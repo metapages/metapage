@@ -4,7 +4,7 @@
 
 A **metapage** is a webpage that consists of embedded and connected webpages.
 
-For documentation and examples: [https://pages.git.com/amagod/metapage](https://pages.git.com/amagod/metapage)
+For documentation and examples: [https://dionjwa.github.io/metapage/](https://dionjwa.github.io/metapage/)
 
 ## Developers
 
