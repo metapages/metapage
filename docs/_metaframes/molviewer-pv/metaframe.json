@@ -1,0 +1,36 @@
+{
+  "version": "0.1-alpha",
+  "inputs": [
+    {
+      "name": "pdb_id",
+      "type": "string",
+      "value": "1C7D"
+    },
+    {
+      "name": "pdb_data",
+      "type": "string"
+    },
+    {
+      "name": "pdb_url",
+      "type": "string"
+    },
+    {
+      "name": "zoom",
+      "type": "float"
+    },
+    {
+      "name": "rotation",
+      "type": "float"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "zoom",
+      "type": "float"
+    },
+    {
+      "name": "rotation",
+      "type": "float"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "name": "metapage",
+  "version": "0.0.2",
+  "description": "Connect web pages together",
+  "main": "metapage.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dionjwa/metapage"
+  },
+  "homepage": "https://pages.git.com/amagod/metapage/",
+  "keywords": [
+    "metapage",
+    "metaframe",
+    "iframe",
+    "webworkers"
+  ],
+  "author": "Dion Amago Whitehead <dion@transition9.com>",
+  "license": "Apache 2.0"
+}

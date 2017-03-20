@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+
+  jekyll-container:
+    image: etelej/jekyll
+    ports:
+        - "5000:4000"
+    volumes:
+        - ./:/app
+    working_dir: /app

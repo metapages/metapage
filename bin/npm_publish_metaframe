@@ -1,0 +1,27 @@
+#!/usr/bin/env sh
+
+set -e
+
+BASE_DIST="dist/npm"
+
+rm -rf dist
+mkdir -p $BASE_DIST
+
+haxe build.hxml
+
+VERSION=`cat etc/npm/package.json | jq -r '. .version'`
+
+echo VERSION=$VERSION
+
+for name in metaframe metapage; do
+	cp -r etc/npm/$name $BASE_DIST/
+
+	cp docs/js/$name.js* $BASE_DIST/$name/
+	cat etc/npm/package.json | jq ". .version = \"$VERSION\" | .name = \"$name\" | .main = \"$name.js\"" > $BASE_DIST/$name/package.json
+	pushd $BASE_DIST/$name
+	npm publish .
+	npm pack
+	npm install -g $name-$VERSION.tgz
+	rm $name-$VERSION.tgz
+	popd
+done

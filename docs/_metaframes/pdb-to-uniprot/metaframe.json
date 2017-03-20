@@ -1,0 +1,23 @@
+{
+	"version": "0.1-alpha",
+	"inputs": [
+		{
+			"name": "pdb_id",
+			"type": "string"
+		}
+	],
+	"outputs": [
+		{
+			"name": "uniprot_id",
+			"type": "string"
+		},
+		{
+			"name": "error",
+			"type": "string"
+		},
+		{
+			"name": "status",
+			"type": "string"
+		}
+	]
+}

@@ -1,0 +1,32 @@
+---
+---
+
+{
+    "version": "0.1-alpha",
+    "iframes": {
+      "button": {
+        "url": "{{site.baseurl}}/metaframes/button-demo/",
+        "out": {
+          "button_out": {}
+        }
+      },
+      "graph": {
+        "url": "{{site.baseurl}}/metaframes/graph-demo/",
+        "in": {
+          "graph_input": {}
+        }
+      }
+    },
+    "pipes": [
+      {
+        "from": {
+          "id": "button",
+          "pipe": "button_out"
+        },
+        "to": {
+          "id": "graph",
+          "pipe": "graph_input"
+        }
+      }
+    ]
+}

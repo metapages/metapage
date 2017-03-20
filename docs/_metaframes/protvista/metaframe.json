@@ -1,0 +1,11 @@
+{
+	"version": "0.1-alpha",
+	"inputs": [
+		{
+			"name": "uniprot_id",
+			"type": "string",
+			"value": "P68871"
+		}
+	],
+	"outputs": []
+}

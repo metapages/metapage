@@ -1,0 +1,68 @@
+---
+---
+
+{
+    "version": "0.1-alpha",
+    "options": {
+      "debug": true
+    },
+    "iframes": {
+      "input-button": {
+        "url": "{{site.baseurl}}/metaframes/pdb-input-button/"
+      },
+      "viewer1": {
+        "url": "{{site.baseurl}}/metaframes/molviewer-pv/"
+      },
+      "viewer2": {
+        "url": "http://localhost:8000/"
+      },
+      "pdb-to-uniprot": {
+        "url": "{{site.baseurl}}/metaframes/pdb-to-uniprot/"
+      },
+      "protvista": {
+        "url": "{{site.baseurl}}/metaframes/protvista/"
+      }
+    },
+    "pipes": [
+      {
+        "from": {
+          "id": "input-button",
+          "pipe": "pdb_id"
+        },
+        "to": {
+          "id": "pdb-to-uniprot",
+          "pipe": "pdb_id"
+        }
+      },
+      {
+        "from": {
+          "id": "pdb-to-uniprot",
+          "pipe": "uniprot_id"
+        },
+        "to": {
+          "id": "protvista",
+          "pipe": "uniprot_id"
+        }
+      },
+      {
+        "from": {
+          "id": "input-button",
+          "pipe": "pdb_data"
+        },
+        "to": {
+          "id": "viewer1",
+          "pipe": "pdb_data"
+        }
+      },
+      {
+        "from": {
+          "id": "input-button",
+          "pipe": "pdb_id"
+        },
+        "to": {
+          "id": "viewer2",
+          "pipe": "pdb_id"
+        }
+      }
+    ]
+}

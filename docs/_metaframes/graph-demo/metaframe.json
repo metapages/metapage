@@ -1,0 +1,10 @@
+{
+	"version": "0.1-alpha",
+	"inputs": [
+		{
+			"name": "graph_input",
+			"type": "string",
+			"value": "Category1"
+		}
+	]
+}

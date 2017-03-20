@@ -1,0 +1,14 @@
+{
+	"version": "0.1-alpha",
+	"outputs": [
+		{
+			"name": "pdb_data",
+			"type": "string"
+		},
+		{
+			"name": "pdb_id",
+			"type": "string",
+			"value": "1c7d"
+		}
+	]
+}

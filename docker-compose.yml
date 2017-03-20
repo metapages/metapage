@@ -1,0 +1,10 @@
+version: '2'
+
+services:
+
+  haxe:
+    image: "haxe:3.4"
+    volumes:
+      - ./:/app
+    working_dir: /app
+    command: ["haxe", "build.hxml"]

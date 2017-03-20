@@ -1,0 +1,121 @@
+---
+---
+
+{
+    "version": "0.1-alpha",
+    "options": {
+      "debug": false
+    },
+    "iframes": {
+      "input-button": {
+        "url": "{{site.baseurl}}/metaframes/pdb-input-button/"
+      },
+      "viewer1": {
+        "url": "{{site.baseurl}}/metaframes/molviewer-pv/"
+      },
+      "viewer2": {
+        "url": "{{site.baseurl}}/metaframes/molviewer-pv/"
+      },
+      "viewer3": {
+        "url": "{{site.baseurl}}/metaframes/molviewer-pv/"
+      },
+      "passthrough1": {
+        "url": "{{site.baseurl}}/metaframes/passthrough/"
+      },
+      "passthrough2": {
+        "url": "{{site.baseurl}}/metaframes/passthrough/"
+      }
+    },
+    "pipes": [
+      {
+        "from": {
+          "id": "input-button",
+          "pipe": "pdb_data"
+        },
+        "to": {
+          "id": "viewer1",
+          "pipe": "pdb_data"
+        }
+      },
+      {
+        "from": {
+          "id": "input-button",
+          "pipe": "pdb_data"
+        },
+        "to": {
+          "id": "viewer2",
+          "pipe": "pdb_data"
+        }
+      },
+      {
+        "from": {
+          "id": "input-button",
+          "pipe": "pdb_data"
+        },
+        "to": {
+          "id": "viewer3",
+          "pipe": "pdb_data"
+        }
+      },
+      {
+        "from": {
+          "id": "viewer1",
+          "pipe": "camera_out"
+        },
+        "to": {
+          "id": "viewer2",
+          "pipe": "camera_in"
+        }
+      },
+      {
+        "from": {
+          "id": "viewer1",
+          "pipe": "camera_out"
+        },
+        "to": {
+          "id": "viewer3",
+          "pipe": "camera_in"
+        }
+      },
+      {
+        "from": {
+          "id": "viewer1",
+          "pipe": "zoom"
+        },
+        "to": {
+          "id": "passthrough2",
+          "pipe": "zoom"
+        }
+      },
+      {
+        "from": {
+          "id": "passthrough2",
+          "pipe": "zoom"
+        },
+        "to": {
+          "id": "viewer2",
+          "pipe": "zoom"
+        }
+      },
+      {
+        "from": {
+          "id": "viewer1",
+          "pipe": "rotation"
+        },
+        "to": {
+          "id": "passthrough1",
+          "pipe": "rotation"
+        }
+      },
+      {
+        "from": {
+          "id": "passthrough1",
+          "pipe": "rotation"
+        },
+        "to": {
+          "id": "viewer3",
+          "pipe": "rotation"
+        }
+      }
+    ]
+}

@@ -1,0 +1,94 @@
+{
+    "version": "0.1-alpha",
+    "iframes": {
+      "input-button": {
+        "url": "../example02-workflow-convert-pdb/input-button"
+      },
+      "viewer1": {
+        "url": "../example02-workflow-convert-pdb/molviewer-pv"
+      },
+      "converter": {
+        "url": "http://ccc.bionano.autodesk.com/metaframe/cwl?git=https://github.com/dionjwa/convert_pdb_workflow_example&cwl=workflows/read_and_clean.cwl&cwlyml=pdbfile.yml",
+        "in": {
+          "uploadpdb.pdb": {}
+        },
+        "out": {
+          "pdbfile": {}
+        }
+      },
+      "viewer2": {
+        "url": "../example02-workflow-convert-pdb/molviewer-pv"
+      },
+      "passthrough1": {
+        "url": "../metaframes/passthrough?direction=right"
+      },
+      "passthrough2": {
+        "url": "../metaframes/passthrough?direction=right"
+      },
+      "passthrough3": {
+        "url": "../metaframes/passthrough?direction=left"
+      }
+    },
+    "pipes": [
+      {
+        "from": {
+          "id": "input-button",
+          "pipe": "button_out"
+        },
+        "to": {
+          "id": "passthrough1",
+          "pipe": "uploadpdb.pdb"
+        }
+      },
+      {
+        "from": {
+          "id": "passthrough1",
+          "pipe": "uploadpdb.pdb"
+        },
+        "to": {
+          "id": "converter",
+          "pipe": "uploadpdb.pdb"
+        }
+      },
+      {
+        "from": {
+          "id": "input-button",
+          "pipe": "button_out"
+        },
+        "to": {
+          "id": "viewer1",
+          "pipe": "pdb_data"
+        }
+      },
+      {
+        "from": {
+          "id": "input-button",
+          "pipe": "button_out"
+        },
+        "to": {
+          "id": "passthrough2",
+          "pipe": "pdb_data"
+        }
+      },
+      {
+        "from": {
+          "id": "converter",
+          "pipe": "pdbfile"
+        },
+        "to": {
+          "id": "passthrough3",
+          "pipe": "pdbfile"
+        }
+      },
+      {
+        "from": {
+          "id": "passthrough3",
+          "pipe": "pdbfile"
+        },
+        "to": {
+          "id": "viewer2",
+          "pipe": "pdb_url"
+        }
+      }
+    ]
+}

@@ -1,0 +1,47 @@
+/* Set up the metaframe channel */
+var metaframe = new Metaframe({debug:false, showBanner:true});
+
+metaframe.ready.then(function() {
+	metaframe.sendDimensions();
+}, function(err) {
+	console.error('Error setting up the metaframe connection');
+});
+
+var inputElement = document.getElementById("input");
+function handleFiles() {
+  var fileList = this.files; /* now you can work with the file list */
+  var file = fileList[0];
+
+  var reader = new FileReader();
+	reader.onload = function(e) {
+		var text = reader.result;
+		metaframe.setOutput("pdb_data", text);
+	}
+
+	reader.readAsText(file);
+}
+
+inputElement.addEventListener("change", handleFiles, false);
+
+function sendPdbId() {
+	var pdbId = document.getElementById('pdbid').value;
+	metaframe.setOutput("pdb_id", pdbId);
+	axios.get('https://files.rcsb.org/download/' + pdbId.toUpperCase() + '.pdb')
+		.then(function (response) {
+			var pdbdata = response.data;
+			metaframe.setOutput("pdb_data", pdbdata);
+		})
+		.catch(function (error) {
+			console.error(error);
+		});
+}
+
+document.getElementById('pdbid').addEventListener('keypress', function (e) {
+	var key = e.which || e.keyCode;
+	if (key === 13) { // 13 is enter
+		sendPdbId();
+	}
+});
+
+document.getElementById('pdbid').value = "1c7d";
+sendPdbId();

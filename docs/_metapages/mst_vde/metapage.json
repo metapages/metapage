@@ -1,0 +1,33 @@
+---
+---
+
+{
+    "version": "0.1-alpha",
+    "options": {
+      "debug": true
+    },
+    "iframes": {
+      "input-button": {
+        "url": "{{site.baseurl}}/metaframes/pdb-input-button/"
+      },
+      "ccc_step1": {
+        "url": "http://localhost:9000/metaframe/",
+        "in": {
+          "image": "avirshup/mst:workflows-0.0.alpha5",
+          "command": ["minimize", "--preprocess", "/inputs/input.pdb", "--outputdir", "/outputs/"]
+        }
+      }
+    },
+    "pipes": [
+      {
+        "from": {
+          "id": "input-button",
+          "pipe": "pdb_data"
+        },
+        "to": {
+          "id": "ccc_step1",
+          "pipe": "input.pdb"
+        }
+      }
+    ]
+}

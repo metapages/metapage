@@ -1,0 +1,22 @@
+---
+layout: vanilla
+---
+
+<style>
+   body {
+       background-color: #93B874;
+   }
+</style>
+
+Metaframe 1 (an iframe)
+
+<div id="input" style="outline-width: 1px;"></div>
+
+<script src="{{site.baseurl}}{{site.data.urls.metaframe_library_path}}"></script>
+<script src="iframe1.js"></script>
+
+When I get input data, I will send the string back out a pipe with the same name, randomly adding one of these characters:
+
+♞☯☭☢€☎∞❄♫☂★☀✓❤✆✇✈✂✄❀❁❂❃✻✼✽✾✿✧✨✩✪✫✍✎✏
+
+

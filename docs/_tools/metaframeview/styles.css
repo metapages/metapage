@@ -1,0 +1,51 @@
+.InputParent {
+    color: red;
+    font-weight: bold;
+}
+
+.InputNameValueParent {
+}
+
+.InputName {
+}
+
+.InputValue {
+}
+
+.horizontal {
+	display: flex;
+	flex-direction: row;
+}
+
+.inputOutputContainer {
+	display: flex;
+	flex-direction: column;
+}
+
+.InputNameValueParent {
+	display: flex;
+	flex-direction: column;
+}
+
+.InputParent {
+	display: flex;
+	flex-direction: row;
+}
+
+
+/* http://apps.eky.hk/css-triangle-generator/ */
+.InputArrow {
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 25px 0 25px 50px;
+	border-color: transparent transparent transparent #007bff;
+}
+
+.OutputArrow {
+	width: 0;
+	height: 0;
+	border-style: solid;
+	border-width: 50px 100px 50px 0;
+	border-color: transparent #007bff transparent transparent;
+}

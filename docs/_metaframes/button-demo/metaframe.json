@@ -1,0 +1,9 @@
+{
+	"version": "0.1-alpha",
+	"outputs": [
+		{
+			"name": "button_out",
+			"type": "string"
+		}
+	]
+}

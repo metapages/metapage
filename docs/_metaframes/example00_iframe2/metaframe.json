@@ -1,0 +1,15 @@
+{
+	"version": "0.1-alpha",
+	"inputs": [
+		{
+			"name": "fooIn",
+			"type": "string"
+		}
+	],
+	"outputs": [
+		{
+			"name": "barOut",
+			"type": "string"
+		}
+	]
+}

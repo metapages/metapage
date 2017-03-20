@@ -1,0 +1,36 @@
+---
+---
+
+{
+    "version": "0.1-alpha",
+    "iframes": {
+      "metaframe1": {
+        "url": "{{site.baseurl}}/metaframes/example00_iframe1/"
+      },
+      "metaframe2": {
+        "url": "{{site.baseurl}}/metaframes/example00_iframe2/"
+      }
+    },
+    "pipes": [
+      {
+        "from": {
+          "id": "metaframe1",
+          "pipe": "fooOut"
+        },
+        "to": {
+          "id": "metaframe2",
+          "pipe": "fooIn"
+        }
+      },
+      {
+        "from": {
+          "id": "metaframe2",
+          "pipe": "barOut"
+        },
+        "to": {
+          "id": "metaframe1",
+          "pipe": "barIn"
+        }
+      }
+    ]
+}
