@@ -1,7 +1,7 @@
 #Site settings
 source: ./
 title: Metapages
-url: "https://dionjwa.github.io" # the base hostname & protocol for your site
+# url: "https://dionjwa.github.io" # the base hostname & protocol for your site
 baseurl: /metapage
 # github:
 #   repository_nwo: /amagod/metapage
