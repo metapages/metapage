@@ -6,7 +6,7 @@ baseurl: /metapage
 # github:
 #   repository_nwo: /amagod/metapage
 
-github_username:  dionjwa
+# github_username:  dionjwa
 # site.github.url: https://pages.git.com/amagod/metapage
 
 # Build settings
@@ -20,3 +20,7 @@ collections:
     output: true
   tools:
     output: true
+
+webrick:
+  headers:
+    "Access-Control-Allow-Origin": "*"

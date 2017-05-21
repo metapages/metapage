@@ -57,9 +57,47 @@ typedef MetapageOptions = {
 	var color :String;
 }
 
+@:enum
+abstract MetapageVersion(String) from String {
+	var V1 = "1";
+}
+
 typedef MetapageDefinition = {
-	var version :String;
+	@:optional var version :MetapageVersion;
 	var iframes :DynamicAccess<MetapageIFrame>;
 	@:optional var options :MetapageOptions;
 	@:optional var pipes :Array<Pipe>;
+}
+
+@:enum
+abstract MetaframeVersion(String) from String {
+	var V1 = "1";
+}
+
+@:enum
+abstract MetaframePipeEncoding(String) {
+	var Utf8 = "utf8";
+	var Base64 = "base64";
+}
+
+typedef MetaframePipeDefinition = {
+	var name :String;
+	@:optional var type :String;
+	@:optional var value :Dynamic;
+	@:optional var encoding :MetaframePipeEncoding;
+}
+
+typedef MetaframeMetadata = {
+	@:optional var version :String;
+	@:optional var title :String;
+	@:optional var author :String;
+	@:optional var image :String;
+	@:optional var descriptionUrl :String;
+}
+
+typedef MetaframeDefinition = {
+	@:optional var version :MetaframeVersion;
+	@:optional var inputs :Array<MetaframePipeDefinition>;
+	@:optional var outputs :Array<MetaframePipeDefinition>;
+	@:optional var metadata :MetaframeMetadata;
 }
