@@ -35,24 +35,24 @@ abstract PipeDataLocation(String) to String {
 	var Url = "url";
 }
 
-typedef PipeDefinition = {
+typedef PipeDefinitionV1 = {
 	var type :String;
 	@:optional var location :PipeDataLocation;
 	@:optional var value :Dynamic;
 }
 
-typedef MetapageIFrame = {
+typedef MetapageIFrameV1 = {
 	var url :String;
 	// var in :DynamicAccess<PipeDefinition>;
 	// var out :DynamicAccess<PipeDefinition>;
 }
 
-typedef MetaframeOptions = {
+typedef MetaframeOptionsV1 = {
 	var debug :Bool;
 	var showBanner :Bool;
 }
 
-typedef MetapageOptions = {
+typedef MetapageOptionsV1 = {
 	var debug :Bool;
 	var color :String;
 }
@@ -62,15 +62,15 @@ abstract MetapageVersion(String) from String {
 	var V1 = "1";
 }
 
-typedef MetapageDefinition = {
+typedef MetapageDefinitionV1 = {
 	@:optional var version :MetapageVersion;
-	var iframes :DynamicAccess<MetapageIFrame>;
-	@:optional var options :MetapageOptions;
+	var iframes :DynamicAccess<MetapageIFrameV1>;
+	@:optional var options :MetapageOptionsV1;
 	@:optional var pipes :Array<Pipe>;
 }
 
 @:enum
-abstract MetaframeVersion(String) from String {
+abstract MetaframeDefinitionVersion(String) from String {
 	var V1 = "1";
 }
 
@@ -80,24 +80,25 @@ abstract MetaframePipeEncoding(String) {
 	var Base64 = "base64";
 }
 
-typedef MetaframePipeDefinition = {
+typedef MetaframePipeDefinitionV1 = {
 	var name :String;
 	@:optional var type :String;
 	@:optional var value :Dynamic;
 	@:optional var encoding :MetaframePipeEncoding;
 }
 
-typedef MetaframeMetadata = {
+typedef MetaframeMetadataV1 = {
 	@:optional var version :String;
 	@:optional var title :String;
 	@:optional var author :String;
 	@:optional var image :String;
 	@:optional var descriptionUrl :String;
+	@:optional var keywords :Array<String>;
 }
 
-typedef MetaframeDefinition = {
-	@:optional var version :MetaframeVersion;
-	@:optional var inputs :Array<MetaframePipeDefinition>;
-	@:optional var outputs :Array<MetaframePipeDefinition>;
-	@:optional var metadata :MetaframeMetadata;
+typedef MetaframeDefinitionV1 = {
+	@:optional var version :MetaframeDefinitionVersion;
+	@:optional var inputs :Array<MetaframePipeDefinitionV1>;
+	@:optional var outputs :Array<MetaframePipeDefinitionV1>;
+	@:optional var metadata :MetaframeMetadataV1;
 }
