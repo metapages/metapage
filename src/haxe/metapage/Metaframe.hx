@@ -22,7 +22,7 @@ class Metaframe extends EventEmitter
 
 	public var ready :Promise<Bool>;
 
-	public function new(opt :MetaframeOptions)
+	public function new(opt :MetaframeOptionsV1)
 	{
 		super();
 		_debug = (opt != null && opt.debug == true);
