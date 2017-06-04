@@ -37,7 +37,7 @@ These are metapages.
 
 # How do I create a metapage?
 
-See the <a href="{{site.baseurl}}/documentation">docs</a> for more detailed documentation.
+See the <a href="{{site.baseurl}}/documentation/">docs</a> for more detailed documentation.
 
 
 
