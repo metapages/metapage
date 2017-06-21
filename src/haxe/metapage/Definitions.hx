@@ -62,11 +62,21 @@ abstract MetapageVersion(String) from String {
 	var V1 = "1";
 }
 
+abstract MetapageId(String) to String
+{
+  inline public function new(s:String)
+  {
+    this = s;
+  }
+}
+
 typedef MetapageDefinitionV1 = {
 	@:optional var version :MetapageVersion;
 	var iframes :DynamicAccess<MetapageIFrameV1>;
 	@:optional var options :MetapageOptionsV1;
 	@:optional var pipes :Array<Pipe>;
+	@:optional var id :MetapageId;
+	@:optional var meta :Dynamic;
 }
 
 @:enum
