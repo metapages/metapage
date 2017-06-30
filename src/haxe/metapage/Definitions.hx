@@ -31,8 +31,8 @@ typedef Pipe = {
 
 @:enum
 abstract PipeDataLocation(String) to String {
-	var Inline = "inline";
-	var Url = "url";
+	var LocationInline = "inline";
+	var LocationUrl = "url";
 }
 
 typedef PipeDefinitionV1 = {
@@ -104,6 +104,7 @@ typedef MetaframeMetadataV1 = {
 	@:optional var image :String;
 	@:optional var descriptionUrl :String;
 	@:optional var keywords :Array<String>;
+	@:optional var iconUrl :String;
 }
 
 typedef MetaframeDefinitionV1 = {
