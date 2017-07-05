@@ -7,6 +7,8 @@ layout: vanilla
       background-color: #FFCCE6;
   }
 </style>
+<script src="{{site.baseurl}}{{site.data.urls.promise_polyfill}}"></script>
+
 Metaframe 2 (an iframe)
 
 <div id="input"></div>

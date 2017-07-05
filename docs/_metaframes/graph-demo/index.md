@@ -4,6 +4,7 @@ layout: vanilla
 
 <head>
 <meta charset="utf-8">
+<script src="{{site.baseurl}}{{site.data.urls.promise_polyfill}}"></script>
 <!-- Author: Bo Ericsson -->
 <title>Real Time Chart Multi</title>
 <link rel="stylesheet type=text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css" media="all">

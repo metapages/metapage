@@ -3,6 +3,7 @@ layout: vanilla
 ---
 
 <head>
+<script src="{{site.baseurl}}{{site.data.urls.promise_polyfill}}"></script>
 <link rel="stylesheet" href="{{site.baseurl}}{{site.data.urls.bootstrap_path}}">
 </head>
 <body>

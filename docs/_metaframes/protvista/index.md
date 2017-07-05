@@ -3,6 +3,7 @@ layout: vanilla
 ---
 
 <head>
+<script src="{{site.baseurl}}{{site.data.urls.promise_polyfill}}"></script>
 <script src="https://ebi-uniprot.github.io/CDN/protvista/protvista.js"></script>
 <link href="https://ebi-uniprot.github.io/CDN/protvista/css/main.css" rel="stylesheet"/>
 </head>

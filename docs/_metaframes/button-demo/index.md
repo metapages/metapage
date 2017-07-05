@@ -2,14 +2,16 @@
 layout: vanilla
 ---
 <head>
-<style>
-	html { height: 100%; }
-	body { min-height: 100%; }
-</style>
+	<style>
+		html { height: 100%; }
+		body { min-height: 100%; }
+	</style>
+	<script src="{{site.baseurl}}{{site.data.urls.promise_polyfill}}"></script>
 </head>
 <body>
-	<link rel="stylesheet" href="pure-min.css">
+	<!-- <link rel="stylesheet" href="pure-min.css"> -->
 	<script src="{{site.baseurl}}{{site.data.urls.metaframe_library_path}}"></script>
+	Har har har
 	<div id="content">
     	<button id="button1" class="pure-button">Add Category1</button>
     	<button id="button2" class="pure-button">Add Category2</button>

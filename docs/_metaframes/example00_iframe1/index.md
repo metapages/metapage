@@ -8,6 +8,8 @@ layout: vanilla
    }
 </style>
 
+<script src="{{site.baseurl}}{{site.data.urls.promise_polyfill}}"></script>
+
 Metaframe 1 (an iframe)
 
 <div id="input" style="outline-width: 1px;"></div>
