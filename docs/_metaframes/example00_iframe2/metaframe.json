@@ -1,5 +1,9 @@
 {
 	"version": "0.1-alpha",
+	"metadata": {
+		"version": "0.1",
+		"title": "Example metaframe"
+	},
 	"inputs": [
 		{
 			"name": "fooIn",

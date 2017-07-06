@@ -1,5 +1,10 @@
 {
 	"version": "0.1-alpha",
+	"metadata": {
+		"version": "0.1",
+		"title": "Protvista (protein sequence features)",
+		"image": "http://ebi-uniprot.github.io/ProtVista/images/ftViewerUP.png"
+	},
 	"inputs": [
 		{
 			"name": "uniprot_id",
