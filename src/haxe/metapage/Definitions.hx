@@ -1,5 +1,9 @@
 package metapage;
 
+import haxe.extern.EitherType;
+
+import util.TypedDynamicAccess;
+
 typedef Function=Dynamic;
 
 typedef PipeUpdateBlob = {
@@ -70,13 +74,46 @@ abstract MetapageId(String) to String
   }
 }
 
+@:enum
+abstract MetapageVersionLayoutType(String) to String {
+	var gridlayout = "gridlayout";
+}
+
+typedef ReactGridLayoutData = {
+	@:optional var i :String;
+	@:optional var x :Float;
+	@:optional var y :Float;
+	@:optional var w :Float;
+	@:optional var h :Float;
+	@:optional var minW :Float;
+	@:optional var maxW :Float;
+	@:optional var minH :Float;
+	@:optional var maxH :Float;
+	@:optional var isDraggable :Bool;
+	@:optional var isResizable :Bool;
+}
+
+typedef MetapageVersionLayoutGrid = {
+	var layout :Array<ReactGridLayoutData>;
+}
+
+typedef MetapageMetadataLayoutV1 = {
+	@:optional var version :String;
+	@:optional var layouts :TypedDynamicAccess<MetapageVersionLayoutType, MetapageVersionLayoutGrid>;
+}
+
+typedef MetapageMetadataV1 = {
+	@:optional var version :String;
+	@:optional var layout :MetapageMetadataLayoutV1;
+}
+
 typedef MetapageDefinitionV1 = {
 	@:optional var version :MetapageVersion;
 	var iframes :DynamicAccess<MetapageIFrameV1>;
 	@:optional var options :MetapageOptionsV1;
 	@:optional var pipes :Array<Pipe>;
 	@:optional var id :MetapageId;
-	@:optional var meta :Dynamic;
+	@:optional var meta :MetapageMetadataV1;
 }
 
 @:enum
