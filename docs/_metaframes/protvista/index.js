@@ -20,11 +20,11 @@ function loadUniprotId(uniprotId) {
 	    exclusions: ['SEQUENCE_INFORMATION', 'STRUCTURAL', 'TOPOLOGY', 'MUTAGENESIS', 'MOLECULE_PROCESSING']
     });
 
-    console.log('height', $("#main").height());
-    console.log('outerHeight', $("#main").outerHeight());
+    // console.log('height', $("#main").height());
+    // console.log('outerHeight', $("#main").outerHeight());
     setInterval(function() {
-    	console.log('height', $("#main").height());
-    	console.log('outerHeight', $("#main").outerHeight());
+    	// console.log('height', $("#main").height());
+    	// console.log('outerHeight', $("#main").outerHeight());
     }, 1000);
     metaframe.sendDimensions({width:600, height:800});
 }
