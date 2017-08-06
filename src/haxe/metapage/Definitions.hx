@@ -6,26 +6,50 @@ import util.TypedDynamicAccess;
 
 typedef Function=Dynamic;
 
+abstract MetapageId(String) to String
+{
+  inline public function new(s:String)
+  {
+    this = s;
+  }
+}
+
+abstract MetaframeId(String) to String
+{
+	inline public function new(s :String)
+	{
+		this = s;
+	}
+}
+
+abstract MetaframePipeId(String) to String
+{
+	inline public function new(s :String)
+	{
+		this = s;
+	}
+}
+
 typedef PipeUpdateBlob = {
-  var name :String;
+  var MetaframePipeId :String;
   var value :Dynamic;
 }
 
 typedef PipeInputBlob = {>PipeUpdateBlob,
-	@:optional var iframeId :String;
+	@:optional var iframeId :MetaframeId;
 	@:optional var parentId :String;
 }
 
 typedef PipeOutputBlob=PipeInputBlob;
 
 typedef PipeOutput = {
-	var id :String;
-	var pipe :String;
+	var id :MetaframeId;
+	var pipe :MetaframePipeId;
 }
 
 typedef PipeInput = {
-	var id :String;
-	var pipe :String;
+	var id :MetaframeId;
+	var pipe :MetaframePipeId;
 }
 
 typedef Pipe = {
@@ -66,14 +90,6 @@ abstract MetapageVersion(String) from String {
 	var V1 = "1";
 }
 
-abstract MetapageId(String) to String
-{
-  inline public function new(s:String)
-  {
-    this = s;
-  }
-}
-
 @:enum
 abstract MetapageVersionLayoutType(String) to String {
 	var gridlayout = "gridlayout";
@@ -109,7 +125,7 @@ typedef MetapageMetadataV1 = {
 
 typedef MetapageDefinitionV1 = {
 	@:optional var version :MetapageVersion;
-	var iframes :DynamicAccess<MetapageIFrameV1>;
+	var iframes :TypedDynamicAccess<MetaframeId, MetapageIFrameV1>;
 	@:optional var options :MetapageOptionsV1;
 	@:optional var pipes :Array<Pipe>;
 	@:optional var id :MetapageId;
@@ -128,7 +144,7 @@ abstract MetaframePipeEncoding(String) {
 }
 
 typedef MetaframePipeDefinitionV1 = {
-	var name :String;
+	var name :MetaframePipeId;
 	@:optional var type :String;
 	@:optional var value :Dynamic;
 	@:optional var encoding :MetaframePipeEncoding;
