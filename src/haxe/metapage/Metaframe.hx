@@ -22,7 +22,7 @@ class Metaframe extends EventEmitter
 
 	public var ready :Promise<Bool>;
 
-	public function new(opt :MetaframeOptionsV1)
+	public function new(?opt :MetaframeOptionsV1)
 	{
 		super();
 		_debug = (opt != null && opt.debug == true);
@@ -88,7 +88,7 @@ class Metaframe extends EventEmitter
 
 					//Set all the output pipe values (if we set the values before setup)
 					for (pipeId in _outputPipeValues.keys()) {
-						var e :PipeUpdateBlob = {name:pipeId, value:_outputPipeValues.get(pipeId)};
+						var e :PipeUpdateBlob = {pipeId:pipeId, value:_outputPipeValues.get(pipeId)};
 						sendRpc(JsonRpcMethodsFromChild.OutputUpdate, e);
 					}
 				} else {
@@ -193,7 +193,7 @@ class Metaframe extends EventEmitter
 	public function setInput(pipeId, pipeValue)
 	{
 		_inputPipeValues.set(pipeId, pipeValue);
-		var inputBlob :PipeUpdateBlob = {name:pipeId, value:pipeValue};
+		var inputBlob :PipeUpdateBlob = {pipeId:pipeId, value:pipeValue};
 		sendRpc(JsonRpcMethodsFromParent.InputUpdate, inputBlob);
 		emit(MetaframeEvents.Input, pipeId, pipeValue);
 		emit(MetaframeEvents.Inputs, _inputPipeValues.keys().map(function(key) return {name:key,value:_inputPipeValues.get(key)}));
@@ -202,11 +202,11 @@ class Metaframe extends EventEmitter
 	public function setInputs(inputs :Array<PipeUpdateBlob>)
 	{
 		for (input in inputs) {
-			_inputPipeValues.set(input.name, input.value);
+			_inputPipeValues.set(input.pipeId, input.value);
 		}
 		emit(MetaframeEvents.Inputs, _inputPipeValues.keys().map(function(key) return {name:key, value:_inputPipeValues.get(key)}));
 		for (input in inputs) {
-			emit(MetaframeEvents.Input, input.name, input.value);
+			emit(MetaframeEvents.Input, input.pipeId, input.value);
 		}
 	}
 
@@ -228,7 +228,7 @@ class Metaframe extends EventEmitter
 	{
 		_outputPipeValues.set(pipeId, pipeValue);
 		//Send the update to the parent for piping to other metaframes
-		var outputBlob :PipeUpdateBlob = {name:pipeId, value:pipeValue};
+		var outputBlob :PipeUpdateBlob = {pipeId:pipeId, value:pipeValue};
 		sendRpc(JsonRpcMethodsFromChild.OutputUpdate, outputBlob);
 		//Notify internal listeners to output updates
 		emit(MetaframeEvents.Output, pipeId, pipeValue);
@@ -237,12 +237,12 @@ class Metaframe extends EventEmitter
 	public function setOutputs(outputs :Array<PipeUpdateBlob>) :Void
 	{
 		for (output in outputs) {
-			_outputPipeValues.set(output.name, output.value);
+			_outputPipeValues.set(output.pipeId, output.value);
 		}
 		sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
 		//Notify internal listeners to output updates
 		for (output in outputs) {
-			emit(MetaframeEvents.Output, output.name, output.value);
+			emit(MetaframeEvents.Output, output.pipeId, output.value);
 		}
 	}
 
@@ -305,8 +305,8 @@ class Metaframe extends EventEmitter
 
 	function internalOnInput(input :PipeUpdateBlob)
 	{
-		debug('InputUpdate from registed RPC pipeId=${input.name} value=${Json.stringify(input.value).substr(0,200)}');
-		var pipeId = input != null ? input.name : null;
+		debug('InputUpdate from registed RPC pipeId=${input.pipeId} value=${Json.stringify(input.value).substr(0,200)}');
+		var pipeId = input != null ? input.pipeId : null;
 		var pipeValue = input != null ? input.value : null;
 		if (pipeId == null) {
 			error('Missing "id" value in the params object to identify the pipe. input=${input}');

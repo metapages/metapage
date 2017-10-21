@@ -50,6 +50,13 @@ Reflect.fields = function(o) {
 	}
 	return a;
 };
+Reflect.deleteField = function(o,field) {
+	if(!Object.prototype.hasOwnProperty.call(o,field)) {
+		return false;
+	}
+	delete(o[field]);
+	return true;
+};
 var Std = function() { };
 Std.__name__ = true;
 Std.string = function(s) {
@@ -291,7 +298,7 @@ var metapage_Metaframe = $hx_exports["Metaframe"] = function(opt) {
 				while(_g2 < _g11.length) {
 					var pipeId = _g11[_g2];
 					++_g2;
-					var e = { name : pipeId, value : _gthis._outputPipeValues[pipeId]};
+					var e = { pipeId : pipeId, value : _gthis._outputPipeValues[pipeId]};
 					_gthis.sendRpc("OutputUpdate",e);
 				}
 			} else {
@@ -443,7 +450,7 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 	,setInput: function(pipeId,pipeValue) {
 		var _gthis = this;
 		this._inputPipeValues[pipeId] = pipeValue;
-		var inputBlob = { name : pipeId, value : pipeValue};
+		var inputBlob = { pipeId : pipeId, value : pipeValue};
 		this.sendRpc("InputUpdate",inputBlob);
 		this.emit("input",pipeId,pipeValue);
 		this.emit("inputs",Reflect.fields(this._inputPipeValues).map(function(key) {
@@ -456,7 +463,7 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 		while(_g < inputs.length) {
 			var input = inputs[_g];
 			++_g;
-			this._inputPipeValues[input.name] = input.value;
+			this._inputPipeValues[input.pipeId] = input.value;
 		}
 		this.emit("inputs",Reflect.fields(this._inputPipeValues).map(function(key) {
 			return { name : key, value : _gthis._inputPipeValues[key]};
@@ -465,7 +472,7 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 		while(_g1 < inputs.length) {
 			var input1 = inputs[_g1];
 			++_g1;
-			this.emit("input",input1.name,input1.value);
+			this.emit("input",input1.pipeId,input1.value);
 		}
 	}
 	,getInputs: function() {
@@ -484,7 +491,7 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 	}
 	,setOutput: function(pipeId,pipeValue) {
 		this._outputPipeValues[pipeId] = pipeValue;
-		var outputBlob = { name : pipeId, value : pipeValue};
+		var outputBlob = { pipeId : pipeId, value : pipeValue};
 		this.sendRpc("OutputUpdate",outputBlob);
 		this.emit("output",pipeId,pipeValue);
 	}
@@ -493,14 +500,14 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 		while(_g < outputs.length) {
 			var output = outputs[_g];
 			++_g;
-			this._outputPipeValues[output.name] = output.value;
+			this._outputPipeValues[output.pipeId] = output.value;
 		}
 		this.sendRpc("OutputsUpdate",outputs);
 		var _g1 = 0;
 		while(_g1 < outputs.length) {
 			var output1 = outputs[_g1];
 			++_g1;
-			this.emit("output",output1.name,output1.value);
+			this.emit("output",output1.pipeId,output1.value);
 		}
 	}
 	,getOutputs: function() {
@@ -552,8 +559,8 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 		}
 	}
 	,internalOnInput: function(input) {
-		this.debug("InputUpdate from registed RPC pipeId=" + input.name + " value=" + HxOverrides.substr(JSON.stringify(input.value),0,200),{ fileName : "Metaframe.hx", lineNumber : 308, className : "metapage.Metaframe", methodName : "internalOnInput"});
-		var pipeId = input != null ? input.name : null;
+		this.debug("InputUpdate from registed RPC pipeId=" + input.pipeId + " value=" + HxOverrides.substr(JSON.stringify(input.value),0,200),{ fileName : "Metaframe.hx", lineNumber : 308, className : "metapage.Metaframe", methodName : "internalOnInput"});
+		var pipeId = input != null ? input.pipeId : null;
 		var pipeValue = input != null ? input.value : null;
 		if(pipeId == null) {
 			this.error("Missing \"id\" value in the params object to identify the pipe. input=" + Std.string(input),{ fileName : "Metaframe.hx", lineNumber : 312, className : "metapage.Metaframe", methodName : "internalOnInput"});
@@ -578,6 +585,18 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 		this.sendRpc("Dimensions",dimensions);
 	}
 });
+var metapage__$MetaframeId_MetaframeId_$Impl_$ = {};
+metapage__$MetaframeId_MetaframeId_$Impl_$.__name__ = true;
+metapage__$MetaframeId_MetaframeId_$Impl_$._new = function(s) {
+	var this1 = s;
+	return this1;
+};
+var metapage__$MetaframePipeId_MetaframePipeId_$Impl_$ = {};
+metapage__$MetaframePipeId_MetaframePipeId_$Impl_$.__name__ = true;
+metapage__$MetaframePipeId_MetaframePipeId_$Impl_$._new = function(s) {
+	var this1 = s;
+	return this1;
+};
 var metapage_MetapageTools = function() { };
 metapage_MetapageTools.__name__ = true;
 metapage_MetapageTools.log = function(o,color,backgroundColor,pos) {
@@ -638,6 +657,27 @@ metapage_MetapageTools.hashCode = function(str) {
 metapage_MetapageTools.intToRGB = function(i) {
 	var c = (i & 16777215).toString(16).toUpperCase();
 	return "00000".substring(0,6 - c.length) + Std.string(c);
+};
+var util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$ = {};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.__name__ = true;
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$._new = function() {
+	var this1 = { };
+	return this1;
+};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.get = function(this1,key) {
+	return this1[key];
+};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.set = function(this1,key,value) {
+	return this1[key] = value;
+};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.exists = function(this1,key) {
+	return Object.prototype.hasOwnProperty.call(this1,key);
+};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.remove = function(this1,key) {
+	return Reflect.deleteField(this1,key);
+};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.keys = function(this1) {
+	return Reflect.fields(this1);
 };
 var $_, $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }

@@ -6,7 +6,11 @@ import haxe.remoting.JsonRpc;
 	import js.Browser;
 	import js.Promise;
 #end
+
 import metapage.Definitions;
 import metapage.JsonRpcMethods;
+
+import util.TypedDynamicAccess;
+
 using Lambda;
 using StringTools;

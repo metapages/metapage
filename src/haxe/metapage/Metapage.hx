@@ -4,7 +4,7 @@ package metapage;
 @:keep
 class Metapage extends EventEmitter
 {
-	public static function fromDefinition(metaPageDef :MetapageDefinition)
+	public static function fromDefinition(metaPageDef :MetapageDefinitionV1)
 	{
 		var metapage = new Metapage(metaPageDef.options);
 		if (metaPageDef.iframes != null) {
@@ -12,7 +12,7 @@ class Metapage extends EventEmitter
 				var iframeDef = metaPageDef.iframes.get(iframeId);
 				var iframe = metapage.createIFrame(iframeDef.url, iframeId);
 				if (Reflect.field(iframeDef, 'in') != null) {
-					var inPipes :DynamicAccess<PipeDefinition> = Reflect.field(iframeDef, 'in');
+					var inPipes :DynamicAccess<PipeDefinitionV1> = Reflect.field(iframeDef, 'in');
 					for (inPipeName in inPipes.keys()) {
 						iframe.setInput(inPipeName, inPipes.get(inPipeName).value);
 					}
@@ -38,7 +38,7 @@ class Metapage extends EventEmitter
 
 	static var LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
 
-	public function new(?opts :MetapageOptions)
+	public function new(?opts :MetapageOptionsV1)
 	{
 		super();
 		_id = generateId();
@@ -167,7 +167,7 @@ class Metapage extends EventEmitter
 
 				case OutputUpdate:
 					var outputBlob :PipeOutputBlob = jsonrpc.params;
-					var pipeId :String = outputBlob.name;
+					var pipeId :String = outputBlob.pipeId;
 					var pipeValue :Dynamic = outputBlob.value;
 					var iframeId :String = jsonrpc.iframeId;
 					var iframe = _iframes.get(iframeId);
@@ -207,7 +207,7 @@ class Metapage extends EventEmitter
 						if (_outputPipeMap.exists(iframeId)) {
 							var iframeToInputs :DynamicAccess<Array<PipeUpdateBlob>> = {};
 							for(output in outputs) {
-								var outputName = output.name;
+								var outputName = output.pipeId;
 								//Does the output pipe go anywhere?
 								if (_outputPipeMap.get(iframeId).exists(outputName)) {
 									//Array of input pipes from the output pipe
@@ -220,7 +220,7 @@ class Metapage extends EventEmitter
 												if (iframeToInputs.get(inputPipe.id) == null) {
 													iframeToInputs.set(inputPipe.id, []);
 												}
-												iframeToInputs.get(inputPipe.id).push({{name:inputPipe.pipe, value:output.value}});
+												iframeToInputs.get(inputPipe.id).push({{pipeId:inputPipe.pipe, value:output.value}});
 												// inputIframe.setInput(inputPipe.pipe, outputValue);
 											}
 										}
@@ -368,7 +368,7 @@ class IFrameRpcClient
 	{
 		var inputs = [];
 		for (pipeId in _inputs.keys()) {
-			inputs.push({name:pipeId, value:_inputs.get(pipeId)});
+			inputs.push({pipeId:pipeId, value:_inputs.get(pipeId)});
 		}
 		sendInputs(inputs);
 	}
@@ -381,7 +381,7 @@ class IFrameRpcClient
 		} else {
 			debug('Not setting input bc _loaded=$_loaded');
 		}
-		var e :PipeInputBlob = {iframeId:id, name:pipeId, value:value};
+		var e :PipeInputBlob = {iframeId:new MetaframeId(id), pipeId:pipeId, value:value};
 		_metapage.emit(JsonRpcMethodsFromParent.InputUpdate, e);
 	}
 
@@ -390,7 +390,7 @@ class IFrameRpcClient
 		debug({m:'IFrameRpcClient', inputs:inputs});
 		for (input in inputs) {
 			Reflect.setField(input, "iframeId", id);
-			_inputs.set(input.name, input.value);
+			_inputs.set(input.pipeId, input.value);
 		}
 		if (this.iframe.parentNode != null && _loaded) {
 			sendInputs(inputs);
@@ -403,7 +403,7 @@ class IFrameRpcClient
 	public function setOutput(pipeId :String, value :Dynamic)
 	{
 		_outputs.set(pipeId, value);
-		var e :PipeInputBlob = {iframeId:id, name:pipeId, value:value};
+		var e :PipeInputBlob = {iframeId:new MetaframeId(id), pipeId:pipeId, value:value};
 		_metapage.emit(JsonRpcMethodsFromChild.OutputUpdate, e);
 		for (l in _onOutput) {
 			if (l != null) {
@@ -415,7 +415,7 @@ class IFrameRpcClient
 	public function setOutputs(outputs :Array<PipeUpdateBlob>)
 	{
 		for (output in outputs) {
-			setOutput(output.name, output.value);
+			setOutput(output.pipeId, output.value);
 		}
 		var e = {iframeId:id, outputs:outputs};
 		_metapage.emit(JsonRpcMethodsFromChild.OutputsUpdate, e);
@@ -484,7 +484,7 @@ class IFrameRpcClient
 
 	function sendInput(pipeId :String)
 	{
-		var inputBlob :PipeInputBlob = {name :pipeId, value: _inputs.get(pipeId), parentId: _parentId};
+		var inputBlob :PipeInputBlob = {pipeId :pipeId, value: _inputs.get(pipeId), parentId: _parentId};
 		sendRpc(JsonRpcMethodsFromParent.InputUpdate, inputBlob);
 	}
 

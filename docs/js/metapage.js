@@ -57,6 +57,13 @@ Reflect.fields = function(o) {
 	}
 	return a;
 };
+Reflect.deleteField = function(o,field) {
+	if(!Object.prototype.hasOwnProperty.call(o,field)) {
+		return false;
+	}
+	delete(o[field]);
+	return true;
+};
 var Std = function() { };
 Std.__name__ = true;
 Std.string = function(s) {
@@ -241,6 +248,18 @@ metapage_EventEmitter.prototype = {
 		this._events = { };
 	}
 };
+var metapage__$MetaframeId_MetaframeId_$Impl_$ = {};
+metapage__$MetaframeId_MetaframeId_$Impl_$.__name__ = true;
+metapage__$MetaframeId_MetaframeId_$Impl_$._new = function(s) {
+	var this1 = s;
+	return this1;
+};
+var metapage__$MetaframePipeId_MetaframePipeId_$Impl_$ = {};
+metapage__$MetaframePipeId_MetaframePipeId_$Impl_$.__name__ = true;
+metapage__$MetaframePipeId_MetaframePipeId_$Impl_$._new = function(s) {
+	var this1 = s;
+	return this1;
+};
 var metapage_Metapage = $hx_exports["Metapage"] = function(opts) {
 	this._debug = false;
 	this._iframes = { };
@@ -409,7 +428,7 @@ metapage_Metapage.prototype = $extend(metapage_EventEmitter.prototype,{
 				break;
 			case "OutputUpdate":
 				var outputBlob = jsonrpc.params;
-				var pipeId = outputBlob.name;
+				var pipeId = outputBlob.pipeId;
 				var pipeValue = outputBlob.value;
 				var iframeId = jsonrpc.iframeId;
 				var iframe1 = this._iframes[iframeId];
@@ -452,7 +471,7 @@ metapage_Metapage.prototype = $extend(metapage_EventEmitter.prototype,{
 						while(_g1 < outputs.length) {
 							var output = outputs[_g1];
 							++_g1;
-							var outputName = output.name;
+							var outputName = output.pipeId;
 							if(Object.prototype.hasOwnProperty.call(this._outputPipeMap[iframeId1],outputName)) {
 								var inputPipes1 = this._outputPipeMap[iframeId1][outputName];
 								if(inputPipes1 != null) {
@@ -466,7 +485,7 @@ metapage_Metapage.prototype = $extend(metapage_EventEmitter.prototype,{
 											if(iframeToInputs[inputPipe1.id] == null) {
 												iframeToInputs[inputPipe1.id] = [];
 											}
-											iframeToInputs[inputPipe1.id].push({ name : inputPipe1.pipe, value : output.value});
+											iframeToInputs[inputPipe1.id].push({ pipeId : inputPipe1.pipe, value : output.value});
 										}
 									}
 								}
@@ -675,7 +694,7 @@ metapage_IFrameRpcClient.prototype = {
 		while(_g < _g1.length) {
 			var pipeId = _g1[_g];
 			++_g;
-			inputs.push({ name : pipeId, value : this._inputs[pipeId]});
+			inputs.push({ pipeId : pipeId, value : this._inputs[pipeId]});
 		}
 		this.sendInputs(inputs);
 	}
@@ -686,7 +705,8 @@ metapage_IFrameRpcClient.prototype = {
 		} else {
 			this.debug("Not setting input bc _loaded=" + Std.string(this._loaded),{ fileName : "Metapage.hx", lineNumber : 382, className : "metapage.IFrameRpcClient", methodName : "setInput"});
 		}
-		var e = { iframeId : this.id, name : pipeId, value : value};
+		var this1 = this.id;
+		var e = { iframeId : this1, pipeId : pipeId, value : value};
 		this._metapage.emit("InputUpdate",e);
 	}
 	,setInputs: function(inputs) {
@@ -696,7 +716,7 @@ metapage_IFrameRpcClient.prototype = {
 			var input = inputs[_g];
 			++_g;
 			input["iframeId"] = this.id;
-			this._inputs[input.name] = input.value;
+			this._inputs[input.pipeId] = input.value;
 		}
 		if(this.iframe.parentNode != null && this._loaded) {
 			this.sendInputs(inputs);
@@ -707,7 +727,8 @@ metapage_IFrameRpcClient.prototype = {
 	}
 	,setOutput: function(pipeId,value) {
 		this._outputs[pipeId] = value;
-		var e = { iframeId : this.id, name : pipeId, value : value};
+		var this1 = this.id;
+		var e = { iframeId : this1, pipeId : pipeId, value : value};
 		this._metapage.emit("OutputUpdate",e);
 		var _g = 0;
 		var _g1 = this._onOutput;
@@ -724,7 +745,7 @@ metapage_IFrameRpcClient.prototype = {
 		while(_g < outputs.length) {
 			var output = outputs[_g];
 			++_g;
-			this.setOutput(output.name,output.value);
+			this.setOutput(output.pipeId,output.value);
 		}
 		var e = { iframeId : this.id, outputs : outputs};
 		this._metapage.emit("OutputsUpdate",e);
@@ -779,7 +800,7 @@ metapage_IFrameRpcClient.prototype = {
 		this.log("registered",{ fileName : "Metapage.hx", lineNumber : 482, className : "metapage.IFrameRpcClient", methodName : "registered"});
 	}
 	,sendInput: function(pipeId) {
-		var inputBlob = { name : pipeId, value : this._inputs[pipeId], parentId : this._parentId};
+		var inputBlob = { pipeId : pipeId, value : this._inputs[pipeId], parentId : this._parentId};
 		this.sendRpc("InputUpdate",inputBlob);
 	}
 	,sendInputs: function(inputs) {
@@ -795,6 +816,12 @@ metapage_IFrameRpcClient.prototype = {
 			_this.log("Cannot send to child iframe messageJson=" + HxOverrides.substr(JSON.stringify(messageJson),0,200),"f00",_this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 503, className : "metapage.IFrameRpcClient", methodName : "sendRpcInternal"});
 		}
 	}
+};
+var metapage__$MetapageId_MetapageId_$Impl_$ = {};
+metapage__$MetapageId_MetapageId_$Impl_$.__name__ = true;
+metapage__$MetapageId_MetapageId_$Impl_$._new = function(s) {
+	var this1 = s;
+	return this1;
 };
 var metapage_MetapageTools = function() { };
 metapage_MetapageTools.__name__ = true;
@@ -856,6 +883,27 @@ metapage_MetapageTools.hashCode = function(str) {
 metapage_MetapageTools.intToRGB = function(i) {
 	var c = (i & 16777215).toString(16).toUpperCase();
 	return "00000".substring(0,6 - c.length) + Std.string(c);
+};
+var util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$ = {};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.__name__ = true;
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$._new = function() {
+	var this1 = { };
+	return this1;
+};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.get = function(this1,key) {
+	return this1[key];
+};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.set = function(this1,key,value) {
+	return this1[key] = value;
+};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.exists = function(this1,key) {
+	return Object.prototype.hasOwnProperty.call(this1,key);
+};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.remove = function(this1,key) {
+	return Reflect.deleteField(this1,key);
+};
+util__$TypedDynamicAccess_TypedDynamicAccess_$Impl_$.keys = function(this1) {
+	return Reflect.fields(this1);
 };
 var $_, $fid = 0;
 function $bind(o,m) { if( m == null ) return null; if( m.__id__ == null ) m.__id__ = $fid++; var f; if( o.hx__closures__ == null ) o.hx__closures__ = {}; else f = o.hx__closures__[m.__id__]; if( f == null ) { f = function(){ return f.method.apply(f.scope, arguments); }; f.scope = o; f.method = m; o.hx__closures__[m.__id__] = f; } return f; }
