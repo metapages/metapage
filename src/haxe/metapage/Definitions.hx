@@ -23,12 +23,6 @@ typedef Pipe = {
 	var to :PipeInput;
 }
 
-@:enum
-abstract PipeDataLocation(String) to String {
-	var LocationInline = "inline";
-	var LocationUrl = "url";
-}
-
 typedef MetapageIFrameV1 = {
 	var url :String;
 	// var in :DynamicAccess<PipeDefinition>;

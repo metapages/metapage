@@ -11,6 +11,7 @@ import metapage.Definitions;
 import metapage.JsonRpcMethods;
 
 import util.TypedDynamicAccess;
+import metapage.Assert.*;
 
 using Lambda;
 using StringTools;

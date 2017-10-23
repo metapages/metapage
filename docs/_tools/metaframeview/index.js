@@ -1,7 +1,7 @@
 ---
 ---
 
-var connectionManager = new Metapage({debug:false});
+var connectionManager = new Metapage({debug:true});
 var metaframe = null;
 var inputTypes = {};
 
@@ -77,14 +77,9 @@ function createInput(name, type, value) {
 
 	var cellType = document.createElement("td");
 	row.appendChild(cellType);
-	if (type) {
-		cellType.innerHTML = type;
+	if (!type) {
+		type = 'string';
 	}
-
-	if (type == null) {
-		type == 'string';
-	}
-
 	cellType.innerHTML = type;
 
 	var cellValue = document.createElement("td");
@@ -158,11 +153,11 @@ function sendInputs() {
 		var row = rows[i];
 		var name = row.cells[0].children[0].value;
 		var value = row.cells[2].children[0].value;
-		value = getConvertedValue({name, value});
+		// value = getConvertedValue({name, value});
 		inputs.push({name:name, value:value});
 	}
 	if (metaframe) {
-		console.log('Setting metaframe', inputs);
+		console.log('Setting metaframe inputs', inputs);
 		metaframe.setInputs(inputs);
 	}
 }
@@ -172,6 +167,7 @@ function sendInputs() {
  * then we can pre-create the input fields
  */
 function setInputs(inputs) {
+	console.log('setInputs', inputs);
 	var table = document.getElementById("inputs-table");
 	while (table.rows.length > 1) {
 		table.deleteRow(table.rows.length - 1);
@@ -183,12 +179,15 @@ function setInputs(inputs) {
 		if (inputData.value) {
 			var valueElement = document.getElementById("InputValue" + inputData.name);
 			var value = inputData.value;
-			if (inputData.type == 'json') {
+			if (typeof(value) == 'object') {
 				value = JSON.stringify(inputData.value);
 			}
+			// if (inputData.type == 'json') {
+			// 	value = JSON.stringify(inputData.value);
+			// }
 			valueElement.value = value;//JSON.stringify(inputData.value);
 			if (metaframe) {
-				metaframe.setInput(inputData.name, inputData.value);
+				metaframe.setInput(inputData.name, {value:inputData.value});
 			}
 		} else {
 			console.log('no value for ', inputData);
@@ -243,6 +242,13 @@ function onNewUrl(url) {
 		.then(function (response) {
 			if (response.data && response.data.inputs) {
 				//Clear out the original inputs
+				response.data.inputs.forEach(function(e) {
+					if (e.value && typeof(e.value) == 'object') {
+						e.value = JSON.stringify(e.value);
+						// delete e.type;
+					}
+				});
+				console.log('response.data.inputs', response.data.inputs);
 				setInputs(response.data.inputs);
 			} else {
 				console.log('Got metapage.json but no inputs array.');
@@ -252,7 +258,12 @@ function onNewUrl(url) {
 			console.warn('No metaframe.json @ ' + metaframeJsonUrl, error);
 		});
 
-	metaframe.onOutput(function(pipeName, value) {
+	metaframe.onOutput(function(pipeName, dataBlob) {
+		console.log('onOutput' + pipeName, dataBlob);
+		var value = dataBlob.value;
+		if (dataBlob.encoding === 'base64') {
+			value = atob(value);
+		}
 		setOutput(pipeName, value);
 	});
 }

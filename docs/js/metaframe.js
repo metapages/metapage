@@ -35,6 +35,13 @@ HxOverrides.remove = function(a,obj) {
 	a.splice(i,1);
 	return true;
 };
+HxOverrides.iter = function(a) {
+	return { cur : 0, arr : a, hasNext : function() {
+		return this.cur < this.arr.length;
+	}, next : function() {
+		return this.arr[this.cur++];
+	}};
+};
 Math.__name__ = true;
 var Reflect = function() { };
 Reflect.__name__ = true;
@@ -202,6 +209,27 @@ js_Boot.__string_rec = function(o,s) {
 		return String(o);
 	}
 };
+var metapage_Assert = function() { };
+metapage_Assert.__name__ = true;
+var metapage_AssertionFailure = function(message,parts) {
+	this.message = message;
+	this.parts = parts;
+};
+metapage_AssertionFailure.__name__ = true;
+metapage_AssertionFailure.prototype = {
+	toString: function() {
+		var buf_b = "";
+		buf_b += Std.string("Assertion failure: " + this.message);
+		var _g = 0;
+		var _g1 = this.parts;
+		while(_g < _g1.length) {
+			var part = _g1[_g];
+			++_g;
+			buf_b += Std.string("\n\t" + part.expr + ": " + Std.string(part.value));
+		}
+		return buf_b;
+	}
+};
 var metapage_EventEmitter = function() {
 	this._events = { };
 };
@@ -260,6 +288,7 @@ var metapage_Metaframe = $hx_exports["Metaframe"] = function(opt) {
 	this._inputPipeValues = { };
 	var _gthis = this;
 	metapage_EventEmitter.call(this);
+	console.log("VERSION=" + metapage_Metaframe.METAPAGE_VERSION);
 	this._debug = opt != null && opt.debug == true;
 	this._isIframe = metapage_Metaframe.isIframe();
 	var $window = window;
@@ -269,13 +298,13 @@ var metapage_Metaframe = $hx_exports["Metaframe"] = function(opt) {
 	if(!this._isIframe) {
 		this.ready = new Promise(function(resolve,reject) {
 		});
-		this.log("Not an iframe, metaframe code disabled",null,null,{ fileName : "Metaframe.hx", lineNumber : 42, className : "metapage.Metaframe", methodName : "new"});
+		this.log("Not an iframe, metaframe code disabled",null,null,{ fileName : "Metaframe.hx", lineNumber : 44, className : "metapage.Metaframe", methodName : "new"});
 		return;
 	}
 	$window.addEventListener("message",$bind(this,this.onWindowMessage));
 	this.ready = new Promise(function(resolve1,reject1) {
 		_gthis.once("SetupIframeServerResponse",function(params) {
-			_gthis.debug("SetupIframeServerResponse params=" + Std.string(params),{ fileName : "Metaframe.hx", lineNumber : 76, className : "metapage.Metaframe", methodName : "new"});
+			_gthis.debug("SetupIframeServerResponse params=" + Std.string(params),{ fileName : "Metaframe.hx", lineNumber : 53, className : "metapage.Metaframe", methodName : "new"});
 			if(_gthis._iframeId == null) {
 				_gthis._iframeId = params.iframeId;
 				_gthis._parentId = params.parentId;
@@ -293,16 +322,14 @@ var metapage_Metaframe = $hx_exports["Metaframe"] = function(opt) {
 				_gthis.debug("initialized parentId=" + _gthis._parentId,null);
 				resolve1(true);
 				_gthis.sendRpc("SetupIframeServerResponseAck",{ });
-				var _g2 = 0;
-				var _g11 = Reflect.fields(_gthis._outputPipeValues);
-				while(_g2 < _g11.length) {
-					var pipeId = _g11[_g2];
-					++_g2;
-					var e = { pipeId : pipeId, value : _gthis._outputPipeValues[pipeId]};
-					_gthis.sendRpc("OutputUpdate",e);
-				}
+				var tmp1 = Reflect.fields(_gthis._outputPipeValues);
+				var _e = _gthis._outputPipeValues;
+				var tmp2 = tmp1.map(function(key) {
+					return _e[key];
+				});
+				_gthis.sendRpc("OutputsUpdate",tmp2);
 			} else {
-				_gthis.debug("Got JsonRpcMethods.SetupIframeServerResponse but already resolved",{ fileName : "Metaframe.hx", lineNumber : 95, className : "metapage.Metaframe", methodName : "new"});
+				_gthis.debug("Got JsonRpcMethods.SetupIframeServerResponse but already resolved",{ fileName : "Metaframe.hx", lineNumber : 73, className : "metapage.Metaframe", methodName : "new"});
 			}
 		});
 		_gthis.sendRpc("SetupIframeClientRequest",{ });
@@ -447,32 +474,39 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 	,getInput: function(pipeId) {
 		return this._inputPipeValues[pipeId];
 	}
-	,setInput: function(pipeId,pipeValue) {
-		var _gthis = this;
-		this._inputPipeValues[pipeId] = pipeValue;
-		var inputBlob = { pipeId : pipeId, value : pipeValue};
+	,setInput: function(inputBlob) {
+		var pipeId = inputBlob.name;
+		var _tmp0 = pipeId;
+		var _tmp1 = _tmp0 != null;
+		if(!_tmp1) {
+			throw new js__$Boot_HaxeError(new metapage_AssertionFailure("pipeId != null",[{ expr : "pipeId", value : _tmp0},{ expr : "pipeId != null", value : _tmp1}]));
+		}
+		this._inputPipeValues[pipeId] = inputBlob;
 		this.sendRpc("InputUpdate",inputBlob);
-		this.emit("input",pipeId,pipeValue);
-		this.emit("inputs",Reflect.fields(this._inputPipeValues).map(function(key) {
-			return { name : key, value : _gthis._inputPipeValues[key]};
+		this.emit("input",pipeId,inputBlob);
+		var tmp = Reflect.fields(this._inputPipeValues);
+		var _e = this._inputPipeValues;
+		this.emit("inputs",tmp.map(function(key) {
+			return _e[key];
 		}));
 	}
 	,setInputs: function(inputs) {
-		var _gthis = this;
 		var _g = 0;
 		while(_g < inputs.length) {
 			var input = inputs[_g];
 			++_g;
-			this._inputPipeValues[input.pipeId] = input.value;
+			this._inputPipeValues[input.name] = input;
 		}
-		this.emit("inputs",Reflect.fields(this._inputPipeValues).map(function(key) {
-			return { name : key, value : _gthis._inputPipeValues[key]};
+		var tmp = Reflect.fields(this._inputPipeValues);
+		var _e = this._inputPipeValues;
+		this.emit("inputs",tmp.map(function(key) {
+			return _e[key];
 		}));
 		var _g1 = 0;
 		while(_g1 < inputs.length) {
 			var input1 = inputs[_g1];
 			++_g1;
-			this.emit("input",input1.pipeId,input1.value);
+			this.emit("input",input1.name,input1);
 		}
 	}
 	,getInputs: function() {
@@ -489,25 +523,48 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 	,getOutput: function(pipeId) {
 		return this._outputPipeValues[pipeId];
 	}
-	,setOutput: function(pipeId,pipeValue) {
-		this._outputPipeValues[pipeId] = pipeValue;
-		var outputBlob = { pipeId : pipeId, value : pipeValue};
-		this.sendRpc("OutputUpdate",outputBlob);
-		this.emit("output",pipeId,pipeValue);
+	,setOutput: function(updateBlob) {
+		var _tmp0 = updateBlob;
+		var _tmp1 = _tmp0 != null;
+		if(!_tmp1) {
+			throw new js__$Boot_HaxeError(new metapage_AssertionFailure("updateBlob != null",[{ expr : "updateBlob", value : _tmp0},{ expr : "updateBlob != null", value : _tmp1}]));
+		}
+		var _tmp01 = updateBlob;
+		var _tmp11 = _tmp01.name;
+		var _tmp2 = _tmp11 != null;
+		if(!_tmp2) {
+			throw new js__$Boot_HaxeError(new metapage_AssertionFailure("updateBlob.name != null",[{ expr : "updateBlob", value : _tmp01},{ expr : "updateBlob.name", value : _tmp11},{ expr : "updateBlob.name != null", value : _tmp2}]));
+		}
+		this._outputPipeValues[updateBlob.name] = updateBlob;
+		this.sendRpc("OutputUpdate",updateBlob);
+		this.emit("output",updateBlob.name,updateBlob);
 	}
-	,setOutputs: function(outputs) {
+	,setOutputs: function(outputs,clearPrevious) {
+		if(clearPrevious == null) {
+			clearPrevious = false;
+		}
+		var previousOutputKeys = Reflect.fields(this._outputPipeValues);
 		var _g = 0;
 		while(_g < outputs.length) {
 			var output = outputs[_g];
 			++_g;
-			this._outputPipeValues[output.pipeId] = output.value;
+			this._outputPipeValues[output.name] = output;
+			HxOverrides.remove(previousOutputKeys,output.name);
+		}
+		if(clearPrevious) {
+			var _g1 = 0;
+			while(_g1 < previousOutputKeys.length) {
+				var key = previousOutputKeys[_g1];
+				++_g1;
+				Reflect.deleteField(this._outputPipeValues,key);
+			}
 		}
 		this.sendRpc("OutputsUpdate",outputs);
-		var _g1 = 0;
-		while(_g1 < outputs.length) {
-			var output1 = outputs[_g1];
-			++_g1;
-			this.emit("output",output1.pipeId,output1.value);
+		var _g2 = 0;
+		while(_g2 < outputs.length) {
+			var output1 = outputs[_g2];
+			++_g2;
+			this.emit("output",output1.name,output1);
 		}
 	}
 	,getOutputs: function() {
@@ -524,19 +581,20 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 	,sendRpc: function(method,params) {
 		if(this._isIframe) {
 			var message = { origin : null, jsonrpc : "2.0", method : method, params : params, iframeId : this._iframeId, parentId : this._parentId};
-			this.debug("Sending message=" + HxOverrides.substr(JSON.stringify(message),0,200),{ fileName : "Metaframe.hx", lineNumber : 269, className : "metapage.Metaframe", methodName : "sendRpc"});
+			this.debug("Sending message=" + HxOverrides.substr(JSON.stringify(message),0,200),{ fileName : "Metaframe.hx", lineNumber : 259, className : "metapage.Metaframe", methodName : "sendRpc"});
 			window.parent.postMessage(message,"*");
 		} else {
-			this.error("Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe",{ fileName : "Metaframe.hx", lineNumber : 272, className : "metapage.Metaframe", methodName : "sendRpc"});
+			this.error("Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe",{ fileName : "Metaframe.hx", lineNumber : 262, className : "metapage.Metaframe", methodName : "sendRpc"});
 		}
 	}
 	,onWindowMessage: function(e) {
 		if(typeof e.data === "object") {
 			var jsonrpc = e.data;
+			console.log(jsonrpc);
 			if(jsonrpc.jsonrpc == "2.0") {
 				var method = jsonrpc.method;
 				if(!(method == "SetupIframeServerResponse" || jsonrpc.parentId == this._parentId && jsonrpc.iframeId == this._iframeId)) {
-					this.error("Received message but jsonrpc.parentId=" + jsonrpc.parentId + " _parentId=" + this._parentId + " jsonrpc.iframeId=" + jsonrpc.iframeId + " _iframeId=" + this._iframeId,{ fileName : "Metaframe.hx", lineNumber : 285, className : "metapage.Metaframe", methodName : "onWindowMessage"});
+					this.error("Received message but jsonrpc.parentId=" + jsonrpc.parentId + " _parentId=" + this._parentId + " jsonrpc.iframeId=" + jsonrpc.iframeId + " _iframeId=" + this._iframeId,{ fileName : "Metaframe.hx", lineNumber : 276, className : "metapage.Metaframe", methodName : "onWindowMessage"});
 					return;
 				}
 				switch(method) {
@@ -552,25 +610,25 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 				this.emit(jsonrpc.method,jsonrpc.params);
 				this.emit("message",jsonrpc);
 			} else {
-				this.log("!Bad JsonRPC version=" + jsonrpc.jsonrpc,null,null,{ fileName : "Metaframe.hx", lineNumber : 299, className : "metapage.Metaframe", methodName : "onWindowMessage"});
+				this.log("!Bad JsonRPC version=" + jsonrpc.jsonrpc,null,null,{ fileName : "Metaframe.hx", lineNumber : 290, className : "metapage.Metaframe", methodName : "onWindowMessage"});
 			}
 		} else {
-			this.log("!message is not an object",null,null,{ fileName : "Metaframe.hx", lineNumber : 302, className : "metapage.Metaframe", methodName : "onWindowMessage"});
+			this.log("!message is not an object",null,null,{ fileName : "Metaframe.hx", lineNumber : 293, className : "metapage.Metaframe", methodName : "onWindowMessage"});
 		}
 	}
 	,internalOnInput: function(input) {
-		this.debug("InputUpdate from registed RPC pipeId=" + input.pipeId + " value=" + HxOverrides.substr(JSON.stringify(input.value),0,200),{ fileName : "Metaframe.hx", lineNumber : 308, className : "metapage.Metaframe", methodName : "internalOnInput"});
-		var pipeId = input != null ? input.pipeId : null;
+		this.debug("InputUpdate from registed RPC pipeId=" + input.name + " value=" + HxOverrides.substr(JSON.stringify(input.value),0,200),{ fileName : "Metaframe.hx", lineNumber : 299, className : "metapage.Metaframe", methodName : "internalOnInput"});
+		var pipeId = input != null ? input.name : null;
 		var pipeValue = input != null ? input.value : null;
 		if(pipeId == null) {
-			this.error("Missing \"id\" value in the params object to identify the pipe. input=" + Std.string(input),{ fileName : "Metaframe.hx", lineNumber : 312, className : "metapage.Metaframe", methodName : "internalOnInput"});
+			this.error("Missing \"name\" value in the params object to identify the pipe. input=" + Std.string(input),{ fileName : "Metaframe.hx", lineNumber : 303, className : "metapage.Metaframe", methodName : "internalOnInput"});
 		} else {
-			this.debug("Setting input value from InputPipeUpdate pipeId=" + pipeId,{ fileName : "Metaframe.hx", lineNumber : 314, className : "metapage.Metaframe", methodName : "internalOnInput"});
-			this.setInput(pipeId,pipeValue);
+			this.debug("Setting input value from InputPipeUpdate pipeId=" + pipeId,{ fileName : "Metaframe.hx", lineNumber : 305, className : "metapage.Metaframe", methodName : "internalOnInput"});
+			this.setInput(input);
 		}
 	}
 	,internalOnInputs: function(inputs) {
-		this.debug("InputUpdates from registed RPC inputs=" + HxOverrides.substr(JSON.stringify(inputs),0,200),{ fileName : "Metaframe.hx", lineNumber : 321, className : "metapage.Metaframe", methodName : "internalOnInputs"});
+		this.debug("InputUpdates from registed RPC inputs=" + HxOverrides.substr(JSON.stringify(inputs),0,200),{ fileName : "Metaframe.hx", lineNumber : 312, className : "metapage.Metaframe", methodName : "internalOnInputs"});
 	}
 	,sendDimensions: function(dimensions) {
 		var $window = window;
@@ -599,6 +657,19 @@ metapage__$MetaframePipeId_MetaframePipeId_$Impl_$._new = function(s) {
 };
 var metapage_MetapageTools = function() { };
 metapage_MetapageTools.__name__ = true;
+metapage_MetapageTools.toDatablob = function(blob) {
+	var data = { value : blob.value};
+	if(blob.type != null) {
+		data.type = blob.type;
+	}
+	if(blob.source != null) {
+		data.source = blob.source;
+	}
+	if(blob.encoding != null) {
+		data.encoding = blob.encoding;
+	}
+	return data;
+};
 metapage_MetapageTools.log = function(o,color,backgroundColor,pos) {
 	if(color != null) {
 		color = color;
@@ -686,6 +757,7 @@ Array.__name__ = true;
 haxe_remoting_JsonRpcConstants.JSONRPC_VERSION_2 = "2.0";
 haxe_remoting_JsonRpcConstants.MULTIPART_JSONRPC_KEY = "jsonrpc";
 haxe_remoting_JsonRpcConstants.JSONRPC_NULL_ID = "_";
+metapage_Metaframe.METAPAGE_VERSION = "alpha";
 metapage_Metaframe.LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_";
 metapage_Metaframe.BANNER_STYLE_TEXT = "#metapagebanner a{background:#3cf;color:#fff;text-decoration:none;font-family:arial,sans-serif;text-align:center;font-weight:bold;padding:5px 40px;font-size:1rem;line-height:2rem;position:relative;transition:0.5s;}#metapagebanner a:hover{background:#3cf;color:#fff;}#metapagebanner a::before,#metapagebanner a::after{content:\"\";width:100%;display:block;position:absolute;top:1px;left:0;height:1px;background:#fff;}#metapagebanner a::after{bottom:1px;top:auto;}@media screen and (min-width:800px){#metapagebanner{position:fixed;display:block;top:0;right:0;width:200px;overflow:hidden;height:200px;z-index:9999;}#metapagebanner a{width:200px;position:absolute;top:60px;right:-60px;transform:rotate(45deg);-webkit-transform:rotate(45deg);-ms-transform:rotate(45deg);-moz-transform:rotate(45deg);-o-transform:rotate(45deg);box-shadow:4px 4px 10px rgba(0,0,0,0.8);}}";
 })(typeof exports != "undefined" ? exports : typeof window != "undefined" ? window : typeof self != "undefined" ? self : this);

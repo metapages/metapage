@@ -86,7 +86,7 @@ class Metapage extends EventEmitter
 		_outputPipeMap.get(pipe.from.id).get(pipe.from.pipe).push(pipe.to);
 	}
 
-	public function setInput(iframeId :String, inputPipeId :String, value :Dynamic)
+	public function setInput(iframeId :String, inputPipeId :String, value :DataBlob)
 	{
 		var iframeClient = _iframes.get(iframeId);
 		if (iframeClient != null) {
@@ -167,22 +167,34 @@ class Metapage extends EventEmitter
 
 				case OutputUpdate:
 					var outputBlob :PipeOutputBlob = jsonrpc.params;
-					var pipeId :String = outputBlob.pipeId;
-					var pipeValue :Dynamic = outputBlob.value;
+					assert(outputBlob != null);
+					assert(outputBlob.name != null);
+					var dataBlob :DataBlob = {
+						value: outputBlob.value,
+						type: outputBlob.type == null ? js.Lib.undefined : outputBlob.type,
+						source: outputBlob.source,
+						encoding: outputBlob.encoding
+					};
+					var pipeId :String = outputBlob.name;
+					// var pipeValue :Dynamic = outputBlob.value;
 					var iframeId :String = jsonrpc.iframeId;
 					var iframe = _iframes.get(iframeId);
-					iframe.debug('OutputPipeUpdate from=$iframeId pipeId=$pipeId params=${Json.stringify(jsonrpc.params).substr(0,200)}');
+					iframe.debug('OutputPipeUpdate from=$iframeId pipeId=${outputBlob.name} params=${Json.stringify(jsonrpc.params).substr(0,200)}');
 					if (iframe != null) {
-						iframe.setOutput(pipeId, pipeValue);
+						iframe.setOutput(outputBlob);
+						//Set the downstream pipes
+						//Does this metaframe have outgoing pipes?
 						if (_outputPipeMap.exists(iframeId)) {
+							//Are any of the outgoing pipes this one?
 							if (_outputPipeMap.get(iframeId).exists(pipeId)) {
+								//Get the incoming pipes from downstream metaframes
 								var inputPipes = _outputPipeMap.get(iframeId).get(pipeId);
 								if (inputPipes != null) {
 									for (inputPipe in inputPipes) {
 										var inputIframe = _iframes.get(inputPipe.id);
 										if (inputIframe != null) {
 											iframe.debug('Sending from $iframeId.$pipeId to ${inputPipe.id}.${inputPipe.pipe}');
-											inputIframe.setInput(inputPipe.pipe, pipeValue);
+											inputIframe.setInput(inputPipe.pipe, dataBlob);
 										}
 									}
 								}
@@ -207,7 +219,7 @@ class Metapage extends EventEmitter
 						if (_outputPipeMap.exists(iframeId)) {
 							var iframeToInputs :DynamicAccess<Array<PipeUpdateBlob>> = {};
 							for(output in outputs) {
-								var outputName = output.pipeId;
+								var outputName = output.name;
 								//Does the output pipe go anywhere?
 								if (_outputPipeMap.get(iframeId).exists(outputName)) {
 									//Array of input pipes from the output pipe
@@ -220,7 +232,9 @@ class Metapage extends EventEmitter
 												if (iframeToInputs.get(inputPipe.id) == null) {
 													iframeToInputs.set(inputPipe.id, []);
 												}
-												iframeToInputs.get(inputPipe.id).push({{pipeId:inputPipe.pipe, value:output.value}});
+												var thisOutputBlob :PipeUpdateBlob = Reflect.copy(output);
+												thisOutputBlob.name = inputPipe.id;
+												iframeToInputs.get(inputPipe.id).push(thisOutputBlob);
 												// inputIframe.setInput(inputPipe.pipe, outputValue);
 											}
 										}
@@ -309,13 +323,13 @@ class IFrameRpcClient
 	var _color :String;
 	var _consoleBackgroundColor :String;
 	var _ready :Promise<Bool>;
-	var _inputs :DynamicAccess<Dynamic> = {};
-	var _outputs :DynamicAccess<Dynamic> = {};
+	var _inputs :DynamicAccess<PipeUpdateBlob> = {};
+	var _outputs :DynamicAccess<PipeUpdateBlob> = {};
 	var _disposables :Array<Void->Void> = [];
 	var _rpcListeners :Array<RequestDef->Void> = [];
 	var _loaded :Bool = false;
 	var _onLoaded : Array<Void->Void> = [];
-	var _onOutput : Array<String->Dynamic->Void> = [];
+	var _onOutput : Array<String->PipeUpdateBlob->Void> = [];
 	var _parentId :String;
 	var _url :String;
 	var _debug :Bool;
@@ -349,6 +363,7 @@ class IFrameRpcClient
 		if (!_debug) {
 			return;
 		}
+		trace(untyped __typeof__(o));
 		var s :String = switch(untyped __typeof__(o)) {
 			case "string": cast o;
 			case "number": o + "";
@@ -366,22 +381,23 @@ class IFrameRpcClient
 
 	public function sendAllInputs()
 	{
-		var inputs = [];
-		for (pipeId in _inputs.keys()) {
-			inputs.push({pipeId:pipeId, value:_inputs.get(pipeId)});
-		}
-		sendInputs(inputs);
+		sendInputs(_inputs.keys().map(_inputs.get));
 	}
 
-	public function setInput(pipeId :String, value :Dynamic)
+	public function setInput(name :String, inputBlob :DataBlob)
 	{
-		_inputs.set(pipeId, value);
+		assert(inputBlob != null);
+		assert(name != null);
+		var pipeUpdateBlob :PipeUpdateClientV1 = cast Reflect.copy(inputBlob);
+		pipeUpdateBlob.name = name;
+		_inputs.set(name, pipeUpdateBlob);
 		if (this.iframe.parentNode != null && _loaded) {
-			sendInput(pipeId);
+			sendInput(name);
 		} else {
 			debug('Not setting input bc _loaded=$_loaded');
 		}
-		var e :PipeInputBlob = {iframeId:new MetaframeId(id), pipeId:pipeId, value:value};
+		var e :PipeInputBlob = cast Reflect.copy(pipeUpdateBlob);
+		e.iframeId = new MetaframeId(id);
 		_metapage.emit(JsonRpcMethodsFromParent.InputUpdate, e);
 	}
 
@@ -390,7 +406,7 @@ class IFrameRpcClient
 		debug({m:'IFrameRpcClient', inputs:inputs});
 		for (input in inputs) {
 			Reflect.setField(input, "iframeId", id);
-			_inputs.set(input.pipeId, input.value);
+			_inputs.set(input.name, input);
 		}
 		if (this.iframe.parentNode != null && _loaded) {
 			sendInputs(inputs);
@@ -400,14 +416,15 @@ class IFrameRpcClient
 		_metapage.emit(JsonRpcMethodsFromParent.InputsUpdate, {iframeId:id, inputs:inputs});
 	}
 
-	public function setOutput(pipeId :String, value :Dynamic)
+	public function setOutput(value :PipeUpdateBlob)
 	{
-		_outputs.set(pipeId, value);
-		var e :PipeInputBlob = {iframeId:new MetaframeId(id), pipeId:pipeId, value:value};
+		_outputs.set(value.name, value);
+		var e :PipeInputBlob = cast Reflect.copy(value);
+		e.iframeId = new MetaframeId(id);
 		_metapage.emit(JsonRpcMethodsFromChild.OutputUpdate, e);
 		for (l in _onOutput) {
 			if (l != null) {
-				l(pipeId, value);
+				l(value.name, value);
 			}
 		}
 	}
@@ -415,7 +432,7 @@ class IFrameRpcClient
 	public function setOutputs(outputs :Array<PipeUpdateBlob>)
 	{
 		for (output in outputs) {
-			setOutput(output.pipeId, output.value);
+			setOutput(output);
 		}
 		var e = {iframeId:id, outputs:outputs};
 		_metapage.emit(JsonRpcMethodsFromChild.OutputsUpdate, e);
@@ -474,18 +491,15 @@ class IFrameRpcClient
 		while(_onLoaded != null && _onLoaded.length > 0) {
 			_onLoaded.pop()();
 		}
-		for (pipeId in _inputs.keys()) {
-			if (_inputs.get(pipeId) != null) {
-				sendInput(pipeId);
-			}
-		}
+		var inputs = _inputs.keys().map(_inputs.get);
+		sendInputs(inputs);
 		log('registered');
 	}
 
 	function sendInput(pipeId :String)
 	{
-		var inputBlob :PipeInputBlob = {pipeId :pipeId, value: _inputs.get(pipeId), parentId: _parentId};
-		sendRpc(JsonRpcMethodsFromParent.InputUpdate, inputBlob);
+		// var inputBlob :PipeInputBlob = {pipeId :pipeId, value: _inputs.get(pipeId), parentId: _parentId};
+		sendRpc(JsonRpcMethodsFromParent.InputUpdate, _inputs.get(pipeId));
 	}
 
 	function sendInputs(inputs :Array<PipeUpdateBlob>)

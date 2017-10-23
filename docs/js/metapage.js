@@ -35,6 +35,13 @@ HxOverrides.remove = function(a,obj) {
 	a.splice(i,1);
 	return true;
 };
+HxOverrides.iter = function(a) {
+	return { cur : 0, arr : a, hasNext : function() {
+		return this.cur < this.arr.length;
+	}, next : function() {
+		return this.arr[this.cur++];
+	}};
+};
 Math.__name__ = true;
 var Reflect = function() { };
 Reflect.__name__ = true;
@@ -63,6 +70,17 @@ Reflect.deleteField = function(o,field) {
 	}
 	delete(o[field]);
 	return true;
+};
+Reflect.copy = function(o) {
+	var o2 = { };
+	var _g = 0;
+	var _g1 = Reflect.fields(o);
+	while(_g < _g1.length) {
+		var f = _g1[_g];
+		++_g;
+		o2[f] = Reflect.field(o,f);
+	}
+	return o2;
 };
 var Std = function() { };
 Std.__name__ = true;
@@ -111,6 +129,25 @@ StringTools.trim = function(s) {
 };
 var haxe_remoting_JsonRpcConstants = function() { };
 haxe_remoting_JsonRpcConstants.__name__ = true;
+var js__$Boot_HaxeError = function(val) {
+	Error.call(this);
+	this.val = val;
+	this.message = String(val);
+	if(Error.captureStackTrace) {
+		Error.captureStackTrace(this,js__$Boot_HaxeError);
+	}
+};
+js__$Boot_HaxeError.__name__ = true;
+js__$Boot_HaxeError.wrap = function(val) {
+	if((val instanceof Error)) {
+		return val;
+	} else {
+		return new js__$Boot_HaxeError(val);
+	}
+};
+js__$Boot_HaxeError.__super__ = Error;
+js__$Boot_HaxeError.prototype = $extend(Error.prototype,{
+});
 var js_Boot = function() { };
 js_Boot.__name__ = true;
 js_Boot.__string_rec = function(o,s) {
@@ -195,6 +232,27 @@ js_Boot.__string_rec = function(o,s) {
 		return o;
 	default:
 		return String(o);
+	}
+};
+var metapage_Assert = function() { };
+metapage_Assert.__name__ = true;
+var metapage_AssertionFailure = function(message,parts) {
+	this.message = message;
+	this.parts = parts;
+};
+metapage_AssertionFailure.__name__ = true;
+metapage_AssertionFailure.prototype = {
+	toString: function() {
+		var buf_b = "";
+		buf_b += Std.string("Assertion failure: " + this.message);
+		var _g = 0;
+		var _g1 = this.parts;
+		while(_g < _g1.length) {
+			var part = _g1[_g];
+			++_g;
+			buf_b += Std.string("\n\t" + part.expr + ": " + Std.string(part.value));
+		}
+		return buf_b;
 	}
 };
 var metapage_EventEmitter = function() {
@@ -413,9 +471,9 @@ metapage_Metapage.prototype = $extend(metapage_EventEmitter.prototype,{
 			var method = jsonrpc.method;
 			switch(method) {
 			case "Dimensions":
-				this.debug("" + jsonrpc.iframeId + " Dimensions " + HxOverrides.substr(JSON.stringify(jsonrpc.params),0,200),null,null,{ fileName : "Metapage.hx", lineNumber : 247, className : "metapage.Metapage", methodName : "onMessage"});
+				this.debug("" + jsonrpc.iframeId + " Dimensions " + HxOverrides.substr(JSON.stringify(jsonrpc.params),0,200),null,null,{ fileName : "Metapage.hx", lineNumber : 261, className : "metapage.Metapage", methodName : "onMessage"});
 				var dimensions = jsonrpc.params;
-				this.debug("" + jsonrpc.iframeId + " Dimensions " + Std.string(dimensions),null,null,{ fileName : "Metapage.hx", lineNumber : 249, className : "metapage.Metapage", methodName : "onMessage"});
+				this.debug("" + jsonrpc.iframeId + " Dimensions " + Std.string(dimensions),null,null,{ fileName : "Metapage.hx", lineNumber : 263, className : "metapage.Metapage", methodName : "onMessage"});
 				var iframe = this._iframes[jsonrpc.iframeId];
 				if(iframe != null) {
 					if(dimensions.height != null) {
@@ -428,13 +486,24 @@ metapage_Metapage.prototype = $extend(metapage_EventEmitter.prototype,{
 				break;
 			case "OutputUpdate":
 				var outputBlob = jsonrpc.params;
-				var pipeId = outputBlob.pipeId;
-				var pipeValue = outputBlob.value;
+				var _tmp0 = outputBlob;
+				var _tmp1 = _tmp0 != null;
+				if(!_tmp1) {
+					throw new js__$Boot_HaxeError(new metapage_AssertionFailure("outputBlob != null",[{ expr : "outputBlob", value : _tmp0},{ expr : "outputBlob != null", value : _tmp1}]));
+				}
+				var _tmp01 = outputBlob;
+				var _tmp11 = _tmp01.name;
+				var _tmp2 = _tmp11 != null;
+				if(!_tmp2) {
+					throw new js__$Boot_HaxeError(new metapage_AssertionFailure("outputBlob.name != null",[{ expr : "outputBlob", value : _tmp01},{ expr : "outputBlob.name", value : _tmp11},{ expr : "outputBlob.name != null", value : _tmp2}]));
+				}
+				var dataBlob = { value : outputBlob.value, type : outputBlob.type == null ? undefined : outputBlob.type, source : outputBlob.source, encoding : outputBlob.encoding};
+				var pipeId = outputBlob.name;
 				var iframeId = jsonrpc.iframeId;
 				var iframe1 = this._iframes[iframeId];
-				iframe1.debug("OutputPipeUpdate from=" + iframeId + " pipeId=" + pipeId + " params=" + HxOverrides.substr(JSON.stringify(jsonrpc.params),0,200),{ fileName : "Metapage.hx", lineNumber : 174, className : "metapage.Metapage", methodName : "onMessage"});
+				iframe1.debug("OutputPipeUpdate from=" + iframeId + " pipeId=" + outputBlob.name + " params=" + HxOverrides.substr(JSON.stringify(jsonrpc.params),0,200),{ fileName : "Metapage.hx", lineNumber : 182, className : "metapage.Metapage", methodName : "onMessage"});
 				if(iframe1 != null) {
-					iframe1.setOutput(pipeId,pipeValue);
+					iframe1.setOutput(outputBlob);
 					if(Object.prototype.hasOwnProperty.call(this._outputPipeMap,iframeId)) {
 						if(Object.prototype.hasOwnProperty.call(this._outputPipeMap[iframeId],pipeId)) {
 							var inputPipes = this._outputPipeMap[iframeId][pipeId];
@@ -445,24 +514,24 @@ metapage_Metapage.prototype = $extend(metapage_EventEmitter.prototype,{
 									++_g;
 									var inputIframe = this._iframes[inputPipe.id];
 									if(inputIframe != null) {
-										iframe1.debug("Sending from " + iframeId + "." + pipeId + " to " + inputPipe.id + "." + inputPipe.pipe,{ fileName : "Metapage.hx", lineNumber : 184, className : "metapage.Metapage", methodName : "onMessage"});
-										inputIframe.setInput(inputPipe.pipe,pipeValue);
+										iframe1.debug("Sending from " + iframeId + "." + pipeId + " to " + inputPipe.id + "." + inputPipe.pipe,{ fileName : "Metapage.hx", lineNumber : 196, className : "metapage.Metapage", methodName : "onMessage"});
+										inputIframe.setInput(inputPipe.pipe,dataBlob);
 									}
 								}
 							}
 						} else {
-							this.log("OutputPipeUpdate _outputPipeMap.get(" + iframeId + ").get(" + pipeId + ") is null","f00",this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 190, className : "metapage.Metapage", methodName : "onMessage"});
+							this.log("OutputPipeUpdate _outputPipeMap.get(" + iframeId + ").get(" + pipeId + ") is null","f00",this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 202, className : "metapage.Metapage", methodName : "onMessage"});
 						}
 					}
 				} else {
-					this.log("missing iframe=" + iframeId,"f00",this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 196, className : "metapage.Metapage", methodName : "onMessage"});
+					this.log("missing iframe=" + iframeId,"f00",this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 208, className : "metapage.Metapage", methodName : "onMessage"});
 				}
 				break;
 			case "OutputsUpdate":
 				var iframeId1 = jsonrpc.iframeId;
 				var iframe2 = this._iframes[iframeId1];
 				var outputs = jsonrpc.params;
-				iframe2.debug("OutputsUpdate from=" + iframeId1 + " outputs=" + HxOverrides.substr(JSON.stringify(jsonrpc.params),0,200),{ fileName : "Metapage.hx", lineNumber : 203, className : "metapage.Metapage", methodName : "onMessage"});
+				iframe2.debug("OutputsUpdate from=" + iframeId1 + " outputs=" + HxOverrides.substr(JSON.stringify(jsonrpc.params),0,200),{ fileName : "Metapage.hx", lineNumber : 215, className : "metapage.Metapage", methodName : "onMessage"});
 				if(iframe2 != null) {
 					iframe2.setOutputs(outputs);
 					if(Object.prototype.hasOwnProperty.call(this._outputPipeMap,iframeId1)) {
@@ -471,7 +540,7 @@ metapage_Metapage.prototype = $extend(metapage_EventEmitter.prototype,{
 						while(_g1 < outputs.length) {
 							var output = outputs[_g1];
 							++_g1;
-							var outputName = output.pipeId;
+							var outputName = output.name;
 							if(Object.prototype.hasOwnProperty.call(this._outputPipeMap[iframeId1],outputName)) {
 								var inputPipes1 = this._outputPipeMap[iframeId1][outputName];
 								if(inputPipes1 != null) {
@@ -481,16 +550,18 @@ metapage_Metapage.prototype = $extend(metapage_EventEmitter.prototype,{
 										++_g11;
 										var inputIframe1 = this._iframes[inputPipe1.id];
 										if(inputIframe1 != null) {
-											iframe2.debug("Sending from " + iframeId1 + "." + outputName + " to " + inputPipe1.id + "." + inputPipe1.pipe,{ fileName : "Metapage.hx", lineNumber : 219, className : "metapage.Metapage", methodName : "onMessage"});
+											iframe2.debug("Sending from " + iframeId1 + "." + outputName + " to " + inputPipe1.id + "." + inputPipe1.pipe,{ fileName : "Metapage.hx", lineNumber : 231, className : "metapage.Metapage", methodName : "onMessage"});
 											if(iframeToInputs[inputPipe1.id] == null) {
 												iframeToInputs[inputPipe1.id] = [];
 											}
-											iframeToInputs[inputPipe1.id].push({ pipeId : inputPipe1.pipe, value : output.value});
+											var thisOutputBlob = Reflect.copy(output);
+											thisOutputBlob.name = inputPipe1.id;
+											iframeToInputs[inputPipe1.id].push(thisOutputBlob);
 										}
 									}
 								}
 							} else {
-								this.log("OutputsUpdate _outputPipeMap.get(" + iframeId1 + ").get(" + outputName + ") is null","f00",this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 229, className : "metapage.Metapage", methodName : "onMessage"});
+								this.log("OutputsUpdate _outputPipeMap.get(" + iframeId1 + ").get(" + outputName + ") is null","f00",this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 243, className : "metapage.Metapage", methodName : "onMessage"});
 							}
 						}
 						var _g2 = 0;
@@ -502,7 +573,7 @@ metapage_Metapage.prototype = $extend(metapage_EventEmitter.prototype,{
 						}
 					}
 				} else {
-					this.log("missing iframe=" + iframeId1,"f00",this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 239, className : "metapage.Metapage", methodName : "onMessage"});
+					this.log("missing iframe=" + iframeId1,"f00",this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 253, className : "metapage.Metapage", methodName : "onMessage"});
 				}
 				break;
 			case "SetupIframeClientRequest":
@@ -634,6 +705,7 @@ metapage_IFrameRpcClient.prototype = {
 		if(!this._debug) {
 			return;
 		}
+		console.log(typeof(o));
 		var s;
 		var _g = typeof(o);
 		switch(_g) {
@@ -688,47 +760,57 @@ metapage_IFrameRpcClient.prototype = {
 		}
 	}
 	,sendAllInputs: function() {
-		var inputs = [];
-		var _g = 0;
-		var _g1 = Reflect.fields(this._inputs);
-		while(_g < _g1.length) {
-			var pipeId = _g1[_g];
-			++_g;
-			inputs.push({ pipeId : pipeId, value : this._inputs[pipeId]});
-		}
-		this.sendInputs(inputs);
+		var tmp = Reflect.fields(this._inputs);
+		var _e = this._inputs;
+		this.sendInputs(tmp.map(function(key) {
+			return _e[key];
+		}));
 	}
-	,setInput: function(pipeId,value) {
-		this._inputs[pipeId] = value;
-		if(this.iframe.parentNode != null && this._loaded) {
-			this.sendInput(pipeId);
-		} else {
-			this.debug("Not setting input bc _loaded=" + Std.string(this._loaded),{ fileName : "Metapage.hx", lineNumber : 382, className : "metapage.IFrameRpcClient", methodName : "setInput"});
+	,setInput: function(name,inputBlob) {
+		var _tmp0 = inputBlob;
+		var _tmp1 = _tmp0 != null;
+		if(!_tmp1) {
+			throw new js__$Boot_HaxeError(new metapage_AssertionFailure("inputBlob != null",[{ expr : "inputBlob", value : _tmp0},{ expr : "inputBlob != null", value : _tmp1}]));
 		}
+		var _tmp01 = name;
+		var _tmp11 = _tmp01 != null;
+		if(!_tmp11) {
+			throw new js__$Boot_HaxeError(new metapage_AssertionFailure("name != null",[{ expr : "name", value : _tmp01},{ expr : "name != null", value : _tmp11}]));
+		}
+		var pipeUpdateBlob = Reflect.copy(inputBlob);
+		pipeUpdateBlob.name = name;
+		this._inputs[name] = pipeUpdateBlob;
+		if(this.iframe.parentNode != null && this._loaded) {
+			this.sendInput(name);
+		} else {
+			this.debug("Not setting input bc _loaded=" + Std.string(this._loaded),{ fileName : "Metapage.hx", lineNumber : 397, className : "metapage.IFrameRpcClient", methodName : "setInput"});
+		}
+		var e = Reflect.copy(pipeUpdateBlob);
 		var this1 = this.id;
-		var e = { iframeId : this1, pipeId : pipeId, value : value};
+		e.iframeId = this1;
 		this._metapage.emit("InputUpdate",e);
 	}
 	,setInputs: function(inputs) {
-		this.debug({ m : "IFrameRpcClient", inputs : inputs},{ fileName : "Metapage.hx", lineNumber : 390, className : "metapage.IFrameRpcClient", methodName : "setInputs"});
+		this.debug({ m : "IFrameRpcClient", inputs : inputs},{ fileName : "Metapage.hx", lineNumber : 406, className : "metapage.IFrameRpcClient", methodName : "setInputs"});
 		var _g = 0;
 		while(_g < inputs.length) {
 			var input = inputs[_g];
 			++_g;
 			input["iframeId"] = this.id;
-			this._inputs[input.pipeId] = input.value;
+			this._inputs[input.name] = input;
 		}
 		if(this.iframe.parentNode != null && this._loaded) {
 			this.sendInputs(inputs);
 		} else {
-			this.debug("Not setting input bc _loaded=" + Std.string(this._loaded),{ fileName : "Metapage.hx", lineNumber : 398, className : "metapage.IFrameRpcClient", methodName : "setInputs"});
+			this.debug("Not setting input bc _loaded=" + Std.string(this._loaded),{ fileName : "Metapage.hx", lineNumber : 414, className : "metapage.IFrameRpcClient", methodName : "setInputs"});
 		}
 		this._metapage.emit("InputsUpdate",{ iframeId : this.id, inputs : inputs});
 	}
-	,setOutput: function(pipeId,value) {
-		this._outputs[pipeId] = value;
+	,setOutput: function(value) {
+		this._outputs[value.name] = value;
+		var e = Reflect.copy(value);
 		var this1 = this.id;
-		var e = { iframeId : this1, pipeId : pipeId, value : value};
+		e.iframeId = this1;
 		this._metapage.emit("OutputUpdate",e);
 		var _g = 0;
 		var _g1 = this._onOutput;
@@ -736,7 +818,7 @@ metapage_IFrameRpcClient.prototype = {
 			var l = _g1[_g];
 			++_g;
 			if(l != null) {
-				l(pipeId,value);
+				l(value.name,value);
 			}
 		}
 	}
@@ -745,7 +827,7 @@ metapage_IFrameRpcClient.prototype = {
 		while(_g < outputs.length) {
 			var output = outputs[_g];
 			++_g;
-			this.setOutput(output.pipeId,output.value);
+			this.setOutput(output);
 		}
 		var e = { iframeId : this.id, outputs : outputs};
 		this._metapage.emit("OutputsUpdate",e);
@@ -756,7 +838,7 @@ metapage_IFrameRpcClient.prototype = {
 			this.sendRpcInternal(method,params);
 		} else {
 			var _this = this._metapage;
-			_this.log("sending rpc later","f00",_this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 429, className : "metapage.IFrameRpcClient", methodName : "sendRpc"});
+			_this.log("sending rpc later","f00",_this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 446, className : "metapage.IFrameRpcClient", methodName : "sendRpc"});
 			this._onLoaded.push(function() {
 				_gthis.sendRpcInternal(method,params);
 			});
@@ -788,20 +870,16 @@ metapage_IFrameRpcClient.prototype = {
 	,registered: function() {
 		this._loaded = true;
 		while(this._onLoaded != null && this._onLoaded.length > 0) (this._onLoaded.pop())();
-		var _g = 0;
-		var _g1 = Reflect.fields(this._inputs);
-		while(_g < _g1.length) {
-			var pipeId = _g1[_g];
-			++_g;
-			if(this._inputs[pipeId] != null) {
-				this.sendInput(pipeId);
-			}
-		}
-		this.log("registered",{ fileName : "Metapage.hx", lineNumber : 482, className : "metapage.IFrameRpcClient", methodName : "registered"});
+		var inputs = Reflect.fields(this._inputs);
+		var _e = this._inputs;
+		var inputs1 = inputs.map(function(key) {
+			return _e[key];
+		});
+		this.sendInputs(inputs1);
+		this.log("registered",{ fileName : "Metapage.hx", lineNumber : 496, className : "metapage.IFrameRpcClient", methodName : "registered"});
 	}
 	,sendInput: function(pipeId) {
-		var inputBlob = { pipeId : pipeId, value : this._inputs[pipeId], parentId : this._parentId};
-		this.sendRpc("InputUpdate",inputBlob);
+		this.sendRpc("InputUpdate",this._inputs[pipeId]);
 	}
 	,sendInputs: function(inputs) {
 		this.sendRpc("InputsUpdate",{ inputs : inputs, parentId : this._parentId});
@@ -809,11 +887,11 @@ metapage_IFrameRpcClient.prototype = {
 	,sendRpcInternal: function(method,params) {
 		var messageJson = { "method" : method, "params" : params, "jsonrpc" : "2.0", parentId : this._parentId, iframeId : this.id};
 		if(this.iframe != null) {
-			this.debug("Sending to child iframe messageJson=" + HxOverrides.substr(JSON.stringify(messageJson),0,200),{ fileName : "Metapage.hx", lineNumber : 500, className : "metapage.IFrameRpcClient", methodName : "sendRpcInternal"});
+			this.debug("Sending to child iframe messageJson=" + HxOverrides.substr(JSON.stringify(messageJson),0,200),{ fileName : "Metapage.hx", lineNumber : 514, className : "metapage.IFrameRpcClient", methodName : "sendRpcInternal"});
 			this.iframe.contentWindow.postMessage(messageJson,"*");
 		} else {
 			var _this = this._metapage;
-			_this.log("Cannot send to child iframe messageJson=" + HxOverrides.substr(JSON.stringify(messageJson),0,200),"f00",_this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 503, className : "metapage.IFrameRpcClient", methodName : "sendRpcInternal"});
+			_this.log("Cannot send to child iframe messageJson=" + HxOverrides.substr(JSON.stringify(messageJson),0,200),"f00",_this._consoleBackgroundColor,{ fileName : "Metapage.hx", lineNumber : 517, className : "metapage.IFrameRpcClient", methodName : "sendRpcInternal"});
 		}
 	}
 };
@@ -825,6 +903,19 @@ metapage__$MetapageId_MetapageId_$Impl_$._new = function(s) {
 };
 var metapage_MetapageTools = function() { };
 metapage_MetapageTools.__name__ = true;
+metapage_MetapageTools.toDatablob = function(blob) {
+	var data = { value : blob.value};
+	if(blob.type != null) {
+		data.type = blob.type;
+	}
+	if(blob.source != null) {
+		data.source = blob.source;
+	}
+	if(blob.encoding != null) {
+		data.encoding = blob.encoding;
+	}
+	return data;
+};
 metapage_MetapageTools.log = function(o,color,backgroundColor,pos) {
 	if(color != null) {
 		color = color;

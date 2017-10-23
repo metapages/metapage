@@ -2,6 +2,26 @@ package metapage;
 
 class MetapageTools
 {
+	/**
+	 * Just strips the name
+	 */
+	public static function toDatablob(blob :PipeUpdateBlob) :DataBlob
+	{
+		var data :DataBlob = {
+			value: blob.value
+		};
+		if (blob.type != null) {
+			data.type = blob.type;
+		}
+		if (blob.source != null) {
+			data.source = blob.source;
+		}
+		if (blob.encoding != null) {
+			data.encoding = blob.encoding;
+		}
+		return data;
+	}
+
 	inline public static function log(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
 	{
 		color = color != null ? color : "000";

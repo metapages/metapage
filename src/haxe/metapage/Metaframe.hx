@@ -1,19 +1,20 @@
 package metapage;
 
-@:enum
-abstract MetaframeEvents(String) to String {
-  var Input = "input";
-  var Inputs = "inputs";
-  var Output = "output";
-  var Message = "message";
+@:enum abstract MetaframeEvents<T:haxe.Constraints.Function>(Dynamic) to Dynamic {
+  var Input : MetaframeEvents<PipeUpdateClientV1->Void> = "input";
+  var Inputs : MetaframeEvents<Array<PipeUpdateClientV1>->Void> = "inputs";
+  var Output : MetaframeEvents<PipeUpdateClientV1->Void> = "output";
+  var Outputs : MetaframeEvents<Array<PipeUpdateClientV1>->Void> = "outputs";
+  var Message : MetaframeEvents<String->Void> = "message";
 }
 
 @:expose("Metaframe")
 @:keep
 class Metaframe extends EventEmitter
 {
-	var _inputPipeValues :haxe.DynamicAccess<Dynamic> = {};
-	var _outputPipeValues :haxe.DynamicAccess<Dynamic> = {};
+	static var METAPAGE_VERSION = MetaframeVersion.Alpha;
+	var _inputPipeValues :haxe.DynamicAccess<PipeUpdateClientV1> = {};
+	var _outputPipeValues :haxe.DynamicAccess<PipeUpdateClientV1> = {};
 	var _iframeId :String;
 	var _parentId :String;
 	var _color :String = '';
@@ -25,6 +26,7 @@ class Metaframe extends EventEmitter
 	public function new(?opt :MetaframeOptionsV1)
 	{
 		super();
+		trace('VERSION=$METAPAGE_VERSION');
 		_debug = (opt != null && opt.debug == true);
 		_isIframe = isIframe();
 
@@ -45,31 +47,6 @@ class Metaframe extends EventEmitter
 
 		window.addEventListener('message', onWindowMessage);
 
-		//Add the custom RPCs
-		// addEventListener(JsonRpcMethodsFromParent.InputUpdate, function(params :PipeUpdateBlob) {
-		// 	debug('InputUpdate from registed RPC pipeId=${params.name} value=${Json.stringify(params.value).substr(0,200)}');
-		// 	var pipeId = params != null ? params.name : null;
-		// 	var pipeValue = params != null ? params.value : null;
-		// 	if (pipeId == null) {
-		// 		error('Missing "id" value in the params object to identify the pipe. params=${params}');
-		// 	} else {
-		// 		debug('Setting input value from InputPipeUpdate pipeId=$pipeId');
-		// 		setInput(pipeId, pipeValue);
-		// 	}
-		// });
-
-		// addEventListener(JsonRpcMethodsFromParent.InputsUpdate, function(params :Array<PipeUpdateBlob>) {
-		// 	debug('InputsUpdate from registed RPC params=${Json.stringify(params).substr(0,200)}');
-		// 	//Update ALL the values before firing any events
-		// 	for (inputUpdate in params) {
-		// 		_inputPipeValues.set(inputUpdate.name, inputUpdate.value);
-		// 	}
-		// 	emit(MetaframeEvents.Inputs, params);
-		// 	for (inputUpdate in params) {
-		// 		emit(MetaframeEvents.Input, inputUpdate.name, inputUpdate.value);
-		// 	}
-		// });
-
 		//Get ready, request the parent to register to establish messaging pipes
 		ready = new Promise(function(resolve, reject) {
 			once(JsonRpcMethodsFromParent.SetupIframeServerResponse, function(params) {
@@ -87,10 +64,11 @@ class Metaframe extends EventEmitter
 					sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {});
 
 					//Set all the output pipe values (if we set the values before setup)
-					for (pipeId in _outputPipeValues.keys()) {
-						var e :PipeUpdateBlob = {pipeId:pipeId, value:_outputPipeValues.get(pipeId)};
-						sendRpc(JsonRpcMethodsFromChild.OutputUpdate, e);
-					}
+					sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, _outputPipeValues.keys().map(_outputPipeValues.get));
+					// for (pipeId in _outputPipeValues.keys()) {
+					// 	var e :PipeUpdateBlob = {pipeId:pipeId, value:_outputPipeValues.get(pipeId)};
+					// 	sendRpc(JsonRpcMethodsFromChild.OutputUpdate, e);
+					// }
 				} else {
 					debug('Got JsonRpcMethods.SetupIframeServerResponse but already resolved');
 				}
@@ -162,93 +140,105 @@ class Metaframe extends EventEmitter
 		return disposer;
 	}
 
-	public function onInput(pipe :String, listener :Dynamic->Void) :Void->Void
+	public function onInput(pipe :String, listener :PipeUpdateClientV1->Void) :Void->Void
 	{
-		return addEventListener(MetaframeEvents.Input, function(pipeId :String, value :Dynamic) {
+		return addEventListener(MetaframeEvents.Input, function(pipeId :String, value :PipeUpdateClientV1) {
 			if (pipe == pipeId) {
 				listener(value);
 			}
 		});
 	}
 
-	public function onInputs(listener :Array<PipeUpdateBlob>->Void) :Void->Void
+	public function onInputs(listener :Array<PipeUpdateClientV1>->Void) :Void->Void
 	{
 		return addEventListener(MetaframeEvents.Inputs, listener);
 	}
 
-	public function onOutput(pipe :String, listener :Dynamic->Void) :Void->Void
+	public function onOutput(pipe :String, listener :PipeUpdateClientV1->Void) :Void->Void
 	{
-		return addEventListener(MetaframeEvents.Output, function(pipeId :String, value :Dynamic) {
+		return addEventListener(MetaframeEvents.Output, function(pipeId :String, value :PipeUpdateClientV1) {
 			if (pipe == pipeId) {
 				listener(value);
 			}
 		});
 	}
 
-	public function getInput (pipeId :String) :Dynamic
+	public function getInput (pipeId :String) :PipeUpdateClientV1
 	{
 		return _inputPipeValues.get(pipeId);
 	}
 
-	public function setInput(pipeId, pipeValue)
+	public function setInput(inputBlob :PipeUpdateClientV1)
 	{
-		_inputPipeValues.set(pipeId, pipeValue);
-		var inputBlob :PipeUpdateBlob = {pipeId:pipeId, value:pipeValue};
+		var pipeId = inputBlob.name;
+		assert(pipeId != null);
+		_inputPipeValues.set(pipeId, inputBlob);
+
+		// var inputBlob :PipeUpdateBlob = Reflect.copy(inputBlob);
+		// inputBlob.pipeId = pipeId
 		sendRpc(JsonRpcMethodsFromParent.InputUpdate, inputBlob);
-		emit(MetaframeEvents.Input, pipeId, pipeValue);
-		emit(MetaframeEvents.Inputs, _inputPipeValues.keys().map(function(key) return {name:key,value:_inputPipeValues.get(key)}));
+		emit(MetaframeEvents.Input, pipeId, inputBlob);
+		emit(MetaframeEvents.Inputs, _inputPipeValues.keys().map(_inputPipeValues.get));
 	}
 
-	public function setInputs(inputs :Array<PipeUpdateBlob>)
+	public function setInputs(inputs :Array<PipeUpdateClientV1>)
 	{
 		for (input in inputs) {
-			_inputPipeValues.set(input.pipeId, input.value);
+			_inputPipeValues.set(input.name, input);
 		}
-		emit(MetaframeEvents.Inputs, _inputPipeValues.keys().map(function(key) return {name:key, value:_inputPipeValues.get(key)}));
+		emit(MetaframeEvents.Inputs, _inputPipeValues.keys().map(_inputPipeValues.get));
 		for (input in inputs) {
-			emit(MetaframeEvents.Input, input.pipeId, input.value);
+			emit(MetaframeEvents.Input, input.name, input);
 		}
 	}
 
-	public function getInputs() :DynamicAccess<Dynamic>
+	public function getInputs() :DynamicAccess<PipeUpdateClientV1>
 	{
-		var inputs :DynamicAccess<Dynamic>= {};
+		var inputs :DynamicAccess<PipeUpdateClientV1>= {};
 		for (key in _inputPipeValues.keys()) {
 			inputs.set(key, _inputPipeValues.get(key));
 		}
 		return inputs;
 	}
 
-	public function getOutput (pipeId :String) :Dynamic
+	public function getOutput(pipeId :String) :PipeUpdateClientV1
 	{
 		return _outputPipeValues.get(pipeId);
 	}
 
-	public function setOutput(pipeId :String, pipeValue :Dynamic) :Void
+	public function setOutput(updateBlob :PipeUpdateClientV1) :Void
 	{
-		_outputPipeValues.set(pipeId, pipeValue);
+		assert(updateBlob != null);
+		assert(updateBlob.name != null);
+		_outputPipeValues.set(updateBlob.name, updateBlob);
 		//Send the update to the parent for piping to other metaframes
-		var outputBlob :PipeUpdateBlob = {pipeId:pipeId, value:pipeValue};
-		sendRpc(JsonRpcMethodsFromChild.OutputUpdate, outputBlob);
+		sendRpc(JsonRpcMethodsFromChild.OutputUpdate, updateBlob);
 		//Notify internal listeners to output updates
-		emit(MetaframeEvents.Output, pipeId, pipeValue);
+		emit(MetaframeEvents.Output, updateBlob.name, updateBlob);
 	}
 
-	public function setOutputs(outputs :Array<PipeUpdateBlob>) :Void
+	public function setOutputs(outputs :Array<PipeUpdateClientV1>, ?clearPrevious :Bool = false) :Void
 	{
+		var previousOutputKeys = _outputPipeValues.keys();
 		for (output in outputs) {
-			_outputPipeValues.set(output.pipeId, output.value);
+			_outputPipeValues.set(output.name, output);
+			previousOutputKeys.remove(output.name);
+		}
+		if (clearPrevious) {
+			for (key in previousOutputKeys) {
+				_outputPipeValues.remove(key);
+			}
 		}
 		sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
 		//Notify internal listeners to output updates
 		for (output in outputs) {
-			emit(MetaframeEvents.Output, output.pipeId, output.value);
+			emit(MetaframeEvents.Output, output.name, output);
 		}
 	}
 
-	public function getOutputs() :DynamicAccess<Dynamic>
+	public function getOutputs() :DynamicAccess<PipeUpdateClientV1>
 	{
-		var outputs :DynamicAccess<Dynamic>= {};
+		var outputs :DynamicAccess<PipeUpdateClientV1>= {};
 		for (key in _outputPipeValues.keys()) {
 			outputs.set(key, _outputPipeValues.get(key));
 		}
@@ -277,6 +267,7 @@ class Metaframe extends EventEmitter
 	{
 		if (untyped __js__('typeof e.data === "object"')) {
 			var jsonrpc :MinimumClientMessage = e.data;
+			trace(jsonrpc);
 			if (jsonrpc.jsonrpc == '2.0') {//Make sure this is a jsonrpc object
 				var method :JsonRpcMethodsFromParent = cast jsonrpc.method;
 				if (!(method == JsonRpcMethodsFromParent.SetupIframeServerResponse || (
@@ -305,14 +296,14 @@ class Metaframe extends EventEmitter
 
 	function internalOnInput(input :PipeUpdateBlob)
 	{
-		debug('InputUpdate from registed RPC pipeId=${input.pipeId} value=${Json.stringify(input.value).substr(0,200)}');
-		var pipeId = input != null ? input.pipeId : null;
+		debug('InputUpdate from registed RPC pipeId=${input.name} value=${Json.stringify(input.value).substr(0,200)}');
+		var pipeId = input != null ? input.name : null;
 		var pipeValue = input != null ? input.value : null;
 		if (pipeId == null) {
-			error('Missing "id" value in the params object to identify the pipe. input=${input}');
+			error('Missing "name" value in the params object to identify the pipe. input=${input}');
 		} else {
 			debug('Setting input value from InputPipeUpdate pipeId=$pipeId');
-			setInput(pipeId, pipeValue);
+			setInput(input);
 		}
 	}
 
