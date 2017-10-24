@@ -26,7 +26,6 @@ class Metaframe extends EventEmitter
 	public function new(?opt :MetaframeOptionsV1)
 	{
 		super();
-		trace('VERSION=$METAPAGE_VERSION');
 		_debug = (opt != null && opt.debug == true);
 		_isIframe = isIframe();
 
@@ -267,7 +266,6 @@ class Metaframe extends EventEmitter
 	{
 		if (untyped __js__('typeof e.data === "object"')) {
 			var jsonrpc :MinimumClientMessage = e.data;
-			trace(jsonrpc);
 			if (jsonrpc.jsonrpc == '2.0') {//Make sure this is a jsonrpc object
 				var method :JsonRpcMethodsFromParent = cast jsonrpc.method;
 				if (!(method == JsonRpcMethodsFromParent.SetupIframeServerResponse || (

@@ -1,7 +1,25 @@
 ---
 ---
 
-var connectionManager = new Metapage({debug:true});
+//Parse the "url" parameter out of the query string, if it exists.
+const qs = (function(a) {
+    if (a == "") return {};
+    var b = {};
+    for (var i = 0; i < a.length; ++i)
+    {
+        var p=a[i].split('=', 2);
+        if (p.length == 1)
+            b[p[0]] = "";
+        else
+            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
+    }
+    return b;
+})(window.location.search.substr(1).split('&'));
+
+var url = qs['url'];
+var debug = qs['debug'];
+
+var connectionManager = new Metapage({debug:debug});
 var metaframe = null;
 var inputTypes = {};
 
@@ -157,7 +175,6 @@ function sendInputs() {
 		inputs.push({name:name, value:value});
 	}
 	if (metaframe) {
-		console.log('Setting metaframe inputs', inputs);
 		metaframe.setInputs(inputs);
 	}
 }
@@ -167,7 +184,6 @@ function sendInputs() {
  * then we can pre-create the input fields
  */
 function setInputs(inputs) {
-	console.log('setInputs', inputs);
 	var table = document.getElementById("inputs-table");
 	while (table.rows.length > 1) {
 		table.deleteRow(table.rows.length - 1);
@@ -248,7 +264,6 @@ function onNewUrl(url) {
 						// delete e.type;
 					}
 				});
-				console.log('response.data.inputs', response.data.inputs);
 				setInputs(response.data.inputs);
 			} else {
 				console.log('Got metapage.json but no inputs array.');
@@ -259,7 +274,6 @@ function onNewUrl(url) {
 		});
 
 	metaframe.onOutput(function(pipeName, dataBlob) {
-		console.log('onOutput' + pipeName, dataBlob);
 		var value = dataBlob.value;
 		if (dataBlob.encoding === 'base64') {
 			value = atob(value);
@@ -267,23 +281,6 @@ function onNewUrl(url) {
 		setOutput(pipeName, value);
 	});
 }
-
-//Parse the "url" parameter out of the query string, if it exists.
-const qs = (function(a) {
-    if (a == "") return {};
-    var b = {};
-    for (var i = 0; i < a.length; ++i)
-    {
-        var p=a[i].split('=', 2);
-        if (p.length == 1)
-            b[p[0]] = "";
-        else
-            b[p[0]] = decodeURIComponent(p[1].replace(/\+/g, " "));
-    }
-    return b;
-})(window.location.search.substr(1).split('&'));
-
-var url = qs['url'];
 
 if (url != null) {
 	url = sanitizeUrl(url);

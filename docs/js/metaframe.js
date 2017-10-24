@@ -288,7 +288,6 @@ var metapage_Metaframe = $hx_exports["Metaframe"] = function(opt) {
 	this._inputPipeValues = { };
 	var _gthis = this;
 	metapage_EventEmitter.call(this);
-	console.log("VERSION=" + metapage_Metaframe.METAPAGE_VERSION);
 	this._debug = opt != null && opt.debug == true;
 	this._isIframe = metapage_Metaframe.isIframe();
 	var $window = window;
@@ -298,13 +297,13 @@ var metapage_Metaframe = $hx_exports["Metaframe"] = function(opt) {
 	if(!this._isIframe) {
 		this.ready = new Promise(function(resolve,reject) {
 		});
-		this.log("Not an iframe, metaframe code disabled",null,null,{ fileName : "Metaframe.hx", lineNumber : 44, className : "metapage.Metaframe", methodName : "new"});
+		this.log("Not an iframe, metaframe code disabled",null,null,{ fileName : "Metaframe.hx", lineNumber : 43, className : "metapage.Metaframe", methodName : "new"});
 		return;
 	}
 	$window.addEventListener("message",$bind(this,this.onWindowMessage));
 	this.ready = new Promise(function(resolve1,reject1) {
 		_gthis.once("SetupIframeServerResponse",function(params) {
-			_gthis.debug("SetupIframeServerResponse params=" + Std.string(params),{ fileName : "Metaframe.hx", lineNumber : 53, className : "metapage.Metaframe", methodName : "new"});
+			_gthis.debug("SetupIframeServerResponse params=" + Std.string(params),{ fileName : "Metaframe.hx", lineNumber : 52, className : "metapage.Metaframe", methodName : "new"});
 			if(_gthis._iframeId == null) {
 				_gthis._iframeId = params.iframeId;
 				_gthis._parentId = params.parentId;
@@ -329,7 +328,7 @@ var metapage_Metaframe = $hx_exports["Metaframe"] = function(opt) {
 				});
 				_gthis.sendRpc("OutputsUpdate",tmp2);
 			} else {
-				_gthis.debug("Got JsonRpcMethods.SetupIframeServerResponse but already resolved",{ fileName : "Metaframe.hx", lineNumber : 73, className : "metapage.Metaframe", methodName : "new"});
+				_gthis.debug("Got JsonRpcMethods.SetupIframeServerResponse but already resolved",{ fileName : "Metaframe.hx", lineNumber : 72, className : "metapage.Metaframe", methodName : "new"});
 			}
 		});
 		_gthis.sendRpc("SetupIframeClientRequest",{ });
@@ -581,20 +580,19 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 	,sendRpc: function(method,params) {
 		if(this._isIframe) {
 			var message = { origin : null, jsonrpc : "2.0", method : method, params : params, iframeId : this._iframeId, parentId : this._parentId};
-			this.debug("Sending message=" + HxOverrides.substr(JSON.stringify(message),0,200),{ fileName : "Metaframe.hx", lineNumber : 259, className : "metapage.Metaframe", methodName : "sendRpc"});
+			this.debug("Sending message=" + HxOverrides.substr(JSON.stringify(message),0,200),{ fileName : "Metaframe.hx", lineNumber : 258, className : "metapage.Metaframe", methodName : "sendRpc"});
 			window.parent.postMessage(message,"*");
 		} else {
-			this.error("Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe",{ fileName : "Metaframe.hx", lineNumber : 262, className : "metapage.Metaframe", methodName : "sendRpc"});
+			this.error("Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe",{ fileName : "Metaframe.hx", lineNumber : 261, className : "metapage.Metaframe", methodName : "sendRpc"});
 		}
 	}
 	,onWindowMessage: function(e) {
 		if(typeof e.data === "object") {
 			var jsonrpc = e.data;
-			console.log(jsonrpc);
 			if(jsonrpc.jsonrpc == "2.0") {
 				var method = jsonrpc.method;
 				if(!(method == "SetupIframeServerResponse" || jsonrpc.parentId == this._parentId && jsonrpc.iframeId == this._iframeId)) {
-					this.error("Received message but jsonrpc.parentId=" + jsonrpc.parentId + " _parentId=" + this._parentId + " jsonrpc.iframeId=" + jsonrpc.iframeId + " _iframeId=" + this._iframeId,{ fileName : "Metaframe.hx", lineNumber : 276, className : "metapage.Metaframe", methodName : "onWindowMessage"});
+					this.error("Received message but jsonrpc.parentId=" + jsonrpc.parentId + " _parentId=" + this._parentId + " jsonrpc.iframeId=" + jsonrpc.iframeId + " _iframeId=" + this._iframeId,{ fileName : "Metaframe.hx", lineNumber : 274, className : "metapage.Metaframe", methodName : "onWindowMessage"});
 					return;
 				}
 				switch(method) {
@@ -610,25 +608,25 @@ metapage_Metaframe.prototype = $extend(metapage_EventEmitter.prototype,{
 				this.emit(jsonrpc.method,jsonrpc.params);
 				this.emit("message",jsonrpc);
 			} else {
-				this.log("!Bad JsonRPC version=" + jsonrpc.jsonrpc,null,null,{ fileName : "Metaframe.hx", lineNumber : 290, className : "metapage.Metaframe", methodName : "onWindowMessage"});
+				this.log("!Bad JsonRPC version=" + jsonrpc.jsonrpc,null,null,{ fileName : "Metaframe.hx", lineNumber : 288, className : "metapage.Metaframe", methodName : "onWindowMessage"});
 			}
 		} else {
-			this.log("!message is not an object",null,null,{ fileName : "Metaframe.hx", lineNumber : 293, className : "metapage.Metaframe", methodName : "onWindowMessage"});
+			this.log("!message is not an object",null,null,{ fileName : "Metaframe.hx", lineNumber : 291, className : "metapage.Metaframe", methodName : "onWindowMessage"});
 		}
 	}
 	,internalOnInput: function(input) {
-		this.debug("InputUpdate from registed RPC pipeId=" + input.name + " value=" + HxOverrides.substr(JSON.stringify(input.value),0,200),{ fileName : "Metaframe.hx", lineNumber : 299, className : "metapage.Metaframe", methodName : "internalOnInput"});
+		this.debug("InputUpdate from registed RPC pipeId=" + input.name + " value=" + HxOverrides.substr(JSON.stringify(input.value),0,200),{ fileName : "Metaframe.hx", lineNumber : 297, className : "metapage.Metaframe", methodName : "internalOnInput"});
 		var pipeId = input != null ? input.name : null;
 		var pipeValue = input != null ? input.value : null;
 		if(pipeId == null) {
-			this.error("Missing \"name\" value in the params object to identify the pipe. input=" + Std.string(input),{ fileName : "Metaframe.hx", lineNumber : 303, className : "metapage.Metaframe", methodName : "internalOnInput"});
+			this.error("Missing \"name\" value in the params object to identify the pipe. input=" + Std.string(input),{ fileName : "Metaframe.hx", lineNumber : 301, className : "metapage.Metaframe", methodName : "internalOnInput"});
 		} else {
-			this.debug("Setting input value from InputPipeUpdate pipeId=" + pipeId,{ fileName : "Metaframe.hx", lineNumber : 305, className : "metapage.Metaframe", methodName : "internalOnInput"});
+			this.debug("Setting input value from InputPipeUpdate pipeId=" + pipeId,{ fileName : "Metaframe.hx", lineNumber : 303, className : "metapage.Metaframe", methodName : "internalOnInput"});
 			this.setInput(input);
 		}
 	}
 	,internalOnInputs: function(inputs) {
-		this.debug("InputUpdates from registed RPC inputs=" + HxOverrides.substr(JSON.stringify(inputs),0,200),{ fileName : "Metaframe.hx", lineNumber : 312, className : "metapage.Metaframe", methodName : "internalOnInputs"});
+		this.debug("InputUpdates from registed RPC inputs=" + HxOverrides.substr(JSON.stringify(inputs),0,200),{ fileName : "Metaframe.hx", lineNumber : 310, className : "metapage.Metaframe", methodName : "internalOnInputs"});
 	}
 	,sendDimensions: function(dimensions) {
 		var $window = window;
