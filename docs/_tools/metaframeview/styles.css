@@ -42,6 +42,25 @@
 	border-color: transparent transparent transparent #007bff;
 }
 
+#metaframes {
+    font-weight: bold;
+    display: flex;
+    flex-flow: column;
+}
+
+#metaframe {
+	flex: 1 1 auto;
+	resize: both;
+	/*padding: 5px;*/
+	border: 5px solid #e5e5e5;
+	overflow: scroll;
+	width: 300px;
+}
+
+iframe {
+	flex: 1 1 auto;
+}
+
 .OutputArrow {
 	width: 0;
 	height: 0;

@@ -8,6 +8,14 @@ For documentation and examples: [https://dionjwa.github.io/metapage/](https://di
 
 ## Developers
 
+### Docs
+
+	cd docs
+	docker-compose build
+	docker-compose up
+	http://localhost:4000/metapage/
+
+
 ### Getting started
 
 #### Prerequisites
