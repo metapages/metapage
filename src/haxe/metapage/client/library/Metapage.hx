@@ -1,4 +1,4 @@
-package metapage;
+package metapage.client.library;
 
 @:expose("Metapage")
 @:keep

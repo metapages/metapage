@@ -1,5 +1,7 @@
 package metapage;
 
+import haxe.remoting.JsonRpc;
+
 @:enum
 abstract JsonRpcMethodsFromChild(String) to String {
   var OutputUpdate = "OutputUpdate";

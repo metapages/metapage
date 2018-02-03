@@ -1,4 +1,4 @@
-package metapage;
+package metapage.client.library;
 
 @:enum abstract MetaframeEvents<T:haxe.Constraints.Function>(Dynamic) to Dynamic {
   var Input : MetaframeEvents<PipeUpdateClientV1->Void> = "input";
@@ -12,7 +12,7 @@ package metapage;
 @:keep
 class Metaframe extends EventEmitter
 {
-	static var METAPAGE_VERSION = MetaframeVersion.Alpha;
+	static var METAPAGE_VERSION = MetapageVersion.Alpha;
 	var _inputPipeValues :haxe.DynamicAccess<PipeUpdateClientV1> = {};
 	var _outputPipeValues :haxe.DynamicAccess<PipeUpdateClientV1> = {};
 	var _iframeId :String;

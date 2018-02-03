@@ -35,12 +35,6 @@ typedef MetaframeOptionsV1 = {
 }
 
 @:enum
-abstract MetapageVersion(String) from String {
-	var Alpha = "alpha";
-	var V1 = "1";
-}
-
-@:enum
 abstract MetapageVersionLayoutType(String) to String {
 	var gridlayout = "gridlayout";
 }

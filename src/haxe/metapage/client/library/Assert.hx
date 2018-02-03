@@ -1,4 +1,4 @@
-package metapage;
+package metapage.client.library;
 
 import haxe.macro.Expr;
 using haxe.macro.Tools;
