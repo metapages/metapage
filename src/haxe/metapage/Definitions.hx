@@ -23,17 +23,6 @@ typedef Pipe = {
 	var to :PipeInput;
 }
 
-typedef MetapageIFrameV1 = {
-	var url :String;
-	// var in :DynamicAccess<PipeDefinition>;
-	// var out :DynamicAccess<PipeDefinition>;
-}
-
-typedef MetaframeOptionsV1 = {
-	@:optional var debug :Bool;
-	@:optional var showBanner :Bool;
-}
-
 @:enum
 abstract MetapageVersionLayoutType(String) to String {
 	var gridlayout = "gridlayout";
