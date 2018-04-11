@@ -8,7 +8,7 @@ install:
 
 .PHONY: build
 build:
-	haxe build.hxml
+	VERSION=${VERSION} haxe build.hxml
 
 .PHONY: publish
 publish:

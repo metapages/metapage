@@ -77,13 +77,13 @@ class Metapage extends EventEmitter
 
 	public function pipe(pipe :Pipe)
 	{
-		if (!_outputPipeMap.exists(pipe.from.id)) {
-			_outputPipeMap.set(pipe.from.id, {});
+		if (!_outputPipeMap.exists(pipe.source.id)) {
+			_outputPipeMap.set(pipe.source.id, {});
 		}
-		if (!_outputPipeMap.get(pipe.from.id).exists(pipe.from.pipe)) {
-			_outputPipeMap.get(pipe.from.id).set(pipe.from.pipe, []);
+		if (!_outputPipeMap.get(pipe.source.id).exists(pipe.source.name)) {
+			_outputPipeMap.get(pipe.source.id).set(pipe.source.name, []);
 		}
-		_outputPipeMap.get(pipe.from.id).get(pipe.from.pipe).push(pipe.to);
+		_outputPipeMap.get(pipe.source.id).get(pipe.source.name).push(pipe.target);
 	}
 
 	public function setInput(iframeId :String, inputPipeId :String, value :DataBlob)
@@ -179,7 +179,7 @@ class Metapage extends EventEmitter
 					// var pipeValue :Dynamic = outputBlob.value;
 					var iframeId :String = jsonrpc.iframeId;
 					var iframe = _iframes.get(iframeId);
-					iframe.debug('OutputPipeUpdate from=$iframeId pipeId=${outputBlob.name} params=${Json.stringify(jsonrpc.params).substr(0,200)}');
+					iframe.debug('OutputPipeUpdate source=$iframeId pipeId=${outputBlob.name} params=${Json.stringify(jsonrpc.params).substr(0,200)}');
 					if (iframe != null) {
 						iframe.setOutput(outputBlob);
 						//Set the downstream pipes
@@ -193,8 +193,8 @@ class Metapage extends EventEmitter
 									for (inputPipe in inputPipes) {
 										var inputIframe = _iframes.get(inputPipe.id);
 										if (inputIframe != null) {
-											iframe.debug('Sending from $iframeId.$pipeId to ${inputPipe.id}.${inputPipe.pipe}');
-											inputIframe.setInput(inputPipe.pipe, dataBlob);
+											iframe.debug('Sending from $iframeId.$pipeId to ${inputPipe.id}.${inputPipe.name}');
+											inputIframe.setInput(inputPipe.name, dataBlob);
 										}
 									}
 								}
@@ -212,7 +212,7 @@ class Metapage extends EventEmitter
 					var iframeId :String = jsonrpc.iframeId;
 					var iframe = _iframes.get(iframeId);
 					var outputs :Array<PipeOutputBlob> = jsonrpc.params;
-					iframe.debug('OutputsUpdate from=$iframeId outputs=${Json.stringify(jsonrpc.params).substr(0,200)}');
+					iframe.debug('OutputsUpdate source=$iframeId outputs=${Json.stringify(jsonrpc.params).substr(0,200)}');
 					if (iframe != null) {
 						iframe.setOutputs(outputs);
 						//Does this iframe have output pipes?
@@ -228,14 +228,14 @@ class Metapage extends EventEmitter
 										for (inputPipe in inputPipes) {
 											var inputIframe = _iframes.get(inputPipe.id);
 											if (inputIframe != null) {
-												iframe.debug('Sending from $iframeId.$outputName to ${inputPipe.id}.${inputPipe.pipe}');
+												iframe.debug('Sending from $iframeId.$outputName to ${inputPipe.id}.${inputPipe.name}');
 												if (iframeToInputs.get(inputPipe.id) == null) {
 													iframeToInputs.set(inputPipe.id, []);
 												}
 												var thisOutputBlob :PipeUpdateBlob = Reflect.copy(output);
 												thisOutputBlob.name = inputPipe.id;
 												iframeToInputs.get(inputPipe.id).push(thisOutputBlob);
-												// inputIframe.setInput(inputPipe.pipe, outputValue);
+												// inputIframe.setInput(inputPipe.name, outputValue);
 											}
 										}
 									}

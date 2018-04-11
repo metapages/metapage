@@ -1,6 +1,6 @@
 package js.metapage.v1;
 
 typedef Pipe = {
-	var from :PipeOutput;
-	var to :PipeInput;
+	var source :PipeOutput;
+	var target :PipeInput;
 }
