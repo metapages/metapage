@@ -1,0 +1,17 @@
+-lib haxe-misc-tools:git:https://github.com/dionjwa/haxe-misc-tools.git#1d05357
+-lib haxe-json-rpc:git:https://github.com/dionjwa/haxe-json-rpc.git#d86e0ee
+-lib hxassert:0.1.0
+
+-cp src/haxe
+
+--each
+
+js.metapage.v1.client.Metapage
+
+-js docs/js/metapage.v1.js
+
+--next
+
+js.metapage.v1.client.Metaframe
+
+-js docs/js/metaframe.v1.js
