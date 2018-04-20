@@ -41,7 +41,7 @@ class Metapage extends EventEmitter
 	public function new(?opts :MetapageOptions)
 	{
 		super();
-		_id = generateId();
+		_id = opts != null && opts.id != null ? opts.id : generateId();
 		_debug = opts != null && opts.debug == true;
 		_consoleBackgroundColor = (opts != null && opts.color != null ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT);
 		Browser.window.addEventListener('message', onMessage);
@@ -66,7 +66,12 @@ class Metapage extends EventEmitter
 		return all;
 	}
 
-	public function createIFrame(url :String, ?iframeId :String = null)
+	public function getIframe(id :MetaframeId) :IFrameElement
+	{
+		return _iframes.get(id) != null ? _iframes.get(id).iframe : null;
+	}
+
+	public function createIFrame(url :String, ?iframeId :MetaframeId = null)
 	{
 		iframeId = iframeId != null ? iframeId : generateId();
 		var iframeClient = new IFrameRpcClient(url, iframeId, _id, _consoleBackgroundColor, _debug);
@@ -280,14 +285,14 @@ class Metapage extends EventEmitter
 		}
 	}
 
-	static function generateId(?length :Int = 8) :String
+	static function generateId(?length :Int = 8) :MetapageId
 	{
 		var s = new StringBuf();
 		while (length > 0) {
 			s.add(LETTERS.charAt(Std.int(Math.max(0, Math.random()*LETTERS.length - 1))));
 			length--;
 		}
-		return s.toString();
+		return new MetapageId(s.toString());
 	}
 
 	public function debug(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
@@ -477,6 +482,11 @@ class IFrameRpcClient
 			this.iframe.parentNode.removeChild(this.iframe);
 		}
 		this.iframe = null;
+		_bufferMessages = null;
+		if (_bufferTimeout != null) {
+			Browser.window.clearInterval(_bufferTimeout);
+			_bufferTimeout = null;
+		}
 	}
 
 	public function register()
@@ -516,9 +526,36 @@ class IFrameRpcClient
 		var messageJson = {'method':method, 'params':params, 'jsonrpc':'2.0', parentId:_parentId, iframeId:id};
 		if (this.iframe != null) {
 			debug('Sending to child iframe messageJson=${Json.stringify(messageJson).substr(0, 200)}');
-			this.iframe.contentWindow.postMessage(messageJson, "*");
+			// this.iframe.contentWindow.postMessage(messageJson, "*");
+			sendOrBufferPostMessage(messageJson, "*");
 		} else {
 			_metapage.error('Cannot send to child iframe messageJson=${Json.stringify(messageJson).substr(0, 200)}');
+		}
+	}
+
+
+	var _bufferMessages :Array<{message:Dynamic,url:String}>;
+	var _bufferTimeout :Int;
+	function sendOrBufferPostMessage(message :Dynamic, ?url :String = "*")
+	{
+		if (this.iframe.contentWindow != null) {
+			this.iframe.contentWindow.postMessage(message, url);
+		} else {
+			if (_bufferMessages == null) {
+				_bufferMessages = [{message:message,url:url}];
+				_bufferTimeout = Browser.window.setInterval(function() {
+					if (this.iframe.contentWindow != null) {
+						for (m in _bufferMessages) {
+							this.iframe.contentWindow.postMessage(m.message, m.url);
+						}
+						Browser.window.clearInterval(_bufferTimeout);
+						_bufferTimeout = null;
+						_bufferMessages = null;
+					}
+				}, 0);
+			} else {
+				_bufferMessages.push({message:message,url:url});
+			}
 		}
 	}
 }
