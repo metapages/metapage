@@ -13,7 +13,7 @@ This page has nothing to see, it converts protein PDB ids to Uniprot ids via the
 </div>
 </body>
 <script src="{{site.baseurl}}{{site.data.urls.axios_path}}"></script>
-<script src="{{site.baseurl}}{{site.data.urls.metaframe_library_path}}"></script>
+<script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
 <script src="index.js"></script>
 
 
