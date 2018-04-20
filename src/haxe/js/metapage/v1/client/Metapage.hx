@@ -167,6 +167,7 @@ class Metapage extends EventEmitter
 
 				case OutputUpdate:
 					var outputBlob :PipeOutputBlob = jsonrpc.params;
+					trace('OutputUpdate outputBlob=$outputBlob');
 					assert(outputBlob != null);
 					assert(outputBlob.name != null);
 					var dataBlob :DataBlob = {
@@ -181,6 +182,7 @@ class Metapage extends EventEmitter
 					var iframe = _iframes.get(iframeId);
 					iframe.debug('OutputPipeUpdate source=$iframeId pipeId=${outputBlob.name} params=${Json.stringify(jsonrpc.params).substr(0,200)}');
 					if (iframe != null) {
+						trace('iframe.setOutput(...) outputBlob=$outputBlob');
 						iframe.setOutput(outputBlob);
 						//Set the downstream pipes
 						//Does this metaframe have outgoing pipes?
@@ -418,6 +420,7 @@ class IFrameRpcClient
 
 	public function setOutput(value :PipeUpdateBlob)
 	{
+		trace('IFrameRpcClient.setOutput value=$value');
 		_outputs.set(value.name, value);
 		var e :PipeInputBlob = cast Reflect.copy(value);
 		e.iframeId = new MetaframeId(id);
@@ -431,6 +434,7 @@ class IFrameRpcClient
 
 	public function setOutputs(outputs :Array<PipeUpdateBlob>)
 	{
+		trace('setOutputs=$outputs');
 		for (output in outputs) {
 			setOutput(output);
 		}

@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:false, showBanner:true});
+var metaframe = new Metaframe({debug:false});
 
 metaframe.ready.then(function() {
 	metaframe.sendDimensions();

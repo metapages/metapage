@@ -1,7 +1,4 @@
-metapage_library_path: "/js/metapage.js"
-metaframe_library_path: "/js/metaframe.js"
 axios_path: "/js/axios.min.js"
 bootstrap_path: "/js/bootstrap.min.css"
 jquery_path: "/js/jquery-3.1.1.slim.min.js"
 promise_polyfill: "/js/promise.min.js"
-# promise_polyfill: "https://cdn.rawgit.com/taylorhakes/promise-polyfill/509b5b35/promise.min.js"

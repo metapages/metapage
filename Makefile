@@ -1,6 +1,9 @@
 SHELL                      = /bin/bash
 VERSION                    = 0.0.1
 
+.PHONY: start
+start: install build
+
 .PHONY: build
 build:
 	haxe build.hxml

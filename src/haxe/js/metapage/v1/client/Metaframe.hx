@@ -207,7 +207,7 @@ class Metaframe extends EventEmitter
 	public function setOutput(updateBlob :PipeUpdateClient) :Void
 	{
 		require(updateBlob != null);
-		require(updateBlob.name != null);
+		require(updateBlob.name != null, updateBlob);
 		_outputPipeValues.set(updateBlob.name, updateBlob);
 		//Send the update to the parent for piping to other metaframes
 		sendRpc(JsonRpcMethodsFromChild.OutputUpdate, updateBlob);
@@ -217,6 +217,7 @@ class Metaframe extends EventEmitter
 
 	public function setOutputs(outputs :Array<PipeUpdateClient>, ?clearPrevious :Bool = false) :Void
 	{
+		trace('setOutputs outputs=$outputs');
 		var previousOutputKeys = _outputPipeValues.keys();
 		for (output in outputs) {
 			_outputPipeValues.set(output.name, output);
@@ -240,6 +241,7 @@ class Metaframe extends EventEmitter
 		for (key in _outputPipeValues.keys()) {
 			outputs.set(key, _outputPipeValues.get(key));
 		}
+		trace('getOutputs outputs=$outputs');
 		return outputs;
 	}
 

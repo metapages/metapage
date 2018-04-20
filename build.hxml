@@ -4,6 +4,8 @@
 
 -cp src/haxe
 
+-debug
+
 --each
 
 js.metapage.v1.client.Metapage

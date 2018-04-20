@@ -1,4 +1,4 @@
-var metaframe = new Metaframe({debug:false, showBanner:true});
+var metaframe = new Metaframe({debug:true});
 
 //Initialize the viewer
 // override the default options with something less restrictive.
@@ -29,8 +29,8 @@ viewer.on('viewerReady', function() {
 	viewerReady = true;
 
 	viewer.on('viewpointChanged', function(cam) {
-		metaframe.setOutput("rotation", viewer.rotation());
-		metaframe.setOutput("zoom", viewer.zoom());
+		metaframe.setOutput({name:"rotation", value:viewer.rotation()});
+		metaframe.setOutput({name:"zoom", value:viewer.zoom()});
 	});
 
 	viewer.addListener('click', function(picked) {

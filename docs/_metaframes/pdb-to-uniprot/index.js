@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:false, showBanner:true});
+var metaframe = new Metaframe({debug:false});
 
 metaframe.ready.then(function() {
 	metaframe.sendDimensions();
@@ -15,22 +15,22 @@ function maybeSendPdbId() {
   		if (pdbToUniprotMap) {
 			if (pdbToUniprotMap[pdbId]) {
 				console.log(pdbId + '=' + pdbToUniprotMap[pdbId]);
-		  		metaframe.setOutput('uniprot_id', pdbToUniprotMap[pdbId]);
+		  		metaframe.setOutput({name:'uniprot_id', value:pdbToUniprotMap[pdbId]});
 		  	} else {
-		  		metaframe.setOutput('error', "No mapping for " + pdbId);
+		  		metaframe.setOutput({name:'error', value:"No mapping for " + pdbId});
 		  	}
 		}
   	}
 }
 
-metaframe.setOutput('status', 'loading');
+metaframe.setOutput({name:'status', value:'loading'});
 axios.get('data.json')
   .then(function (response) {
   	pdbToUniprotMap = response.data;
 
   	maybeSendPdbId();
 
-  	metaframe.setOutput('status', 'ready');
+  	metaframe.setOutput({name:'status', value:'ready'});
 
   })
   .catch(function (error) {

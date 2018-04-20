@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:false, showBanner:true});
+var metaframe = new Metaframe({debug:false});
 
 metaframe.ready.then(function() {
 	metaframe.sendDimensions();
@@ -29,7 +29,7 @@ metaframe.addEventListener("input", function(pipe, value) {
 	    metaframe.sendDimensions();
 	}
 	inputElements[pipe].innerHTML = (value + "").substr(0, 15);
-	metaframe.setOutput(pipe, value);
+	metaframe.setOutput({name:pipe, value:value});
 });
 
 QueryString = function () {

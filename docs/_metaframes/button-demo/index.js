@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:false, showBanner:true});
+var metaframe = new Metaframe({debug:false});
 
 metaframe.ready.then(function() {
 	metaframe.sendDimensions();
@@ -11,17 +11,17 @@ metaframe.ready.then(function() {
 document.getElementById("button1")
 	.addEventListener('click', function() {
 		var val = "Category1";
-		metaframe.setOutput("button_out", val);
+		metaframe.setOutput({name:"button_out", value:val});
 	});
 
 document.getElementById("button2")
 	.addEventListener('click', function() {
 		var val = "Category2";
-		metaframe.setOutput("button_out", val);
+		metaframe.setOutput({name:"button_out", value:val});
 	});
 
 document.getElementById("button3")
 	.addEventListener('click', function() {
 		var val = "Category3";
-		metaframe.setOutput("button_out", val);
+		metaframe.setOutput({name:"button_out", value:val});
 	});
