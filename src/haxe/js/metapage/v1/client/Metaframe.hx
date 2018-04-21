@@ -127,11 +127,15 @@ class Metaframe extends EventEmitter
 		//will always get a value if it exists
 		if (event == MetaframeEvents.Input) {
 			Browser.window.setTimeout(function() {
-				untyped __js__('for (key in {0}) { {1}.apply(null, key, {0}[key]); }', _inputPipeValues, listener);
+				if (_inputPipeValues != null) {
+					untyped __js__('for (key in {0}) { {1}.apply(null, key, {0}[key]); }', _inputPipeValues, listener);
+				}
 			}, 0);
 		} else if (event == MetaframeEvents.Output) {
 			Browser.window.setTimeout(function() {
-				untyped __js__('for (key in {0}) { {1}.apply(null, key, {0}[key]); }', _outputPipeValues, listener);
+				if (_outputPipeValues != null) {
+					untyped __js__('for (key in {0}) { {1}.apply(null, key, {0}[key]); }', _outputPipeValues, listener);
+				}
 			}, 0);
 		}
 
