@@ -217,7 +217,6 @@ class Metaframe extends EventEmitter
 
 	public function setOutputs(outputs :Array<PipeUpdateClient>, ?clearPrevious :Bool = false) :Void
 	{
-		trace('setOutputs outputs=$outputs');
 		var previousOutputKeys = _outputPipeValues.keys();
 		for (output in outputs) {
 			_outputPipeValues.set(output.name, output);
@@ -241,7 +240,6 @@ class Metaframe extends EventEmitter
 		for (key in _outputPipeValues.keys()) {
 			outputs.set(key, _outputPipeValues.get(key));
 		}
-		trace('getOutputs outputs=$outputs');
 		return outputs;
 	}
 

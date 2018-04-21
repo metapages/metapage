@@ -1,4 +1,4 @@
-var metaframe = new Metaframe({debug:true});
+var metaframe = new Metaframe({debug:false});
 
 //Initialize the viewer
 // override the default options with something less restrictive.
@@ -59,7 +59,8 @@ metaframe.ready.then(function() {
 /*
  * On input pipe update, send value to the graph
  */
-metaframe.onInput("pdb_data", function(pdb_data) {
+metaframe.onInput("pdb_data", function(inputBlob) {
+	var pdb_data = inputBlob.value;
 	metaframe.debug('pdb_data=' + (pdb_data != null ? pdb_data.substr(0, 200) : null));
 	if (pdb_data != null && viewerReady) {
 		metaframe.debug('Setting pdb data to pv viewer');
@@ -68,19 +69,8 @@ metaframe.onInput("pdb_data", function(pdb_data) {
 	}
 });
 
-/*
- * On input pipe update, send value to the graph
- */
-metaframe.onInput("pdb_data", function(pdb_data) {
-	metaframe.debug('pdb_data=' + (pdb_data != null ? pdb_data.substr(0, 200) : null));
-	if (pdb_data != null && viewerReady) {
-		metaframe.debug('Setting pdb data to pv viewer');
-	    var structure = pv.io.pdb(pdb_data);
-	    showStructure(structure);
-	}
-});
-
-metaframe.onInput("pdb_id", function(pdb_id) {
+metaframe.onInput("pdb_id", function(inputBlob) {
+	var pdb_id = inputBlob.value;
 	metaframe.debug('pdb_id=' + pdb_id);
 	if (pdb_id != null && viewerReady) {
 		  pv.io.fetchPdb('https://files.rcsb.org/download/' + pdb_id + '.pdb', function(structure) {
@@ -89,7 +79,8 @@ metaframe.onInput("pdb_id", function(pdb_id) {
 	}
 });
 
-metaframe.onInput("pdb_url", function(pdb_url) {
+metaframe.onInput("pdb_url", function(inputBlob) {
+	var pdb_url = inputBlob.value;
 	metaframe.debug('pdb_url=' + pdb_url);
 	if (pdb_url != null && viewerReady) {
 		  pv.io.fetchPdb(pdb_url, function(structure) {
@@ -98,7 +89,8 @@ metaframe.onInput("pdb_url", function(pdb_url) {
 	}
 });
 
-metaframe.onInput("rotation", function(rotation) {
+metaframe.onInput("rotation", function(inputBlob) {
+	var rotation = inputBlob.value;
 	metaframe.debug('rotation in=' + (rotation != null ? rotation : null) + ', viewerReady=' + viewerReady);
 	if (viewerReady && rotation != null && typeof(rotation) == 'object') {
 		metaframe.debug('SETTING ROTATION=' + rotation);
@@ -108,7 +100,8 @@ metaframe.onInput("rotation", function(rotation) {
 	}
 });
 
-metaframe.onInput("zoom", function(zoom) {
+metaframe.onInput("zoom", function(inputBlob) {
+	var zoom = inputBlob.value;
 	zoom = parseFloat(zoom + "");
 	metaframe.debug('zoom in=' + (zoom != null ? zoom : null) + ', viewerReady=' + viewerReady);
 	if (viewerReady && zoom != null && typeof(zoom) == 'number') {

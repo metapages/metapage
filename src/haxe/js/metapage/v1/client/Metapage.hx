@@ -30,7 +30,7 @@ class Metapage extends EventEmitter
 	/* [from][pipeId]=>Array<PipeInput>*/
 	var _outputPipeMap :DynamicAccess<DynamicAccess<Array<PipeInput>>> = {};
 	var _iframes :DynamicAccess<IFrameRpcClient> = {};
-	var _id :String;
+	var _id :MetapageId;
 	public var _debug :Bool = false;
 	var _consoleBackgroundColor :String;
 
@@ -41,7 +41,7 @@ class Metapage extends EventEmitter
 	public function new(?opts :MetapageOptions)
 	{
 		super();
-		_id = opts != null && opts.id != null ? opts.id : generateId();
+		_id = opts != null && opts.id != null ? opts.id : cast generateId();
 		_debug = opts != null && opts.debug == true;
 		_consoleBackgroundColor = (opts != null && opts.color != null ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT);
 		Browser.window.addEventListener('message', onMessage);
@@ -172,7 +172,6 @@ class Metapage extends EventEmitter
 
 				case OutputUpdate:
 					var outputBlob :PipeOutputBlob = jsonrpc.params;
-					trace('OutputUpdate outputBlob=$outputBlob');
 					assert(outputBlob != null);
 					assert(outputBlob.name != null);
 					var dataBlob :DataBlob = {
@@ -187,7 +186,6 @@ class Metapage extends EventEmitter
 					var iframe = _iframes.get(iframeId);
 					iframe.debug('OutputPipeUpdate source=$iframeId pipeId=${outputBlob.name} params=${Json.stringify(jsonrpc.params).substr(0,200)}');
 					if (iframe != null) {
-						trace('iframe.setOutput(...) outputBlob=$outputBlob');
 						iframe.setOutput(outputBlob);
 						//Set the downstream pipes
 						//Does this metaframe have outgoing pipes?
@@ -285,14 +283,14 @@ class Metapage extends EventEmitter
 		}
 	}
 
-	static function generateId(?length :Int = 8) :MetapageId
+	static function generateId(?length :Int = 8) :MetaframeId
 	{
 		var s = new StringBuf();
 		while (length > 0) {
 			s.add(LETTERS.charAt(Std.int(Math.max(0, Math.random()*LETTERS.length - 1))));
 			length--;
 		}
-		return new MetapageId(s.toString());
+		return new MetaframeId(s.toString());
 	}
 
 	public function debug(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
@@ -425,7 +423,6 @@ class IFrameRpcClient
 
 	public function setOutput(value :PipeUpdateBlob)
 	{
-		trace('IFrameRpcClient.setOutput value=$value');
 		_outputs.set(value.name, value);
 		var e :PipeInputBlob = cast Reflect.copy(value);
 		e.iframeId = new MetaframeId(id);
@@ -439,7 +436,6 @@ class IFrameRpcClient
 
 	public function setOutputs(outputs :Array<PipeUpdateBlob>)
 	{
-		trace('setOutputs=$outputs');
 		for (output in outputs) {
 			setOutput(output);
 		}
