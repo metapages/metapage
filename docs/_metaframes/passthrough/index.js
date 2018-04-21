@@ -12,7 +12,8 @@ metaframe.ready.then(function() {
  */
 var inputElements = {};
 
-metaframe.addEventListener("input", function(pipe, value) {
+metaframe.addEventListener("input", function(pipe, pipeBlob) {
+	var value = pipeBlob.value;
 	if (!(pipe in inputElements)) {
 		//Create the row showing the input value
 		var row = document.createElement("tr");
