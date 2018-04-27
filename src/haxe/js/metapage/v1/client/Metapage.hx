@@ -11,10 +11,9 @@ class Metapage extends EventEmitter
 			for (iframeId in metaPageDef.iframes.keys()) {
 				var iframeDef = metaPageDef.iframes.get(iframeId);
 				var iframe = metapage.createIFrame(iframeDef.url, iframeId);
-				if (Reflect.field(iframeDef, 'in') != null) {
-					var inPipes :DynamicAccess<MetaframePipeDefinition> = Reflect.field(iframeDef, 'in');
-					for (inPipeName in inPipes.keys()) {
-						iframe.setInput(inPipeName, inPipes.get(inPipeName).value);
+				if (iframeDef.metaframe != null && iframeDef.metaframe.inputs != null) {
+					for (inPipe in iframeDef.metaframe.inputs) {
+						iframe.setInput(inPipe.name, inPipe);
 					}
 				}
 			}
@@ -36,12 +35,10 @@ class Metapage extends EventEmitter
 
 	public static var CONSOLE_BACKGROUND_COLOR_DEFAULT = 'bcbcbc';
 
-	static var LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
-
 	public function new(?opts :MetapageOptions)
 	{
 		super();
-		_id = opts != null && opts.id != null ? opts.id : cast generateId();
+		_id = opts != null && opts.id != null ? opts.id : MetapageTools.generateMetapageId();
 		_debug = opts != null && opts.debug == true;
 		_consoleBackgroundColor = (opts != null && opts.color != null ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT);
 		Browser.window.addEventListener('message', onMessage);
@@ -71,9 +68,9 @@ class Metapage extends EventEmitter
 		return _iframes.get(id) != null ? _iframes.get(id).iframe : null;
 	}
 
-	public function createIFrame(url :String, ?iframeId :MetaframeId = null)
+	public function createIFrame(url :String, ?iframeId :MetaframeId = null) :IFrameRpcClient
 	{
-		iframeId = iframeId != null ? iframeId : generateId();
+		iframeId = iframeId != null ? iframeId : MetapageTools.generateMetaframeId();
 		var iframeClient = new IFrameRpcClient(url, iframeId, _id, _consoleBackgroundColor, _debug);
 		iframeClient._metapage = this;
 		_iframes.set(iframeId, iframeClient);
@@ -281,16 +278,6 @@ class Metapage extends EventEmitter
 
 			emit(OtherEvents.Message, jsonrpc);
 		}
-	}
-
-	static function generateId(?length :Int = 8) :MetaframeId
-	{
-		var s = new StringBuf();
-		while (length > 0) {
-			s.add(LETTERS.charAt(Std.int(Math.max(0, Math.random()*LETTERS.length - 1))));
-			length--;
-		}
-		return new MetaframeId(s.toString());
 	}
 
 	public function debug(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)

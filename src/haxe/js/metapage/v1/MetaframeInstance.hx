@@ -4,6 +4,6 @@ typedef MetaframeInstance = {
 	var id :MetaframeId;
 	var url :String;
 	var metaframe :MetaframeDefinition;
-	var screenshotUrl :String;
-	var updatedAt :Date;
+	@:optional var screenshotUrl :String;
+	@:optional var updatedAt :Date;
 }

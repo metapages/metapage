@@ -26,3 +26,4 @@ publish:
 .PHONY: clean
 clean:
 	rm -rf .haxelib
+

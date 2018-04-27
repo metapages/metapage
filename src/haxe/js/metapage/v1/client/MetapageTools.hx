@@ -2,6 +2,27 @@ package js.metapage.v1.client;
 
 class MetapageTools
 {
+	public static function generateMetaframeId(?length :Int = 8) :MetaframeId
+	{
+		return new MetaframeId(generateId(8));
+	}
+
+	public static function generateMetapageId(?length :Int = 8) :MetapageId
+	{
+		return new MetapageId(generateId(8));
+	}
+
+	static var LETTERS = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-_';
+	static function generateId(?length :Int = 8) :String
+	{
+		var s = new StringBuf();
+		while (length > 0) {
+			s.add(LETTERS.charAt(Std.int(Math.max(0, Math.random()*LETTERS.length - 1))));
+			length--;
+		}
+		return s.toString();
+	}
+
 	/**
 	 * Just strips the name
 	 */
