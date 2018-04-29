@@ -8,7 +8,7 @@ layout: vanilla
 <link rel="stylesheet" href="{{site.baseurl}}{{site.data.urls.bootstrap_path}}">
 <link rel="stylesheet" href="styles.css">
 
-<script src="{{site.baseurl}}{{site.data.urls.metapage_library_path}}"></script>
+<script src="{{site.baseurl}}{{site.data.urls-internal.metapage_library_path}}"></script>
 </head>
 
 <body>

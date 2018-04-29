@@ -84,6 +84,7 @@ function setOutput(name, value) {
 }
 
 function createInput(name, type, value) {
+	console.log('createInput ' + name + ' value=' + value);
 	var table = document.getElementById("inputs-table");
 	var row = table.insertRow(row, table.rows);
 
@@ -250,12 +251,21 @@ function onNewUrl(url) {
 	document.getElementById("metaframes").appendChild(metaframe.iframe);
 	// Make a request for a user with a given ID
 	var metaframeJsonUrl = url;
+	console.log('url', url);
+	var tokens = url.split('?');
+	console.log('tokens', tokens);
+	metaframeJsonUrl = tokens.shift();
+	var secondHalf = tokens.join('?');
+	console.log('secondHalf', secondHalf);
 	if (!metaframeJsonUrl.endsWith('/')) {
 		metaframeJsonUrl = metaframeJsonUrl + '/';
 	}
 	metaframeJsonUrl = metaframeJsonUrl + 'metaframe.json';
+	metaframeJsonUrl = metaframeJsonUrl + '?' + secondHalf;
+	console.log('metaframeJsonUrl', metaframeJsonUrl);
 	axios.get(metaframeJsonUrl)
 		.then(function (response) {
+			console.log(response.data);
 			if (response.data && response.data.inputs) {
 				//Clear out the original inputs
 				response.data.inputs.forEach(function(e) {

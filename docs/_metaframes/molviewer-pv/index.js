@@ -29,6 +29,7 @@ viewer.on('viewerReady', function() {
 	viewerReady = true;
 
 	viewer.on('viewpointChanged', function(cam) {
+		console.log(viewer.rotation());
 		metaframe.setOutput({name:"rotation", value:viewer.rotation()});
 		metaframe.setOutput({name:"zoom", value:viewer.zoom()});
 	});
