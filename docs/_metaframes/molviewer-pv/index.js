@@ -29,7 +29,6 @@ viewer.on('viewerReady', function() {
 	viewerReady = true;
 
 	viewer.on('viewpointChanged', function(cam) {
-		console.log(viewer.rotation());
 		metaframe.setOutput({name:"rotation", value:viewer.rotation()});
 		metaframe.setOutput({name:"zoom", value:viewer.zoom()});
 	});
@@ -51,7 +50,6 @@ viewer.on('viewerReady', function() {
 
 /* Set up the metaframe channel */
 metaframe.ready.then(function() {
-	metaframe.log('molviewer metaframe connection ready');
 	metaframe.sendDimensions({width:width,height:height});
 }, function(err) {
 	metaframe.error('molviewer: Error setting up the metaframe connection error=' + JSON.stringify(err));

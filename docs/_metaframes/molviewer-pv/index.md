@@ -11,5 +11,5 @@ layout: vanilla
     <div id="viewer"></div>
 </body>
 <script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
-<script src="https://rawgit.com/biasmv/pv/master/bio-pv.min.js"></script>
+<script src="bio-pv.min.js"></script>
 <script src="index.js"></script>

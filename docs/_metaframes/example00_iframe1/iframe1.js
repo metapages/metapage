@@ -7,8 +7,12 @@ var letters = '♞☯☭☢€☎∞❄♫☂★☀✓❤✆✇✈✂✄❀❁�
 
 var value = letters[Math.floor(Math.random()*letters.length)];
 
-connection.onInput('barIn', function(value) {
+connection.onInput('barIn', function(blob) {
 	var display = document.getElementById("input");
+	var value = blob.value;
+	if (value === undefined) {
+		value = "";
+	}
 	display.innerHTML = value;
 	setTimeout(function() {
 		value = value + letters[Math.floor(Math.random()*letters.length)];
@@ -21,6 +25,5 @@ connection.onInput('barIn', function(value) {
 });
 
 connection.ready.then(function(_) {
-	connection.log('READY');
 	connection.setOutput({name:"fooOut", value:value});
 });

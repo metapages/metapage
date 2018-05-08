@@ -8,6 +8,7 @@ layout: vanilla
 <link href="https://ebi-uniprot.github.io/CDN/protvista/css/main.css" rel="stylesheet"/>
 </head>
 <body>
+<div id="uniprotid"></div>
 <div id="main"></div>
 </body>
 <script src="{{site.baseurl}}{{site.data.urls.jquery_path}}"></script>

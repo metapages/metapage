@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:true});
+var metaframe = new Metaframe({debug:false});
 
 metaframe.ready.then(function() {
 	metaframe.sendDimensions();
@@ -26,7 +26,7 @@ inputElement.addEventListener("change", handleFiles, false);
 function sendPdbId() {
 	var pdbId = document.getElementById('pdbid').value;
 	metaframe.setOutput({name:"pdb_id", value:pdbId});
-	axios.get('https://files.rcsb.org/download/' + pdbId.toUpperCase() + '.pdb')
+	fetch('https://files.rcsb.org/download/' + pdbId.toUpperCase() + '.pdb')
 		.then(function (response) {
 			var pdbdata = response.data;
 			metaframe.setOutput({name:"pdb_data", value:pdbdata});

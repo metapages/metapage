@@ -128,13 +128,13 @@ class Metaframe extends EventEmitter
 		if (event == MetaframeEvents.Input) {
 			Browser.window.setTimeout(function() {
 				if (_inputPipeValues != null) {
-					untyped __js__('for (key in {0}) { {1}.apply(null, key, {0}[key]); }', _inputPipeValues, listener);
+					untyped __js__('for (key in {0}) { try{ if (key !== undefined && {0}[key] !== undefined) { {1}.apply(null, key, {0}[key]); } }catch(e){console.error(e);} }', _inputPipeValues, listener);
 				}
 			}, 0);
 		} else if (event == MetaframeEvents.Output) {
 			Browser.window.setTimeout(function() {
 				if (_outputPipeValues != null) {
-					untyped __js__('for (key in {0}) { {1}.apply(null, key, {0}[key]); }', _outputPipeValues, listener);
+					untyped __js__('for (key in {0}) { try{ {1}.apply(null, key, {0}[key]); }catch(e){console.error(e);} }', _outputPipeValues, listener);
 				}
 			}, 0);
 		}
@@ -280,7 +280,12 @@ class Metaframe extends EventEmitter
 
 				switch(method) {
 					case SetupIframeServerResponse: //Handled elsewhere
-					case InputUpdate: internalOnInput(jsonrpc.params);
+					case InputUpdate:
+						if (jsonrpc.params != null) {
+							if (jsonrpc.params.name != null) {
+								internalOnInput(jsonrpc.params);
+							}
+						}
 					case InputsUpdate: setInputs(jsonrpc.params.inputs);
 				}
 
@@ -297,7 +302,7 @@ class Metaframe extends EventEmitter
 
 	function internalOnInput(input :PipeUpdateBlob)
 	{
-		debug('InputUpdate from registed RPC pipeId=${input.name} value=${Json.stringify(input.value).substr(0,200)}');
+		debug('InputUpdate from registed RPC pipeId=${input.name} value=${input == null || input.value == null ? "undefined" : Json.stringify(input.value).substr(0,200)}');
 		var pipeId = input != null ? input.name : null;
 		var pipeValue = input != null ? input.value : null;
 		if (pipeId == null) {
