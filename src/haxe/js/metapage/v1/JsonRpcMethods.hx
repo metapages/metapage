@@ -25,12 +25,12 @@ abstract OtherEvents(String) to String {
 
 typedef SetupIframeServerResponseData = {
 	var origin :String;
-	var iframeId :String;
+	var iframeId :MetaframeId;
 	var parentId :String;
 }
 
 typedef MinimumClientMessage = {>RequestDef,
 	var origin :String;
-	var iframeId :String;
+	var iframeId :MetaframeId;
 	var parentId :String;
 }

@@ -1,5 +1,7 @@
 package js.metapage.v1.client;
 
+typedef Map<K:String,V>=util.TypedDynamicAccess<K,V>;
+
 @:expose("Metapage")
 @:keep
 class Metapage extends EventEmitter
@@ -27,8 +29,8 @@ class Metapage extends EventEmitter
 	}
 
 	/* [from][pipeId]=>Array<PipeInput>*/
-	var _outputPipeMap :DynamicAccess<DynamicAccess<Array<PipeInput>>> = {};
-	var _iframes :DynamicAccess<IFrameRpcClient> = {};
+	var _outputPipeMap :Map<MetaframeId, Map<MetaframePipeId, Array<PipeInput>>> = {};
+	var _iframes :Map<MetaframeId, IFrameRpcClient> = {};
 	var _id :MetapageId;
 	public var _debug :Bool = false;
 	var _consoleBackgroundColor :String;
@@ -122,10 +124,11 @@ class Metapage extends EventEmitter
 				return true;
 			default:
 				//TODO: check origin+source
-				if (!(message.parentId == _id && _iframes.exists(message.iframeId))) {
-					error('message.parentId=${message.parentId} _id=${_id} message.iframeId=${message.iframeId} _iframes.exists(message.iframeId)=${_iframes.exists(message.iframeId)} message=${Json.stringify(message).substr(0, 200)}');
+				var iframeId :MetaframeId = message.iframeId;
+				if (!(message.parentId == _id && _iframes.exists(iframeId))) {
+					error('message.parentId=${message.parentId} _id=${_id} message.iframeId=${iframeId} _iframes.exists(message.iframeId)=${_iframes.exists(iframeId)} message=${Json.stringify(message).substr(0, 200)}');
 				}
-				return message.parentId == _id && _iframes.exists(message.iframeId);
+				return message.parentId == _id && _iframes.exists(iframeId);
 		}
 	}
 
@@ -327,7 +330,7 @@ class IFrameRpcClient
 	var _debug :Bool;
 	public var _metapage :Metapage;
 
-	public function new(url :String, iframeId :String, parentId :String, consoleBackgroundColor :String, ?debug :Bool = false)
+	public function new(url :String, iframeId :MetaframeId, parentId :MetapageId, consoleBackgroundColor :String, ?debug :Bool = false)
 	{
 		//Url sanitation
 		if (!url.startsWith('http')) {
@@ -376,7 +379,7 @@ class IFrameRpcClient
 		sendInputs(_inputs.keys().map(_inputs.get));
 	}
 
-	public function setInput(name :String, inputBlob :DataBlob)
+	public function setInput(name :MetaframePipeId, inputBlob :DataBlob)
 	{
 		assert(inputBlob != null);
 		assert(name != null);
