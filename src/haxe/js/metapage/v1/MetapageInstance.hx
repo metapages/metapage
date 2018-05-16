@@ -6,13 +6,6 @@ typedef MetapageInstance = {//>MetapageInstanceDefinition, >MetapageInstanceInpu
 	var id :MetapageId;
 	var metapage :MetapageDefinitionAbstract;
 	var state :MetapageInstanceInputs;
-	// var id :MetapageId;
-	// var metapage :MetapageDefinitionAbstract;
-	// var inputs :Map<MetaframeId, Map<MetaframePipeId, DataBlob>>;
-	// //Version counter for the metapage definition
-	// @:optional var v :Int;
-	// //Version counter for the inputs
-	// @:optional var vi :Int;
 	// @:optional
 
 	//Version counter for the metapage definition
