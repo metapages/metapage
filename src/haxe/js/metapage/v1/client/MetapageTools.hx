@@ -2,6 +2,13 @@ package js.metapage.v1.client;
 
 class MetapageTools
 {
+	public static function equals (blob :DataBlob, other :DataBlob) :Bool
+	{
+		return blob.value == other.value &&
+			blob.source == other.source &&
+			blob.encoding == other.encoding;
+	}
+
 	public static function generateMetaframeId(?length :Int = 8) :MetaframeId
 	{
 		return new MetaframeId(generateId(8));

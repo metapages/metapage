@@ -29,8 +29,11 @@ viewer.on('viewerReady', function() {
 	viewerReady = true;
 
 	viewer.on('viewpointChanged', function(cam) {
-		metaframe.setOutput({name:"rotation", value:viewer.rotation()});
-		metaframe.setOutput({name:"zoom", value:viewer.zoom()});
+		metaframe.setOutputs({
+			"rotation": {value:viewer.rotation()},
+			"zoom": {value:viewer.zoom()},
+		});
+		// metaframe.setOutput("zoom", {value:viewer.zoom()});
 	});
 
 	viewer.addListener('click', function(picked) {
@@ -42,7 +45,7 @@ viewer.on('viewerReady', function() {
 	});
 
 	if (metaframe.getInput("pdb_data") != null) {
-		var pdb_data = metaframe.getInput("pdb_data");
+		var pdb_data = metaframe.getInput("pdb_data").value;
 		var structure = pv.io.pdb(pdb_data);
 		showStructure(structure);
 	}

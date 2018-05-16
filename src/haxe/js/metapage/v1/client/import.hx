@@ -15,3 +15,5 @@ import util.TypedDynamicAccess;
 
 using Lambda;
 using StringTools;
+
+using js.metapage.v1.client.MetapageTools;

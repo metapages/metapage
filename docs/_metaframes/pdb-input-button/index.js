@@ -25,11 +25,11 @@ inputElement.addEventListener("change", handleFiles, false);
 
 function sendPdbId() {
 	var pdbId = document.getElementById('pdbid').value;
-	metaframe.setOutput({name:"pdb_id", value:pdbId});
+	metaframe.setOutput("pdb_id", {value:pdbId});
 	fetch('https://files.rcsb.org/download/' + pdbId.toUpperCase() + '.pdb')
 		.then(function (response) {
 			var pdbdata = response.data;
-			metaframe.setOutput({name:"pdb_data", value:pdbdata});
+			metaframe.setOutput("pdb_data", {value:pdbdata});
 		})
 		.catch(function (error) {
 			console.error(error);
