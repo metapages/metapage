@@ -188,9 +188,11 @@ class Metaframe extends EventEmitter
 			_inputPipeValues.set(pipeId, updateBlob);
 		}
 
-		emit(MetaframeEvents.Inputs, actualUpdates);
-		for (pipeId in actualUpdates.keys()) {
-			emit(MetaframeEvents.Input, pipeId, actualUpdates[pipeId]);
+		if (actualUpdates != null) {
+			emit(MetaframeEvents.Inputs, actualUpdates);
+			for (pipeId in actualUpdates.keys()) {
+				emit(MetaframeEvents.Input, pipeId, actualUpdates[pipeId]);
+			}
 		}
 	}
 

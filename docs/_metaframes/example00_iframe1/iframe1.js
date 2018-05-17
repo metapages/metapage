@@ -1,7 +1,7 @@
 ---
 ---
 
-var connection = new Metaframe({debug:true});
+var connection = new Metaframe({debug:false});
 
 var letters = '♞☯☭☢€☎∞❄♫☂★☀✓❤✆✇✈✂✄❀❁❂❃✻✼✽✾✿✧✨✩✪✫✍✎✏';
 
