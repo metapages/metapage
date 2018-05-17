@@ -11,7 +11,7 @@ connection.onInput('fooIn', function(blob) {
 	display.innerHTML = value;
 	setTimeout(function() {
 		value = value + letters[Math.floor(Math.random()*letters.length)];
-		connection.setOutput({name:"barOut", value:value});
+		connection.setOutput("barOut", {value:value});
 		display.innerHTML = "";
 	}, 2000);
 });

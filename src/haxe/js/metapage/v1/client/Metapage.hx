@@ -13,6 +13,7 @@ class Metapage extends EventEmitter
 {
 	public static function fromDefinition(metaPageDef :MetapageDefinition, ?inputs :MetapageInstanceInputs)
 	{
+		trace(metaPageDef);
 		var metapage = new Metapage(metaPageDef.options);
 		if (inputs ==  null) {
 			inputs = {};
@@ -65,7 +66,8 @@ class Metapage extends EventEmitter
 	{
 		super();
 		_id = opts != null && opts.id != null ? opts.id : MetapageTools.generateMetapageId();
-		_debug = opts != null && opts.debug == true;
+		// _debug = opts != null && opts.debug == true;
+		_debug = true;
 		_consoleBackgroundColor = (opts != null && opts.color != null ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT);
 		Browser.window.addEventListener('message', onMessage);
 		log('Initialized');
@@ -161,6 +163,13 @@ class Metapage extends EventEmitter
 
 	public function pipe(pipe :Pipe)
 	{
+		assert(pipe != null);
+		assert(pipe.source != null);
+		assert(pipe.target != null);
+		assert(pipe.source.id != null);
+		assert(pipe.source.name != null);
+		assert(pipe.target.id != null);
+		assert(pipe.target.name != null);
 		if (!_outputPipeMap.exists(pipe.source.id)) {
 			_outputPipeMap.set(pipe.source.id, {});
 		}
@@ -297,7 +306,7 @@ class Metapage extends EventEmitter
 					var iframeId :MetaframeId = jsonrpc.iframeId;
 					var iframe = _iframes.get(iframeId);
 					var outputs :MetaframeInputMap = jsonrpc.params;
-					iframe.debug('OutputsUpdate source=$iframeId outputs=${Json.stringify(jsonrpc.params).substr(0,200)}');
+					iframe.debug('OutputsUpdate source=$iframeId outputs=${Json.stringify(jsonrpc.params).substr(0,200)} _outputPipeMap=${Json.stringify(_outputPipeMap, null, "  ")}');
 					if (iframe != null) {
 						iframe.setOutputs(outputs);
 						//Does this iframe have output pipes?
@@ -443,7 +452,6 @@ class IFrameRpcClient
 		if (!_debug) {
 			return;
 		}
-		trace(untyped __typeof__(o));
 		var s :String = switch(untyped __typeof__(o)) {
 			case "string": cast o;
 			case "number": o + "";
@@ -676,7 +684,11 @@ class IFrameRpcClient
 			_onLoaded.pop()();
 		}
 		// var inputs = _inputs.keys().map(_inputs.get);
-		// sendInputs(_inputs);
+		// You still need to set the inputs even though they
+		// may have been set initially, because the inputs may
+		// have been been updated before the metaframe internal
+		// returned its server ack.
+		sendInputs(_inputs);
 		log('registered');
 	}
 

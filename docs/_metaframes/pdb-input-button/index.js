@@ -1,11 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:false});
-
-metaframe.ready.then(function() {
-	metaframe.sendDimensions();
-}, function(err) {
-	console.error('Error setting up the metaframe connection');
-});
+var metaframe = new Metaframe({debug:true});
 
 var inputElement = document.getElementById("input");
 function handleFiles() {
@@ -44,4 +38,10 @@ document.getElementById('pdbid').addEventListener('keypress', function (e) {
 });
 
 document.getElementById('pdbid').value = "1c7d";
-sendPdbId();
+
+metaframe.ready.then(function() {
+	metaframe.sendDimensions();
+	sendPdbId();
+}, function(err) {
+	console.error('Error setting up the metaframe connection');
+});

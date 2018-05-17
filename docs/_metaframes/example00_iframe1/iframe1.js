@@ -1,7 +1,7 @@
 ---
 ---
 
-var connection = new Metaframe({debug:false});
+var connection = new Metaframe({debug:true});
 
 var letters = '♞☯☭☢€☎∞❄♫☂★☀✓❤✆✇✈✂✄❀❁❂❃✻✼✽✾✿✧✨✩✪✫✍✎✏';
 
@@ -19,11 +19,11 @@ connection.onInput('barIn', function(blob) {
 		if (value.length > 30) {
 			value = letters[Math.floor(Math.random()*letters.length)];
 		}
-		connection.setOutput({name:"fooOut", value:value});
+		connection.setOutput("fooOut", {value:value});
 		display.innerHTML = "";
 	}, 2000);
 });
 
 connection.ready.then(function(_) {
-	connection.setOutput({name:"fooOut", value:value});
+	connection.setOutput("fooOut", {value:value});
 });
