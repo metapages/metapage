@@ -3,8 +3,6 @@ package js.metapage.v1.client;
 @:enum abstract MetaframeEvents<T:haxe.Constraints.Function>(Dynamic) to Dynamic {
   var Input : MetaframeEvents<PipeUpdateClient->Void> = "input";
   var Inputs : MetaframeEvents<MetaframeInputMap->Void> = "inputs";
-  // var Output : MetaframeEvents<PipeUpdateClient->Void> = "output";
-  // var Outputs : MetaframeEvents<MetaframeInputMap->Void> = "outputs";
   var Message : MetaframeEvents<String->Void> = "message";
 }
 
@@ -69,13 +67,6 @@ class Metaframe extends EventEmitter
 					sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {});
 
 					resolve(true);
-
-					//Set all the output pipe values (if we set the values before setup)
-					// sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, _outputPipeValues);
-					// for (pipeId in _outputPipeValues.keys()) {
-					// 	var e :PipeUpdateBlob = {pipeId:pipeId, value:_outputPipeValues.get(pipeId)};
-					// 	sendRpc(JsonRpcMethodsFromChild.OutputUpdate, e);
-					// }
 				} else {
 					debug('Got JsonRpcMethods.SetupIframeServerResponse but already resolved');
 				}
@@ -142,14 +133,7 @@ class Metaframe extends EventEmitter
 					// untyped __js__('for (key in {1}) { try{ if (key !== undefined && {0}[key] !== undefined) { {1}.apply(null, key, {0}[key]); } }catch(e){console.error(e);} }', keys, _inputPipeValues, listener);
 				}
 			}, 0);
-		} 
-		// else if (event == MetaframeEvents.Output) {
-		// 	Browser.window.setTimeout(function() {
-		// 		if (_outputPipeValues != null) {
-		// 			untyped __js__('for (key in {0}) { try{ {1}.apply(null, key, {0}[key]); }catch(e){console.error(e);} }', _outputPipeValues, listener);
-		// 		}
-		// 	}, 0);
-		// }
+		}
 
 		return disposer;
 	}
@@ -168,33 +152,10 @@ class Metaframe extends EventEmitter
 		return addEventListener(MetaframeEvents.Inputs, listener);
 	}
 
-	// public function onOutput(pipe :MetaframePipeId, listener :PipeUpdateClient->Void) :Void->Void
-	// {
-	// 	return addEventListener(MetaframeEvents.Output, function(pipeId :String, value :PipeUpdateClient) {
-	// 		if (pipe == pipeId) {
-	// 			listener(value);
-	// 		}
-	// 	});
-	// }
-
 	public function getInput (pipeId :MetaframePipeId) :DataBlob
 	{
 		return _inputPipeValues.get(pipeId);
 	}
-
-	
-	// function setInput(pipeId, inputBlob :DataBlob)
-	// {
-	// 	// var pipeId = inputBlob.name;
-	// 	assert(pipeId != null);
-	// 	_inputPipeValues.set(pipeId, inputBlob);
-
-	// 	// var inputBlob :PipeUpdateBlob = Reflect.copy(inputBlob);
-	// 	// inputBlob.pipeId = pipeId
-	// 	sendRpc(JsonRpcMethodsFromParent.InputUpdate, inputBlob);
-	// 	emit(MetaframeEvents.Input, pipeId, inputBlob);
-	// 	emit(MetaframeEvents.Inputs, _inputPipeValues.keys().map(_inputPipeValues.get));
-	// }
 
 	/**
 	 * Not public. I dont' see the use case of allowing internal
@@ -236,11 +197,6 @@ class Metaframe extends EventEmitter
 	public function getInputs() :MetaframeInputMap
 	{
 		return Reflect.copy(_inputPipeValues);
-		// var inputs :DynamicAccess<PipeUpdateClient>= {};
-		// for (key in _inputPipeValues.keys()) {
-		// 	inputs.set(key, _inputPipeValues.get(key));
-		// }
-		// return inputs;
 	}
 
 	public function getOutput(pipeId :MetaframePipeId) :DataBlob
@@ -263,26 +219,6 @@ class Metaframe extends EventEmitter
 		outputs[pipeId] = updateBlob;
 
 		setOutputs(outputs);
-
-		// var pipeId = updateBlob.name;
-		// if (_outputPipeValues.exists(pipeId)
-		// 		&& _outputPipeValues.[pipeId]
-		// 		&& _outputPipeValues.[pipeId].equals(updateBlob)
-		// 		) {
-		// 	//No change
-		// 	return;
-		// }
-
-		// var version = _outputPipeValues.exists(pipeId) && _outputPipeValues.[pipeId].v != null
-		// 	? _outputPipeValues.[pipeId].v
-		// 	: 0;
-		// version++;
-		// updateBlob.v = version;
-		// _outputPipeValues.set(pipeId, updateBlob);
-		// //Send the update to the parent for piping to other metaframes
-		// sendRpc(JsonRpcMethodsFromChild.OutputUpdate, updateBlob);
-		// //Notify internal listeners to output updates
-		// emit(MetaframeEvents.Output, pipeId, updateBlob);
 	}
 
 	public function setOutputs(outputs :MetaframeInputMap, ?clearPrevious :Bool = false) :Void
@@ -314,28 +250,9 @@ class Metaframe extends EventEmitter
 			_outputPipeValues.set(pipeId, updateBlob);
 		}
 
-
-		// var previousOutputKeys = _outputPipeValues.keys();
-		// for (output in outputs) {
-		// 	_outputPipeValues.set(output.name, output);
-		// 	previousOutputKeys.remove(output.name);
-		// }
-		// if (clearPrevious) {
-		// 	for (key in previousOutputKeys) {
-		// 		_outputPipeValues.remove(key);
-		// 	}
-		// }
 		if (actualUpdates != null) {
 			sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
-			// for (pipeId in actualUpdates.keys()) {
-			// 	emit(MetaframeEvents.Output, pipeId, actualUpdates[pipeId]);
-			// }
 		}
-		
-		//Notify internal listeners to output updates
-		// for (output in outputs) {
-		// 	emit(MetaframeEvents.Output, output.name, output);
-		// }
 	}
 
 	public function getOutputs() :MetaframeInputMap
@@ -376,12 +293,6 @@ class Metaframe extends EventEmitter
 
 				switch(method) {
 					case SetupIframeServerResponse: //Handled elsewhere
-					// case InputUpdate:
-					// 	if (jsonrpc.params != null) {
-					// 		if (jsonrpc.params.name != null) {
-					// 			internalOnInput(jsonrpc.params);
-					// 		}
-					// 	}
 					case InputsUpdate: setInputsFromMetapage(jsonrpc.params.inputs);
 				}
 
@@ -395,24 +306,6 @@ class Metaframe extends EventEmitter
 			log('!message is not an object');
 		}
 	}
-
-	// function internalOnInput(input :PipeUpdateBlob)
-	// {
-	// 	debug('InputUpdate from registed RPC pipeId=${input.name} value=${input == null || input.value == null ? "undefined" : Json.stringify(input.value).substr(0,200)}');
-	// 	var pipeId = input != null ? input.name : null;
-	// 	var pipeValue = input != null ? input.value : null;
-	// 	if (pipeId == null) {
-	// 		error('Missing "name" value in the params object to identify the pipe. input=${input}');
-	// 	} else {
-	// 		debug('Setting input value from InputPipeUpdate pipeId=$pipeId');
-	// 		setInput(input);
-	// 	}
-	// }
-
-	// function internalOnInputs(inputs :MetaframeInputMap)
-	// {
-	// 	debug('InputUpdates from registed RPC inputs=${Json.stringify(inputs).substr(0,200)}');
-	// }
 
 	function sendDimensions(?dimensions :{width :Float, height:Float})
 	{

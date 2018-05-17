@@ -13,7 +13,6 @@ class Metapage extends EventEmitter
 {
 	public static function fromDefinition(metaPageDef :MetapageDefinition, ?inputs :MetapageInstanceInputs)
 	{
-		trace(metaPageDef);
 		var metapage = new Metapage(metaPageDef.options);
 		if (inputs ==  null) {
 			inputs = {};
@@ -32,10 +31,6 @@ class Metapage extends EventEmitter
 							initialInputs = initialInputs == null ? {} : initialInputs;
 							initialInputs[inPipe.name] = inPipe;
 						}
-						// if (!initialInputs.exists(inPipe.name)) {
-						// 	initialInputs[inPipe.name] = inPipe;
-						// }
-						// iframe.setInput(inPipe.name, inPipe);
 					}
 				}
 				iframe.setInitialState(initialInputs);
@@ -66,8 +61,7 @@ class Metapage extends EventEmitter
 	{
 		super();
 		_id = opts != null && opts.id != null ? opts.id : MetapageTools.generateMetapageId();
-		// _debug = opts != null && opts.debug == true;
-		_debug = true;
+		_debug = opts != null && opts.debug == true;
 		_consoleBackgroundColor = (opts != null && opts.color != null ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT);
 		Browser.window.addEventListener('message', onMessage);
 		log('Initialized');
@@ -119,14 +113,6 @@ class Metapage extends EventEmitter
 				}
 			}
 		}
-			// var inputs = [];
-			// for (pipeId in updates.get(metaframeId).keys()) {
-			// 	//Gotta add the pipe name, some unneeded duplication here.
-			// 	var update :PipeUpdateBlob = cast Reflect.copy(updates.get(metaframeId).get(pipeId));
-			// 	update.name = pipeId;
-			// 	inputs.push(update);
-			// }
-		// }
 	}
 
 	public function removeAll() :Void
@@ -259,48 +245,6 @@ class Metapage extends EventEmitter
 					var iframe = _iframes.get(jsonrpc.iframeId);
 					iframe.registered();
 
-				// case OutputUpdate:
-				// 	var outputBlob :PipeOutputBlob = jsonrpc.params;
-				// 	assert(outputBlob != null);
-				// 	assert(outputBlob.name != null);
-				// 	var dataBlob :DataBlob = {
-				// 		value: outputBlob.value,
-				// 		type: outputBlob.type == null ? js.Lib.undefined : outputBlob.type,
-				// 		source: outputBlob.source,
-				// 		encoding: outputBlob.encoding
-				// 	};
-				// 	var pipeId :MetaframePipeId = outputBlob.name;
-				// 	// var pipeValue :Dynamic = outputBlob.value;
-				// 	var iframeId :MetaframeId = jsonrpc.iframeId;
-				// 	var iframe = _iframes.get(iframeId);
-				// 	iframe.debug('OutputPipeUpdate source=$iframeId pipeId=${outputBlob.name} params=${Json.stringify(jsonrpc.params).substr(0,200)}');
-				// 	if (iframe != null) {
-				// 		iframe.setOutput(outputBlob);
-				// 		//Set the downstream pipes
-				// 		//Does this metaframe have outgoing pipes?
-				// 		if (_outputPipeMap.exists(iframeId)) {
-				// 			//Are any of the outgoing pipes this one?
-				// 			if (_outputPipeMap.get(iframeId).exists(pipeId)) {
-				// 				//Get the incoming pipes from downstream metaframes
-				// 				var inputPipes = _outputPipeMap.get(iframeId).get(pipeId);
-				// 				if (inputPipes != null) {
-				// 					for (inputPipe in inputPipes) {
-				// 						var inputIframe = _iframes.get(inputPipe.id);
-				// 						if (inputIframe != null) {
-				// 							iframe.debug('Sending from $iframeId.$pipeId to ${inputPipe.id}.${inputPipe.name}');
-				// 							inputIframe.setInput(inputPipe.name, dataBlob);
-				// 						}
-				// 					}
-				// 				}
-				// 			} else {
-				// 				error('OutputPipeUpdate _outputPipeMap.get($iframeId).get($pipeId) is null');
-				// 			}
-				// 		} else {
-				// 			// error('OutputPipeUpdate !_outputPipeMap.exists($iframeId) keys=${_outputPipeMap.keys()}');
-				// 		}
-				// 	} else {
-				// 		error('missing iframe=$iframeId');
-				// 	}
 				case OutputsUpdate:
 
 					var iframeId :MetaframeId = jsonrpc.iframeId;
@@ -328,10 +272,7 @@ class Metapage extends EventEmitter
 												if (!iframeToInputs.exists(inputPipe.id)) {
 													iframeToInputs.set(inputPipe.id, {});
 												}
-												// var thisOutputBlob :PipeUpdateBlob = Reflect.copy(output);
-												// thisOutputBlob.name = inputPipe.name;
 												iframeToInputs.get(inputPipe.id).set(inputPipe.name, output);
-												// inputIframe.setInput(inputPipe.name, outputValue);
 											}
 										}
 									}
@@ -364,8 +305,6 @@ class Metapage extends EventEmitter
 							iframe.iframe.width = '${dimensions.width}px';
 						}
 					}
-				// case AddRpcMethod,Message,RPC,SetParentId,SetupIframeServerResponse:
-					//Client methods
 			}
 
 			emit(OtherEvents.Message, jsonrpc);
@@ -483,19 +422,6 @@ class IFrameRpcClient
 		var inputs :MetaframeInputMap = {};
 		inputs.set(name, inputBlob);
 		setInputs(inputs);
-
-		
-		// var pipeUpdateBlob :PipeUpdateClient = cast Reflect.copy(inputBlob);
-		// pipeUpdateBlob.name = name;
-		// _inputs.set(name, pipeUpdateBlob);
-		// if (this.iframe.parentNode != null && _loaded) {
-		// 	sendInput(name);
-		// } else {
-		// 	debug('Not setting input bc _loaded=$_loaded');
-		// }
-		// var e :PipeInputBlob = cast Reflect.copy(pipeUpdateBlob);
-		// e.iframeId = new MetaframeId(id);
-		// _metapage.emit(JsonRpcMethodsFromParent.InputUpdate, e);
 	}
 
 	public function setInputs(maybeNewInputs :MetaframeInputMap)
@@ -528,10 +454,6 @@ class IFrameRpcClient
 		}
 		//Updated, so create a new copy
 		_inputs = Reflect.copy(_inputs);
-		// for (input in inputs) {
-		// 	Reflect.setField(input, "iframeId", id);
-		// 	_inputs.set(input.name, input);
-		// }
 		if (this.iframe.parentNode != null && _loaded) {
 			sendInputs(actuallyNewInputs);
 		} else {
@@ -539,9 +461,6 @@ class IFrameRpcClient
 		}
 		var e = {iframeId:id, inputs:actuallyNewInputs};
 		_metapage.emit(JsonRpcMethodsFromParent.InputsUpdate, e);
-		// for (updatedKey in updatedKeys) {
-		// 	_metapage.emit(JsonRpcMethodsFromParent.InputUpdate, e);
-		// }
 	}
 
 	public function setOutput(pipeId :MetaframePipeId, updateBlob :DataBlob)
@@ -556,16 +475,6 @@ class IFrameRpcClient
 		var outputs :MetaframeInputMap = {};
 		outputs.set(pipeId, updateBlob);
 		setOutputs(outputs);
-
-		// _outputs.set(value.name, value);
-		// var e :PipeInputBlob = cast Reflect.copy(value);
-		// e.iframeId = new MetaframeId(id);
-		// _metapage.emit(JsonRpcMethodsFromChild.OutputUpdate, e);
-		// for (l in _onOutput) {
-		// 	if (l != null) {
-		// 		l(value.name, value);
-		// 	}
-		// }
 	}
 
 	public function setOutputs(maybeNewOutputs :MetaframeInputMap)
@@ -598,26 +507,6 @@ class IFrameRpcClient
 		}
 		//Updated, so create a new copy
 		_outputs = Reflect.copy(_outputs);
-		// for (input in inputs) {
-		// 	Reflect.setField(input, "iframeId", id);
-		// 	_inputs.set(input.name, input);
-		// }
-		// if (this.iframe.parentNode != null && _loaded) {
-		// 	sendInputs(actuallyNewOutputs);
-		// } else {
-		// 	debug('Not setting input bc _loaded=$_loaded');
-		// }
-		// var e = {iframeId:id, inputs:actuallyNewOutputs};
-		// _metapage.emit(JsonRpcMethodsFromParent.InputsUpdate, e);
-		// for (updatedKey in updatedKeys) {
-		// 	_metapage.emit(JsonRpcMethodsFromParent.InputUpdate, e);
-		// }
-
-
-		// for (output in outputs) {
-		// 	setOutput(output);
-		// }
-		// var e = {iframeId:id, outputs:outputs};
 		_metapage.emit(JsonRpcMethodsFromChild.OutputsUpdate, actuallyNewOutputs);
 	}
 
@@ -683,7 +572,6 @@ class IFrameRpcClient
 		while(_onLoaded != null && _onLoaded.length > 0) {
 			_onLoaded.pop()();
 		}
-		// var inputs = _inputs.keys().map(_inputs.get);
 		// You still need to set the inputs even though they
 		// may have been set initially, because the inputs may
 		// have been been updated before the metaframe internal
@@ -691,12 +579,6 @@ class IFrameRpcClient
 		sendInputs(_inputs);
 		log('registered');
 	}
-
-	// function sendInput(pipeId :String)
-	// {
-	// 	// var inputBlob :PipeInputBlob = {pipeId :pipeId, value: _inputs.get(pipeId), parentId: _parentId};
-	// 	sendRpc(JsonRpcMethodsFromParent.InputUpdate, _inputs.get(pipeId));
-	// }
 
 	function sendInputs(inputs :MetaframeInputMap)
 	{
@@ -708,7 +590,6 @@ class IFrameRpcClient
 		var messageJson = {'method':method, 'params':params, 'jsonrpc':'2.0', parentId:_parentId, iframeId:id};
 		if (this.iframe != null) {
 			debug('Sending to child iframe messageJson=${Json.stringify(messageJson).substr(0, 200)}');
-			// this.iframe.contentWindow.postMessage(messageJson, "*");
 			sendOrBufferPostMessage(messageJson, "*");
 		} else {
 			_metapage.error('Cannot send to child iframe messageJson=${Json.stringify(messageJson).substr(0, 200)}');
@@ -741,4 +622,3 @@ class IFrameRpcClient
 		}
 	}
 }
-
