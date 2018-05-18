@@ -2,11 +2,55 @@ package js.metapage.v1.client;
 
 class MetapageTools
 {
-	public static function equals (blob :DataBlob, other :DataBlob) :Bool
+	/**
+	 * Only returns updated object if origin modified
+	 */
+	public static function filterOutNullsMetapage(values :MetapageInstanceInputs) :MetapageInstanceInputs
 	{
-		return blob.value == other.value &&
-			blob.source == other.source &&
-			blob.encoding == other.encoding;
+		if (values == null) {
+			return null;
+		}
+		var result :MetapageInstanceInputs = values;
+
+		for (metaframeId in values.keys()) {
+			var metaFrameValues = values.get(metaframeId);
+			metaFrameValues = filterOutNullsMetaframe(metaFrameValues);
+			if (values.get(metaframeId) != metaFrameValues) {
+				if (result == values) {
+					result = Reflect.copy(values);
+				}
+				result.set(metaframeId, metaFrameValues);
+			}
+		}
+		return result;
+	}
+
+	/**
+	 * Only returns updated object if origin modified
+	 */
+	public static function filterOutNullsMetaframe(values :MetaframeInputMap) :MetaframeInputMap
+	{
+		if (values == null) {
+			return null;
+		}
+		var result :MetaframeInputMap = values;
+		for (pipeId in values.keys()) {
+			if (values.get(pipeId).value == null) {
+				result = result == values ? Reflect.copy(values) : result;
+				Reflect.deleteField(result, pipeId);
+			}
+		}
+		return result;
+	}
+
+	public static function equals(blob :DataBlob, other :DataBlob) :Bool
+	{
+		assert(blob != null);
+		assert(other != null);
+		return
+				blob.value == other.value &&
+				blob.source == other.source &&
+				blob.encoding == other.encoding;
 	}
 
 	public static function generateMetaframeId(?length :Int = 8) :MetaframeId

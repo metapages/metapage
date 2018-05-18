@@ -18,20 +18,21 @@ var pdbToUniprotMap = null;
 function maybeSendPdbId() {
 	if (pdbToUniprotMap && metaframe.getInput('pdb_id') && metaframe.getInput('pdb_id').value != null) {
   		var pdbId = metaframe.getInput('pdb_id').value.toUpperCase();
-  		setText(pdbId + "=> NOT READY");
+  		// setText(pdbId + "=> NOT READY");
   		if (pdbToUniprotMap && pdbId) {
 			if (pdbToUniprotMap[pdbId]) {
-				setText(pdbId + "=>" + pdbToUniprotMap[pdbId]);
-		  		metaframe.setOutput({name:'uniprot_id', value:pdbToUniprotMap[pdbId]});
+				  setText(pdbId + "=>" + (pdbToUniprotMap[pdbId] ? pdbToUniprotMap[pdbId] : "none"));
+		  		metaframe.setOutput('uniprot_id', {value:pdbToUniprotMap[pdbId]});
 		  	} else {
-		  		setText(pdbId + "=> [unknown]");
-		  		metaframe.setOutput({name:'error', value:"No mapping for " + pdbId});
+		  		setText(pdbId + "=> none");
+          metaframe.setOutput('uniprot_id', {value:null});
+		  		metaframe.setOutput('error', {value:"No mapping for " + pdbId});
 		  	}
 		}
   	}
 }
 
-metaframe.setOutput({name:'status', value:'loading'});
+metaframe.setOutput('status', {value:'loading'});
 
 fetch('data.json')
   .then(function (response) {
@@ -40,7 +41,7 @@ fetch('data.json')
   .then(function(jsonResponse) {
   	pdbToUniprotMap = jsonResponse;
   	setText("Ready.");
-  	metaframe.setOutput({name:'status', value:'ready'});
+  	metaframe.setOutput('status', {value:'ready'});
   	maybeSendPdbId();
   })
   .catch(function (error) {

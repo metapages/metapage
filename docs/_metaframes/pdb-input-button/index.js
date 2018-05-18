@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:true});
+var metaframe = new Metaframe({debug:false});
 
 var inputElement = document.getElementById("input");
 function handleFiles() {
@@ -20,13 +20,25 @@ inputElement.addEventListener("change", handleFiles, false);
 function sendPdbId() {
 	var pdbId = document.getElementById('pdbid').value;
 	metaframe.setOutput("pdb_id", {value:pdbId});
-	fetch('https://files.rcsb.org/download/' + pdbId.toUpperCase() + '.pdb')
+	var url = 'https://files.rcsb.org/download/' + pdbId.toUpperCase() + '.pdb';
+	fetch(url)
 		.then(function (response) {
-			var pdbdata = response.data;
-			metaframe.setOutput("pdb_data", {value:pdbdata});
+			if(response.ok) {
+				return response.text();
+			} else {
+				debug(response);
+				metaframe.setOutput("pdb_data", {value:null});
+				return null;
+			}
+		})
+		.then(function(pdb_data) {
+			if (pdb_data != null) {
+				metaframe.setOutput("pdb_data", {value:pdb_data});
+			}
 		})
 		.catch(function (error) {
-			console.error(error);
+			debug(error);
+			metaframe.setOutput("pdb_data", {value:null});
 		});
 }
 

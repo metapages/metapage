@@ -13,8 +13,10 @@ class Metapage extends EventEmitter
 {
 	public static function fromDefinition(metaPageDef :MetapageDefinition, ?inputs :MetapageInstanceInputs)
 	{
+		// trace('start metaPageDef=${metaPageDef} inputs=${inputs}');
 		var metapage = new Metapage(metaPageDef.options);
-		if (inputs ==  null) {
+		inputs = inputs.filterOutNullsMetapage();
+		if (inputs == null) {
 			inputs = {};
 		}
 		if (metaPageDef.iframes != null) {
@@ -25,14 +27,18 @@ class Metapage extends EventEmitter
 				//If there's an existing state from the passed in inputs we'll use
 				//that and ignore the metaframe default
 				var initialInputs = inputs == null || inputs[iframeId] == null ? {} : inputs[iframeId];
+				// trace('begin initialInputs=${initialInputs}');
+				initialInputs = initialInputs.filterOutNullsMetaframe();
 				if (iframeDef.metaframe != null && iframeDef.metaframe.inputs != null) {
 					for (inPipe in iframeDef.metaframe.inputs) {
-						if (initialInputs == null || !initialInputs.exists(inPipe.name)) {
+						if (inPipe.value != null && !initialInputs.exists(inPipe.name)) {
 							initialInputs = initialInputs == null ? {} : initialInputs;
+							// trace('addeding inPipe=${inPipe}');
 							initialInputs[inPipe.name] = inPipe;
 						}
 					}
 				}
+				// trace('end initialInputs=${Json.stringify(initialInputs, null, "  ")}');
 				iframe.setInitialState(initialInputs);
 			}
 		}
@@ -41,7 +47,8 @@ class Metapage extends EventEmitter
 				metapage.pipe(pipeDef);
 			}
 		}
-		metapage.applyUpdates(inputs);
+		// trace('inputs=${Json.stringify(inputs, null, "  ")}');
+		// metapage.applyUpdates(inputs);
 		return metapage;
 	}
 
@@ -62,6 +69,7 @@ class Metapage extends EventEmitter
 		super();
 		_id = opts != null && opts.id != null ? opts.id : MetapageTools.generateMetapageId();
 		_debug = opts != null && opts.debug == true;
+		// _debug = true;
 		_consoleBackgroundColor = (opts != null && opts.color != null ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT);
 		Browser.window.addEventListener('message', onMessage);
 		log('Initialized');
@@ -209,11 +217,11 @@ class Metapage extends EventEmitter
 
 	function onMessage(e :Event)
 	{
-		debug(Std.string(untyped e.data).substr(0, 200));
+		// debug(Std.string(untyped e.data).substr(0, 200));
 		if (untyped __js__('typeof e.data === "object"')) {
 			var jsonrpc :MinimumClientMessage = untyped e.data;
 			if (!isValidJsonRpcMessage(jsonrpc)) {
-				error('invalid message ${Json.stringify(jsonrpc).substr(0, 200)}');
+				debug('invalid message ${Json.stringify(jsonrpc).substr(0, 200)}');
 				return;
 			}
 			var origin :String = untyped e.origin;
@@ -233,6 +241,7 @@ class Metapage extends EventEmitter
 				 * The response is idempotent.
 				 */
 				case SetupIframeClientRequest:
+					debug('SetupIframeClientRequest from unknown, registered all metaframes');
 					for (iframeId in _iframes.keys()) {
 						var iframeClient = _iframes.get(iframeId);
 						iframeClient.register();
@@ -240,17 +249,18 @@ class Metapage extends EventEmitter
 
 				/* A client iframe responded */
 				case SetupIframeServerResponseAck:
+					debug('SetupIframeServerResponseAck iframeId=${jsonrpc.iframeId} jsonrpc.params=${Json.stringify(jsonrpc.params, null, "  ")}');
 					/* Send all inputs when a client has registered.*/
 					var params :MinimumClientMessage = jsonrpc.params;
 					var iframe = _iframes.get(jsonrpc.iframeId);
 					iframe.registered();
 
 				case OutputsUpdate:
-
 					var iframeId :MetaframeId = jsonrpc.iframeId;
 					var iframe = _iframes.get(iframeId);
 					var outputs :MetaframeInputMap = jsonrpc.params;
-					iframe.debug('OutputsUpdate source=$iframeId outputs=${Json.stringify(jsonrpc.params).substr(0,200)} _outputPipeMap=${Json.stringify(_outputPipeMap, null, "  ")}');
+					// debug('OutputsUpdate iframeId=${iframeId} outputs=${Json.stringify(outputs, null, "  ")}');
+					iframe.debug('OutputsUpdate iframeId=$iframeId outputs=${Json.stringify(outputs).substr(0,200)} _outputPipeMap=${Json.stringify(_outputPipeMap, null, "  ")}');
 					if (iframe != null) {
 						iframe.setOutputs(outputs);
 						//Does this iframe have output pipes?
@@ -277,7 +287,7 @@ class Metapage extends EventEmitter
 										}
 									}
 								} else {
-									error('OutputsUpdate _outputPipeMap.get($iframeId).get(${pipeId}) is null');
+									// error('OutputsUpdate _outputPipeMap.get($iframeId).get(${pipeId}) is null');
 								}
 							}
 							for (iframeId in iframeToInputs.keys()) {

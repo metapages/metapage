@@ -12,25 +12,25 @@ metaframe.ready.then(function() {
  */
 var inputElements = {};
 
-metaframe.addEventListener("input", function(pipe, pipeBlob) {
-	var value = pipeBlob.value;
-	if (!(pipe in inputElements)) {
+metaframe.addEventListener("input", function(pipeName, inputBlob) {
+	var value = inputBlob.value;
+	if (!(pipeName in inputElements)) {
 		//Create the row showing the input value
 		var row = document.createElement("tr");
 
 	    var nameColumn = document.createElement("td");
 	    row.appendChild(nameColumn);
-	    nameColumn.innerHTML = pipe;
+	    nameColumn.innerHTML = pipeName;
 
 	    var valueColumn = document.createElement("td");
 	    row.appendChild(valueColumn);
-	    inputElements[pipe] = valueColumn;
+	    inputElements[pipeName] = valueColumn;
 
 	    document.getElementById("inputs").appendChild(row);
 	    metaframe.sendDimensions();
 	}
-	inputElements[pipe].innerHTML = (value + "").substr(0, 15);
-	metaframe.setOutput({name:pipe, value:value});
+	inputElements[pipeName].innerHTML = (value + "").substr(0, 15);
+	metaframe.setOutput(pipeName, inputBlob);
 });
 
 QueryString = function () {

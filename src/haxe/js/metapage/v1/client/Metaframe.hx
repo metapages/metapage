@@ -67,6 +67,16 @@ class Metaframe extends EventEmitter
 					sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {});
 
 					resolve(true);
+
+					//Send notifications of initial inputs (if non-null)
+					//so you don't have to listen to the ready event if you don't
+					//want to
+					if (_inputPipeValues != null && _inputPipeValues.keys().length > 0) {
+						emit(MetaframeEvents.Inputs, _inputPipeValues);
+						for (pipeId in _inputPipeValues.keys()) {
+							emit(MetaframeEvents.Input, pipeId, _inputPipeValues[pipeId]);
+						}
+					}
 				} else {
 					debug('Got JsonRpcMethods.SetupIframeServerResponse but already resolved');
 				}
@@ -158,7 +168,7 @@ class Metaframe extends EventEmitter
 	}
 
 	/**
-	 * Not public. I dont' see the use case of allowing internal
+	 * Not public. I don't see the use case of allowing internal
 	 * metaframes to set their own "inputs". It's state they know,
 	 * it's not coming from the metapage parent, so it's not really
 	 * a function argument, if you think about metaframes as
@@ -215,7 +225,7 @@ class Metaframe extends EventEmitter
 	public function setOutput(pipeId :MetaframePipeId, updateBlob :DataBlob) :Void
 	{
 		require(pipeId != null);
-		// require(updateBlob.name != null, updateBlob);
+		require(updateBlob != null);
 
 		var outputs :MetaframeInputMap = {};
 		outputs[pipeId] = updateBlob;
@@ -225,13 +235,17 @@ class Metaframe extends EventEmitter
 
 	public function setOutputs(outputs :MetaframeInputMap, ?clearPrevious :Bool = false) :Void
 	{
+		//This doesn't make any sense, so don't do it
+		require(outputs != null);
+
 		if (clearPrevious) {
 			_outputPipeValues = {};
 		}
 
-		if (outputs == null) {
-			return;
-		}
+		//What does this mean?
+		// if (outputs == null) {
+		// 	return;
+		// }
 
 		var actualUpdates :MetaframeInputMap = null;
 		for (pipeId in outputs.keys()) {
@@ -241,9 +255,15 @@ class Metaframe extends EventEmitter
 				continue;
 			}
 
+			if (!_outputPipeValues.exists(pipeId) && updateBlob.value == null) {
+				//No change
+				continue;
+			}
+
 			var version = _outputPipeValues.exists(pipeId) && _outputPipeValues[pipeId].v != null
 				? _outputPipeValues[pipeId].v
 				: 0;
+
 			version++;
 			updateBlob = updateBlob == null ? {value :null} : updateBlob;
 			updateBlob.v = version;
@@ -253,7 +273,7 @@ class Metaframe extends EventEmitter
 		}
 
 		if (actualUpdates != null) {
-			sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
+			sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, actualUpdates);
 		}
 	}
 

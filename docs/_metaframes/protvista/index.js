@@ -15,15 +15,16 @@ function on_uniprot_id(blob) {
 }
 
 function loadUniprotId(uniprotId) {
-    if (!uniprotId) {
-        return;
-    }
-
     // console.log('protvista uniprotId', uniprotId);
 	var mainDiv = document.getElementById('main');
 	while (mainDiv.firstChild) {
 	    mainDiv.removeChild(mainDiv.firstChild);
 	}
+
+    if (!uniprotId) {
+        document.getElementById('uniprotid').innerHTML = 'Uniprot ID: none';
+        return;
+    }
 
     document.getElementById('uniprotid').innerHTML = 'Uniprot ID: ' + uniprotId;
 

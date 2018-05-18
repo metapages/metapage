@@ -11,17 +11,17 @@ metaframe.ready.then(function() {
 document.getElementById("button1")
 	.addEventListener('click', function() {
 		var val = "Category1";
-		metaframe.setOutput({name:"button_out", value:val});
+		metaframe.setOutput(button_out, {value:val});
 	});
 
 document.getElementById("button2")
 	.addEventListener('click', function() {
 		var val = "Category2";
-		metaframe.setOutput({name:"button_out", value:val});
+		metaframe.setOutput(button_out, {value:val});
 	});
 
 document.getElementById("button3")
 	.addEventListener('click', function() {
 		var val = "Category3";
-		metaframe.setOutput({name:"button_out", value:val});
+		metaframe.setOutput(button_out, {value:val});
 	});
