@@ -39,11 +39,11 @@ function onPdbData(pdb_data) {
 	metaframe.debug('pdb_data=' + (pdb_data != null ? pdb_data.substr(0, 200) : null));
 	if (pdb_data != null) {
 		metaframe.debug('Setting pdb data to pv viewer');
-		setLabel("pdb_data=" + pdb_data.substr(0, 20));
+		// setLabel("pdb_data=" + pdb_data.substr(0, 20));
 	    var structure = pv.io.pdb(pdb_data);
 	    showStructure(structure);
 	} else {
-		setLabel("pdb_data=null");
+		// setLabel("pdb_data=null");
 		viewer.clear();
 	}
 }

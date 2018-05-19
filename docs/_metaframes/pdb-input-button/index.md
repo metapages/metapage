@@ -13,6 +13,9 @@ layout: vanilla
   <label for="pdbid">PDB Id:</label>
   <input type="text" class="form-control" id="pdbid"/>
 </div>
+<div>
+1BNA 5C0T 5C0U 1c7d
+</div>
 
 </body>
 <script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
