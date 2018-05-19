@@ -1,0 +1,28 @@
+.column {
+    display: flex;
+    flex-direction: column;
+}
+
+.row {
+    display: flex;
+    flex-direction: row;
+}
+
+
+.box-name {
+    position: relative;
+    background: #88b7d5;
+    border: 4px solid #c2e1f5;
+}
+
+.box-type {
+}
+
+.box-source {
+}
+
+.box-encoding {
+}
+
+.box-value {
+}
