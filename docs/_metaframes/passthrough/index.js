@@ -7,9 +7,6 @@ metaframe.ready.then(function() {
 	metaframe.error('Error setting up the metaframe connection');
 });
 
-// var values = {};
-// var valueNameOrder = [];
-
 /*
  * On input pipe update, show value, and pass to output pipe
  */
@@ -42,20 +39,19 @@ function createRow(name) {
 		value: valueDiv,
 		source: sourceDiv,
 		type: typeDiv,
+		update: function(blob) {
+			valueDiv.innerHTML = (JSON.stringify(blob.value) + "").substr(0, 200);
+			sourceDiv.innerHTML = blob.source;
+		},
 	}
-}
-
-function updateRow(name, blob, rowDivBlob) {
-	rowDivBlob.value.innerHTML = (JSON.stringify(blob.value) + "").substr(0, 200);
-	rowDivBlob.source.innerHTML = blob.source;
 }
 
 function createOrUpdateRow(name, blob) {
 	if (inputElements[name]) {
-		updateRow(name, blob, inputElements[name]);
+		inputElements[name].update(blob);
 	} else {
 		var rowBlob = createRow(name)
-		updateRow(name, blob, rowBlob);
+		rowBlob.update(blob);
 
 		inputElements[name] = rowBlob;
 		var parent = document.getElementById("column");
@@ -81,62 +77,3 @@ metaframe.addEventListener("inputs", function(inputMap) {
 		}
 	}
 });
-
-
-
-
-// 	var value = inputBlob.value;
-// 	if (!(pipeName in inputElements)) {
-// 		//Create the row showing the input value
-// 		var row = document.createElement("tr");
-
-// 	    var nameColumn = document.createElement("td");
-// 	    row.appendChild(nameColumn);
-// 	    nameColumn.innerHTML = pipeName;
-
-// 	    var valueColumn = document.createElement("td");
-// 	    row.appendChild(valueColumn);
-// 	    inputElements[pipeName] = valueColumn;
-
-// 	    document.getElementById("inputs").appendChild(row);
-// 	    metaframe.sendDimensions();
-// 	}
-// 	inputElements[pipeName].innerHTML = (value + "").substr(0, 15);
-// 	metaframe.setOutput(pipeName, inputBlob);
-// });
-
-// QueryString = function () {
-//   // This function is anonymous, is executed immediately and
-//   // the return value is assigned to QueryString!
-//   var query_string = {};
-//   var query = window.location.search.substring(1);
-//   var vars = query.split("&");
-//   for (var i=0;i<vars.length;i++) {
-//     var pair = vars[i].split("=");
-//         // If first entry with this name
-//     if (typeof query_string[pair[0]] === "undefined") {
-//       query_string[pair[0]] = decodeURIComponent(pair[1]);
-//         // If second entry with this name
-//     } else if (typeof query_string[pair[0]] === "string") {
-//       var arr = [ query_string[pair[0]],decodeURIComponent(pair[1]) ];
-//       query_string[pair[0]] = arr;
-//         // If third or later entry with this name
-//     } else {
-//       query_string[pair[0]].push(decodeURIComponent(pair[1]));
-//     }
-//   }
-//   return query_string;
-// }();
-
-// if (QueryString.direction == 'up') {
-// 	document.getElementById("arrow_box").className = "arrow_box_top";
-// }
-// if (QueryString.direction == 'down') {
-// 	document.getElementById("arrow_box").className = "arrow_box_bottom";
-// }
-// if (QueryString.direction == 'left') {
-// 	document.getElementById("arrow_box").className = "arrow_box_left";
-// }
-// if (QueryString.direction == 'right') {
-// 	document.getElementById("arrow_box").className = "arrow_box_right";
-// }
