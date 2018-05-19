@@ -39,11 +39,9 @@ function onPdbData(pdb_data) {
 	metaframe.debug('pdb_data=' + (pdb_data != null ? pdb_data.substr(0, 200) : null));
 	if (pdb_data != null) {
 		metaframe.debug('Setting pdb data to pv viewer');
-		// setLabel("pdb_data=" + pdb_data.substr(0, 20));
 	    var structure = pv.io.pdb(pdb_data);
 	    showStructure(structure);
 	} else {
-		// setLabel("pdb_data=null");
 		viewer.clear();
 	}
 }
@@ -125,16 +123,6 @@ metaframe.onInput("pdb_data", function(inputBlob) {
 		return;
 	}
 	onPdbData(inputBlob.value);
-	// metaframe.debug('pdb_data=' + (pdb_data != null ? pdb_data.substr(0, 200) : null));
-	// setLabel("pdb_data=" + pdb_data.substr(0, 20));
-	// if (pdb_data != null) {
-	// 	metaframe.debug('Setting pdb data to pv viewer');
-	//     var structure = pv.io.pdb(pdb_data);
-	//     showStructure(structure);
-	// } else {
-	// 	setLabel("pdb_data=null");
-	// 	viewer.clear();
-	// }
 });
 
 metaframe.onInput("pdb_id", function(inputBlob) {
@@ -142,14 +130,6 @@ metaframe.onInput("pdb_id", function(inputBlob) {
 		return;
 	}
 	onPdbId(inputBlob.value);
-	// var pdb_id = inputBlob.value;
-	// metaframe.debug('pdb_id=' + pdb_id);
-	// if (pdb_id != null && viewerReady) {
-	// 	setLabel("pdb_id=" + pdb_id);
-	// 	pv.io.fetchPdb('https://files.rcsb.org/download/' + pdb_id + '.pdb', function(structure) {
-	// 		showStructure(structure);
-	// 	});
-	// }
 });
 
 metaframe.onInput("pdb_url", function(inputBlob) {
@@ -157,14 +137,6 @@ metaframe.onInput("pdb_url", function(inputBlob) {
 		return;
 	}
 	onPdbUrl(inputBlob.value);
-	// var pdb_url = inputBlob.value;
-	// metaframe.debug('pdb_url=' + pdb_url);
-	// if (pdb_url != null && viewerReady) {
-	// 	setLabel("pdb_url=" + pdb_url);
-	// 	pv.io.fetchPdb(pdb_url, function(structure) {
-	// 		showStructure(structure);
-	// 	});
-	// }
 });
 
 metaframe.onInput("rotation", function(inputBlob) {
@@ -198,6 +170,6 @@ metaframe.onInput("zoom", function(inputBlob) {
 });
 
 metaframe.onInputs(function(inputsBlob) {
-	// console.log("inputsBlob", inputsBlob);
+	metaframe.debug("inputsBlob " + inputsBlob);
 });
 
