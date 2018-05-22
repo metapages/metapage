@@ -14,24 +14,27 @@ var inputElements = null;//{};
 
 //Creates javascript object with methods
 function createRow(name) {
-	var nameDiv = document.createElement("div");
+	var nameDiv = document.createElement("td");
 	nameDiv.classList.add("box-name");
 	nameDiv.innerHTML = name;
 
-	var valueDiv = document.createElement("div");
-	valueDiv.classList.add("box-value");
+	var valueDiv = document.createElement("td");
+	// valueDiv.classList.add("box-value");
 
-	var sourceDiv = document.createElement("div");
-	sourceDiv.classList.add("box-source");
+	var sourceDiv = document.createElement("td");
+	// sourceDiv.classList.add("box-source");
 
-	var typeDiv = document.createElement("div");
-	typeDiv.classList.add("box-type");
+	var typeDiv = document.createElement("td");
+	// typeDiv.classList.add("box-type");
 
-	var rowDiv = document.createElement("div");
-	rowDiv.classList.add("row");
+	var rowDiv = document.createElement("tr");
+	// rowDiv.classList.add("row");
 
 	rowDiv.appendChild(nameDiv);
 	rowDiv.appendChild(valueDiv);
+
+	var parent = document.getElementById("tablebody");
+	parent.appendChild(rowDiv);
 
 	return {
 		row: rowDiv,
@@ -52,15 +55,15 @@ function createOrUpdateRow(name, blob) {
 	} else {
 		var rowBlob = createRow(name)
 		rowBlob.update(blob);
-
 		inputElements[name] = rowBlob;
-		var parent = document.getElementById("column");
-		parent.appendChild(rowBlob.row);
 	}
 }
 
 metaframe.addEventListener("inputs", function(inputMap) {
 	if (!inputElements) {
+		//Remove "No data" text
+		var unneededText = document.getElementById("nodata");
+		unneededText.parentNode.removeChild(unneededText);
 		//First inputs, do these in alphabetical order
 		inputElements = {};
 		var keys = [];

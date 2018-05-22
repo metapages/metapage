@@ -4,7 +4,7 @@ import haxe.remoting.JsonRpc;
 
 @:enum
 abstract JsonRpcMethodsFromChild(String) to String {
-  // var OutputUpdate = "OutputUpdate";
+  var InputsUpdate = "InputsUpdate";
   var OutputsUpdate = "OutputsUpdate";
   var SetupIframeClientRequest = "SetupIframeClientRequest";
   var SetupIframeServerResponseAck = "SetupIframeServerResponseAck";
@@ -14,7 +14,6 @@ abstract JsonRpcMethodsFromChild(String) to String {
 @:enum
 abstract JsonRpcMethodsFromParent(String) to String {
   var InputsUpdate = "InputsUpdate";
-  // var InputUpdate = "InputUpdate";
   var SetupIframeServerResponse = "SetupIframeServerResponse";
 }
 

@@ -11,10 +11,17 @@ layout: vanilla
     <title>Metaframe pipe passthrough</title>
 </head>
 <body>
-<h3>Piped Values</h3>
-<div className="container">
-    <div id="column" className="column" />
-</div>
+<h3 id="nodata">No data as yet</h3>
+
+<table class="table">
+    <!-- <thead>
+    <tr>
+      <th><abbr title="Name">Name</abbr></th>
+      <th><abbr title="Value">Value</abbr></th>
+    </tr>
+  </thead> -->
+  <tbody id="tablebody" />
+</table>
 <script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
 <script src="index.js"></script>
 </body>

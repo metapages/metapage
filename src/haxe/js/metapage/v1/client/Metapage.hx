@@ -13,7 +13,6 @@ class Metapage extends EventEmitter
 {
 	public static function fromDefinition(metaPageDef :MetapageDefinition, ?inputs :MetapageInstanceInputs)
 	{
-		// trace('start metaPageDef=${metaPageDef} inputs=${inputs}');
 		var metapage = new Metapage(metaPageDef.options);
 		inputs = inputs.filterOutNullsMetapage();
 		if (inputs == null) {
@@ -27,18 +26,15 @@ class Metapage extends EventEmitter
 				//If there's an existing state from the passed in inputs we'll use
 				//that and ignore the metaframe default
 				var initialInputs = inputs == null || inputs[iframeId] == null ? {} : inputs[iframeId];
-				// trace('begin initialInputs=${initialInputs}');
 				initialInputs = initialInputs.filterOutNullsMetaframe();
 				if (iframeDef.metaframe != null && iframeDef.metaframe.inputs != null) {
 					for (inPipe in iframeDef.metaframe.inputs) {
 						if (inPipe.value != null && !initialInputs.exists(inPipe.name)) {
 							initialInputs = initialInputs == null ? {} : initialInputs;
-							// trace('addeding inPipe=${inPipe}');
 							initialInputs[inPipe.name] = inPipe;
 						}
 					}
 				}
-				// trace('end initialInputs=${Json.stringify(initialInputs, null, "  ")}');
 				iframe.setInitialState(initialInputs);
 			}
 		}
@@ -47,8 +43,6 @@ class Metapage extends EventEmitter
 				metapage.pipe(pipeDef);
 			}
 		}
-		// trace('inputs=${Json.stringify(inputs, null, "  ")}');
-		// metapage.applyUpdates(inputs);
 		return metapage;
 	}
 
@@ -298,10 +292,14 @@ class Metapage extends EventEmitter
 						error('missing iframe=$iframeId');
 					}
 
-				// case InputUpdate,InputsUpdate:
-					//In the future, we might update the state of the system
-					//to preserve metapage states.
-					//Until then InputPipeUpdates (from iframes) are ignored
+				case InputsUpdate:
+					//This is triggered by the metaframe itself, meaning the metaframe
+					//decided to save this state info.
+					var iframeId :MetaframeId = jsonrpc.iframeId;
+					var inputs :MetaframeInputMap = jsonrpc.params;
+					var e :MetapageInstanceInputs = {};
+					e.set(iframeId, inputs);
+					emit(MetapageEvents.Inputs, e);
 				case Dimensions:
 					debug('${jsonrpc.iframeId} Dimensions ${Json.stringify(jsonrpc.params).substr(0, 200)}');
 					var dimensions :{height:Float,width:Float} = jsonrpc.params;
@@ -366,6 +364,7 @@ class IFrameRpcClient
 	var _parentId :MetapageId;
 	var _url :String;
 	var _debug :Bool;
+	var _sendInputsAfterRegistration :Bool = false;
 	public var _metapage :Metapage;
 
 	public function new(url :String, iframeId :MetaframeId, parentId :MetapageId, consoleBackgroundColor :String, ?debug :Bool = false)
@@ -391,6 +390,8 @@ class IFrameRpcClient
 		_consoleBackgroundColor = consoleBackgroundColor;
 	}
 
+	//This doesn't send anything, since the initial state
+	//is send in the init message
 	public function setInitialState(inputs :MetaframeInputMap)
 	{
 		_inputs = inputs;
@@ -437,30 +438,15 @@ class IFrameRpcClient
 	public function setInputs(maybeNewInputs :MetaframeInputMap)
 	{
 		debug({m:'IFrameRpcClient', inputs:maybeNewInputs});
-		if (maybeNewInputs == _inputs) {
-			//Equality means no updates
-			return;
-		}
 
-		var actuallyNewInputs :MetaframeInputMap = null;
-		var updatedKeys :Array<MetaframePipeId> = null;
-		for (pipeId in maybeNewInputs.keys()) {
-			if (!_inputs.exists(pipeId) || _inputs.get(pipeId).v == null || maybeNewInputs.get(pipeId).v == null || _inputs.get(pipeId).v < maybeNewInputs.get(pipeId).v) {
-				if (actuallyNewInputs == null) {
-					actuallyNewInputs = {};
-					updatedKeys = [];
-				}
-				var version = _inputs.exists(pipeId) && _inputs.get(pipeId).v != null ? _inputs.get(pipeId).v : 0;
-				version++;
-				var newValue = maybeNewInputs.get(pipeId);
-				newValue.v = version;
-				actuallyNewInputs.set(pipeId, newValue);
-				_inputs.set(pipeId, newValue);
-				updatedKeys.push(pipeId);
-			}
-		}
-		if (updatedKeys == null || updatedKeys.length == 0) {
+		var actuallyNewInputs = maybeNewInputs.mergeNewImportsIntoCurrentReturnUpdated(_inputs);
+
+		if (actuallyNewInputs == null) {
+			debug('nothing new ');
 			return;
+		}
+		if (!_loaded) {
+			_sendInputsAfterRegistration = true;
 		}
 		//Updated, so create a new copy
 		_inputs = Reflect.copy(_inputs);
@@ -489,30 +475,9 @@ class IFrameRpcClient
 
 	public function setOutputs(maybeNewOutputs :MetaframeInputMap)
 	{
-		if (maybeNewOutputs == null || _outputs == maybeNewOutputs) {
-			return;
-		}
-
-		var actuallyNewOutputs :MetaframeInputMap = null;
-		var updatedKeys :Array<MetaframePipeId> = null;
-		for (pipeId in maybeNewOutputs.keys()) {
-			//No version means it came from the metaframe itself
-			if (!_outputs.exists(pipeId) || _outputs.get(pipeId).v == null || maybeNewOutputs.get(pipeId).v == null || _outputs.get(pipeId).v < maybeNewOutputs.get(pipeId).v) {
-				if (actuallyNewOutputs == null) {
-					actuallyNewOutputs = {};
-					updatedKeys = [];
-				}
-				var version = _outputs.exists(pipeId) && _outputs.get(pipeId).v != null ? _outputs.get(pipeId).v : 0;
-				version++;
-				var newValue = maybeNewOutputs.get(pipeId);
-				newValue = newValue == null ? {value:null} : newValue;
-				newValue.v = version;
-				actuallyNewOutputs.set(pipeId, newValue);
-				_outputs.set(pipeId, newValue);
-				updatedKeys.push(pipeId);
-			}
-		}
-		if (updatedKeys == null || updatedKeys.length == 0) {
+		var actuallyNewOutputs = maybeNewOutputs.mergeNewImportsIntoCurrentReturnUpdated(_outputs);
+		if (actuallyNewOutputs == null) {
+			debug('setOutputs nothing new');
 			return;
 		}
 		//Updated, so create a new copy
@@ -578,6 +543,9 @@ class IFrameRpcClient
 
 	public function registered()
 	{
+		if (_loaded) {
+			return;
+		}
 		_loaded = true;
 		while(_onLoaded != null && _onLoaded.length > 0) {
 			_onLoaded.pop()();
@@ -586,7 +554,9 @@ class IFrameRpcClient
 		// may have been set initially, because the inputs may
 		// have been been updated before the metaframe internal
 		// returned its server ack.
-		sendInputs(_inputs);
+		if (_sendInputsAfterRegistration) {
+			sendInputs(_inputs);
+		}
 		log('registered');
 	}
 

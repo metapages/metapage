@@ -11,4 +11,5 @@ abstract DataEncoding(String) to String from String {
 	var ucs2 = 'ucs2';
 	var binary = 'binary';
 	var hex = 'hex';
+	var json = 'json';
 }

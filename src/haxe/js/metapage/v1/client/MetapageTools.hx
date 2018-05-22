@@ -3,6 +3,81 @@ package js.metapage.v1.client;
 class MetapageTools
 {
 	/**
+	 * currentInputs, maybeNewInputs, updated
+	 * @param  url :String       [description]
+	 * @return     [description]
+	 */
+	public static function mergeNewImportsIntoCurrentReturnUpdated(maybeNew :MetaframeInputMap, current :MetaframeInputMap) :MetaframeInputMap
+	{
+		if (maybeNew == current) {
+			//Equality means no updates
+			return null;
+		}
+
+		var actuallyNewInputs :MetaframeInputMap = null;
+		for (pipeId in maybeNew.keys()) {
+			var blob :DataBlob = maybeNew[pipeId];
+			if (!current.exists(pipeId) || !equals(current[pipeId], blob)) {
+				actuallyNewInputs = actuallyNewInputs == null ? {} : actuallyNewInputs;
+				var version = current.exists(pipeId) && current[pipeId].v != null ? current[pipeId].v : 0;
+				version++;
+				blob.v = version;
+				actuallyNewInputs[pipeId] = blob;
+				current[pipeId] = blob;
+			}
+		}
+		return actuallyNewInputs;
+	}
+
+	public static function getOnlyNewUpdates(current :MetapageInstanceInputs, maybeNew :MetapageInstanceInputs) :MetapageInstanceInputs
+	{
+		if (maybeNew == null) {
+			return null;
+		}
+		var actualNew :MetapageInstanceInputs = null;
+		for (metaframeId in maybeNew.keys()) {
+			if (!current.exists(metaframeId)) {
+				actualNew = actualNew == null ? {} : actualNew;
+				actualNew[metaframeId] = maybeNew[metaframeId];
+			} else {
+				for (pipeId in maybeNew[metaframeId].keys()) {
+					var currentBlob = current[metaframeId][pipeId];
+					if (currentBlob == null || (currentBlob.v != null && currentBlob.v < maybeNew[metaframeId][pipeId].v)) {
+						actualNew = actualNew == null ? {} : actualNew;
+						if (actualNew[metaframeId] == null) {
+							actualNew[metaframeId] = {};
+						}
+						actualNew[metaframeId][pipeId] = maybeNew[metaframeId][pipeId];
+					}
+				}
+			}
+		}
+
+		return actualNew;
+	}
+
+	//Does no version checking, it is assumed that the updated are already version checked
+	public static function merge(current :MetapageInstanceInputs, updated :MetapageInstanceInputs) :MetapageInstanceInputs
+	{
+		if (updated == null) {
+			return current;
+		}
+
+		var result :MetapageInstanceInputs = Reflect.copy(current);
+		for (metaframeId in updated.keys()) {
+			if (!current.exists(metaframeId)) {
+				result[metaframeId] = updated[metaframeId];
+			} else {
+				for (pipeId in updated[metaframeId].keys()) {
+					result[metaframeId][pipeId] = updated[metaframeId][pipeId];
+				}
+			}
+		}
+
+		return result;
+	}
+
+	/**
 	 * Only returns updated object if origin modified
 	 */
 	public static function filterOutNullsMetapage(values :MetapageInstanceInputs) :MetapageInstanceInputs
@@ -48,9 +123,11 @@ class MetapageTools
 		assert(blob != null);
 		assert(other != null);
 		return
-				blob.value == other.value &&
+				(blob.v != null && blob.v == other.v)
+				||
+				(blob.value == other.value &&
 				blob.source == other.source &&
-				blob.encoding == other.encoding;
+				blob.encoding == other.encoding);
 	}
 
 	public static function generateMetaframeId(?length :Int = 8) :MetaframeId

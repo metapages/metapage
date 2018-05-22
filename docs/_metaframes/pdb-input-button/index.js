@@ -19,11 +19,12 @@ inputElement.addEventListener("change", handleFiles, false);
 
 function sendPdbId() {
 	var pdbId = document.getElementById('pdbid').value;
-	metaframe.setOutput("pdb_id", {value:pdbId});
 	var url = 'https://files.rcsb.org/download/' + pdbId.toUpperCase() + '.pdb';
 	fetch(url)
 		.then(function (response) {
 			if(response.ok) {
+				metaframe.setOutput("pdb_id", {value:pdbId});
+				metaframe.setInput("pdb_id", {value:pdbId});
 				return response.text();
 			} else {
 				debug(response);
@@ -49,10 +50,13 @@ document.getElementById('pdbid').addEventListener('keypress', function (e) {
 	}
 });
 
-document.getElementById('pdbid').value = "1c7d";
-
 metaframe.ready.then(function() {
 	metaframe.sendDimensions();
+	if (metaframe.getInputs() && metaframe.getInputs()['pdb_id']) {
+		document.getElementById('pdbid').value = metaframe.getInputs()['pdb_id'].value;
+	} else {
+		document.getElementById('pdbid').value = "1C7D";
+	}
 	sendPdbId();
 }, function(err) {
 	console.error('Error setting up the metaframe connection');

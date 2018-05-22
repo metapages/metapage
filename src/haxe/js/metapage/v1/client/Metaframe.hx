@@ -47,10 +47,12 @@ class Metaframe extends EventEmitter
 		ready = new Promise(function(resolve, reject) {
 			once(JsonRpcMethodsFromParent.SetupIframeServerResponse, function(params :SetupIframeServerResponseData) {
 
-				debug('SetupIframeServerResponse params=${Std.string(params)}');
 				if (_iframeId == null) {
 					_iframeId = params.iframeId;
+					_color = MetapageTools.stringToRgb(_iframeId);
 					_parentId = params.parentId;
+
+					debug('SetupIframeServerResponse params=${Std.string(params)}');
 
 					_inputPipeValues = params.state != null && params.state.inputs != null
 						? params.state.inputs
@@ -60,8 +62,8 @@ class Metaframe extends EventEmitter
 						? params.state.outputs
 						: _outputPipeValues;
 
-					_color = MetapageTools.stringToRgb(_iframeId);
-					debug('initialized parentId=${_parentId}', null);
+					debug('SetupIframeServerResponse _inputPipeValues=${Json.stringify(_inputPipeValues, null, "  ")}');
+					debug('SetupIframeServerResponse _outputPipeValues=${Json.stringify(_outputPipeValues, null, "  ")}');
 
 					//Tell the parent we have registered.
 					sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {});
@@ -139,8 +141,6 @@ class Metaframe extends EventEmitter
 			Browser.window.setTimeout(function() {
 				if (_inputPipeValues != null) {
 					listener(_inputPipeValues);
-					// var keys = _inputPipeValues.keys();
-					// untyped __js__('for (key in {1}) { try{ if (key !== undefined && {0}[key] !== undefined) { {1}.apply(null, key, {0}[key]); } }catch(e){console.error(e);} }', keys, _inputPipeValues, listener);
 				}
 			}, 0);
 		}
@@ -162,9 +162,49 @@ class Metaframe extends EventEmitter
 		return addEventListener(MetaframeEvents.Inputs, listener);
 	}
 
-	public function getInput (pipeId :MetaframePipeId) :DataBlob
+	/**
+	 * This is a particular use case: metapage inputs are saved outside
+	 * the iframe, so when this iframe is restarted in the same metapage
+	 * it will start with this value. So in a way, it can be used for
+	 * state storage, by the metaframe itself.
+	 */
+	public function setInput(pipeId :MetaframePipeId, blob :DataBlob)
 	{
-		return _inputPipeValues.get(pipeId);
+		var inputs :MetaframeInputMap = {};
+		inputs[pipeId] = blob;
+		setInputs(inputs);
+	}
+
+	public function setInputs(inputs :MetaframeInputMap)
+	{
+		var actualUpdates :MetaframeInputMap = null;
+		for (pipeId in inputs.keys()) {
+			var blob = inputs[pipeId];
+			// if (!_inputPipeValues.exists(pipeId)) {
+			// 	actualUpdates = actualUpdates == null ? {} : actualUpdates;
+			// 	blob.v = blob.v == null ? 1 : blob.v;
+			// 	_inputPipeValues[pipeId] = blob;
+			// 	actualUpdates[pipeId] = blob;
+			// } else {
+			if (!_inputPipeValues.exists(pipeId) || !_inputPipeValues[pipeId].equals(blob)) {
+				actualUpdates = actualUpdates == null ? {} : actualUpdates;
+				blob.v = _inputPipeValues.exists(pipeId) ? _inputPipeValues[pipeId].v + 1 : (blob.v == null ? 1 : blob.v);
+				_inputPipeValues[pipeId] = blob;
+				actualUpdates[pipeId] = blob;
+			}
+			// }
+			// var version = _inputPipeValues.exists(pipeId) && _inputPipeValues[pipeId].v != null ? _inputPipeValues[pipeId].v : 0;
+			// version++;
+			// blob.v = version;
+			// _inputPipeValues[pipeId] = blob;
+		}
+		if (actualUpdates != null) {
+			sendRpc(JsonRpcMethodsFromChild.InputsUpdate, actualUpdates);
+			emit(MetaframeEvents.Inputs, actualUpdates);
+			for (pipeId in actualUpdates.keys()) {
+				emit(MetaframeEvents.Input, pipeId, actualUpdates[pipeId]);
+			}
+		}
 	}
 
 	/**
@@ -204,6 +244,12 @@ class Metaframe extends EventEmitter
 				emit(MetaframeEvents.Input, pipeId, actualUpdates[pipeId]);
 			}
 		}
+	}
+
+	public function getInput (pipeId :MetaframePipeId) :DataBlob
+	{
+		require(pipeId != null);
+		return _inputPipeValues.get(pipeId);
 	}
 
 	public function getInputs() :MetaframeInputMap
