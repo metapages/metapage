@@ -9,11 +9,21 @@ layout: vanilla
     <link rel="stylesheet" href="css/bulma-0.7.1.css">
     <link rel="stylesheet" href="index.css">
     <title>Metaframe pipe passthrough</title>
+    <script defer src="font-awesome-all-v5.0.7.js"></script>
 </head>
 <body>
-<h3 id="nodata">No data as yet</h3>
 
-<table class="table">
+<div id="header">
+  <h3 id="nodata">No data as yet</h3>
+  <a id="add-input-button" class="button is-success is-outlined">
+    <span>Input</span>
+    <span class="icon is-small">
+      <i class="fas fa-plus"></i>
+    </span>
+  </a>
+  <!-- <button id="add-input-button" class="button is-success is-outlined" >Input</button> -->
+</div>
+<table class="table is-bordered is-fullwidth">
     <!-- <thead>
     <tr>
       <th><abbr title="Name">Name</abbr></th>

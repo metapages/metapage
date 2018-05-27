@@ -13,6 +13,7 @@
     /*position: relative;*/
     background: #88b7d5;
     /*border: 4px solid #c2e1f5;*/
+   	max-width: 100px;
 }
 
 .box-type {
@@ -25,4 +26,16 @@
 }
 
 .box-value {
+	overflow: hidden;
+}
+
+.box-delete {
+	max-width: 100px;
+}
+
+#header {
+	display: flex;
+	direction: row;
+	justify-content: space-between;
+	align-items: flex-start;
 }

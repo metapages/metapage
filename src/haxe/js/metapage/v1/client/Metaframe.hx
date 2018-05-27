@@ -3,6 +3,7 @@ package js.metapage.v1.client;
 @:enum abstract MetaframeEvents<T:haxe.Constraints.Function>(Dynamic) to Dynamic {
   var Input : MetaframeEvents<PipeUpdateClient->Void> = "input";
   var Inputs : MetaframeEvents<MetaframeInputMap->Void> = "inputs";
+  var InputsDelete : MetaframeEvents<Array<MetaframePipeId>->Void> = "inputsdelete";
   var Message : MetaframeEvents<String->Void> = "message";
 }
 
@@ -207,6 +208,17 @@ class Metaframe extends EventEmitter
 		}
 	}
 
+	public function deleteInputs(pipeId :haxe.extern.EitherType<MetaframePipeId,Array<MetaframePipeId>>)
+	{
+		trace('deleteInputs');
+		var pipeIds :Array<MetaframePipeId> = untyped __typeof__(pipeId) == 'string' ? [pipeId] : pipeId;
+		for (pipeId in pipeIds) {
+			_inputPipeValues.remove(pipeId);
+		}
+		emit(MetaframeEvents.InputsDelete, pipeIds);
+		sendRpc(JsonRpcMethodsFromChild.InputsDelete, pipeIds);
+	}
+
 	/**
 	 * Not public. I don't see the use case of allowing internal
 	 * metaframes to set their own "inputs". It's state they know,
@@ -243,6 +255,28 @@ class Metaframe extends EventEmitter
 			for (pipeId in actualUpdates.keys()) {
 				emit(MetaframeEvents.Input, pipeId, actualUpdates[pipeId]);
 			}
+		}
+	}
+
+	/**
+	 * Deleted in puts are assumed to ORIGINATE from a metaframe
+	 * so this event should really not do anything. Maybe.
+	 */
+	function deleteInputsFromMetapage(pipeIds :Array<MetaframePipeId>)
+	{
+		if (pipeIds == null || pipeIds.length == 0) {
+			return;
+		}
+
+		var changed :Array<MetaframePipeId> = null;
+		for (pipeId in pipeIds) {
+			if (_inputPipeValues.exists(pipeId)) {
+				changed = [pipeId];
+				_inputPipeValues.remove(pipeId);
+			}
+		}
+		if (changed != null) {
+			emit(MetaframeEvents.InputsDelete, changed);
 		}
 	}
 
@@ -362,6 +396,7 @@ class Metaframe extends EventEmitter
 				switch(method) {
 					case SetupIframeServerResponse: //Handled elsewhere
 					case InputsUpdate: setInputsFromMetapage(jsonrpc.params.inputs);
+					case InputsDelete: deleteInputsFromMetapage(jsonrpc.params.inputs);
 				}
 
 				emit(jsonrpc.method, jsonrpc.params);

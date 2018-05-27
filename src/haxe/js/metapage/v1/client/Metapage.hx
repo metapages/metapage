@@ -3,6 +3,7 @@ package js.metapage.v1.client;
 @:enum abstract MetapageEvents<T:haxe.Constraints.Function>(Dynamic) to Dynamic {
   // This object is react-friendly (value equality failure equals state change)
   var Inputs : MetapageEvents<MetapageInstanceInputs->Void> = "inputs";
+  var InputsDelete : MetapageEvents<MetapageInstanceInputsDeleted->Void> = "inputsDelete";
   // This object is react-friendly (value equality failure equals state change)
   var Outputs : MetapageEvents<MetapageInstanceInputs->Void> = "outputs";
 }
@@ -300,6 +301,17 @@ class Metapage extends EventEmitter
 					var e :MetapageInstanceInputs = {};
 					e.set(iframeId, inputs);
 					emit(MetapageEvents.Inputs, e);
+				case InputsDelete:
+					//This is triggered by the metaframe itself, meaning the metaframe
+					//decided to save this state info.
+					var pipeIds :Array<MetaframePipeId> = jsonrpc.params;
+					var iframeId :MetaframeId = jsonrpc.iframeId;
+					//Delete the local copy, the metaframe representation
+					//here will send the event.
+					_iframes.get(iframeId).deleteInputs(pipeIds);
+					var e :MetapageInstanceInputsDeleted = {};
+					e.set(iframeId, pipeIds);
+					emit(MetapageEvents.InputsDelete, e);
 				case Dimensions:
 					debug('${jsonrpc.iframeId} Dimensions ${Json.stringify(jsonrpc.params).substr(0, 200)}');
 					var dimensions :{height:Float,width:Float} = jsonrpc.params;
@@ -459,6 +471,42 @@ class IFrameRpcClient
 		_metapage.emit(JsonRpcMethodsFromParent.InputsUpdate, e);
 	}
 
+	/**
+	 * This currently can only originate INSIDE the metaframe
+	 * so we do not currently send the deleted inputs update
+	 * back to the metaframe. If there is that use case, then
+	 * the metaframe will need to check if the inputs are already
+	 * deleted and then simply ignore that message.
+	 */
+	public function deleteInputs(pipeIds :Array<MetaframePipeId>)
+	{
+		debug({m:'IFrameRpcClient deleteInputs', pipeIds:pipeIds});
+
+		if (!_loaded) {
+			_sendInputsAfterRegistration = true;
+		}
+
+		var updatedInputs = _inputs;
+		for (pipeId in pipeIds) {
+			if (_inputs.exists(pipeId)) {
+				if (updatedInputs == _inputs) {
+					//Updated, so create a new copy
+					updatedInputs = Reflect.copy(_inputs);
+				}
+				updatedInputs.remove(pipeId);
+			}
+		}
+		_inputs = updatedInputs;
+		var e :MetapageInstanceInputsDeleted = {};
+		e[id] = pipeIds;
+		_metapage.emit(JsonRpcMethodsFromParent.InputsDelete, e);
+		//Send back to the metaframe, just in case the deletion
+		//occured outside the metaframe. This use case is a bit uncertain
+		//but we can avoid circular events by not sending further updates
+		//once the event is inside the metaframe
+		sendRpc(JsonRpcMethodsFromParent.InputsDelete, pipeIds);
+	}
+
 	public function setOutput(pipeId :MetaframePipeId, updateBlob :DataBlob)
 	{
 		if (pipeId == null) {
@@ -483,18 +531,6 @@ class IFrameRpcClient
 		//Updated, so create a new copy
 		_outputs = Reflect.copy(_outputs);
 		_metapage.emit(JsonRpcMethodsFromChild.OutputsUpdate, actuallyNewOutputs);
-	}
-
-	public function sendRpc(method :String, params :Dynamic)
-	{
-		if (this.iframe.parentNode != null && _loaded) {
-			sendRpcInternal(method, params);
-		} else {
-			_metapage.error('sending rpc later');
-			_onLoaded.push(function() {
-				sendRpcInternal(method, params);
-			});
-		}
 	}
 
 	public function onOutput(cb :String->Dynamic->Void) :Void->Void
@@ -565,9 +601,29 @@ class IFrameRpcClient
 		sendRpc(JsonRpcMethodsFromParent.InputsUpdate, {inputs :inputs, parentId: _parentId});
 	}
 
+	public function sendRpc(method :String, params :Dynamic)
+	{
+		if (this.iframe.parentNode != null && _loaded) {
+			sendRpcInternal(method, params);
+		} else {
+			_metapage.error('sending rpc later');
+			_onLoaded.push(function() {
+				sendRpcInternal(method, params);
+			});
+		}
+	}
+
 	function sendRpcInternal(method :String, params :Dynamic)
 	{
-		var messageJson = {'method':method, 'params':params, 'jsonrpc':'2.0', parentId:_parentId, iframeId:id};
+		//TODO: typedef this
+		var messageJson :MinimumClientMessage = {
+			method: method,
+			params: params,
+			jsonrpc: '2.0',
+			parentId: _parentId,
+			iframeId :id,
+			origin: null,//TODO:??
+		};
 		if (this.iframe != null) {
 			debug('Sending to child iframe messageJson=${Json.stringify(messageJson).substr(0, 200)}');
 			sendOrBufferPostMessage(messageJson, "*");
