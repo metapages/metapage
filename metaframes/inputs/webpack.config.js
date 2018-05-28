@@ -18,6 +18,18 @@ module.exports = {
                 loader: 'style-loader!css-loader!sass-loader'
             },
             {
+				test: /\.css$/,
+				loader: 'style-loader'
+			},
+			{
+				test: /\.css$/,
+				loader: 'css-loader',
+				query: {
+					modules: true,
+					localIdentName: '[name]__[local]___[hash:base64:5]'
+				}
+			},
+            {
                 test: /\.(woff(2)?|ttf|eot|svg)(\?v=\d+\.\d+\.\d+)?$/,
                 use: [{
                     loader: 'file-loader',
