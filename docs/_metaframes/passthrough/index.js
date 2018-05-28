@@ -6,15 +6,55 @@ var metaframe = new Metaframe({debug:true});
  */
 var inputElements = null;
 
+function rename(prev, next) {
+	if (!metaframe.getInput(prev)) {
+		return;
+	}
+	var previousDiv = inputElements[prev].row;
+	var rowBlob = createRow(next, previousDiv)
+	rowBlob.update(metaframe.getInput(prev));
+	inputElements[prev].deleteRow();
+	delete inputElements[prev];
+	inputElements[next] = rowBlob;
+	metaframe.setInput(next, metaframe.getInput(prev));
+}
+
 //Creates javascript object with methods
-function createRow(name) {
-	var nameDiv = document.createElement("td");
+function createRow(name, previousDiv) {
+	var nameRow = document.createElement("td");
+	var nameDiv = document.createElement("div");
+	nameRow.appendChild(nameDiv);
 	nameDiv.classList.add("box-name");
 	nameDiv.innerHTML = name;
+	nameDiv.setAttribute("contenteditable", true);
+	var nameTimer;
+	nameDiv.addEventListener("input", function(anything) {
+		console.log('input');
+		//Clear the current countdown
+		if (nameTimer) {
+			clearTimeout(nameTimer);
+			nameTimer = null;
+		}
+		//Start a 1 second countdown, save the
+		//changed name afterwards
+		nameTimer = setTimeout(function() {
+			console.log(`Save name=${nameDiv.innerHTML}`);
+			if (name != nameDiv.innerHTML) {
+				rename(name, nameDiv.innerHTML);
+			}
+		}, 1000);
+	}, false);
 
-	var valueDiv = document.createElement("td");
+	contenteditable="true"
+	var valueRow = document.createElement("td");
+	var valueDiv = document.createElement("div");
+	valueRow.appendChild(valueDiv);
 	valueDiv.classList.add('box-value');
-	// valueDiv.classList.add("box-value");
+	valueDiv.setAttribute("contenteditable", true);
+	valueDiv.addEventListener("input", function(anything) {
+		console.log('input');
+		console.log(anything);
+	}, false);
 
 	// var sourceDiv = document.createElement("td");
 	// sourceDiv.classList.add("box-source");
@@ -27,21 +67,28 @@ function createRow(name) {
 	var deleteButton = document.createElement("button")
 	deleteDiv.appendChild(deleteButton);
 	deleteButton.classList.add('button', 'is-danger', 'is-small');
-	deleteButton.onclick = function() {
+
+	function deleteRow() {
 		metaframe.deleteInputs(name);
-	};
+	}
+
+	deleteButton.onclick = deleteRow;
 
 	// typeDiv.classList.add("box-type");
 
 	var rowDiv = document.createElement("tr");
 	// rowDiv.classList.add("row");
 
-	rowDiv.appendChild(nameDiv);
-	rowDiv.appendChild(valueDiv);
+	rowDiv.appendChild(nameRow);
+	rowDiv.appendChild(valueRow);
 	rowDiv.appendChild(deleteDiv);
 
 	var parent = document.getElementById("tablebody");
-	parent.appendChild(rowDiv);
+	if (previousDiv) {
+		parent.insertBefore(rowDiv, previousDiv)
+	} else {
+		parent.appendChild(rowDiv);
+	}
 
 	//inputElements stores a map of these
 	return {
@@ -52,9 +99,13 @@ function createRow(name) {
 		// type: typeDiv,
 		delete: deleteDiv,
 		update: function(blob) {
-			valueDiv.innerHTML = (JSON.stringify(blob.value) + "").substr(0, 200);
-			// sourceDiv.innerHTML = blob.source;
+			if (blob) {
+				valueDiv.innerHTML = (JSON.stringify(blob.value) + "").substr(0, 200);
+				//Not all types are directly editable here
+				valueDiv.setAttribute("contenteditable", blob.encoding == null || blob.encoding == 'utf8' || blob.encoding == 'json');
+			}
 		},
+		deleteRow: deleteRow,
 	}
 }
 
@@ -104,12 +155,10 @@ function updateWithNewInputs(inputMap) {
 }
 
 metaframe.addEventListener('inputs', function(inputMap) {
-	console.log('inputs', inputMap);
 	updateWithNewInputs(inputMap);
 });
 
 metaframe.addEventListener('inputsdelete', function(inputsArray) {
-	console.log('inputsdelete', inputsArray);
 	inputsArray.forEach(deleteRow);
 });
 
