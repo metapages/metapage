@@ -33,6 +33,7 @@ layout: vanilla
   <tbody id="tablebody" />
 </table>
 <script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
-<script src="index.js"></script>
+<!-- <script src="index.js"></script> -->
+<script src="bundle.js"></script>
 </body>
 
