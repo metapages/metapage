@@ -210,13 +210,19 @@ class Metaframe extends EventEmitter
 
 	public function deleteInputs(pipeId :haxe.extern.EitherType<MetaframePipeId,Array<MetaframePipeId>>)
 	{
-		trace('deleteInputs');
 		var pipeIds :Array<MetaframePipeId> = untyped __typeof__(pipeId) == 'string' ? [pipeId] : pipeId;
-		for (pipeId in pipeIds) {
-			_inputPipeValues.remove(pipeId);
+		var removedCount = 0;
+		for (id in pipeIds) {
+			if (_inputPipeValues.exists(id)) {
+				_inputPipeValues.remove(id);
+				removedCount++;
+			}
 		}
-		emit(MetaframeEvents.InputsDelete, pipeIds);
-		sendRpc(JsonRpcMethodsFromChild.InputsDelete, pipeIds);
+		if (removedCount > 0) {
+			_inputPipeValues = Reflect.copy(_inputPipeValues);
+			emit(MetaframeEvents.InputsDelete, pipeIds);
+			sendRpc(JsonRpcMethodsFromChild.InputsDelete, pipeIds);
+		}
 	}
 
 	/**

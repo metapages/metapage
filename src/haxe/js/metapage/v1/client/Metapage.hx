@@ -497,6 +497,8 @@ class IFrameRpcClient
 			}
 		}
 		_inputs = updatedInputs;
+
+		trace('Metapage:Metaframe deleteInputs after _inputs=${Json.stringify(_inputs, null, "  ")}');
 		var e :MetapageInstanceInputsDeleted = {};
 		e[id] = pipeIds;
 		_metapage.emit(JsonRpcMethodsFromParent.InputsDelete, e);

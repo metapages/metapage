@@ -7,16 +7,26 @@ var metaframe = new Metaframe({debug:true});
 var inputElements = null;
 
 function rename(prev, next) {
-	if (!metaframe.getInput(prev)) {
+	if (!metaframe.getInput(prev) || !inputElements[prev]) {
 		return;
 	}
-	var previousDiv = inputElements[prev].row;
-	var rowBlob = createRow(next, previousDiv)
-	rowBlob.update(metaframe.getInput(prev));
-	inputElements[prev].deleteRow();
-	delete inputElements[prev];
+	if (prev == next) {
+		return;
+	}
+	//Create the new with the different name, same value
+	var previousBlob = inputElements[prev];
+	var rowBlob = createRow(next, previousBlob.row);
+
 	inputElements[next] = rowBlob;
-	metaframe.setInput(next, metaframe.getInput(prev));
+	var valueBlob = metaframe.getInput(prev);
+	console.log(`rename ${prev} ${next} previousDiv=${previousBlob.row != null} valueBlob=${valueBlob}`);
+	valueBlob.v = 1;
+	rowBlob.update(metaframe.getInput(prev));
+	metaframe.setInput(next, valueBlob);
+
+	//Delete the previous
+	delete inputElements[prev];
+	previousBlob.deleteRow();
 }
 
 //Creates javascript object with methods
@@ -27,23 +37,80 @@ function createRow(name, previousDiv) {
 	nameDiv.classList.add("box-name");
 	nameDiv.innerHTML = name;
 	nameDiv.setAttribute("contenteditable", true);
+
+	var isdeleted = false;
+	// var isListening = false;
+
+
 	var nameTimer;
-	nameDiv.addEventListener("input", function(anything) {
-		console.log('input');
-		//Clear the current countdown
-		if (nameTimer) {
-			clearTimeout(nameTimer);
-			nameTimer = null;
+	var editing = false;
+
+	var finishEditing = function() {
+		if (isdeleted || !editing) {
+			return;
 		}
-		//Start a 1 second countdown, save the
-		//changed name afterwards
-		nameTimer = setTimeout(function() {
+		editing = false;
+		if (name != nameDiv.innerHTML) {
 			console.log(`Save name=${nameDiv.innerHTML}`);
-			if (name != nameDiv.innerHTML) {
-				rename(name, nameDiv.innerHTML);
-			}
-		}, 1000);
-	}, false);
+			rename(name, nameDiv.innerHTML);
+			// nameDiv.setAttribute("contenteditable", false);
+			// setTimeout(function() {
+			// 	nameDiv.setAttribute("contenteditable", true);
+			// }, 0);
+		}
+		nameDiv.onkeydown = null;
+		// if (nameTimer) {
+		// 	clearTimeout(nameTimer);
+		// 	nameTimer = null;
+		// }
+	}
+
+
+
+	var inputListener = function(anything) {
+		console.log('input');
+		
+		//Clear the current countdown
+		// if (nameTimer) {
+		// 	clearTimeout(nameTimer);
+		// 	nameTimer = null;
+		// }
+
+		// //Start a 1 second countdown, save the
+		// //changed name afterwards
+		// nameTimer = setTimeout(function() {
+		// 	if (isdeleted) {
+		// 		return;
+		// 	}
+		// 	finishEditing();
+		// }, 3000);
+
+		if (!editing) {
+			editing = true;
+			// isListening = true;
+
+			nameDiv.onkeydown = function (e) {
+				console.log('keydown');
+				if (!e) {
+					e = window.event;
+				}
+				var keyCode = e.which || e.keyCode,
+					target = e.target || e.srcElement;
+
+				if (keyCode === 13 && !e.shiftKey) {
+					console.log('Just enter');
+					if (e.preventDefault) {
+						e.preventDefault();
+					} else {
+						e.returnValue = false;
+					}
+					// target.innerHTML = '';
+					finishEditing();
+				}
+			};
+		}
+	}
+	nameDiv.addEventListener("input", inputListener, false);
 
 	contenteditable="true"
 	var valueRow = document.createElement("td");
@@ -51,10 +118,10 @@ function createRow(name, previousDiv) {
 	valueRow.appendChild(valueDiv);
 	valueDiv.classList.add('box-value');
 	valueDiv.setAttribute("contenteditable", true);
-	valueDiv.addEventListener("input", function(anything) {
-		console.log('input');
-		console.log(anything);
-	}, false);
+	// valueDiv.addEventListener("input", function(anything) {
+	// 	console.log('input');
+	// 	console.log(anything);
+	// }, false);
 
 	// var sourceDiv = document.createElement("td");
 	// sourceDiv.classList.add("box-source");
@@ -68,12 +135,6 @@ function createRow(name, previousDiv) {
 	deleteDiv.appendChild(deleteButton);
 	deleteButton.classList.add('button', 'is-danger', 'is-small');
 
-	function deleteRow() {
-		metaframe.deleteInputs(name);
-	}
-
-	deleteButton.onclick = deleteRow;
-
 	// typeDiv.classList.add("box-type");
 
 	var rowDiv = document.createElement("tr");
@@ -83,7 +144,26 @@ function createRow(name, previousDiv) {
 	rowDiv.appendChild(valueRow);
 	rowDiv.appendChild(deleteDiv);
 
+	function deleteRow() {
+		if (isdeleted) {
+			return;
+		}
+		isdeleted = true;
+		if (rowDiv.parentElement) {
+			rowDiv.parentElement.removeChild(rowDiv);
+		} else {
+			console.error(`Missing parentElement for ${name}`);
+		}
+		delete inputElements[name];
+		nameDiv.removeEventListener("input", inputListener);
+		nameDiv.onkeydown = null;
+		metaframe.deleteInputs(name);
+	}
+
+	deleteButton.onclick = deleteRow;
+
 	var parent = document.getElementById("tablebody");
+	console.log(`creating ${name} is previousDiv=${previousDiv != null}`);
 	if (previousDiv) {
 		parent.insertBefore(rowDiv, previousDiv)
 	} else {
