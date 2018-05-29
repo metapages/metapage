@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:true});
+var metaframe = new Metaframe({debug:false});
 
 /*
  * On input pipe update, show value, and pass to output pipe
@@ -16,17 +16,12 @@ function rename(prev, next) {
 	//Create the new with the different name, same value
 	var previousBlob = inputElements[prev];
 	var rowBlob = createRow(next, previousBlob.row);
-
 	inputElements[next] = rowBlob;
 	var valueBlob = metaframe.getInput(prev);
-	console.log(`rename ${prev} ${next} previousDiv=${previousBlob.row != null} valueBlob=${valueBlob}`);
 	valueBlob.v = 1;
-	rowBlob.update(metaframe.getInput(prev));
 	metaframe.setInput(next, valueBlob);
-
-	//Delete the previous
-	delete inputElements[prev];
-	previousBlob.deleteRow();
+	//This causes downstream cleanup
+	metaframe.deleteInput(prev);
 }
 
 //Creates javascript object with methods
@@ -34,63 +29,28 @@ function createRow(name, previousDiv) {
 	var nameRow = document.createElement("td");
 	var nameDiv = document.createElement("div");
 	nameRow.appendChild(nameDiv);
-	nameDiv.classList.add("box-name");
+	nameDiv.classList.add("column-name", "prop-text");
 	nameDiv.innerHTML = name;
 	nameDiv.setAttribute("contenteditable", true);
 
 	var isdeleted = false;
-	// var isListening = false;
 
-
-	var nameTimer;
-	var editing = false;
-
-	var finishEditing = function() {
-		if (isdeleted || !editing) {
+	var editingName = false;
+	var finishEditingName = function() {
+		if (isdeleted || !editingName) {
 			return;
 		}
-		editing = false;
+		editingName = false;
 		if (name != nameDiv.innerHTML) {
-			console.log(`Save name=${nameDiv.innerHTML}`);
 			rename(name, nameDiv.innerHTML);
-			// nameDiv.setAttribute("contenteditable", false);
-			// setTimeout(function() {
-			// 	nameDiv.setAttribute("contenteditable", true);
-			// }, 0);
 		}
 		nameDiv.onkeydown = null;
-		// if (nameTimer) {
-		// 	clearTimeout(nameTimer);
-		// 	nameTimer = null;
-		// }
 	}
-
-
-
-	var inputListener = function(anything) {
-		console.log('input');
-		
-		//Clear the current countdown
-		// if (nameTimer) {
-		// 	clearTimeout(nameTimer);
-		// 	nameTimer = null;
-		// }
-
-		// //Start a 1 second countdown, save the
-		// //changed name afterwards
-		// nameTimer = setTimeout(function() {
-		// 	if (isdeleted) {
-		// 		return;
-		// 	}
-		// 	finishEditing();
-		// }, 3000);
-
-		if (!editing) {
-			editing = true;
-			// isListening = true;
-
+	var inputListenerName = function(anything) {
+		if (!editingName) {
+			editingName = true;
+			//Capture enter and send changed name
 			nameDiv.onkeydown = function (e) {
-				console.log('keydown');
 				if (!e) {
 					e = window.event;
 				}
@@ -98,51 +58,73 @@ function createRow(name, previousDiv) {
 					target = e.target || e.srcElement;
 
 				if (keyCode === 13 && !e.shiftKey) {
-					console.log('Just enter');
 					if (e.preventDefault) {
 						e.preventDefault();
 					} else {
 						e.returnValue = false;
 					}
-					// target.innerHTML = '';
-					finishEditing();
+					finishEditingName();
 				}
 			};
 		}
 	}
-	nameDiv.addEventListener("input", inputListener, false);
 
-	contenteditable="true"
+	var editingValue = false;
+	var finishEditingValue = function() {
+		if (isdeleted || !editingValue) {
+			return;
+		}
+		editingValue = false;
+		metaframe.setInput(name, {value:valueDiv.innerHTML});
+		valueDiv.onkeydown = null;
+		valueDiv.setAttribute("contenteditable", false);
+		setTimeout(function() {
+			valueDiv.setAttribute("contenteditable", true);
+		}, 0);
+	}
+	var inputListenerValue = function(anything) {
+		if (!editingValue) {
+			editingValue = true;
+			//Capture enter and send changed name
+			valueDiv.onkeydown = function (e) {
+				if (!e) {
+					e = window.event;
+				}
+				var keyCode = e.which || e.keyCode,
+					target = e.target || e.srcElement;
+
+				if (keyCode === 13 && !e.shiftKey) {
+					if (e.preventDefault) {
+						e.preventDefault();
+					} else {
+						e.returnValue = false;
+					}
+					finishEditingValue();
+				}
+			};
+		}
+	}
+
 	var valueRow = document.createElement("td");
 	var valueDiv = document.createElement("div");
 	valueRow.appendChild(valueDiv);
-	valueDiv.classList.add('box-value');
+	valueDiv.classList.add('column-value');
 	valueDiv.setAttribute("contenteditable", true);
-	// valueDiv.addEventListener("input", function(anything) {
-	// 	console.log('input');
-	// 	console.log(anything);
-	// }, false);
-
-	// var sourceDiv = document.createElement("td");
-	// sourceDiv.classList.add("box-source");
-
-	// var typeDiv = document.createElement("td");
-	// typeDiv.classList.add("box-type");
 
 	var deleteDiv = document.createElement("td");
-	deleteDiv.classList.add('box-delete');
+	deleteDiv.classList.add('column-delete');
 	var deleteButton = document.createElement("button")
 	deleteDiv.appendChild(deleteButton);
 	deleteButton.classList.add('button', 'is-danger', 'is-small');
 
-	// typeDiv.classList.add("box-type");
-
 	var rowDiv = document.createElement("tr");
-	// rowDiv.classList.add("row");
 
 	rowDiv.appendChild(nameRow);
 	rowDiv.appendChild(valueRow);
 	rowDiv.appendChild(deleteDiv);
+
+	nameDiv.addEventListener("input", inputListenerName, false);
+	valueDiv.addEventListener("input", inputListenerValue, false);
 
 	function deleteRow() {
 		if (isdeleted) {
@@ -155,7 +137,8 @@ function createRow(name, previousDiv) {
 			console.error(`Missing parentElement for ${name}`);
 		}
 		delete inputElements[name];
-		nameDiv.removeEventListener("input", inputListener);
+		nameDiv.removeEventListener("input", inputListenerName);
+		valueDiv.removeEventListener("input", inputListenerValue);
 		nameDiv.onkeydown = null;
 		metaframe.deleteInputs(name);
 	}
@@ -163,7 +146,7 @@ function createRow(name, previousDiv) {
 	deleteButton.onclick = deleteRow;
 
 	var parent = document.getElementById("tablebody");
-	console.log(`creating ${name} is previousDiv=${previousDiv != null}`);
+	// console.log(`creating ${name} is previousDiv=${previousDiv != null}`);
 	if (previousDiv) {
 		parent.insertBefore(rowDiv, previousDiv)
 	} else {
@@ -180,7 +163,13 @@ function createRow(name, previousDiv) {
 		delete: deleteDiv,
 		update: function(blob) {
 			if (blob) {
-				valueDiv.innerHTML = (JSON.stringify(blob.value) + "").substr(0, 200);
+				if (!blob.value) {
+					valueDiv.innerHTML = null;
+				} else if (typeof(blob.value) == 'object') {
+					valueDiv.innerHTML = JSON.stringify(blob.value);
+				} else {
+					valueDiv.innerHTML = `${blob.value}`;
+				}
 				//Not all types are directly editable here
 				valueDiv.setAttribute("contenteditable", blob.encoding == null || blob.encoding == 'utf8' || blob.encoding == 'json');
 			}
@@ -234,18 +223,37 @@ function updateWithNewInputs(inputMap) {
 	}
 }
 
-metaframe.addEventListener('inputs', function(inputMap) {
+metaframe.addEventListener(Metaframe.INPUTS, function(inputMap) {
 	updateWithNewInputs(inputMap);
 });
 
-metaframe.addEventListener('inputsdelete', function(inputsArray) {
+metaframe.addEventListener(Metaframe.INPUTSDELETE, function(inputsArray) {
+	// console.log(`INPUTSDELETE inputsArray=${inputsArray}`);
 	inputsArray.forEach(deleteRow);
 });
 
 var addInputButton = document.getElementById("add-input-button");
 addInputButton.onclick = function(ignored) {
-	metaframe.setInput('foo', {value:`replaceme ${Math.random()} ${Math.random()} ${Math.random()} ${Math.random()} ${Math.random()}`});
-	// createOrUpdateRow('foo', {value:'replaceme'});
+	//Get a safe new name
+	var proposedNameBase = 'new-input';
+	var proposedName = proposedNameBase;
+	if (inputElements) {
+		var ok = false;
+		var count = 0;
+		do {
+			ok = true;
+			for (name in inputElements) {
+				if (name == proposedName) {
+					count++;
+					proposedName = `${proposedNameBase}${count}`;
+					ok = false;
+					break;
+				}
+			}
+		}
+		while(!ok);
+	}
+	metaframe.setInput(proposedName, {value:`replaceme`});
 }
 
 metaframe.ready.then(function() {

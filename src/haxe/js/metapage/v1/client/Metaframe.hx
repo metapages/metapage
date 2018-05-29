@@ -15,6 +15,11 @@ typedef MetaframeOptions = {
 @:keep
 class Metaframe extends EventEmitter
 {
+	public static var INPUT = MetaframeEvents.Input;
+	public static var INPUTS = MetaframeEvents.Inputs;
+	public static var INPUTSDELETE = MetaframeEvents.InputsDelete;
+	public static var MESSAGE = MetaframeEvents.Message;
+
 	static var METAPAGE_VERSION = MetapageVersion.Alpha;
 	var _inputPipeValues :MetaframeInputMap = {};
 	var _outputPipeValues :MetaframeInputMap = {};
@@ -206,6 +211,11 @@ class Metaframe extends EventEmitter
 				emit(MetaframeEvents.Input, pipeId, actualUpdates[pipeId]);
 			}
 		}
+	}
+
+	public function deleteInput(pipeId :MetaframePipeId)
+	{
+		deleteInputs([pipeId]);
 	}
 
 	public function deleteInputs(pipeId :haxe.extern.EitherType<MetaframePipeId,Array<MetaframePipeId>>)

@@ -14,22 +14,23 @@ layout: vanilla
 <body>
 
 <div id="header">
-  <h3 id="nodata">No data as yet</h3>
   <a id="add-input-button" class="button is-success is-outlined">
-    <span>Input</span>
+    <!-- <span>Input</span> -->
     <span class="icon is-small">
       <i class="fas fa-plus"></i>
     </span>
   </a>
+  <h3 id="nodata">No data as yet</h3>
   <!-- <button id="add-input-button" class="button is-success is-outlined" >Input</button> -->
 </div>
-<table class="table is-bordered is-fullwidth">
-    <!-- <thead>
-    <tr>
-      <th><abbr title="Name">Name</abbr></th>
-      <th><abbr title="Value">Value</abbr></th>
-    </tr>
-  </thead> -->
+<table class="table is-bordered inputs">
+    <thead>
+      <tr>
+        <th class="column-name prop-text"><abbr title="Name">Name</abbr></th>
+        <th class="column-value prop-text"><abbr title="Value">Value</abbr></th>
+        <th class="column-delete prop-text"><abbr title="Delete">X</abbr></th>
+      </tr>
+  </thead>
   <tbody id="tablebody" />
 </table>
 <script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
