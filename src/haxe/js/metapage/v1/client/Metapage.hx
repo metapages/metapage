@@ -63,8 +63,7 @@ class Metapage extends EventEmitter
 	{
 		super();
 		_id = opts != null && opts.id != null ? opts.id : MetapageTools.generateMetapageId();
-		_debug = opts != null && opts.debug == true;
-		// _debug = true;
+		_debug = opts != null && opts.debug;
 		_consoleBackgroundColor = (opts != null && opts.color != null ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT);
 		Browser.window.addEventListener('message', onMessage);
 		log('Initialized');
@@ -255,7 +254,20 @@ class Metapage extends EventEmitter
 					var iframe = _iframes.get(iframeId);
 					var outputs :MetaframeInputMap = jsonrpc.params;
 					// debug('OutputsUpdate iframeId=${iframeId} outputs=${Json.stringify(outputs, null, "  ")}');
+					// trace('OutputsUpdate iframeId=$iframeId outputs=${Json.stringify(outputs).substr(0,200)} _outputPipeMap=${Json.stringify(_outputPipeMap, null, "  ")}');
+					// Metapage.hx:260 Metapage[hVgIx715] Metaframe[Hkfn5IUJX] OutputsUpdate iframeId=Hkfn5IUJX outputs={"new-input":{"value":"replasdffceme","v":2}} 
+					// _outputPipeMap={
+					//   "Hkfn5IUJX": {
+					//     "*": [
+					//       {
+					//         "id": "HJWxO49ym",
+					//         "name": "*"
+					//       }
+					//     ]
+					//   }
+					// }
 					iframe.debug('OutputsUpdate iframeId=$iframeId outputs=${Json.stringify(outputs).substr(0,200)} _outputPipeMap=${Json.stringify(_outputPipeMap, null, "  ")}');
+					var star = new MetaframePipeId('*');
 					if (iframe != null) {
 						iframe.setOutputs(outputs);
 						//Does this iframe have output pipes?
@@ -263,11 +275,16 @@ class Metapage extends EventEmitter
 							var iframeToInputs :JSMap<MetaframeId, MetaframeInputMap> = null;// = {};
 							for (pipeId in outputs.keys()) {
 								var output = outputs[pipeId];
+								output.v = null;
 								//Does the output pipe go anywhere?
 								//TODO: this is also where the glob pattern checks occur
-								if (_outputPipeMap.get(iframeId).exists(pipeId)) {
+								if (_outputPipeMap[iframeId].exists(pipeId) || _outputPipeMap[iframeId].exists(star)) {
 									//Array of input pipes from the output pipe
-									var inputPipesToOtherFrames = _outputPipeMap.get(iframeId).get(pipeId);
+									var inputPipesToOtherFrames = _outputPipeMap[iframeId].get(pipeId);
+									if (_outputPipeMap[iframeId].exists(star)) {
+										inputPipesToOtherFrames = inputPipesToOtherFrames == null ? [] : inputPipesToOtherFrames;
+										inputPipesToOtherFrames = inputPipesToOtherFrames.concat(_outputPipeMap[iframeId][star]);
+									}
 									if (inputPipesToOtherFrames != null) {
 										for (inputPipe in inputPipesToOtherFrames) {
 											var inputIframe = _iframes.get(inputPipe.id);
@@ -277,7 +294,12 @@ class Metapage extends EventEmitter
 												if (!iframeToInputs.exists(inputPipe.id)) {
 													iframeToInputs.set(inputPipe.id, {});
 												}
-												iframeToInputs.get(inputPipe.id).set(inputPipe.name, output);
+												if (inputPipe.name == star) {
+													//Use the name of the output pipe
+													iframeToInputs[inputPipe.id].set(pipeId, output);
+												} else {
+													iframeToInputs[inputPipe.id].set(inputPipe.name, output);
+												}
 											}
 										}
 									}
@@ -285,6 +307,7 @@ class Metapage extends EventEmitter
 									// error('OutputsUpdate _outputPipeMap.get($iframeId).get(${pipeId}) is null');
 								}
 							}
+							// trace('iframeToInputs=${Json.stringify(iframeToInputs, null, "  ")}');
 							for (iframeId in iframeToInputs.keys()) {
 								_iframes.get(iframeId).setInputs(iframeToInputs.get(iframeId));
 							}
@@ -309,9 +332,10 @@ class Metapage extends EventEmitter
 					//Delete the local copy, the metaframe representation
 					//here will send the event.
 					_iframes.get(iframeId).deleteInputs(pipeIds);
-					var e :MetapageInstanceInputsDeleted = {};
-					e.set(iframeId, pipeIds);
-					emit(MetapageEvents.InputsDelete, e);
+					//Handled in the iframe wrapper above
+					// var e :MetapageInstanceInputsDeleted = {};
+					// e.set(iframeId, pipeIds);
+					// emit(MetapageEvents.InputsDelete, e);
 				case Dimensions:
 					debug('${jsonrpc.iframeId} Dimensions ${Json.stringify(jsonrpc.params).substr(0, 200)}');
 					var dimensions :{height:Float,width:Float} = jsonrpc.params;
@@ -502,6 +526,7 @@ class IFrameRpcClient
 		var e :MetapageInstanceInputsDeleted = {};
 		e[id] = pipeIds;
 		_metapage.emit(JsonRpcMethodsFromParent.InputsDelete, e);
+		_metapage.emit(MetapageEvents.InputsDelete, e);
 		//Send back to the metaframe, just in case the deletion
 		//occured outside the metaframe. This use case is a bit uncertain
 		//but we can avoid circular events by not sending further updates

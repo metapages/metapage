@@ -221,9 +221,12 @@ function updateWithNewInputs(inputMap) {
 			createOrUpdateRow(inputName, inputMap[inputName]);
 		}
 	}
+	//Then pass all through
+	metaframe.setOutputs(inputMap);
 }
 
 metaframe.addEventListener(Metaframe.INPUTS, function(inputMap) {
+	// console.log(`Metaframe.${Metaframe.INPUTS} ${JSON.stringify(inputMap)}`);
 	updateWithNewInputs(inputMap);
 });
 

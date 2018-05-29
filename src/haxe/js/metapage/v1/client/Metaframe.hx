@@ -68,6 +68,7 @@ class Metaframe extends EventEmitter
 						? params.state.outputs
 						: _outputPipeValues;
 
+					// trace('$_iframeId SetupIframeServerResponse _inputPipeValues=${Json.stringify(_inputPipeValues, null, "  ")}');
 					debug('SetupIframeServerResponse _inputPipeValues=${Json.stringify(_inputPipeValues, null, "  ")}');
 					debug('SetupIframeServerResponse _outputPipeValues=${Json.stringify(_outputPipeValues, null, "  ")}');
 
@@ -80,9 +81,9 @@ class Metaframe extends EventEmitter
 					//so you don't have to listen to the ready event if you don't
 					//want to
 					if (_inputPipeValues != null && _inputPipeValues.keys().length > 0) {
-						emit(MetaframeEvents.Inputs, _inputPipeValues);
+						emit(MetaframeEvents.Inputs, Json.parse(Json.stringify(_inputPipeValues)));
 						for (pipeId in _inputPipeValues.keys()) {
-							emit(MetaframeEvents.Input, pipeId, _inputPipeValues[pipeId]);
+							emit(MetaframeEvents.Input, pipeId, Json.parse(Json.stringify(_inputPipeValues[pipeId])));
 						}
 					}
 				} else {
@@ -146,7 +147,7 @@ class Metaframe extends EventEmitter
 		if (event == MetaframeEvents.Inputs) {
 			Browser.window.setTimeout(function() {
 				if (_inputPipeValues != null) {
-					listener(_inputPipeValues);
+					listener(Json.parse(Json.stringify(_inputPipeValues)));
 				}
 			}, 0);
 		}
@@ -158,7 +159,7 @@ class Metaframe extends EventEmitter
 	{
 		return addEventListener(MetaframeEvents.Inputs, function(inputs :MetaframeInputMap) {
 			if (inputs.exists(pipeId)) {
-				listener(inputs.get(pipeId));
+				listener(Json.parse(Json.stringify(inputs.get(pipeId))));
 			}
 		});
 	}
@@ -176,6 +177,9 @@ class Metaframe extends EventEmitter
 	 */
 	public function setInput(pipeId :MetaframePipeId, blob :DataBlob)
 	{
+		//Sanity, you cannot set the version here, as this is a primary
+		//data source, versioning happens at a later step.
+		Reflect.deleteField(blob, 'v');
 		var inputs :MetaframeInputMap = {};
 		inputs[pipeId] = blob;
 		setInputs(inputs);
@@ -183,6 +187,7 @@ class Metaframe extends EventEmitter
 
 	public function setInputs(inputs :MetaframeInputMap)
 	{
+		// trace('$_iframeId setInputs inputs=${Json.stringify(inputs, null, "  ")} _inputPipeValues=${Json.stringify(_inputPipeValues, null, "  ")}');
 		var actualUpdates :MetaframeInputMap = null;
 		for (pipeId in inputs.keys()) {
 			var blob = inputs[pipeId];
@@ -205,6 +210,7 @@ class Metaframe extends EventEmitter
 			// _inputPipeValues[pipeId] = blob;
 		}
 		if (actualUpdates != null) {
+			// trace('$_iframeId actualUpdates=${Json.stringify(actualUpdates, null, "  ")}');
 			sendRpc(JsonRpcMethodsFromChild.InputsUpdate, actualUpdates);
 			emit(MetaframeEvents.Inputs, actualUpdates);
 			for (pipeId in actualUpdates.keys()) {
@@ -249,6 +255,7 @@ class Metaframe extends EventEmitter
 	 */
 	function setInputsFromMetapage(inputs :MetaframeInputMap)
 	{
+		// trace('$_iframeId setInputsFromMetapage inputs=${Json.stringify(inputs, null, "  ")} _inputPipeValues=${Json.stringify(_inputPipeValues, null, "  ")}');
 		if (inputs == null) {
 			return;
 		}
@@ -263,7 +270,7 @@ class Metaframe extends EventEmitter
 			//No version. Metaframe internal inputs are not versioned
 			actualUpdates = actualUpdates == null ? {} : actualUpdates;
 			actualUpdates.set(pipeId, updateBlob);
-			_inputPipeValues.set(pipeId, updateBlob);
+			_inputPipeValues.set(pipeId, Reflect.copy(updateBlob));
 		}
 
 		if (actualUpdates != null) {
@@ -299,12 +306,16 @@ class Metaframe extends EventEmitter
 	public function getInput (pipeId :MetaframePipeId) :DataBlob
 	{
 		require(pipeId != null);
-		return _inputPipeValues.get(pipeId);
+		if (_inputPipeValues.get(pipeId) != null) {
+			return Json.parse(Json.stringify(_inputPipeValues[pipeId]));
+		} else {
+			return null;
+		}
 	}
 
 	public function getInputs() :MetaframeInputMap
 	{
-		return Reflect.copy(_inputPipeValues);
+		return Json.parse(Json.stringify(_inputPipeValues));
 	}
 
 	public function getOutput(pipeId :MetaframePipeId) :DataBlob
@@ -375,7 +386,7 @@ class Metaframe extends EventEmitter
 
 	public function getOutputs() :MetaframeInputMap
 	{
-		return Reflect.copy(_outputPipeValues);
+		return Json.parse(Json.stringify(_outputPipeValues));
 	}
 
 	function sendRpc(method :String, params :Dynamic) :Void

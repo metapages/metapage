@@ -19,7 +19,7 @@ class EventEmitter
 			_events.set(event, []);
 		}
 		_events.get(event).push(listener);
-		return removeListener.bind(event, listener);
+		return removeEventListener.bind(event, listener);
 	}
 
 	public function once(event :String, listener :Function) :Void->Void
@@ -27,13 +27,13 @@ class EventEmitter
 		var g;
 		g = function() {
 			var args = untyped __js__('arguments');
-			removeListener(event, g);
+			removeEventListener(event, g);
 			untyped __js__('{0}.apply(null, {1})', listener, args);
 		}
 		return addEventListener(event, g);
 	}
 
-	public function removeListener(event :String, listener :Function) :Void
+	public function removeEventListener(event :String, listener :Function) :Void
 	{
 		if (untyped __js__('{0} in {1}', event, _events)) {
 			var arr :Array<Function> = _events.get(event);
