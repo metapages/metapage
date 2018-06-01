@@ -6,6 +6,12 @@ var metaframe = new Metaframe({debug:false});
  */
 var inputElements = null;
 
+function htmlDecode(input){
+	var e = document.createElement('div');
+	e.innerHTML = input;
+	return e.childNodes.length === 0 ? "" : e.childNodes[0].nodeValue;
+}
+
 function rename(prev, next) {
 	if (!metaframe.getInput(prev) || !inputElements[prev]) {
 		return;
@@ -75,7 +81,15 @@ function createRow(name, previousDiv) {
 			return;
 		}
 		editingValue = false;
-		metaframe.setInput(name, {value:valueDiv.innerHTML});
+		var value = valueDiv.innerHTML;
+		if (value) {
+			// value = value.replace(/&amp;/g, '&');
+			// value = value.replace('&amp;', '&');
+			value = htmlDecode(value);
+		}
+		console.log('valueDiv.innerHTML');
+		console.log(value);
+		metaframe.setInput(name, {value:value});
 		valueDiv.onkeydown = null;
 		valueDiv.setAttribute("contenteditable", false);
 		setTimeout(function() {
@@ -168,7 +182,11 @@ function createRow(name, previousDiv) {
 				} else if (typeof(blob.value) == 'object') {
 					valueDiv.innerHTML = JSON.stringify(blob.value);
 				} else {
-					valueDiv.innerHTML = `${blob.value}`;
+					if (blob.encoding == 'base64') {
+						valueDiv.innerHTML = atob(blob.value);
+					} else {
+						valueDiv.innerHTML = `${blob.value}`;
+					}
 				}
 				//Not all types are directly editable here
 				valueDiv.setAttribute("contenteditable", blob.encoding == null || blob.encoding == 'utf8' || blob.encoding == 'json');
