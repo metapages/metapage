@@ -337,18 +337,19 @@ class Metapage extends EventEmitter
 					// e.set(iframeId, pipeIds);
 					// emit(MetapageEvents.InputsDelete, e);
 				case Dimensions:
+					trace('${jsonrpc.iframeId} Dimensions ${Json.stringify(jsonrpc.params, null, "  ")}');
 					debug('${jsonrpc.iframeId} Dimensions ${Json.stringify(jsonrpc.params).substr(0, 200)}');
-					var dimensions :{height:Float,width:Float} = jsonrpc.params;
-					debug('${jsonrpc.iframeId} Dimensions ${dimensions}');
-					var iframe = _iframes.get(jsonrpc.iframeId);
-					if (iframe != null) {
-						if (dimensions.height != null) {
-							iframe.iframe.height = '${dimensions.height}px';
-						}
-						if (dimensions.width != null) {
-							iframe.iframe.width = '${dimensions.width}px';
-						}
-					}
+					// var dimensions :{height:Float,width:Float} = jsonrpc.params;
+					// debug('${jsonrpc.iframeId} Dimensions ${dimensions}');
+					// var iframe = _iframes.get(jsonrpc.iframeId);
+					// if (iframe != null) {
+					// 	if (dimensions.height != null) {
+					// 		iframe.iframe.height = '${dimensions.height}px';
+					// 	}
+					// 	if (dimensions.width != null) {
+					// 		iframe.iframe.width = '${dimensions.width}px';
+					// 	}
+					// }
 			}
 
 			emit(OtherEvents.Message, jsonrpc);
@@ -416,9 +417,7 @@ class IFrameRpcClient
 
 		this.id = iframeId;
 		this.iframe = Browser.document.createIFrameElement();
-		// this.iframe.width = '100%';
-		// this.iframe.height = '100%';
-		this.iframe.scrolling = "no";
+		// this.iframe.scrolling = "no";
 		this.iframe.src = url;
 		this._debug = debug;
 		_parentId = parentId;

@@ -1,8 +1,9 @@
 #header {
+    width: 100%;
     display: flex;
     flex-direction: row-reverse;
     justify-content: space-between;
-    align-items: flex-start;
+    /*align-items: flex-start;*/
 }
 
 .column {
@@ -19,10 +20,27 @@
     table-layout: fixed;
 }
 
-.inputs td {
+#input-button {
+    flex: 0 0 auto;
+}
+
+#nodata {
+    flex: 0 1 auto;
+}
+
+/*.inputs td {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}*/
+
+textarea {
+    /*border: none;*/
+    width: 100%;
+    height: 100%;
+    -webkit-box-sizing: border-box; /* <=iOS4, <= Android  2.3 */
+       -moz-box-sizing: border-box; /* FF1+ */
+            box-sizing: border-box; /* Chrome, IE8, Opera, Safari 5.1*/
 }
 
 /*.column-name {
@@ -35,7 +53,6 @@
 
 .column-delete {
     width: 10%;
-    /*max-width: 5px;*/
 }
 */
 .prop-text{font-size:1.0vw}
@@ -51,9 +68,9 @@
     table td:nth-child(3), table th:nth-child(3)  {
        display:none;
     }
-    .column-value {
+    /*.column-value {
         width: 100%;
-    }
+    }*/
     #header {
         display: none;
     }

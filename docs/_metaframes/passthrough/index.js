@@ -120,7 +120,7 @@ function createRow(name, previousDiv) {
 	}
 
 	var valueRow = document.createElement("td");
-	var valueDiv = document.createElement("div");
+	var valueDiv = document.createElement("textarea");
 	valueRow.appendChild(valueDiv);
 	valueDiv.classList.add('column-value');
 	valueDiv.setAttribute("contenteditable", true);
@@ -278,7 +278,7 @@ addInputButton.onclick = function(ignored) {
 }
 
 metaframe.ready.then(function() {
-	metaframe.sendDimensions();
+	// metaframe.sendDimensions();
 }, function(err) {
 	metaframe.error('Error setting up the metaframe connection');
 });

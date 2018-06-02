@@ -86,6 +86,9 @@ class Metaframe extends EventEmitter
 							emit(MetaframeEvents.Input, pipeId, Json.parse(Json.stringify(_inputPipeValues[pipeId])));
 						}
 					}
+
+					window.addEventListener('resize', sendWindowDimensions);
+					sendWindowDimensions();
 				} else {
 					debug('Got JsonRpcMethods.SetupIframeServerResponse but already resolved');
 				}
@@ -437,6 +440,11 @@ class Metaframe extends EventEmitter
 		}
 	}
 
+	function sendWindowDimensions()
+	{
+		sendDimensions();
+	}
+
 	function sendDimensions(?dimensions :{width :Float, height:Float})
 	{
 		var window = Browser.window;
@@ -447,8 +455,12 @@ class Metaframe extends EventEmitter
 				height:height,
 				"window.innerWidth": window.innerWidth,
 				"window.innerHeight": window.innerHeight,
+				"window.outerWidth": window.outerWidth,
+				"window.outerHeight": window.outerHeight,
 				"window.document.body.scrollHeight": window.document.body.scrollHeight,
+				"window.document.body.scrollWidth": window.document.body.scrollWidth,
 				"window.document.documentElement.scrollHeight": window.document.documentElement.scrollHeight,
+				"window.document.documentElement.scrollWidth": window.document.documentElement.scrollWidth,
 			};
 		} else {
 			if (untyped __typeof__(dimensions) != 'object') {

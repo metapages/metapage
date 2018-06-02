@@ -11,14 +11,16 @@ layout: vanilla
 
 <body>
 
-<h1>Metaframe editor</h1>
-
-
-<div class="horizontal" >
-	<div class="column-inputs-outputs" id="container-inputs" ></div>
-	<div class="column-metaframe"      id="container-metaframe" ></div>
-	<div class="column-inputs-outputs" id="container-outputs" ></div>
+<div class="horizontal">
+	<h1>Metaframe resizer</h1>
+	<h1 id="size-display">Size:</h1>
 </div>
+
+<div class="iframe-wrapper-container" >
+	<div id="iframe-wrapper" class="iframe-wrapper" ></div>
+</div>
+
+
 
 </body>
 
