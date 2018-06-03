@@ -3,34 +3,41 @@
 	flex-direction: row;
 	justify-content: space-between;
 	border: 5px solid #e5e5e5;
+	padding: 2px;
 }
 
 .iframe-wrapper-container {
     /*width: 400px;*/
-    width: 100vw;
+    /*width: 100vw;*/
+    max-width: 100%;
+    /*max-height: 100%;*/
+    width: 100%;
     height: 100%;
     /*min-height: 30px;*/
     /*overflow: hidden;*/
     border: 2px solid #396aba;
     /*position: relative;*/
-    padding: 5px;
+    padding: 15px;
+    /*margin: 5px;*/
+
+    resize: both;
+    overflow: auto;
+}
+
+body {
     margin: 5px;
 }
 
 .iframe-wrapper {
 
-	resize: both;
-    overflow: auto;
-
-
     /*width: 300px;*/
     max-width: 100%;
     max-height: 100%;
-    height: 300px;
+    /*height: 300px;*/
     position: relative;
     /*overflow: hidden;*/
     border: 1px solid red;
-    padding: 5px;
+    /*padding: 5px;*/
     margin: 5px;
 }
 
@@ -38,7 +45,7 @@ iframe {
 	position: absolute;
 	top: 0px;
 	width: 100%;
-	/*height: 100vh;*/
+	height: 100vh;
 	border: 1px solid green;
 	padding: 5px;
 
