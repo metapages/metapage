@@ -12,7 +12,8 @@
     max-width: 100%;
     /*max-height: 100%;*/
     width: 100%;
-    height: 100%;
+    /*height: 100%;*/
+    height: 500px;
     /*min-height: 30px;*/
     /*overflow: hidden;*/
     border: 2px solid #396aba;
@@ -28,12 +29,15 @@ body {
     margin: 5px;
 }
 
+/*https://stackoverflow.com/questions/18765762/how-to-make-width-and-height-of-iframe-same-as-its-parent-div*/
+
 .iframe-wrapper {
 
     /*width: 300px;*/
     max-width: 100%;
-    max-height: 100%;
+    /*max-height: 100%;*/
     /*height: 300px;*/
+    height: 100%;
     position: relative;
     /*overflow: hidden;*/
     border: 1px solid red;
@@ -45,9 +49,10 @@ iframe {
 	position: absolute;
 	top: 0px;
 	width: 100%;
-	height: 100vh;
+	/*height: 100vh;*/
+	height: 100%;
 	border: 1px solid green;
-	padding: 5px;
+	/*padding: 5px;*/
 
 	/*min-height: 500px;*/
 	/*flex: 1 1 auto;*/
