@@ -13,6 +13,8 @@
     /*overflow: hidden;*/
     border: 2px solid #396aba;
     /*position: relative;*/
+    padding: 5px;
+    margin: 5px;
 }
 
 .iframe-wrapper {
@@ -28,14 +30,17 @@
     position: relative;
     /*overflow: hidden;*/
     border: 1px solid red;
+    padding: 5px;
+    margin: 5px;
 }
 
 iframe {
-	/*position: absolute;
+	position: absolute;
 	top: 0px;
 	width: 100%;
-	height: 100vh;
-	border: 1px solid #396aba;*/
+	/*height: 100vh;*/
+	border: 1px solid green;
+	padding: 5px;
 
 	/*min-height: 500px;*/
 	/*flex: 1 1 auto;*/
