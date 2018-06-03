@@ -120,7 +120,7 @@ function createRow(name, previousDiv) {
 	}
 
 	var valueRow = document.createElement("td");
-	var valueDiv = document.createElement("textarea");
+	var valueDiv = document.createElement("div");
 	valueRow.appendChild(valueDiv);
 	valueDiv.classList.add('column-value');
 	valueDiv.setAttribute("contenteditable", true);
