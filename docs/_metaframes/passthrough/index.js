@@ -57,8 +57,6 @@ function createRow(name, previousDiv) {
 		rowDiv.appendChild(divs[i]);
 	}
 
-
-	// nameRow.appendChild(nameDiv);
 	nameDiv.classList.add("column-name", "prop-text");
 	nameDiv.innerHTML = name;
 	nameDiv.setAttribute("contenteditable", true);
@@ -149,12 +147,9 @@ function createRow(name, previousDiv) {
 	// valueDiv.classList.add('column-value');
 	// valueDiv.setAttribute("contenteditable", true);
 
-	// var deleteDiv = document.createElement("td");
 	var deleteButton;
 	if (!disableEditParam) {
 		deleteDiv.classList.add('column-delete');
-		// var deleteButton = document.createElement("button");
-		// var deleteButton = document.createElement("i");
 		deleteButton = document.createElement("a");
 		deleteButton.innerHTML = `<span class="icon is-small">
 	        <i class="icon-cancel"></i>
@@ -162,17 +157,8 @@ function createRow(name, previousDiv) {
 
 
 	    deleteButton.classList.add('button', 'is-danger', 'is-outlined');
-		// deleteButton.classList.add('icon-cancel', 'fa');
-		// <i class="fa icon-cancel"></i>
 		deleteDiv.appendChild(deleteButton);
-		// deleteButton.classList.add('button', 'is-danger', 'is-small');
 	}
-
-	// var rowDiv = document.createElement("tr");
-
-	// rowDiv.appendChild(nameRow);
-	// rowDiv.appendChild(valueRow);
-	// rowDiv.appendChild(deleteDiv);
 
 	nameDiv.addEventListener("input", inputListenerName, false);
 	// valueDiv.addEventListener("input", inputListenerValue, false);
@@ -199,7 +185,6 @@ function createRow(name, previousDiv) {
 	}
 
 	var parent = document.getElementById("input-rows");
-	// console.log(`creating ${name} is previousDiv=${previousDiv != null}`);
 	if (previousDiv) {
 		parent.insertBefore(rowDiv, previousDiv)
 	} else {
@@ -264,7 +249,6 @@ function updateWithNewInputs(inputMap) {
 		//Remove "No data" text
 		var unneededText = document.getElementById("nodata");
 		unneededText.innerHTML = null;
-		// unneededText.parentNode.removeChild(unneededText);
 		//First inputs, do these in alphabetical order
 		inputElements = {};
 		var keys = [];
@@ -287,12 +271,10 @@ function updateWithNewInputs(inputMap) {
 }
 
 metaframe.addEventListener(Metaframe.INPUTS, function(inputMap) {
-	// console.log(`Metaframe.${Metaframe.INPUTS} ${JSON.stringify(inputMap)}`);
 	updateWithNewInputs(inputMap);
 });
 
 metaframe.addEventListener(Metaframe.INPUTSDELETE, function(inputsArray) {
-	// console.log(`INPUTSDELETE inputsArray=${inputsArray}`);
 	inputsArray.forEach(deleteRow);
 });
 
@@ -331,19 +313,3 @@ metaframe.ready.then(function() {
 }, function(err) {
 	metaframe.error('Error setting up the metaframe connection');
 });
-
-
-// Applied globally on all textareas with the "autoExpand" class
-// $(document)
-//     .one('focus.autoExpand', 'textarea.autoExpand', function(){
-//         var savedValue = this.value;
-//         this.value = '';
-//         this.baseScrollHeight = this.scrollHeight;
-//         this.value = savedValue;
-//     })
-//     .on('input.autoExpand', 'textarea.autoExpand', function(){
-//         var minRows = this.getAttribute('data-min-rows')|0, rows;
-//         this.rows = minRows;
-//         rows = Math.ceil((this.scrollHeight - this.baseScrollHeight) / 16);
-//         this.rows = minRows + rows;
-//     });
