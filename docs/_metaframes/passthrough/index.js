@@ -147,9 +147,19 @@ function createRow(name, previousDiv) {
 
 	// var deleteDiv = document.createElement("td");
 	deleteDiv.classList.add('column-delete');
-	var deleteButton = document.createElement("button")
+	// var deleteButton = document.createElement("button");
+	// var deleteButton = document.createElement("i");
+	var deleteButton = document.createElement("a");
+	deleteButton.innerHTML = `<span class="icon is-small">
+        <i class="icon-cancel"></i>
+      </span>`;
+
+
+    deleteButton.classList.add('button', 'is-danger', 'is-outlined');
+	// deleteButton.classList.add('icon-cancel', 'fa');
+	// <i class="fa icon-cancel"></i>
 	deleteDiv.appendChild(deleteButton);
-	deleteButton.classList.add('button', 'is-danger', 'is-small');
+	// deleteButton.classList.add('button', 'is-danger', 'is-small');
 
 	// var rowDiv = document.createElement("tr");
 
@@ -309,16 +319,16 @@ metaframe.ready.then(function() {
 
 
 // Applied globally on all textareas with the "autoExpand" class
-$(document)
-    .one('focus.autoExpand', 'textarea.autoExpand', function(){
-        var savedValue = this.value;
-        this.value = '';
-        this.baseScrollHeight = this.scrollHeight;
-        this.value = savedValue;
-    })
-    .on('input.autoExpand', 'textarea.autoExpand', function(){
-        var minRows = this.getAttribute('data-min-rows')|0, rows;
-        this.rows = minRows;
-        rows = Math.ceil((this.scrollHeight - this.baseScrollHeight) / 16);
-        this.rows = minRows + rows;
-    });
+// $(document)
+//     .one('focus.autoExpand', 'textarea.autoExpand', function(){
+//         var savedValue = this.value;
+//         this.value = '';
+//         this.baseScrollHeight = this.scrollHeight;
+//         this.value = savedValue;
+//     })
+//     .on('input.autoExpand', 'textarea.autoExpand', function(){
+//         var minRows = this.getAttribute('data-min-rows')|0, rows;
+//         this.rows = minRows;
+//         rows = Math.ceil((this.scrollHeight - this.baseScrollHeight) / 16);
+//         this.rows = minRows + rows;
+//     });
