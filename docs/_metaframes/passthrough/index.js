@@ -42,12 +42,17 @@ function createRow(name, previousDiv) {
 
 	var nameDiv = document.createElement("div");
 	nameDiv.classList.add('has-text-info');
+
 	var valueDiv = document.createElement("div");
-	var valueTextArea = document.createElement("textarea");
-	valueTextArea.classList.add('input-row-element-value-textarea');
+	valueDiv.classList.add('column-value');
+	valueDiv.classList.add('input-row-element-value', 'input-row-element-value-textarea');
+	valueDiv.setAttribute("contenteditable", true);
+	// var valueTextArea = document.createElement("textarea");
+	// valueTextArea.classList.add('input-row-element-value-textarea');
+	// valueDiv.appendChild(valueTextArea);
 	// valueTextArea.classList.add('autoExpand');
 	// valueTextArea.type = 'text';
-	valueDiv.appendChild(valueTextArea);
+
 	var deleteDiv = document.createElement("div");
 
 	var divs  = [nameDiv, valueDiv, deleteDiv];
@@ -141,12 +146,6 @@ function createRow(name, previousDiv) {
 		}
 	}
 
-	// var valueRow = document.createElement("td");
-	
-	// valueRow.appendChild(valueDiv);
-	// valueDiv.classList.add('column-value');
-	// valueDiv.setAttribute("contenteditable", true);
-
 	var deleteButton;
 	if (!disableEditParam) {
 		deleteDiv.classList.add('column-delete');
@@ -161,7 +160,7 @@ function createRow(name, previousDiv) {
 	}
 
 	nameDiv.addEventListener("input", inputListenerName, false);
-	// valueDiv.addEventListener("input", inputListenerValue, false);
+	valueDiv.addEventListener("input", inputListenerValue, false);
 
 	function deleteRow() {
 		if (isdeleted) {
@@ -176,7 +175,7 @@ function createRow(name, previousDiv) {
 		delete inputElements[name];
 		nameDiv.removeEventListener("input", inputListenerName);
 		nameDiv.onkeydown = null;
-		// valueDiv.removeEventListener("input", inputListenerValue);
+		valueDiv.removeEventListener("input", inputListenerValue);
 		metaframe.deleteInputs(name);
 	}
 
@@ -202,22 +201,22 @@ function createRow(name, previousDiv) {
 		update: function(blob) {
 			if (blob) {
 				if (!blob.value) {
-					// valueDiv.innerHTML = null;
-					valueTextArea.value = null;
+					valueDiv.innerHTML = null;
+					// valueTextArea.value = null;
 				} else if (typeof(blob.value) == 'object') {
-					// valueDiv.innerHTML = JSON.stringify(blob.value);
-					valueTextArea.value = JSON.stringify(blob.value);
+					valueDiv.innerHTML = JSON.stringify(blob.value);
+					// valueTextArea.value = JSON.stringify(blob.value);
 				} else {
 					if (blob.encoding == 'base64') {
-						// valueDiv.innerHTML = atob(blob.value);
-						valueTextArea.value = atob(blob.value);
+						valueDiv.innerHTML = atob(blob.value);
+						// valueTextArea.value = atob(blob.value);
 					} else {
-						// valueDiv.innerHTML = `${blob.value}`;
-						valueTextArea.value = `${blob.value}`;
+						valueDiv.innerHTML = `${blob.value}`;
+						// valueTextArea.value = `${blob.value}`;
 					}
 				}
 				//Not all types are directly editable here
-				// valueDiv.setAttribute("contenteditable", blob.encoding == null || blob.encoding == 'utf8' || blob.encoding == 'json');
+				valueDiv.setAttribute("contenteditable", blob.encoding == null || blob.encoding == 'utf8' || blob.encoding == 'json');
 			}
 		},
 		deleteRow: deleteRow,
