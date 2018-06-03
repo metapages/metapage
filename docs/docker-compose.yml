@@ -5,10 +5,9 @@ services:
   jekyll-container:
     build: .
     # image: "jekyll/jekyll:latest"
-    command: jekyll serve
+    command: jekyll serve --watch --force_polling
     ports:
         - "4000:4000"
     volumes:
         # - ./:/app
         - ./:/srv/jekyll
-    # working_dir: /srv/jekyll

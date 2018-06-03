@@ -433,7 +433,8 @@ class Metaframe extends EventEmitter
 				emit(MetaframeEvents.Message, jsonrpc);
 
 			} else {
-				log('!Bad JsonRPC version=${jsonrpc.jsonrpc}');
+				trace(e.data);
+				log('!Bad JsonRPC version=${Json.stringify(e.data)}');
 			}
 		} else {
 			log('!message is not an object');

@@ -27,3 +27,6 @@ publish:
 clean:
 	rm -rf .haxelib
 
+.PHONY: serve
+serve:
+	cd docs && docker-compose up

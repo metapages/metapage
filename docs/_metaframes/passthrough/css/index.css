@@ -98,14 +98,14 @@ html body {
     .prop-text{font-size:4.0vw}
 }
 */
-@media screen and (max-width: 300px) {
+/*@media screen and (max-width: 300px) {
     #header {
         display: none;
     }
     .button {
         display: none;
     }
-}
+}*/
 
 
 /*@media screen and (min-width: 201px) and (max-width: 768px) {

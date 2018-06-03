@@ -2,8 +2,10 @@ var urlObject = new URL(window.location.href);
 var disableEditParam = urlObject.searchParams.get('edit') == '0' || urlObject.searchParams.get('debug') == 'false';
 var debugParam = urlObject.searchParams.get('debug') == '1' || urlObject.searchParams.get('debug') == 'true';
 
+console.log('disableEditParam', disableEditParam);
+
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:debugParam});
+var metaframe = new Metaframe({debug:false});
 
 /*
  * On input pipe update, show value, and pass to output pipe
@@ -247,7 +249,9 @@ function updateWithNewInputs(inputMap) {
 		}
 		//Remove "No data" text
 		var unneededText = document.getElementById("nodata");
-		unneededText.innerHTML = null;
+		if (unneededText) {
+			unneededText.innerHTML = null;
+		}
 		//First inputs, do these in alphabetical order
 		inputElements = {};
 		var keys = [];
@@ -277,11 +281,12 @@ metaframe.addEventListener(Metaframe.INPUTSDELETE, function(inputsArray) {
 	inputsArray.forEach(deleteRow);
 });
 
-var addInputButton = document.getElementById("add-input-button");
-
 if (disableEditParam) {
-	addInputButton.parentNode.removeChild(addInputButton);
+	var header = document.getElementById('header');
+	header.parentNode.removeChild(header);
+	// addInputButton.parentNode.removeChild(addInputButton);
 } else {
+	var addInputButton = document.getElementById('add-input-button');
 	addInputButton.onclick = function(ignored) {
 		//Get a safe new name
 		var proposedNameBase = 'new-input';

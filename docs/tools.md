@@ -8,4 +8,6 @@ permalink: /tools/
 	<li><a href="{{site.baseurl}}/tools/metaframeview?url={{site.baseurl}}/metaframes/example00_iframe1/">Metaframe Viewer</a></li>
 
 	<li><a href="{{site.baseurl}}/tools/metapageview">Metapage Viewer</a></li>
+
+	<li><a href="{{site.baseurl}}/tools/metaframe-resize?url={{site.baseurl}}/metaframes/passthrough/">Metaframe Resizer</a></li>
 </ul>

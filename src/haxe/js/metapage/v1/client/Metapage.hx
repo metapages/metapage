@@ -140,6 +140,11 @@ class Metapage extends EventEmitter
 		return _iframes.get(id) != null ? _iframes.get(id).iframe : null;
 	}
 
+	public function getMetaframe(id :MetaframeId) :IFrameRpcClient
+	{
+		return _iframes.get(id);
+	}
+
 	public function createIFrame(url :String, ?iframeId :MetaframeId = null) :IFrameRpcClient
 	{
 		iframeId = iframeId != null ? iframeId : MetapageTools.generateMetaframeId();

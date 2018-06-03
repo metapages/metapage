@@ -1,38 +1,127 @@
 ---
 ---
 
-var metapage = new Metapage({debug:true});
+var urlObject = new URL(window.location.href);
+var urlParam = urlObject.searchParams.get('url');
+var debugParam = urlObject.searchParams.get('debug') == '1' || urlObject.searchParams.get('debug') == 'true';
+
+// var metapage = new Metapage({debug:debugParam});
 
 //Hard coding DCC for now
-var metaframe = metapage.createIFrame('http://localhost:8180/metaframe/');
-var metaframeInputs = metapage.createIFrame('http://0.0.0.0:4000/metapage/metaframes/passthrough/');
-var metaframeOutputs = metapage.createIFrame('http://0.0.0.0:4000/metapage/metaframes/passthrough/');
+urlParam = 'http://localhost:8180/metaframe/';
+// urlParam = 'http://localhost:9091/metaframe?WSPORT=8180';
 
-document.getElementById("container-inputs").appendChild(metaframeInputs.iframe);
-document.getElementById("container-outputs").appendChild(metaframeOutputs.iframe);
-document.getElementById("container-metaframe").appendChild(metaframe.iframe);
+var metaframeDataUrl = new URL(urlParam);
+// metaframeDataUrl
+// var metaframeDataUrl = urlParam;
+if (!metaframeDataUrl.pathname.endsWith('/metaframe.json')) {
+	metaframeDataUrl.pathname = metaframeDataUrl.pathname + '/metaframe.json';
+}
 
-metapage.pipe({
-	source: {
-		id: metaframeInputs.id,
-		name:'*',
-	},
-	target: {
-		id: metaframe.id,
-		name:'*',
-	}
-});
-metapage.pipe({
-	source: {
-		id: metaframe.id,
-		name:'*',
-	},
-	target: {
-		id: metaframeOutputs.id,
-		name:'*',
-	}
-});
+console.log('site.baseurl', "{{site.baseurl}}");
+console.log(metaframeDataUrl.toString());
+fetch(metaframeDataUrl.toString())
+  .then(function(response) {
+    return response.json();
+  })
+  .then(function(metaframeJson) {
+  	console.log('metaframeJson', metaframeJson);
+    buildEditorWithInitialInputs(metaframeJson.inputs);
+  })
+  // .catch(function(error) {
+  //   console.error(error);
+  // });
 
+
+
+
+function buildEditorWithInitialInputs(startInputs) {
+
+	var idInputs = 'inputsId';
+	var idOutputs = 'outputsId';
+	var idTarget = 'target';
+	var metapageDef = {
+		id: '_',
+		iframes: {},
+		pipes: [
+			{
+				source: {
+					id: idInputs,
+					name:'*',
+				},
+				target: {
+					id: idTarget,
+					name:'*',
+				}
+			},
+			{
+				source: {
+					id: idTarget,
+					name:'*',
+				},
+				target: {
+					id: idOutputs,
+					name:'*',
+				}
+			}
+		],
+	};
+	console.log(metapageDef);
+	metapageDef.iframes[idInputs] = {
+		url: '{{site.baseurl}}/metaframes/passthrough/?edit=1',
+		inputs: startInputs,
+		outputs: startInputs,
+	};
+	metapageDef.iframes[idOutputs] = {
+		url: '{{site.baseurl}}/metaframes/passthrough/?edit=0',
+	};
+
+
+	metapageDef.iframes[idTarget] = {
+		url: urlParam,
+		inputs: startInputs,
+	};
+
+	var startState = {};
+	startState[idInputs] = startInputs;
+	startState[idTarget] = startInputs;
+
+	console.log(metapageDef);
+
+	var metapage = Metapage.fromDefinition(metapageDef, startState);
+	var metaframe = metapage.getMetaframe(idTarget);
+	var metaframeInputs = metapage.getMetaframe(idInputs);
+	var metaframeOutputs = metapage.getMetaframe(idOutputs);
+
+	// var metaframe = metapage.createIFrame('http://localhost:8180/metaframe/');
+	// var metaframeInputs = metapage.createIFrame('{{site.baseurl}}/metapage/metaframes/passthrough/?edit=1');
+	// var metaframeOutputs = metapage.createIFrame('{{site.baseurl}}/metapage/metaframes/passthrough/?edit=0&debug=1');
+
+	document.getElementById("container-inputs").appendChild(metaframeInputs.iframe);
+	document.getElementById("container-outputs").appendChild(metaframeOutputs.iframe);
+	document.getElementById("container-metaframe").appendChild(metaframe.iframe);
+
+	// metapage.pipe({
+	// 	source: {
+	// 		id: metaframeInputs.id,
+	// 		name:'*',
+	// 	},
+	// 	target: {
+	// 		id: metaframe.id,
+	// 		name:'*',
+	// 	}
+	// });
+	// metapage.pipe({
+	// 	source: {
+	// 		id: metaframe.id,
+	// 		name:'*',
+	// 	},
+	// 	target: {
+	// 		id: metaframeOutputs.id,
+	// 		name:'*',
+	// 	}
+	// });
+}
 
 
 
