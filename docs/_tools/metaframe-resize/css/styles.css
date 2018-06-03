@@ -1,48 +1,39 @@
+body {
+    margin: 5px;
+}
+
 .horizontal {
 	display: flex;
 	flex-direction: row;
 	justify-content: space-between;
 	border: 5px solid #e5e5e5;
 	padding: 2px;
+	margin-bottom: 5px;
 }
 
 .iframe-wrapper-container {
-    /*width: 400px;*/
-    /*width: 100vw;*/
     max-width: 100%;
-    /*max-height: 100%;*/
     width: 100%;
-    /*height: 100%;*/
     height: 500px;
-    /*min-height: 30px;*/
-    /*overflow: hidden;*/
-    border: 2px solid #396aba;
-    /*position: relative;*/
-    padding: 15px;
-    /*margin: 5px;*/
+
+    border: 4px solid #e5e5e5;
+    padding-right: 15px;
+    padding-bottom: 15px;
 
     resize: both;
     overflow: auto;
-}
-
-body {
-    margin: 5px;
 }
 
 /*https://stackoverflow.com/questions/18765762/how-to-make-width-and-height-of-iframe-same-as-its-parent-div*/
 
 .iframe-wrapper {
 
-    /*width: 300px;*/
     max-width: 100%;
-    /*max-height: 100%;*/
-    /*height: 300px;*/
     height: 100%;
     position: relative;
-    /*overflow: hidden;*/
-    border: 1px solid red;
-    /*padding: 5px;*/
-    margin: 5px;
+    /*border: 1px solid red;*/
+    /*border: solid 1px gray;*/
+    /*margin: 5px;*/
 }
 
 iframe {
@@ -51,9 +42,6 @@ iframe {
 	width: 100%;
 	/*height: 100vh;*/
 	height: 100%;
-	border: 1px solid green;
-	/*padding: 5px;*/
-
-	/*min-height: 500px;*/
-	/*flex: 1 1 auto;*/
+	border-right: 1px dotted #D3D3D3;
+	border-bottom: 1px dotted #D3D3D3;
 }
