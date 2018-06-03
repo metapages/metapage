@@ -1,5 +1,9 @@
+var urlObject = new URL(window.location.href);
+var disableEditParam = urlObject.searchParams.get('edit') == '0' || urlObject.searchParams.get('debug') == 'false';
+var debugParam = urlObject.searchParams.get('debug') == '1' || urlObject.searchParams.get('debug') == 'true';
+
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:false});
+var metaframe = new Metaframe({debug:debugParam});
 
 /*
  * On input pipe update, show value, and pass to output pipe
@@ -146,20 +150,23 @@ function createRow(name, previousDiv) {
 	// valueDiv.setAttribute("contenteditable", true);
 
 	// var deleteDiv = document.createElement("td");
-	deleteDiv.classList.add('column-delete');
-	// var deleteButton = document.createElement("button");
-	// var deleteButton = document.createElement("i");
-	var deleteButton = document.createElement("a");
-	deleteButton.innerHTML = `<span class="icon is-small">
-        <i class="icon-cancel"></i>
-      </span>`;
+	var deleteButton;
+	if (!disableEditParam) {
+		deleteDiv.classList.add('column-delete');
+		// var deleteButton = document.createElement("button");
+		// var deleteButton = document.createElement("i");
+		deleteButton = document.createElement("a");
+		deleteButton.innerHTML = `<span class="icon is-small">
+	        <i class="icon-cancel"></i>
+	      </span>`;
 
 
-    deleteButton.classList.add('button', 'is-danger', 'is-outlined');
-	// deleteButton.classList.add('icon-cancel', 'fa');
-	// <i class="fa icon-cancel"></i>
-	deleteDiv.appendChild(deleteButton);
-	// deleteButton.classList.add('button', 'is-danger', 'is-small');
+	    deleteButton.classList.add('button', 'is-danger', 'is-outlined');
+		// deleteButton.classList.add('icon-cancel', 'fa');
+		// <i class="fa icon-cancel"></i>
+		deleteDiv.appendChild(deleteButton);
+		// deleteButton.classList.add('button', 'is-danger', 'is-small');
+	}
 
 	// var rowDiv = document.createElement("tr");
 
@@ -187,7 +194,9 @@ function createRow(name, previousDiv) {
 		metaframe.deleteInputs(name);
 	}
 
-	deleteButton.onclick = deleteRow;
+	if (deleteButton) {
+		deleteButton.onclick = deleteRow;
+	}
 
 	var parent = document.getElementById("input-rows");
 	// console.log(`creating ${name} is previousDiv=${previousDiv != null}`);
@@ -288,28 +297,34 @@ metaframe.addEventListener(Metaframe.INPUTSDELETE, function(inputsArray) {
 });
 
 var addInputButton = document.getElementById("add-input-button");
-addInputButton.onclick = function(ignored) {
-	//Get a safe new name
-	var proposedNameBase = 'new-input';
-	var proposedName = proposedNameBase;
-	if (inputElements) {
-		var ok = false;
-		var count = 0;
-		do {
-			ok = true;
-			for (name in inputElements) {
-				if (name == proposedName) {
-					count++;
-					proposedName = `${proposedNameBase}${count}`;
-					ok = false;
-					break;
+
+if (disableEditParam) {
+	addInputButton.parentNode.removeChild(addInputButton);
+} else {
+	addInputButton.onclick = function(ignored) {
+		//Get a safe new name
+		var proposedNameBase = 'new-input';
+		var proposedName = proposedNameBase;
+		if (inputElements) {
+			var ok = false;
+			var count = 0;
+			do {
+				ok = true;
+				for (name in inputElements) {
+					if (name == proposedName) {
+						count++;
+						proposedName = `${proposedNameBase}${count}`;
+						ok = false;
+						break;
+					}
 				}
 			}
+			while(!ok);
 		}
-		while(!ok);
+		metaframe.setInput(proposedName, {value:`replaceme`});
 	}
-	metaframe.setInput(proposedName, {value:`replaceme`});
 }
+
 
 metaframe.ready.then(function() {
 	// metaframe.sendDimensions();

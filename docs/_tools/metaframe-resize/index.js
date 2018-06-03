@@ -1,22 +1,12 @@
 ---
 ---
 
-var metapage = new Metapage({debug:false});
+var urlObject = new URL(window.location.href);
+var urlParam = urlObject.searchParams.get('url');
+var debugParam = urlObject.searchParams.get('debug') == '1' || urlObject.searchParams.get('debug') == 'true';
+
+var metapage = new Metapage({debug:debugParam});
 var metaframe;
-
-var urlParams;
-(window.onpopstate = function () {
-    var match,
-        pl     = /\+/g,  // Regex for replacing addition symbol with a space
-        search = /([^&=]+)=?([^&]*)/g,
-        decode = function (s) { return decodeURIComponent(s.replace(pl, " ")); },
-        query  = window.location.search.substring(1);
-
-    urlParams = {};
-    while (match = search.exec(query))
-       urlParams[decode(match[1])] = decode(match[2]);
-})();
-
 
 var lastWidth = document.getElementById('iframe-wrapper').offsetWidth;
 var metaframeDiv = document.getElementById("iframe-wrapper");
@@ -33,13 +23,11 @@ function outputsize() {
 new ResizeObserver(outputsize).observe(metaframeDiv);
 
 
-if (urlParams && urlParams.url) {
-	//Hard coding DCC for now
-	metaframe = metapage.createIFrame(urlParams.url);
+if (urlParam) {
+	metaframe = metapage.createIFrame(urlParam);
 	metaframeDiv.appendChild(metaframe.iframe);
 } else {
 	var fullUrl = `${window.location.href}?url=${window.location.origin}/metapage/metaframes/passthrough/`;
 	console.log(fullUrl);
 	document.getElementById('iframe-wrapper').innerHTML = `Append metaframe url: <a href="${fullUrl}">${fullUrl}</a>`;
 }
-// http://0.0.0.0:4000/metapage/metaframes/passthrough/
