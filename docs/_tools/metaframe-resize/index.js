@@ -38,5 +38,8 @@ if (urlParams && urlParams.url) {
 	metaframe = metapage.createIFrame(urlParams.url);
 	metaframeDiv.appendChild(metaframe.iframe);
 } else {
-	document.getElementById('iframe-wrapper').innerHTML = `Usage: ${window.location.href}?url=www.yoururl.com`;
+	var fullUrl = `${window.location.href}?url=${window.location.origin}/metapage/metaframes/passthrough/`;
+	console.log(fullUrl);
+	document.getElementById('iframe-wrapper').innerHTML = `Append metaframe url: <a href="${fullUrl}">${fullUrl}</a>`;
 }
+// http://0.0.0.0:4000/metapage/metaframes/passthrough/
