@@ -2,7 +2,7 @@
 ---
 
 var metapage = new Metapage({debug:false});
-
+var metaframe;
 
 var urlParams;
 (window.onpopstate = function () {
@@ -16,22 +16,27 @@ var urlParams;
     while (match = search.exec(query))
        urlParams[decode(match[1])] = decode(match[2]);
 })();
-console.log(urlParams);
+
+
+var lastWidth = document.getElementById('iframe-wrapper').offsetWidth;
+var metaframeDiv = document.getElementById("iframe-wrapper");
+
+function outputsize() {
+	if (lastWidth && document.getElementById('iframe-wrapper').offsetWidth != lastWidth) {
+		document.getElementById('helper-text').innerHTML = null;
+		lastWidth = null;
+	}
+	if (metaframe) {
+		document.getElementById('size-display').innerHTML = `Size: ${metaframe.iframe.offsetWidth}x${metaframe.iframe.offsetHeight}`;
+	}
+}
+new ResizeObserver(outputsize).observe(metaframeDiv);
+
 
 if (urlParams && urlParams.url) {
 	//Hard coding DCC for now
-	var metaframe = metapage.createIFrame(urlParams.url);
-	var metaframeDiv = document.getElementById("iframe-wrapper");
+	metaframe = metapage.createIFrame(urlParams.url);
 	metaframeDiv.appendChild(metaframe.iframe);
-
-	var lastWidth = document.getElementById('iframe-wrapper').innerWidth;
-	console.log(lastWidth);
-	new ResizeObserver(function outputsize() {
-		lastWidth = document.getElementById('iframe-wrapper').innerWidth;
-		console.log(lastWidth);
-		document.getElementById('size-display').innerHTML = `Size: ${metaframe.iframe.offsetWidth}x${metaframe.iframe.offsetHeight}`;
-	}).observe(metaframeDiv);
+} else {
+	document.getElementById('iframe-wrapper').innerHTML = `Usage: ${window.location.href}?url=www.yoururl.com`;
 }
-
-
-

@@ -12,7 +12,7 @@ layout: vanilla
 <body>
 
 <div class="horizontal">
-	<h1>Metaframe resizer</h1>
+	<h1 id="title">Metaframe resizer</h1>
 	<h1 id="size-display">Size:</h1>
 </div>
 
@@ -22,7 +22,7 @@ layout: vanilla
 
 <div  class="horizontal-reverse" >
 	<div id="resize-here">
-		<span  class="has-text-info is-size-7">Resize here ▲</span>
+		<span id="helper-text" class="has-text-info is-size-7">Resize here ▲</span>
 	</div>
 </div>
 
