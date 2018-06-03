@@ -32,9 +32,27 @@ function rename(prev, next) {
 
 //Creates javascript object with methods
 function createRow(name, previousDiv) {
-	var nameRow = document.createElement("td");
+
+	var rowDiv = document.createElement("div");
+	rowDiv.classList.add('input-row');
+
 	var nameDiv = document.createElement("div");
-	nameRow.appendChild(nameDiv);
+	var valueDiv = document.createElement("div");
+	var valueTextArea = document.createElement("textarea");
+	valueTextArea.classList.add('input-row-element-value-textarea');
+	// valueTextArea.type = 'text';
+	valueDiv.appendChild(valueTextArea);
+	var deleteDiv = document.createElement("div");
+
+	var divs  = [nameDiv, valueDiv, deleteDiv];
+	var names = ['name', 'value', 'delete'];
+	for (var i = 0; i < ['name', 'value', 'delete'].length; i++) {
+		divs[i].classList.add('input-row-element', `input-row-element-${names[i]}`);
+		rowDiv.appendChild(divs[i]);
+	}
+
+
+	// nameRow.appendChild(nameDiv);
 	nameDiv.classList.add("column-name", "prop-text");
 	nameDiv.innerHTML = name;
 	nameDiv.setAttribute("contenteditable", true);
@@ -119,26 +137,26 @@ function createRow(name, previousDiv) {
 		}
 	}
 
-	var valueRow = document.createElement("td");
-	var valueDiv = document.createElement("div");
-	valueRow.appendChild(valueDiv);
-	valueDiv.classList.add('column-value');
-	valueDiv.setAttribute("contenteditable", true);
+	// var valueRow = document.createElement("td");
+	
+	// valueRow.appendChild(valueDiv);
+	// valueDiv.classList.add('column-value');
+	// valueDiv.setAttribute("contenteditable", true);
 
-	var deleteDiv = document.createElement("td");
+	// var deleteDiv = document.createElement("td");
 	deleteDiv.classList.add('column-delete');
 	var deleteButton = document.createElement("button")
 	deleteDiv.appendChild(deleteButton);
 	deleteButton.classList.add('button', 'is-danger', 'is-small');
 
-	var rowDiv = document.createElement("tr");
+	// var rowDiv = document.createElement("tr");
 
-	rowDiv.appendChild(nameRow);
-	rowDiv.appendChild(valueRow);
-	rowDiv.appendChild(deleteDiv);
+	// rowDiv.appendChild(nameRow);
+	// rowDiv.appendChild(valueRow);
+	// rowDiv.appendChild(deleteDiv);
 
 	nameDiv.addEventListener("input", inputListenerName, false);
-	valueDiv.addEventListener("input", inputListenerValue, false);
+	// valueDiv.addEventListener("input", inputListenerValue, false);
 
 	function deleteRow() {
 		if (isdeleted) {
@@ -152,8 +170,8 @@ function createRow(name, previousDiv) {
 		}
 		delete inputElements[name];
 		nameDiv.removeEventListener("input", inputListenerName);
-		valueDiv.removeEventListener("input", inputListenerValue);
 		nameDiv.onkeydown = null;
+		// valueDiv.removeEventListener("input", inputListenerValue);
 		metaframe.deleteInputs(name);
 	}
 
@@ -178,18 +196,22 @@ function createRow(name, previousDiv) {
 		update: function(blob) {
 			if (blob) {
 				if (!blob.value) {
-					valueDiv.innerHTML = null;
+					// valueDiv.innerHTML = null;
+					valueTextArea.value = null;
 				} else if (typeof(blob.value) == 'object') {
-					valueDiv.innerHTML = JSON.stringify(blob.value);
+					// valueDiv.innerHTML = JSON.stringify(blob.value);
+					valueTextArea.value = JSON.stringify(blob.value);
 				} else {
 					if (blob.encoding == 'base64') {
-						valueDiv.innerHTML = atob(blob.value);
+						// valueDiv.innerHTML = atob(blob.value);
+						valueTextArea.value = atob(blob.value);
 					} else {
-						valueDiv.innerHTML = `${blob.value}`;
+						// valueDiv.innerHTML = `${blob.value}`;
+						valueTextArea.value = `${blob.value}`;
 					}
 				}
 				//Not all types are directly editable here
-				valueDiv.setAttribute("contenteditable", blob.encoding == null || blob.encoding == 'utf8' || blob.encoding == 'json');
+				// valueDiv.setAttribute("contenteditable", blob.encoding == null || blob.encoding == 'utf8' || blob.encoding == 'json');
 			}
 		},
 		deleteRow: deleteRow,

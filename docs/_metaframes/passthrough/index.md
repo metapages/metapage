@@ -24,16 +24,8 @@ layout: vanilla
   <h3 id="nodata">No data as yet</h3>
   <!-- <button id="add-input-button" class="button is-success is-outlined" >Input</button> -->
 </div>
-<table class="table is-bordered inputs">
-    <thead>
-      <tr>
-        <th class="column-name prop-text"><abbr title="Name">Name</abbr></th>
-        <th class="column-value prop-text"><abbr title="Value">Value</abbr></th>
-        <th class="column-delete prop-text"><abbr title="Delete">X</abbr></th>
-      </tr>
-  </thead>
-  <tbody id="tablebody" />
-</table>
+<div id="tablebody" class="input-rows"></div>
+
 <script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
 <script src="index.js"></script>
 </body>
