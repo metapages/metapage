@@ -37,9 +37,11 @@ function createRow(name, previousDiv) {
 	rowDiv.classList.add('input-row');
 
 	var nameDiv = document.createElement("div");
+	nameDiv.classList.add('has-text-info');
 	var valueDiv = document.createElement("div");
 	var valueTextArea = document.createElement("textarea");
 	valueTextArea.classList.add('input-row-element-value-textarea');
+	// valueTextArea.classList.add('autoExpand');
 	// valueTextArea.type = 'text';
 	valueDiv.appendChild(valueTextArea);
 	var deleteDiv = document.createElement("div");
@@ -177,7 +179,7 @@ function createRow(name, previousDiv) {
 
 	deleteButton.onclick = deleteRow;
 
-	var parent = document.getElementById("tablebody");
+	var parent = document.getElementById("input-rows");
 	// console.log(`creating ${name} is previousDiv=${previousDiv != null}`);
 	if (previousDiv) {
 		parent.insertBefore(rowDiv, previousDiv)
@@ -304,3 +306,19 @@ metaframe.ready.then(function() {
 }, function(err) {
 	metaframe.error('Error setting up the metaframe connection');
 });
+
+
+// Applied globally on all textareas with the "autoExpand" class
+$(document)
+    .one('focus.autoExpand', 'textarea.autoExpand', function(){
+        var savedValue = this.value;
+        this.value = '';
+        this.baseScrollHeight = this.scrollHeight;
+        this.value = savedValue;
+    })
+    .on('input.autoExpand', 'textarea.autoExpand', function(){
+        var minRows = this.getAttribute('data-min-rows')|0, rows;
+        this.rows = minRows;
+        rows = Math.ceil((this.scrollHeight - this.baseScrollHeight) / 16);
+        this.rows = minRows + rows;
+    });

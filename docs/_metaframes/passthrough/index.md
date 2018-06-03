@@ -14,17 +14,19 @@ layout: vanilla
 </head>
 <body>
 
-<div id="header">
-  <a id="add-input-button" class="button is-success is-outlined">
-    <!-- <span>Input</span> -->
-    <span class="icon is-small">
-      <i class="fas fa-plus"></i>
-    </span>
-  </a>
-  <h3 id="nodata">No data as yet</h3>
-  <!-- <button id="add-input-button" class="button is-success is-outlined" >Input</button> -->
+<div class="container">
+  <div id="header">
+    <a id="add-input-button" class="button is-success is-outlined">
+      <!-- <span>Input</span> -->
+      <span class="icon is-small">
+        <i class="fas fa-plus"></i>
+      </span>
+    </a>
+    <h3 id="nodata">No data as yet</h3>
+    <!-- <button id="add-input-button" class="button is-success is-outlined" >Input</button> -->
+  </div>
+  <div id="input-rows" class="input-rows"></div>
 </div>
-<div id="tablebody" class="input-rows"></div>
 
 <script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
 <script src="index.js"></script>
