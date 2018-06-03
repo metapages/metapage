@@ -337,7 +337,7 @@ class Metapage extends EventEmitter
 					// e.set(iframeId, pipeIds);
 					// emit(MetapageEvents.InputsDelete, e);
 				case Dimensions:
-					trace('${jsonrpc.iframeId} Dimensions ${Json.stringify(jsonrpc.params, null, "  ")}');
+					// trace('${jsonrpc.iframeId} Dimensions ${Json.stringify(jsonrpc.params, null, "  ")}');
 					debug('${jsonrpc.iframeId} Dimensions ${Json.stringify(jsonrpc.params).substr(0, 200)}');
 					// var dimensions :{height:Float,width:Float} = jsonrpc.params;
 					// debug('${jsonrpc.iframeId} Dimensions ${dimensions}');

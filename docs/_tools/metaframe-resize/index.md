@@ -20,6 +20,11 @@ layout: vanilla
 	<div id="iframe-wrapper" class="iframe-wrapper" ></div>
 </div>
 
+<div  class="horizontal-reverse" >
+	<div id="resize-here">
+		<span  class="has-text-info is-size-7">Resize here ▲</span>
+	</div>
+</div>
 
 
 </body>

@@ -24,7 +24,11 @@ if (urlParams && urlParams.url) {
 	var metaframeDiv = document.getElementById("iframe-wrapper");
 	metaframeDiv.appendChild(metaframe.iframe);
 
+	var lastWidth = document.getElementById('iframe-wrapper').innerWidth;
+	console.log(lastWidth);
 	new ResizeObserver(function outputsize() {
+		lastWidth = document.getElementById('iframe-wrapper').innerWidth;
+		console.log(lastWidth);
 		document.getElementById('size-display').innerHTML = `Size: ${metaframe.iframe.offsetWidth}x${metaframe.iframe.offsetHeight}`;
 	}).observe(metaframeDiv);
 }

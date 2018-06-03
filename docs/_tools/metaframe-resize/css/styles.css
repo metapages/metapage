@@ -11,6 +11,15 @@ body {
 	margin-bottom: 5px;
 }
 
+.horizontal-reverse {
+	display: flex;
+	flex-direction: row-reverse;
+}
+
+/*.horizontal-reverse div {
+	background-color: green;
+}*/
+
 .iframe-wrapper-container {
     max-width: 100%;
     width: 100%;
