@@ -2,8 +2,6 @@ var urlObject = new URL(window.location.href);
 var disableEditParam = urlObject.searchParams.get('edit') == '0' || urlObject.searchParams.get('debug') == 'false';
 var debugParam = urlObject.searchParams.get('debug') == '1' || urlObject.searchParams.get('debug') == 'true';
 
-console.log('disableEditParam', disableEditParam);
-
 /* Set up the metaframe channel */
 var metaframe = new Metaframe({debug:false});
 

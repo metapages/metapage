@@ -1,3 +1,47 @@
+//localstorage wrapper
+window.store = {
+    localStoreSupport: function() {
+        try {
+            return 'localStorage' in window && window['localStorage'] !== null;
+        } catch (e) {
+            return false;
+        }
+    },
+    set: function(name,value,days) {
+        if (days) {
+            var date = new Date();
+            date.setTime(date.getTime()+(days*24*60*60*1000));
+            var expires = "; expires="+date.toGMTString();
+        }
+        else {
+            var expires = "";
+        }
+        if( this.localStoreSupport() ) {
+            localStorage.setItem(name, value);
+        }
+    },
+    get: function(name) {
+        if( this.localStoreSupport() ) {
+            var ret = localStorage.getItem(name);
+            //console.log(typeof ret);
+            switch (ret) {
+              case 'true':
+                  return true;
+              case 'false':
+                  return false;
+              default:
+                  return ret;
+            }
+        }
+    },
+    del: function(name) {
+        if( this.localStoreSupport() ) {
+            localStorage.removeItem(name);
+        }
+    },
+}
+
+
 /* Set up the metaframe channel */
 var metaframe = new Metaframe({debug:false});
 
@@ -27,7 +71,7 @@ function sendPdbId() {
 				metaframe.setInput("pdb_id", {value:pdbId});
 				return response.text();
 			} else {
-				debug(response);
+				metaframe.debug(response);
 				metaframe.setOutput("pdb_data", {value:null});
 				return null;
 			}
@@ -35,11 +79,18 @@ function sendPdbId() {
 		.then(function(pdb_data) {
 			if (pdb_data != null) {
 				metaframe.setOutput("pdb_data", {value:pdb_data});
+				//Cache locally for when we're offline
+				store.set(pdbId, pdb_data);
 			}
 		})
 		.catch(function (error) {
-			debug(error);
-			metaframe.setOutput("pdb_data", {value:null});
+			metaframe.debug(error);
+			var cachedValue = store.get(pdbId);
+			if (cachedValue) {
+				metaframe.setOutput("pdb_data", {value:cachedValue});
+			} else {
+				metaframe.setOutput("pdb_data", {value:null});
+			}
 		});
 }
 
