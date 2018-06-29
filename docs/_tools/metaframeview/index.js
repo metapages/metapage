@@ -6,21 +6,25 @@ var urlParam = urlObject.searchParams.get('url');
 var debugParam = urlObject.searchParams.get('debug') == '1' || urlObject.searchParams.get('debug') == 'true';
 
 // var metapage = new Metapage({debug:debugParam});
-
+console.log('urlParam', urlParam);
+document.getElementById("url").innerHTML = urlParam;
 //Hard coding DCC for now
-urlParam = 'http://localhost:8180/metaframe/';
+// urlParam = 'http://localhost:8180/metaframe/';
 // urlParam = 'http://localhost:9091/metaframe?WSPORT=8180';
 
 var metaframeDataUrl = new URL(urlParam);
 // metaframeDataUrl
 // var metaframeDataUrl = urlParam;
 if (!metaframeDataUrl.pathname.endsWith('/metaframe.json')) {
+	if (metaframeDataUrl.pathname.endsWith('/')) {
+		metaframeDataUrl.pathname = metaframeDataUrl.pathname.substring(0, metaframeDataUrl.pathname.length - 1);
+	}
 	metaframeDataUrl.pathname = metaframeDataUrl.pathname + '/metaframe.json';
 }
 
 console.log('site.baseurl', "{{site.baseurl}}");
 console.log(metaframeDataUrl.toString());
-fetch(metaframeDataUrl.toString())
+fetch(metaframeDataUrl.toString(), {method: 'get',mode: 'no-cors'})
   .then(function(response) {
     return response.json();
   })

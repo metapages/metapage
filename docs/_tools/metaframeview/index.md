@@ -13,7 +13,8 @@ layout: vanilla
 
 <h1>Metaframe editor</h1>
 
-
+<div id="url" >
+</div>
 <div class="horizontal" >
 	<div class="column-inputs-outputs" id="container-inputs" ></div>
 	<div class="column-metaframe"      id="container-metaframe" ></div>
