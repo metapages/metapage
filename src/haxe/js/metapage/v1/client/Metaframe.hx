@@ -75,8 +75,6 @@ class Metaframe extends EventEmitter
 					//Tell the parent we have registered.
 					sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {});
 
-					resolve(true);
-
 					//Send notifications of initial inputs (if non-null)
 					//so you don't have to listen to the ready event if you don't
 					//want to
@@ -86,6 +84,14 @@ class Metaframe extends EventEmitter
 							emit(MetaframeEvents.Input, pipeId, Json.parse(Json.stringify(_inputPipeValues[pipeId])));
 						}
 					}
+
+					//Resolve AFTER sending inputs. This way consumers can either:
+					//1) Just listen to inputs updates. The first will be when the metaframe is ready
+					//2) Listen to the ready event, get the inputs if desired, and listen to subsequent
+					//   inputs updates. You may not wish to respond to the first updates but you might
+					//   want to know when the metaframe is ready
+					//*** Does this distinction make sense?
+					resolve(true);
 
 					window.addEventListener('resize', sendWindowDimensions);
 					sendWindowDimensions();
@@ -475,7 +481,7 @@ class Metaframe extends EventEmitter
 		sendRpc(JsonRpcMethodsFromChild.Dimensions, dimensions);
 	}
 
-	static function isIframe() :Bool
+	public static function isIframe() :Bool
 	{
 		//http://stackoverflow.com/questions/326069/how-to-identify-if-a-webpage-is-being-loaded-inside-an-iframe-or-directly-into-t
 		try {
