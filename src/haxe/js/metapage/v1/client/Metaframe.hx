@@ -358,11 +358,6 @@ class Metaframe extends EventEmitter
 			_outputPipeValues = {};
 		}
 
-		//What does this mean?
-		// if (outputs == null) {
-		// 	return;
-		// }
-
 		var actualUpdates :MetaframeInputMap = null;
 		for (pipeId in outputs.keys()) {
 			var updateBlob = outputs[pipeId];
@@ -439,11 +434,10 @@ class Metaframe extends EventEmitter
 				emit(MetaframeEvents.Message, jsonrpc);
 
 			} else {
-				trace(e.data);
-				log('!Bad JsonRPC version=${Json.stringify(e.data)}');
+				//Some other message, e.g. webpack dev server, ignored
 			}
 		} else {
-			log('!message is not an object');
+			//Not an object, ignored by us
 		}
 	}
 
