@@ -1,5 +1,5 @@
 SHELL                      = /bin/bash
-VERSION                    = 0.0.6
+VERSION                    = 0.0.7
 GIT_REPO                   = dionjwa/metapage
 BASE_DIST                  = dist/npm
 
@@ -58,7 +58,7 @@ serve:
 	cd docs && docker-compose up
 
 .PHONY: tag
-tag: tag-update-files
+tag:
 	git tag "${VERSION}"
 	git commit -m "Version update > ${VERSION}"
 	git push
