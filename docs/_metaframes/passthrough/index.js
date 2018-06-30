@@ -114,8 +114,6 @@ function createRow(name, previousDiv) {
 			// value = value.replace('&amp;', '&');
 			value = htmlDecode(value);
 		}
-		console.log('valueDiv.innerHTML');
-		console.log(value);
 		metaframe.setInput(name, {value:value});
 		valueDiv.onkeydown = null;
 		valueDiv.setAttribute("contenteditable", false);
