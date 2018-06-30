@@ -56,3 +56,12 @@ clean:
 .PHONY: serve
 serve:
 	cd docs && docker-compose up
+
+.PHONY: tag
+tag: tag-update-files
+	git tag "${VERSION}"
+	git commit -m "Version update > ${VERSION}"
+	git push
+	git tag --delete "${VERSION}"
+	git tag -f "${VERSION}"
+	git push --tags
