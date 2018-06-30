@@ -1,5 +1,11 @@
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:false, showBanner:true});
+var metaframe = new Metaframe({debug:false});
+
+function setText(text) {
+	document.getElementById("output").innerHTML = text;
+}
+
+setText("Loading...");
 
 metaframe.ready.then(function() {
 	metaframe.sendDimensions();
@@ -10,35 +16,39 @@ metaframe.ready.then(function() {
 var pdbToUniprotMap = null;
 
 function maybeSendPdbId() {
-	if (metaframe.getInput('pdb_id')) {
-  		var pdbId = metaframe.getInput('pdb_id').toUpperCase();
-  		if (pdbToUniprotMap) {
+	if (pdbToUniprotMap && metaframe.getInput('pdb_id') && metaframe.getInput('pdb_id').value != null) {
+  		var pdbId = metaframe.getInput('pdb_id').value.toUpperCase();
+  		// setText(pdbId + "=> NOT READY");
+  		if (pdbToUniprotMap && pdbId) {
 			if (pdbToUniprotMap[pdbId]) {
-				console.log(pdbId + '=' + pdbToUniprotMap[pdbId]);
-		  		metaframe.setOutput('uniprot_id', pdbToUniprotMap[pdbId]);
+				  setText(pdbId + "=>" + (pdbToUniprotMap[pdbId] ? pdbToUniprotMap[pdbId] : "none"));
+		  		metaframe.setOutput('uniprot_id', {value:pdbToUniprotMap[pdbId]});
 		  	} else {
-		  		metaframe.setOutput('error', "No mapping for " + pdbId);
+		  		setText(pdbId + "=> none");
+          metaframe.setOutput('uniprot_id', {value:null});
+		  		metaframe.setOutput('error', {value:"No mapping for " + pdbId});
 		  	}
 		}
   	}
 }
 
-metaframe.setOutput('status', 'loading');
-axios.get('data.json')
+metaframe.setOutput('status', {value:'loading'});
+
+fetch('data.json')
   .then(function (response) {
-  	pdbToUniprotMap = response.data;
-
+  	return response.json();
+  })
+  .then(function(jsonResponse) {
+  	pdbToUniprotMap = jsonResponse;
+  	setText("Ready.");
+  	metaframe.setOutput('status', {value:'ready'});
   	maybeSendPdbId();
-
-  	metaframe.setOutput('status', 'ready');
-
   })
   .catch(function (error) {
+  	console.error('failed data.json response');
     console.error(error);
   });
 
-metaframe.onInput("pdb_id", function(pdbId) {
-	console.log('pdb converter on input pdb_id=' + pdbId);
+metaframe.onInput("pdb_id", function(blob) {
 	maybeSendPdbId();
 });
-

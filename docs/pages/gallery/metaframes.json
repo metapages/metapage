@@ -1,0 +1,14 @@
+---
+permalink: /gallery/metaframes.json
+---
+[
+
+{% for metaframe in site.metaframes %}
+{% case forloop.index %}
+{% when 1 %}
+"{{metaframe.id}}"
+{% else %}
+,"{{metaframe.id}}"
+{% endcase %}
+{% endfor %}
+]

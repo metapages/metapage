@@ -1,13 +1,13 @@
 {
-  "name": "metapage",
-  "version": "0.0.2",
+  "name": "REPLACED",
+  "version": "REPLACED",
   "description": "Connect web pages together",
-  "main": "metapage.js",
+  "main": "index.js",
   "repository": {
     "type": "git",
     "url": "https://github.com/dionjwa/metapage"
   },
-  "homepage": "https://pages.git.com/amagod/metapage/",
+  "homepage": "https://metapages.org/",
   "keywords": [
     "metapage",
     "metaframe",

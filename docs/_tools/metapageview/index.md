@@ -7,7 +7,7 @@ layout: vanilla
 <script src="{{site.baseurl}}{{site.data.urls.jquery_path}}"></script>
 <link rel="stylesheet" href="{{site.baseurl}}{{site.data.urls.bootstrap_path}}">
 
-<script src="{{site.baseurl}}{{site.data.urls.metapage_library_path}}"></script>
+<script src="{{site.baseurl}}{{site.data.urls-internal.metapage_library_path}}"></script>
 
 <style>
 	.vertical {

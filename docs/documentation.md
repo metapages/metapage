@@ -13,14 +13,14 @@ For example, the small two-piece metapage above can be created with these two st
 1) Include a the metapage script in your page:
 
 {% highlight html %}
-	<script src="https://pages.git.com/{{site.baseurl}}{{site.data.urls.metapage_library_path}}"></script>
+	<script src="https://pages.git.com{{site.baseurl}}{{site.data.urls.metapage_library_path}}"></script>
 {% endhighlight %}
 
 2) Then create the metaframes, connect them together, and add the metaframes to the document (in your Javascript:
 
 {% highlight javascript %}
   //Create the metaframe object
-  var mp = new Metapage({debug:false});
+  var mp = new Metapage();
 
   //Create the metaframes
   var iframe1 = mp.createIFrame('{{site.baseurl}}/metaframes/example00_iframe1');

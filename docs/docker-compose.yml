@@ -3,9 +3,11 @@ version: '2'
 services:
 
   jekyll-container:
-    image: etelej/jekyll
+    build: .
+    # image: "jekyll/jekyll:latest"
+    command: jekyll serve --watch --force_polling
     ports:
-        - "5000:4000"
+        - "4000:4000"
     volumes:
-        - ./:/app
-    working_dir: /app
+        # - ./:/app
+        - ./:/srv/jekyll

@@ -1,5 +1,10 @@
 {
   "version": "0.1-alpha",
+  "metadata": {
+    "version": "0.1",
+    "title": "PV Protein Viewer",
+    "image": "protein.png"
+  },
   "inputs": [
     {
       "name": "pdb_id",

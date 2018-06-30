@@ -1,14 +1,17 @@
 var letters = '♞☯☭☢€☎∞❄♫☂★☀✓❤✆✇✈✂✄❀❁❂❃✻✼✽✾✿✧✨✩✪✫✍✎✏';
 
-var connection = new Metaframe({debug:false, showBanner:true});
+var connection = new Metaframe({debug:false});
 
-connection.onInput('fooIn', function(value) {
+connection.onInput('fooIn', function(blob) {
 	var display = document.getElementById("input");
+	var value = blob.value;
+	if (value === undefined) {
+		value = "";
+	}
 	display.innerHTML = value;
 	setTimeout(function() {
 		value = value + letters[Math.floor(Math.random()*letters.length)];
-		// console.log('Setting iframe2.barOut = ' + value);
-		connection.setOutput('barOut', value);
+		connection.setOutput("barOut", {value:value});
 		display.innerHTML = "";
 	}, 2000);
 });
