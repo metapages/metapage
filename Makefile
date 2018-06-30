@@ -1,5 +1,5 @@
 SHELL                      = /bin/bash
-VERSION                    = 0.0.7
+VERSION                    = 0.0.9
 GIT_REPO                   = dionjwa/metapage
 BASE_DIST                  = dist/npm
 
@@ -60,6 +60,7 @@ serve:
 .PHONY: tag
 tag:
 	git tag "${VERSION}"
+	git add Makefile
 	git commit -m "Version update > ${VERSION}"
 	git push
 	git tag --delete "${VERSION}"
