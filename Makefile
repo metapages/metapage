@@ -1,5 +1,5 @@
 SHELL                      = /bin/bash
-VERSION                    = 0.0.4
+VERSION                    = 0.0.6
 GIT_REPO                   = dionjwa/metapage
 BASE_DIST                  = dist/npm
 
@@ -11,9 +11,8 @@ travis: publish
 	@if [ "${TRAVIS_BRANCH}" == "master" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ] && [ "${TRAVIS_REPO_SLUG}" == "${GIT_REPO}" ]; \
 		then make test-ci ; \
 	fi
-	@if [ "${TRAVIS_PULL_REQUEST}" == "false" ] && [ "${TRAVIS_REPO_SLUG}" == "${GIT_REPO}" ] && [ "${VERSION}" == "${TRAVIS_TAG}" ] && [ ! -z "${NPM_USERNAME}" ] && [ ! -z "${NPM_PASSWORD}" ]; \
-	then \
-		make publish-internal ; \
+	@if [ "${TRAVIS_PULL_REQUEST}" == "false" ] && [ "${TRAVIS_REPO_SLUG}" == "${GIT_REPO}" ] && [ "${VERSION}" == "${TRAVIS_TAG}" ] && [ ! -z "${NPM_TOKEN}" ]; \
+		then make publish-internal ; \
 	fi
 
 .PHONY: build
