@@ -1,26 +1,29 @@
 ---
 ---
 
-var connection = new Metaframe({debug:false, showBanner:true});
+var connection = new Metaframe({debug:false});
 
 var letters = '♞☯☭☢€☎∞❄♫☂★☀✓❤✆✇✈✂✄❀❁❂❃✻✼✽✾✿✧✨✩✪✫✍✎✏';
 
 var value = letters[Math.floor(Math.random()*letters.length)];
 
-connection.onInput('barIn', function(value) {
+connection.onInput('barIn', function(blob) {
 	var display = document.getElementById("input");
+	var value = blob.value;
+	if (value === undefined) {
+		value = "";
+	}
 	display.innerHTML = value;
 	setTimeout(function() {
 		value = value + letters[Math.floor(Math.random()*letters.length)];
 		if (value.length > 30) {
 			value = letters[Math.floor(Math.random()*letters.length)];
 		}
-		connection.setOutput('fooOut', value);
+		connection.setOutput("fooOut", {value:value});
 		display.innerHTML = "";
 	}, 2000);
 });
 
 connection.ready.then(function(_) {
-	connection.log('READY');
-	connection.setOutput('fooOut', value);
+	connection.setOutput("fooOut", {value:value});
 });

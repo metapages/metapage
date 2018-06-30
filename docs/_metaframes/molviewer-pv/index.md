@@ -3,12 +3,17 @@ layout: vanilla
 ---
 
 <head>
-    <title>Molecule viewer</title>
+    <title>Javascript Protein Viewer</title>
     <meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+    <script src="{{site.baseurl}}{{site.data.urls.promise_polyfill}}"></script>
 </head>
 <body>
-    <div id="viewer"></div>
+	<div id="label">Waiting for data</div>
+	<div id="viewer"></div>
+    <div>
+    	<a href="https://biasmv.github.io/pv/">Javascript Protein Viewer</a>
+    </div>
 </body>
-<script src="{{site.baseurl}}{{site.data.urls.metaframe_library_path}}"></script>
-<script src="https://rawgit.com/biasmv/pv/master/bio-pv.min.js"></script>
+<script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
+<script src="bio-pv.min.js"></script>
 <script src="index.js"></script>

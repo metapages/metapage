@@ -1,5 +1,10 @@
 {
 	"version": "0.1-alpha",
+	"metadata": {
+		"version": "0.1",
+		"title": "Example animated input graph",
+		"author": "Dion Whitehead"
+	},
 	"inputs": [
 		{
 			"name": "graph_input",

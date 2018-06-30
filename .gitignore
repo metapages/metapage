@@ -3,7 +3,6 @@
 lib/iframeclient.js
 node_modules
 *.sublime-workspace
-/build.hxml
 tmp
 npm-debug.log
 .haxelib
@@ -19,3 +18,5 @@ _site
 .sass-cache
 Gemfile.lock
 dist
+docs/js/metaframe*
+docs/js/metapage*

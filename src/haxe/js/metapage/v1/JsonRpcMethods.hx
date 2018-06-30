@@ -1,42 +1,38 @@
-package metapage;
+package js.metapage.v1;
+
+import haxe.remoting.JsonRpc;
 
 @:enum
 abstract JsonRpcMethodsFromChild(String) to String {
-  var OutputUpdate = "OutputUpdate";
+  var InputsUpdate = "InputsUpdate";
+  var InputsDelete = "InputsDelete";
   var OutputsUpdate = "OutputsUpdate";
   var SetupIframeClientRequest = "SetupIframeClientRequest";
   var SetupIframeServerResponseAck = "SetupIframeServerResponseAck";
-  // var AddRpcMethod = "AddRpcMethod";
-  // var RPC = "RPC";
   var Dimensions = "Dimensions";
-  // var Message = "Message";
 }
 
 @:enum
 abstract JsonRpcMethodsFromParent(String) to String {
   var InputsUpdate = "InputsUpdate";
-  var InputUpdate = "InputUpdate";
+  var InputsDelete = "InputsDelete";
   var SetupIframeServerResponse = "SetupIframeServerResponse";
-  // var AddRpcMethod = "AddRpcMethod";
-  // var RPC = "RPC";
-  // var Message = "Message";
 }
 
 @:enum
 abstract OtherEvents(String) to String {
-  // var AddRpcMethod = "AddRpcMethod";
-  // var RPC = "RPC";
   var Message = "Message";
 }
 
 typedef SetupIframeServerResponseData = {
 	var origin :String;
-	var iframeId :String;
-	var parentId :String;
+	var iframeId :MetaframeId;
+	var parentId :MetapageId;
+  var state: {inputs:MetaframeInputMap, outputs:MetaframeInputMap};
 }
 
 typedef MinimumClientMessage = {>RequestDef,
 	var origin :String;
-	var iframeId :String;
-	var parentId :String;
+	var iframeId :MetaframeId;
+	var parentId :MetapageId;
 }

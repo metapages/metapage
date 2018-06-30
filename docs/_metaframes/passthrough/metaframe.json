@@ -1,5 +1,10 @@
 {
 	"version": "0.1-alpha",
+	"metadata": {
+		"version": "0.1",
+		"title": "Passthrough metaframe",
+		"author": "Dion Whitehead"
+	},
 	"inputs": [],
 	"outputs": []
 }
