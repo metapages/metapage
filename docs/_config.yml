@@ -1,18 +1,13 @@
 #Site settings
 source: ./
 title: Metapages
-# url: "https://dionjwa.github.io" # the base hostname & protocol for your site
-baseurl: /metapage
-# github:
-#   repository_nwo: /amagod/metapage
-
-# github_username:  dionjwa
-# site.github.url: https://dionjwa.github.io/metapage/
+baseurl: ""
 
 # Build settings
 markdown: kramdown
 theme: minima
-include: ['docs/pages']
+
+include: ['pages']
 collections:
   metaframes:
     output: true
