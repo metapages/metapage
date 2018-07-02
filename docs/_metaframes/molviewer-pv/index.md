@@ -14,6 +14,6 @@ layout: vanilla
     	<a href="https://biasmv.github.io/pv/">Javascript Protein Viewer</a>
     </div>
 </body>
-<script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
+<script src="{{site.data.urls-internal.metaframe_library_path}}"></script>
 <script src="bio-pv.min.js"></script>
 <script src="index.js"></script>

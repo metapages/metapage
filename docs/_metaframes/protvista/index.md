@@ -12,5 +12,5 @@ layout: vanilla
 <div id="main"></div>
 </body>
 <script src="{{site.baseurl}}{{site.data.urls.jquery_path}}"></script>
-<script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
+<script src="{{site.data.urls-internal.metaframe_library_path}}"></script>
 <script src="index.js"></script>

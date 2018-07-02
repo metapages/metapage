@@ -12,7 +12,7 @@ Convert PDB ID => UniProt ID
 <div id="output">
 </div>
 </body>
-<script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
+<script src="{{site.data.urls-internal.metaframe_library_path}}"></script>
 <script src="index.js"></script>
 
 

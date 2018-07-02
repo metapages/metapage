@@ -26,6 +26,6 @@ layout: vanilla
   <div id="input-rows" class="input-rows"></div>
 </div>
 
-<script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
+<script src="{{site.data.urls-internal.metaframe_library_path}}"></script>
 <script src="index.js"></script>
 </body>

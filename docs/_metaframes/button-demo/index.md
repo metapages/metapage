@@ -10,7 +10,7 @@ layout: vanilla
 </head>
 <body>
 	<!-- <link rel="stylesheet" href="pure-min.css"> -->
-	<script src="{{site.baseurl}}{{site.data.urls-internal.metaframe_library_path}}"></script>
+	<script src="{{site.data.urls-internal.metaframe_library_path}}"></script>
 	Har har har
 	<div id="content">
     	<button id="button1" class="pure-button">Add Category1</button>
