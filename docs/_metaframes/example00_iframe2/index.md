@@ -13,7 +13,7 @@ Metaframe 2 (an iframe)
 
 <div id="input"></div>
 
-<script src="{{site.data.urls-internal.metaframe_library_path}}"></script>
+{% include metaframe_lib_script.html %}
 <script src="iframe2.js"></script>
 
 

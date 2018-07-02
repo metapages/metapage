@@ -6,8 +6,9 @@ services:
     build: .
     # image: "jekyll/jekyll:latest"
     command: jekyll serve --watch --force_polling
+    environment:
+      - JEKYLL_ENV=development
     ports:
         - "4000:4000"
     volumes:
-        # - ./:/app
         - ./:/srv/jekyll

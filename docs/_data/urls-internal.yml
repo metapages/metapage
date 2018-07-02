@@ -1,9 +1,2 @@
-{% if jekyll.environment == "production" %}
-metapage_library_path: "https://cdn.jsdelivr.net/npm/metapage@0.0.9/index.js"
-metaframe_library_path: "https://cdn.jsdelivr.net/npm/metaframe@0.0.9/index.js"
-{% else %}
 metapage_library_path: "/js/metapage.js"
 metaframe_library_path: "/js/metaframe.js"
-{% endif %}
-
-

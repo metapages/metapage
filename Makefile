@@ -2,13 +2,18 @@ SHELL                      = /bin/bash
 VERSION                    = 0.0.9
 GIT_REPO                   = dionjwa/metapage
 BASE_DIST                  = dist/npm
+DOCKER_COMPOSE             = docker-compose
+DOCKER_COMPOSE_TOOLS       = docker-compose -f docker-compose-tools.yml
+
+SHELL=/bin/bash
+COMPOSE_TOOLS=docker-compose -f docker-compose-tools.yml run
+DEV_SERVER_PORT=8090
 
 .PHONY: start
 start: install compile
 
 .PHONY: travis
-travis: install
-	docker-compose run compile
+travis: install compile
 	make travis-internal
 
 .PHONY: travis-internal
@@ -24,14 +29,14 @@ travis-internal:
 compile:
 	rm -rf docs/js/metapage*
 	rm -rf docs/js/metaframe*
-	docker-compose run compile
+	${DOCKER_COMPOSE} run compile
 	sed -i '' "s#metapage_library_path: \"https://cdn.*#metapage_library_path: \"https://cdn.jsdelivr.net/npm/metapage@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
 	sed -i '' "s#metaframe_library_path: \"https://cdn.*#metaframe_library_path: \"https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
 
 .PHONY: install
 install:
-	docker-compose run haxelibs
-	docker-compose run node_modules
+	${DOCKER_COMPOSE_TOOLS} run haxelibs
+	${DOCKER_COMPOSE_TOOLS} run node_modules
 
 .PHONY: test-ci
 test-ci: compile
