@@ -3,6 +3,9 @@ source: ./
 title: Metapages
 baseurl: ""
 
+#Controls logic for changing asset urls
+environment: production
+
 # Build settings
 markdown: kramdown
 theme: minima
