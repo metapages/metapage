@@ -14,6 +14,7 @@ Metaframe 1 (an iframe)
 
 <div id="input" style="outline-width: 1px;"></div>
 
+
 {% include metaframe_lib_script.html %}
 <script src="iframe1.js"></script>
 

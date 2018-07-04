@@ -1,5 +1,5 @@
 #Change the version then run `make tag`, this will trigger a build and publish
-VERSION                    = 0.0.13
+VERSION                    = 0.0.14
 SHELL                      = /bin/bash
 GIT_REPO                   = dionjwa/metapage
 BASE_DIST                  = dist/npm
@@ -77,6 +77,7 @@ serve: install compile
 
 .PHONY: tag
 tag:
+	sed -i '' "s#<script src=\"https://cdn.jsdelivr.net.*#<script src=\"https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/index.js\"></script>#" docs/_includes/metaframe_lib_script.html
 	echo "${VERSION}" > ./docs/_includes/version.html
 	git tag "${VERSION}"
 	git add Makefile
