@@ -2,15 +2,6 @@ version: '2'
 
 services:
 
-  metapagewebsite:
-    build: ../metapage/docs
-    command: ['jekyll', 'serve', '--watch', '--force_polling', '--config', '_config.yml,_config.dev.yml']
-    ports:
-      - "4000:4000"
-    volumes:
-      - ../metapage/docs:/srv/jekyll
-    networks:
-      - mps
   haxe:
     image: "haxe:3.4"
     volumes:

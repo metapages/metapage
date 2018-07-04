@@ -13,6 +13,7 @@ client/bridge/test/exampleWorkflow/**/inputs
 .idea
 client/bridge/lib/workflow-client.js
 .aws
+.env
 gitcache
 _site
 .sass-cache

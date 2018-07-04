@@ -3,7 +3,7 @@ VERSION                    = 0.0.9
 GIT_REPO                   = dionjwa/metapage
 BASE_DIST                  = dist/npm
 DOCKER_COMPOSE             = docker-compose
-DOCKER_COMPOSE_TOOLS       = docker-compose -f docker-compose-tools.yml
+DOCKER_COMPOSE_TOOLS       = docker-compose -f docker-compose.tools.yml
 
 SHELL=/bin/bash
 COMPOSE_TOOLS=docker-compose -f docker-compose-tools.yml run
@@ -29,7 +29,7 @@ travis-internal:
 compile:
 	rm -rf docs/js/metapage*
 	rm -rf docs/js/metaframe*
-	${DOCKER_COMPOSE} run compile
+	${DOCKER_COMPOSE_TOOLS} run compile
 	sed -i '' "s#metapage_library_path: \"https://cdn.*#metapage_library_path: \"https://cdn.jsdelivr.net/npm/metapage@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
 	sed -i '' "s#metaframe_library_path: \"https://cdn.*#metaframe_library_path: \"https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
 
@@ -63,7 +63,7 @@ clean:
 
 .PHONY: serve
 serve:
-	cd docs && docker-compose up
+	cd docs && ${DOCKER_COMPOSE} up
 
 .PHONY: tag
 tag:
