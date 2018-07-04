@@ -15,19 +15,18 @@ services:
     command: ["/bin/sh", "-c", 'haxelib install --always build.hxml']
     working_dir: /app
     volumes:
-      - ./.haxelib:/app/.haxelib
-      - ./src:/app/src
+      - ./:/app
 
-  # Simply installs npm modules into a persistent docker volume
-  # for efficiency. Used by reloaders, not the main app
-  node_modules:
-    image: dionjwa/haxe-watch:v0.15.0
-    working_dir: /app
-    command: ["/bin/sh", "-c", "npm i"]
-    volumes:
+  # # Simply installs npm modules into a persistent docker volume
+  # # for efficiency. Used by reloaders, not the main app
+  # node_modules:
+  #   image: dionjwa/haxe-watch:v0.15.0
+  #   working_dir: /app
+  #   command: ["/bin/sh", "-c", "npm i -g --prefix ./node_modules_docker"]
+  #   volumes:
+  #     - ./package.json:/app/package.json
+  #     - ./package.json:/app/package.json
       - ./node_modules_docker:/app/node_modules
-      - ./package-lock.json:/app/package-lock.json
-      - ./package.json:/app/package.json
 
   #Build all
   compile:

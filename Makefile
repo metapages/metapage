@@ -1,5 +1,6 @@
-SHELL                      = /bin/bash
+#Change the version then run `make tag`, this will trigger a build and publish
 VERSION                    = 0.0.9
+SHELL                      = /bin/bash
 GIT_REPO                   = dionjwa/metapage
 BASE_DIST                  = dist/npm
 DOCKER_COMPOSE             = docker-compose
@@ -7,7 +8,6 @@ DOCKER_COMPOSE_TOOLS       = docker-compose -f docker-compose.tools.yml
 
 SHELL=/bin/bash
 COMPOSE_TOOLS=docker-compose -f docker-compose-tools.yml run
-DEV_SERVER_PORT=8090
 
 .PHONY: start
 start: install compile
@@ -33,10 +33,12 @@ compile:
 	sed -i '' "s#metapage_library_path: \"https://cdn.*#metapage_library_path: \"https://cdn.jsdelivr.net/npm/metapage@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
 	sed -i '' "s#metaframe_library_path: \"https://cdn.*#metaframe_library_path: \"https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
 
-.PHONY: install
-install:
+.PHONY: haxelib
+haxelib:
 	${DOCKER_COMPOSE_TOOLS} run haxelibs
-	${DOCKER_COMPOSE_TOOLS} run node_modules
+
+.PHONY: install
+install: haxelib
 
 .PHONY: test-ci
 test-ci: compile
@@ -62,7 +64,7 @@ clean:
 	rm -rf .haxelib
 
 .PHONY: serve
-serve:
+serve: compile
 	cd docs && ${DOCKER_COMPOSE} up
 
 .PHONY: tag
