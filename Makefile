@@ -62,6 +62,8 @@ publish-internal:
 .PHONY: clean
 clean:
 	rm -rf .haxelib
+	rm -rf ./docs/js/metaframe*
+	rm -rf ./docs/js/metapage*
 
 .PHONY: serve
 serve: compile

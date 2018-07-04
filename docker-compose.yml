@@ -8,4 +8,4 @@ services:
     ports:
       - "4000:${PORT_METAPAGE:-4000}"
     volumes:
-      - ../metapage/docs:/srv/jekyll
+      - ./docs:/srv/jekyll

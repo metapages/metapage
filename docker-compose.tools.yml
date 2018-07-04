@@ -2,31 +2,13 @@ version: '2'
 
 services:
 
-  haxe:
-    image: "haxe:3.4"
-    volumes:
-      - ./:/app
-    working_dir: /app
-    command: ["haxe", "build.hxml"]
-
   # Installs haxelibs locally
   haxelibs:
     image: dionjwa/haxe-watch:v0.15.0
-    command: ["/bin/sh", "-c", 'haxelib install --always build.hxml']
+    command: ["/bin/sh", "-c", 'haxelib newrepo && haxelib install --always build.hxml']
     working_dir: /app
     volumes:
       - ./:/app
-
-  # # Simply installs npm modules into a persistent docker volume
-  # # for efficiency. Used by reloaders, not the main app
-  # node_modules:
-  #   image: dionjwa/haxe-watch:v0.15.0
-  #   working_dir: /app
-  #   command: ["/bin/sh", "-c", "npm i -g --prefix ./node_modules_docker"]
-  #   volumes:
-  #     - ./package.json:/app/package.json
-  #     - ./package.json:/app/package.json
-      - ./node_modules_docker:/app/node_modules
 
   #Build all
   compile:
