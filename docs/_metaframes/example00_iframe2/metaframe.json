@@ -4,16 +4,10 @@
 		"version": "0.1",
 		"title": "Example metaframe"
 	},
-	"inputs": [
-		{
-			"name": "fooIn",
-			"type": "string"
-		}
-	],
-	"outputs": [
-		{
-			"name": "barOut",
-			"type": "string"
-		}
-	]
+	"inputs": {
+		"fooIn": {}
+	},
+	"outputs": {
+		"barOut": {}
+	}
 }

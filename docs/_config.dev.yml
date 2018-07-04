@@ -1,0 +1,4 @@
+baseurl: ""
+
+#Controls logic for changing asset urls
+environment: development

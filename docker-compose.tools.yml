@@ -4,13 +4,11 @@ services:
 
   metapagewebsite:
     build: ../metapage/docs
-    # build: .haxelib/metapage/git/docs
-    command: ['jekyll', 'serve', '--watch', '--force_polling']
+    command: ['jekyll', 'serve', '--watch', '--force_polling', '--config', '_config.yml,_config.dev.yml']
     ports:
       - "4000:4000"
     volumes:
       - ../metapage/docs:/srv/jekyll
-      # - .haxelib/metapage/git/docs:/srv/jekyll
     networks:
       - mps
   haxe:

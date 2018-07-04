@@ -5,37 +5,26 @@
     "title": "PV Protein Viewer",
     "image": "protein.png"
   },
-  "inputs": [
-    {
-      "name": "pdb_id",
-      "type": "string",
-      "value": "1C7D"
+  "inputs": {
+    "pdb_id": {
+      "value": "1C7D",
+      "type": "pdb_id:rcsb.org"
     },
-    {
-      "name": "pdb_data",
-      "type": "string"
+    "pdb_data": {},
+    "pdb_url": {},
+    "zoom": {
+      "type": "json"
     },
-    {
-      "name": "pdb_url",
-      "type": "string"
-    },
-    {
-      "name": "zoom",
-      "type": "float"
-    },
-    {
-      "name": "rotation",
+    "rotation": {
       "type": "float"
     }
-  ],
-  "outputs": [
-    {
-      "name": "zoom",
-      "type": "float"
+  },
+  "outputs": {
+    "zoom": {
+      "type": "json"
     },
-    {
-      "name": "rotation",
+    "rotation": {
       "type": "float"
     }
-  ]
+  }
 }

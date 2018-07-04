@@ -10,18 +10,15 @@ metaframe.ready.then(function() {
 /* Push random numbers to the next page every time the button is clicked */
 document.getElementById("button1")
 	.addEventListener('click', function() {
-		var val = "Category1";
-		metaframe.setOutput(button_out, {value:val});
+		metaframe.setOutput("button_out", {value:"Category1"});
 	});
 
 document.getElementById("button2")
 	.addEventListener('click', function() {
-		var val = "Category2";
-		metaframe.setOutput(button_out, {value:val});
+		metaframe.setOutput("button_out", {value:"Category2"});
 	});
 
 document.getElementById("button3")
 	.addEventListener('click', function() {
-		var val = "Category3";
-		metaframe.setOutput(button_out, {value:val});
+		metaframe.setOutput("button_out", {value:"Category3"});
 	});

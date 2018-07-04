@@ -5,12 +5,10 @@
 		"title": "Protvista (protein sequence features)",
 		"image": "http://ebi-uniprot.github.io/ProtVista/images/ftViewerUP.png"
 	},
-	"inputs": [
-		{
-			"name": "uniprot_id",
-			"type": "string",
+	"inputs": {
+		"uniprot_id": {
 			"value": "P68871"
 		}
-	],
-	"outputs": []
+	},
+	"outputs": {}
 }

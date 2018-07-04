@@ -5,7 +5,8 @@ services:
   jekyll-container:
     build: .
     # image: "jekyll/jekyll:latest"
-    command: jekyll serve --watch --force_polling
+    # command: ['jekyll', 'serve', '--watch', '--force_polling', '--config', '_config.yml,_config.dev.yml']
+    command: ['jekyll', 'serve', '--watch', '--force_polling']
     environment:
       - JEKYLL_ENV=development
     ports:

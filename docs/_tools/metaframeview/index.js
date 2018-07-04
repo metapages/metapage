@@ -6,28 +6,38 @@ var urlParam = urlObject.searchParams.get('url');
 var debugParam = urlObject.searchParams.get('debug') == '1' || urlObject.searchParams.get('debug') == 'true';
 
 document.getElementById("url").innerHTML = urlParam;
-
-var metaframeDataUrl = new URL(urlParam);
-if (!metaframeDataUrl.pathname.endsWith('/metaframe.json')) {
-	if (metaframeDataUrl.pathname.endsWith('/')) {
-		metaframeDataUrl.pathname = metaframeDataUrl.pathname.substring(0, metaframeDataUrl.pathname.length - 1);
+console.log('urlParam', urlParam);
+if (urlParam != null) {
+	var metaframeDataUrl;
+	try {
+		metaframeDataUrl = new URL(urlParam);
+	} catch (err) {
+		document.getElementById("url").innerHTML = `Invalid URL: ${urlParam}`;
 	}
-	metaframeDataUrl.pathname = metaframeDataUrl.pathname + '/metaframe.json';
+
+	if (metaframeDataUrl != null) {
+		if (!metaframeDataUrl.pathname.endsWith('/metaframe.json')) {
+			if (metaframeDataUrl.pathname.endsWith('/')) {
+				metaframeDataUrl.pathname = metaframeDataUrl.pathname.substring(0, metaframeDataUrl.pathname.length - 1);
+			}
+			metaframeDataUrl.pathname = metaframeDataUrl.pathname + '/metaframe.json';
+		}
+
+		fetch(metaframeDataUrl.toString(), {method: 'get',mode: 'cors', redirect: 'follow', cache: 'no-cache'})
+			.then(function(response) {
+				if(response.ok) {
+					return response.json();
+				}
+				throw new Error(`fetch ${metaframeDataUrl.toString()} failed status=${response.status } error=${Response.statusText}`);
+			})
+			.then(function(metaframeJson) {
+				buildEditorWithInitialInputs(metaframeJson.inputs);
+			})
+			.catch(function(error) {
+				console.error(error);
+			});
+	}
 }
-
-fetch(metaframeDataUrl.toString(), {method: 'get',mode: 'cors', redirect: 'follow', cache: 'no-cache'})
-  .then(function(response) {
-  	if(response.ok) {
-		return response.json();
-	}
-	throw new Error(`fetch ${metaframeDataUrl.toString()} failed status=${response.status } error=${Response.statusText}`);
-  })
-  .then(function(metaframeJson) {
-    buildEditorWithInitialInputs(metaframeJson.inputs);
-  })
-  .catch(function(error) {
-    console.error(error);
-  });
 
 function buildEditorWithInitialInputs(startInputs) {
 
