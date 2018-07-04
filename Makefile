@@ -1,5 +1,5 @@
 #Change the version then run `make tag`, this will trigger a build and publish
-VERSION                    = 0.0.11
+VERSION                    = 0.0.12
 SHELL                      = /bin/bash
 GIT_REPO                   = dionjwa/metapage
 BASE_DIST                  = dist/npm
