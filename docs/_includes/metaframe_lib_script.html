@@ -1,5 +1,11 @@
 {% if jekyll.environment == "production" %}
+<script >
+console.log('PRODUCTION!');
+</script>
 <script src="https://cdn.jsdelivr.net/npm/metapage@0.0.9/index.js"></script>
 {% else %}
+<script >
+console.log('DEVELOPMENT!');
+</script>
 <script src="/js/metaframe.js"></script>
 {% endif %}
