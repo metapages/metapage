@@ -4,4 +4,4 @@ title: API
 permalink: /api/
 ---
 
-Coming soon.
+Version {% include version.html %} Coming soon.

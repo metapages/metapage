@@ -77,6 +77,7 @@ serve: install compile
 
 .PHONY: tag
 tag:
+	cat "${VERSION}" > ./docs/_includes/version.html
 	git tag "${VERSION}"
 	git add Makefile
 	git commit -m "Version update > ${VERSION}"
