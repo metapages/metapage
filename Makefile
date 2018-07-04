@@ -1,5 +1,5 @@
 #Change the version then run `make tag`, this will trigger a build and publish
-VERSION                    = 0.0.12
+VERSION                    = 0.0.13
 SHELL                      = /bin/bash
 GIT_REPO                   = dionjwa/metapage
 BASE_DIST                  = dist/npm
@@ -77,7 +77,7 @@ serve: install compile
 
 .PHONY: tag
 tag:
-	cat "${VERSION}" > ./docs/_includes/version.html
+	echo "${VERSION}" > ./docs/_includes/version.html
 	git tag "${VERSION}"
 	git add Makefile
 	git commit -m "Version update > ${VERSION}"
