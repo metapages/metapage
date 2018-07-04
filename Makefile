@@ -1,5 +1,5 @@
 #Change the version then run `make tag`, this will trigger a build and publish
-VERSION                    = 0.0.9
+VERSION                    = 0.0.11
 SHELL                      = /bin/bash
 GIT_REPO                   = dionjwa/metapage
 BASE_DIST                  = dist/npm
@@ -49,6 +49,7 @@ publish: install compile publish-internal
 
 .PHONY: publish-internal
 publish-internal:
+	@echo "PUBLISHING ${VERSION}"
 	for name in "metaframe" "metapage" ; do \
 		rm -rf ${BASE_DIST}/$${name} ; \
 		mkdir -p ${BASE_DIST}/$${name} ; \
