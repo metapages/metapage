@@ -47,16 +47,21 @@ test-ci:
 .PHONY: publish
 publish: install compile publish-internal
 
+# This expects NPM_TOKEN in the form: //registry.npmjs.org/:_authToken=XXX
+# as this is what is directly dumped to the ~/.npmrc file (if it doesn't exist in that file)
 .PHONY: publish-internal
 publish-internal:
 	@echo "PUBLISHING ${VERSION}"
+	@if ! grep --no-messages -q "${NPM_TOKEN}" "${HOME}/.npmrc" ; \
+		then echo "${NPM_TOKEN}" > ${HOME}/.npmrc ; \
+	fi
 	for name in "metaframe" "metapage" ; do \
 		rm -rf ${BASE_DIST}/$${name} ; \
 		mkdir -p ${BASE_DIST}/$${name} ; \
 		cp docs/js/$${name}.js ${BASE_DIST}/$${name}/index.js ; \
 		cat etc/npm/package.json | jq ". .version = \"${VERSION}\" | .name = \"$${name}\" | .main = \"$${name}.js\"" > ${BASE_DIST}/$${name}/package.json ; \
 		pushd ${BASE_DIST}/$${name} ; \
-		npm publish . ; \
+		npm publish . || exit 1 ; \
 		popd ; \
 	done
 
