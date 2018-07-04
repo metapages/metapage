@@ -30,8 +30,8 @@ compile:
 	rm -rf docs/js/metapage*
 	rm -rf docs/js/metaframe*
 	${DOCKER_COMPOSE_TOOLS} run compile
-	sed -i '' "s#metapage_library_path: \"https://cdn.*#metapage_library_path: \"https://cdn.jsdelivr.net/npm/metapage@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
-	sed -i '' "s#metaframe_library_path: \"https://cdn.*#metaframe_library_path: \"https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
+	# sed -i '' "s#metapage_library_path: \"https://cdn.*#metapage_library_path: \"https://cdn.jsdelivr.net/npm/metapage@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
+	# sed -i '' "s#metaframe_library_path: \"https://cdn.*#metaframe_library_path: \"https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
 
 .PHONY: haxelib
 haxelib:
@@ -41,11 +41,11 @@ haxelib:
 install: haxelib
 
 .PHONY: test-ci
-test-ci: compile
+test-ci:
 	@echo 'Implement basic tests'
 
 .PHONY: publish
-publish: compile publish-internal
+publish: install compile publish-internal
 
 .PHONY: publish-internal
 publish-internal:
@@ -66,7 +66,7 @@ clean:
 	rm -rf ./docs/js/metapage*
 
 .PHONY: serve
-serve: compile
+serve: install compile
 	cd docs && ${DOCKER_COMPOSE} up
 
 .PHONY: tag
