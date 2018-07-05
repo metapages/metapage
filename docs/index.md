@@ -31,7 +31,7 @@ Browsers are an ideal platform to distribute applications: they are readily avai
 
 A website can crunch data, show interactive plots and graphics, allow sophisticated user interaction. In other words, all manner of useful things.
 
-When you have somethine like a webiste that is specialized and does something well, eventually people want to combine useful pieces into a bigger whole.
+When you have somethine like a website that is specialized and does something well, eventually people want to combine useful pieces into a bigger whole.
 
 These are metapages.
 
