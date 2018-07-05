@@ -29,7 +29,7 @@ layout: vanilla
 }
 </style>
 
-<script src="{{site.baseurl}}{{site.data.urls.metapage_library_path}}"></script>
+{% include metapage_lib_script.html %}
 
 <body>
 

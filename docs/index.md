@@ -22,7 +22,7 @@ An example metapage showing two metaframes passing characters back and forth:
   </div>
 </div>
 <link rel="stylesheet" href="{{site.baseurl}}/metapages/example00-basic/styles.css">
-<script src="{{site.baseurl}}{{site.data.urls.metapage_library_path}}"></script>
+{% include metapage_lib_script.html %}
 <script src="{{site.baseurl}}/metapages/example00-basic/script1.js"></script>
 
 # Why would you want to do this?
