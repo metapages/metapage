@@ -6,26 +6,26 @@
     "iframes": {
       "button": {
         "url": "{{site.baseurl}}/metaframes/button-demo/",
-        "out": {
+        "outputs": {
           "button_out": {}
         }
       },
       "graph": {
         "url": "{{site.baseurl}}/metaframes/graph-demo/",
-        "in": {
+        "inputs": {
           "graph_input": {}
         }
       }
     },
     "pipes": [
       {
-        "from": {
+        "source": {
           "id": "button",
-          "pipe": "button_out"
+          "name": "button_out"
         },
-        "to": {
+        "target": {
           "id": "graph",
-          "pipe": "graph_input"
+          "name": "graph_input"
         }
       }
     ]

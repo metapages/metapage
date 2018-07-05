@@ -28,93 +28,93 @@
     },
     "pipes": [
       {
-        "from": {
+        "source": {
           "id": "input-button",
-          "pipe": "pdb_data"
+          "name": "pdb_data"
         },
-        "to": {
+        "target": {
           "id": "viewer1",
-          "pipe": "pdb_data"
+          "name": "pdb_data"
         }
       },
       {
-        "from": {
+        "source": {
           "id": "input-button",
-          "pipe": "pdb_data"
+          "name": "pdb_data"
         },
-        "to": {
+        "target": {
           "id": "viewer2",
-          "pipe": "pdb_data"
+          "name": "pdb_data"
         }
       },
       {
-        "from": {
+        "source": {
           "id": "input-button",
-          "pipe": "pdb_data"
+          "name": "pdb_data"
         },
-        "to": {
+        "target": {
           "id": "viewer3",
-          "pipe": "pdb_data"
+          "name": "pdb_data"
         }
       },
       {
-        "from": {
+        "source": {
           "id": "viewer1",
-          "pipe": "camera_out"
+          "name": "camera_out"
         },
-        "to": {
+        "target": {
           "id": "viewer2",
-          "pipe": "camera_in"
+          "name": "camera_in"
         }
       },
       {
-        "from": {
+        "source": {
           "id": "viewer1",
-          "pipe": "camera_out"
+          "name": "camera_out"
         },
-        "to": {
+        "target": {
           "id": "viewer3",
-          "pipe": "camera_in"
+          "name": "camera_in"
         }
       },
       {
-        "from": {
+        "source": {
           "id": "viewer1",
-          "pipe": "zoom"
+          "name": "zoom"
         },
-        "to": {
+        "target": {
           "id": "passthrough2",
-          "pipe": "zoom"
+          "name": "zoom"
         }
       },
       {
-        "from": {
+        "source": {
           "id": "passthrough2",
-          "pipe": "zoom"
+          "name": "zoom"
         },
-        "to": {
+        "target": {
           "id": "viewer2",
-          "pipe": "zoom"
+          "name": "zoom"
         }
       },
       {
-        "from": {
+        "source": {
           "id": "viewer1",
-          "pipe": "rotation"
+          "name": "rotation"
         },
-        "to": {
+        "target": {
           "id": "passthrough1",
-          "pipe": "rotation"
+          "name": "rotation"
         }
       },
       {
-        "from": {
+        "source": {
           "id": "passthrough1",
-          "pipe": "rotation"
+          "name": "rotation"
         },
-        "to": {
+        "target": {
           "id": "viewer3",
-          "pipe": "rotation"
+          "name": "rotation"
         }
       }
     ]

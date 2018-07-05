@@ -7,7 +7,6 @@ axios.get('metapage.json')
   	for (var key in iframes) {
       var parent = document.getElementById("_" + key);
       if (parent) {
-        
         parent.appendChild(iframes[key]);
       } else {
         parent = document.getElementById("body");
