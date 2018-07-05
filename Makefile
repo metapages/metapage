@@ -13,16 +13,12 @@ COMPOSE_TOOLS=docker-compose -f docker-compose-tools.yml run
 start: install compile
 
 .PHONY: travis
-travis: install compile
-	make travis-internal
-
-.PHONY: travis-internal
-travis-internal:
+travis:
 	@if [ "${TRAVIS_BRANCH}" == "master" ] && [ "${TRAVIS_PULL_REQUEST}" != "false" ] && [ "${TRAVIS_REPO_SLUG}" == "${GIT_REPO}" ]; \
 		then make test-ci ; \
 	fi
 	@if [ "${TRAVIS_PULL_REQUEST}" == "false" ] && [ "${TRAVIS_REPO_SLUG}" == "${GIT_REPO}" ] && [ "${VERSION}" == "${TRAVIS_TAG}" ] && [ ! -z "${NPM_TOKEN}" ]; \
-		then make publish-internal ; \
+		then make publish ; \
 	fi
 
 .PHONY: compile
@@ -41,11 +37,11 @@ haxelib:
 install: haxelib
 
 .PHONY: test-ci
-test-ci:
+test-ci: install compile
 	@echo 'Implement basic tests'
 
 .PHONY: publish
-publish: install compile publish-internal
+publish: test-ci publish-internal
 
 # This expects NPM_TOKEN in the form: //registry.npmjs.org/:_authToken=XXX
 # as this is what is directly dumped to the ~/.npmrc file (if it doesn't exist in that file)
