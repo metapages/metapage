@@ -26,8 +26,6 @@ compile:
 	rm -rf docs/js/metapage*
 	rm -rf docs/js/metaframe*
 	${DOCKER_COMPOSE_TOOLS} run compile
-	# sed -i '' "s#metapage_library_path: \"https://cdn.*#metapage_library_path: \"https://cdn.jsdelivr.net/npm/metapage@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
-	# sed -i '' "s#metaframe_library_path: \"https://cdn.*#metaframe_library_path: \"https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/index.js\"#g" docs/_data/urls-internal.yml
 
 .PHONY: haxelib
 haxelib:
