@@ -1,4 +1,3 @@
-# cloud-build env vars: https://cloud.google.com/cloud-build/docs/configuring-builds/substitute-variable-values
 steps:
 - name: 'gcr.io/cloud-builders/docker'
   args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA', 'docs' ]
