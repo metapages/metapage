@@ -1,19 +1,21 @@
-version: '2'
+version: '2.3'
 
 services:
 
   # Installs haxelibs locally
-  haxelibs:
-    image: dionjwa/haxe-watch:v0.15.0
-    command: ["/bin/sh", "-c", 'haxelib newrepo && haxelib install --always build.hxml']
-    working_dir: /app
-    volumes:
-      - ./:/app
+  # haxelibs:
+  #   image: dionjwa/haxe-watch:v0.15.0
+  #   command: ["/bin/sh", "-c", 'haxelib newrepo && haxelib install --always build.hxml']
+  #   working_dir: /app
+  #   volumes:
+  #     - ./:/app
 
   #Build all
   compile:
-    image: dionjwa/haxe-watch:v0.15.0
+    build:
+      context: .
+      target: client-builder
     command: ["sh", "-c", "haxe build.hxml"]
-    working_dir: /app
+    working_dir: /client
     volumes:
-      - ./:/app
+      - ./src:/client/src
