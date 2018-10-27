@@ -1,4 +1,22 @@
 steps:
 - name: 'gcr.io/cloud-builders/docker'
-  args: [ 'build', '-t', 'gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA', '--target', 'prod', '--build-arg', 'TAG=$SHORT_SHA', '.' ]
-images: [ 'gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA' ]
+  entrypoint: 'sh'
+  args:
+  - '-c'
+  - |
+    echo "TEST"
+    if [[ "$BRANCH_NAME" == "master" ]]; then exit 0; fi; docker build -t gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA --target prod --build-arg TAG=$SHORT_SHA .
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    echo "BUILD"
+    if [[ "$BRANCH_NAME" != "master" ]]; then echo "Not master, not building"; exit 0; fi; docker build -t gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA --target prod --build-arg TAG=$SHORT_SHA .
+- name: 'gcr.io/cloud-builders/docker'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    echo "PUSH"
+    if [[ "$BRANCH_NAME" != "master" ]]; then echo "Not master, not pushing"; exit 0; fi; docker push gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA

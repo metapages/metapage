@@ -20,9 +20,9 @@ ADD build.hxml /client/build.hxml
 RUN haxelib newrepo && haxelib install --always build.hxml
 ADD src /client/src
 
-ARG TAG=none-set
+ARG GITSHA7=none-set
 
-RUN echo "${TAG}" > /client/.version
+RUN echo "${GITSHA7}" > /client/.version
 RUN haxe build.hxml
 
 # Jekyll container serving the static website with metapage/frame libraries
