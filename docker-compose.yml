@@ -6,18 +6,17 @@ services:
     build:
       context: .
       target: prod
-    # command: ['jekyll', 'serve', '--watch', '--force_polling', '--config', '_config.yml,_config.dev.yml']
-    command: ls /srv/jekyll/js
+    command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
     ports:
       - "4000:${PORT_METAPAGE:-4000}"
-    # volumes:
-    #   - ./docs:/srv/jekyll
+    volumes:
+      - ./docs:/srv/jekyll
 
   dev:
     build:
       context: .
       target: dev
     working_dir: /app
-    command: haxe build.hxml
+    command: haxelib install build.hxml && haxe build.hxml
     volumes:
       - ./:/app
