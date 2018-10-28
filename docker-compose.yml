@@ -1,11 +1,22 @@
-version: '2'
+version: '2.3'
 
 services:
 
   jekyll:
-    build: ./docs
-    command: ['jekyll', 'serve', '--watch', '--force_polling', '--config', '_config.yml,_config.dev.yml']
+    build:
+      context: .
+      target: prod
+    command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
     ports:
       - "4000:${PORT_METAPAGE:-4000}"
     volumes:
       - ./docs:/srv/jekyll
+
+  dev:
+    build:
+      context: .
+      target: dev
+    working_dir: /app
+    command: haxelib install build.hxml && haxe build.hxml
+    volumes:
+      - ./:/app
