@@ -7,14 +7,6 @@
 
 -debug
 
-# --each
+js.metapage.v1.client.Metaframe
 
-js.metapage.v1.client.Metapage
-
--js docs/js/metapage.js
-
-# --next
-
-# js.metapage.v1.client.Metaframe
-
-# -js docs/js/metaframe.js
+-js docs/js/metaframe.js
