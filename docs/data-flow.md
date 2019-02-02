@@ -12,6 +12,9 @@ Inside a metaframe, the `metaframe` object
 
 
 
+Talk about observables:
+https://medium.com/@jacobp100/you-arent-using-redux-with-observables-enough-b59329c5a3af
+
 
 
 

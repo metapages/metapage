@@ -39,7 +39,7 @@ test-ci: install compile
 	@echo 'Implement basic tests'
 
 .PHONY: publish
-publish: test-ci publish-internal
+publish: ci-test publish-internal
 
 # This expects NPM_TOKEN in the form: //registry.npmjs.org/:_authToken=XXX
 # as this is what is directly dumped to the ~/.npmrc file (if it doesn't exist in that file)

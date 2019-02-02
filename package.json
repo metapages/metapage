@@ -1,0 +1,12 @@
+{
+  "name": "metapage",
+  "version": "0.0.1",
+  "description": "Metapage build root",
+  "repository": "https://github.com/dionjwa/metapage",
+  "dependencies": {
+  },
+  "devDependencies": {
+  },
+  "author": "",
+  "license": "Apache-2.0"
+}

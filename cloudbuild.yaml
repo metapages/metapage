@@ -1,10 +1,10 @@
-secrets:
-- kmsKeyName: projects/t9-docker-images/locations/global/keyRings/t9_cloud_build/cryptoKeys/cloud_build_key_github_token
-  secretEnv:
-    NPM_TOKEN: |
-      CiQAiVVX3HIaDHpLvVt7XXSDfeq9UtIyLKE3f9ogYEAB3uOoFgcSUQDvWY1ru+vRYEvL6oufZzcl
-      CnXDWKHO3Bfhos0UAOkqFxA0PgWVYq6bpWPh/O8xQrFJf/finV4qAa6c+U1aqUroYiVJ+Uer2cpT
-      Z+AzBq5rHg==
+# secrets:
+# - kmsKeyName: projects/t9-docker-images/locations/global/keyRings/t9_cloud_build/cryptoKeys/cloud_build_key_github_token
+#   secretEnv:
+#     NPM_TOKEN: |
+#       CiQAiVVX3HIaDHpLvVt7XXSDfeq9UtIyLKE3f9ogYEAB3uOoFgcSUQDvWY1ru+vRYEvL6oufZzcl
+#       CnXDWKHO3Bfhos0UAOkqFxA0PgWVYq6bpWPh/O8xQrFJf/finV4qAa6c+U1aqUroYiVJ+Uer2cpT
+#       Z+AzBq5rHg==
 
 steps:
 
@@ -17,23 +17,24 @@ steps:
   args:
     - '-c'
     - |
+      echo "TAG_NAME=${TAG_NAME}"
       DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE pull --ignore-pull-failures
       DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE build
       DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE push builder
 
-- name: 'docker/compose:1.22.0'
-  id: 'test'
-  env:
-  - 'DOCKER_REPOSITORY=gcr.io/t9-docker-images/$REPO_NAME'
-  - 'BUILDER_DOCKER_COMPOSE=docker-compose.yml'
-  entrypoint: 'sh'
-  args:
-    - '-c'
-    - |
-      echo "BUILD/ENSURE BUILDER IMAGE: $$BUILDER_DOCKER_IMAGE"
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE pull --ignore-pull-failures
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE build
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE push
+# - name: 'docker/compose:1.22.0'
+#   id: 'test'
+#   env:
+#   - 'DOCKER_REPOSITORY=gcr.io/t9-docker-images/$REPO_NAME'
+#   - 'BUILDER_DOCKER_COMPOSE=docker-compose.yml'
+#   entrypoint: 'sh'
+#   args:
+#     - '-c'
+#     - |
+#       echo "BUILD/ENSURE BUILDER IMAGE: $$BUILDER_DOCKER_IMAGE"
+#       DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE pull --ignore-pull-failures
+#       DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE build
+#       DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE push
 
 
 

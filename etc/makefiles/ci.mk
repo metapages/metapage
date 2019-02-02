@@ -20,18 +20,21 @@ help: ## Print help documentation
 		cat "${HELP_OVERVIEW_FILE}" ; \
 	fi
 
+.PHONY: help-%
+help-impl-%:
+	@grep -h -E '^[a-zA-Z_-]+[a-zA-Z0-9_-]*:.*? ###?$* .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*? ###$* "}; {printf "\033[36m%-40s\033[0m %s\n", $$1, $$2}'
+
+
 .PHONY: help-advanced
 # via https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
 help-advanced: ## Print advanced help documentation
 	@grep -h -E '^[a-zA-Z_-]+[a-zA-Z0-9_-]*:.*? ##.* .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?#+[a-z]* "}; {printf "\033[36m%-40s\033[0m %s\n", $$1, $$2}'
 
 .PHONY: help-ci
-help-ci: ## Print CI/CD commands
-	@grep -h -E '^[a-zA-Z_-]+[a-zA-Z0-9_-]*:.*? ###?ci .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*? ###ci "}; {printf "\033[36m%-40s\033[0m %s\n", $$1, $$2}'
+help-ci: help-impl-ci ## Print CI/CD commands
 
 .PHONY: help-update-makefile
-help-mk: ## Print makefile update commands
-	@grep -h -E '^[a-zA-Z_-]+[a-zA-Z0-9_-]*:.*? ###?mk .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*? ###mk "}; {printf "\033[36m%-40s\033[0m %s\n", $$1, $$2}'
+help-mk: help-impl-mk ## Print makefile update commands
 
 .DEFAULT_GOAL := help
 
