@@ -12,4 +12,5 @@ steps:
   - '-c'
   - |
     echo "PUSH"
-    if [[ "$BRANCH_NAME" != "master" ]]; then echo "Not master, not pushing"; exit 0; fi; docker push gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA
+    if [[ "$BRANCH_NAME" != "master" ]]; then echo "Not master, not pushing"; exit 0; fi;
+    docker push gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA
