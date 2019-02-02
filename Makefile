@@ -1,7 +1,9 @@
 # The dash prepended to the "include" command prevents make from exiting if the file does not exist
 -include .env
 
-DOCKER_REPOSITORY        ?= gcr.io/t9-docker-images/metapage
+PROJECT_NAME              = metapage
+DOCKER_REGISTRY           = gcr.io/t9-docker-images
+# DOCKER_REPOSITORY        ?= gcr.io/t9-docker-images/metapage
 
 COMPOSE_CI_FILE           = docker-compose.yml
 # Add any custom overrides here
