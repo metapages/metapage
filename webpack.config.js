@@ -1,10 +1,13 @@
 module.exports = {
+  mode: 'development',
   devtool: 'cheap-module-eval-source-map',
   entry: {
     metapage: './build-metapage.hxml',
     metaframe: './build-metaframe.hxml'
   },
   output: {
+    library: 'metapage',
+    libraryTarget: 'window',
     filename: '[name].js',
     path: __dirname + '/docs/js'
   },

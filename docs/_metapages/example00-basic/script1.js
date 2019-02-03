@@ -1,7 +1,7 @@
 ---
 ---
 
-var connectionManager = new Metapage({debug:false});
+var connectionManager = new metapage.Metapage({debug:false});
 
 var url1 = '{{site.baseurl}}/metaframes/example00_iframe1/';
 var iframe1 = connectionManager.createIFrame(url1);
