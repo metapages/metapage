@@ -39,7 +39,7 @@ steps:
       make ci-pull
       make ci-build
       make ci-push-builder
-      webpack --mode=production
+      npx webpack --mode=production
 
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
   id: 'test'
