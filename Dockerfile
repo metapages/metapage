@@ -1,10 +1,4 @@
-FROM docker/compose:1.22.0 as builder
-RUN apk --no-cache add \
-	bash \
-	jq \
-	make
-
-FROM haxe:3.4.7-alpine3.8 as haxe
+FROM haxe:3.4.7-alpine3.8 as builder
 RUN apk --no-cache add \
 	bash \
 	g++ \
@@ -12,14 +6,13 @@ RUN apk --no-cache add \
 	git \
 	jq \
 	make \
-	nodejs nodejs-npm
+	nodejs nodejs-npm \
+  	py-pip
 
+RUN pip install docker-compose
 RUN npm install -g npx
-
-# First build the metapage/metaframe javascript libraries
-# by compiling the haxe->js
-
 WORKDIR /workspace
+
 ADD package.json .
 ADD package-lock.json .
 RUN npm i
@@ -29,6 +22,12 @@ RUN npm i terser@3.14
 ADD build-base.hxml .
 # If this changes, also change etc/makefiles/haxe.mk
 RUN haxelib newrepo && haxelib install --always build-base.hxml
+
+FROM builder as haxe
+
+# First build the metapage/metaframe javascript libraries
+# by compiling the haxe->js
+
 ADD src ./src
 ADD build-metaframe.hxml .
 ADD build-metapage.hxml .

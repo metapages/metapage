@@ -3,4 +3,4 @@ build-base.hxml
 -debug
 
 js.metapage.v1.client.Metapage
--js docs/js/metapage.js
+-js build/compile/metapage.js

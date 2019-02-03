@@ -1,10 +1,8 @@
-# secrets:
-# - kmsKeyName: projects/t9-docker-images/locations/global/keyRings/t9_cloud_build/cryptoKeys/cloud_build_key_github_token
-#   secretEnv:
-#     NPM_TOKEN: |
-#       CiQAiVVX3HIaDHpLvVt7XXSDfeq9UtIyLKE3f9ogYEAB3uOoFgcSUQDvWY1ru+vRYEvL6oufZzcl
-#       CnXDWKHO3Bfhos0UAOkqFxA0PgWVYq6bpWPh/O8xQrFJf/finV4qAa6c+U1aqUroYiVJ+Uer2cpT
-#       Z+AzBq5rHg==
+secrets:
+- kmsKeyName: projects/t9-docker-images/locations/global/keyRings/t9_cloud_build/cryptoKeys/cloud_build_key_github_token
+  secretEnv:
+    NPM_TOKEN: |
+      CiQAiVVX3MKdtsTGaR5Xh4GB0KAvfJgqtyBDAg+C9Ig6hv058YISTQDvWY1r1KQnvwBRbdDdwOiSmZWUbzMMPsTyhc/bhzfcT3VsUSRil50Rw4VutbUC4JBzvv30+4gk7r0gusfOwQOAxijGVN+k3530nPbz
 
 steps:
 
@@ -41,6 +39,7 @@ steps:
       make ci-pull
       make ci-build
       make ci-push-builder
+      webpack --mode=production
 
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
   id: 'test'
@@ -56,8 +55,8 @@ steps:
       echo "Tests go here"
 
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
-  id: 'deploy'
-  # secretEnv: ['NPM_TOKEN']
+  id: 'npm'
+  secretEnv: ['NPM_TOKEN']
   env:
   - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
   - 'DOCKER_TAG=$COMMIT_SHA'
@@ -66,4 +65,4 @@ steps:
   args:
   - '-c'
   - |
-    echo "deploy goes here"
+    RANDOM=$$RANDOM make npm-publish

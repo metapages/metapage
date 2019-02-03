@@ -7,6 +7,8 @@ services:
     build:
       context: .
       target: builder
+      args:
+        - DOCKER_TAG=${DOCKER_TAG:-latest}
       cache_from:
         - ${DOCKER_REPOSITORY}:builder
 
@@ -15,6 +17,8 @@ services:
     build:
       context: .
       target: haxe
+      args:
+        - DOCKER_TAG=${DOCKER_TAG:-latest}
       cache_from:
         - ${DOCKER_REPOSITORY}:builder
         - ${DOCKER_REPOSITORY}:haxe

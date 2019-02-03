@@ -11,6 +11,7 @@ run: ###dev Run a development stack, with autoreloading etc
 .PHONY: clean
 clean: ###dev Clean all local files and compose stacks
 	rm -rf .haxelib
-	rm -rf ./docs/js/metaframe*
-	rm -rf ./docs/js/metapage*
+	rm -rf node_modules
+	rm -rf build
+	rm -rf ./docs/js/meta*
 	${COMPOSE_DEV} down -v
