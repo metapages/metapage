@@ -1,7 +1,7 @@
 ---
 ---
 
-var connection = new Metaframe({debug:false});
+var connection = new metaframe.Metaframe({debug:false});
 
 var letters = '♞☯☭☢€☎∞❄♫☂★☀✓❤✆✇✈✂✄❀❁❂❃✻✼✽✾✿✧✨✩✪✫✍✎✏';
 

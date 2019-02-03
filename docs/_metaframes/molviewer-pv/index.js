@@ -1,4 +1,4 @@
-var metaframe = new Metaframe({debug:false});
+var metaframe = new metaframe.Metaframe({debug:false});
 
 //Initialize the viewer
 // override the default options with something less restrictive.

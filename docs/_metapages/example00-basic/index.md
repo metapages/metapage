@@ -51,4 +51,4 @@ These metaframes add a random letter to the input string then pass it back:
 
 </body>
 <script src="script1.js"></script>
-<!-- <script src="script2.js"></script> -->
+<script src="script2.js"></script>

@@ -1,6 +1,6 @@
 var letters = '♞☯☭☢€☎∞❄♫☂★☀✓❤✆✇✈✂✄❀❁❂❃✻✼✽✾✿✧✨✩✪✫✍✎✏';
 
-var connection = new Metaframe({debug:false});
+var connection = new metaframe.Metaframe({debug:false});
 
 connection.onInput('fooIn', function(blob) {
 	var display = document.getElementById("input");

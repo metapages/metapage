@@ -1,8 +1,8 @@
 axios.get('metapage.json')
   .then(function (response) {
   	var metaPageDefinition = response.data;
-  	var metapage = Metapage.fromDefinition(metaPageDefinition);
-  	var iframes = metapage.get_iframes();
+  	var mp = metapage.Metapage.fromDefinition(metaPageDefinition);
+  	var iframes = mp.get_iframes();
 
   	for (var key in iframes) {
       var parent = document.getElementById("_" + key);
