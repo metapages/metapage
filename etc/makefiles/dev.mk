@@ -5,8 +5,8 @@ help-dev: help-impl-dev ## Development commands
 
 .PHONY: run
 run: ###dev Run a development stack, with autoreloading etc
-	${COMPOSE_DEV} pull
-	${COMPOSE_DEV} up
+	@#${COMPOSE_DEV} pull
+	${COMPOSE_DEV} up jekyll
 
 .PHONY: clean
 clean: ###dev Clean all local files and compose stacks

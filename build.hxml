@@ -4,12 +4,12 @@
 build-base.hxml
 -debug
 
---each
+# --each
 
 js.metapage.v1.client.Metapage
 -js docs/js/metapage.js
 
---next
+# --next
 
-js.metapage.v1.client.Metaframe
--js docs/js/metaframe.js
+# js.metapage.v1.client.Metaframe
+# -js docs/js/metaframe.js
