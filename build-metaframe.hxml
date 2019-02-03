@@ -1,12 +1,6 @@
--lib haxe-misc-tools:git:https://github.com/dionjwa/haxe-misc-tools.git#3da2a1e
--lib haxe-json-rpc:git:https://github.com/dionjwa/haxe-json-rpc.git#d86e0ee
--lib haxe-redux:git:https://github.com/elsassph/haxe-redux#58f05b7
--lib hxassert:0.1.0
-
--cp src/haxe
+build-base.hxml
 
 -debug
 
 js.metapage.v1.client.Metaframe
-
 -js docs/js/metaframe.js

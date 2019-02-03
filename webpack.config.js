@@ -1,5 +1,5 @@
 module.exports = {
-  devtool: 'source-map',
+  devtool: 'cheap-module-eval-source-map',
   entry: {
     metapage: './build-metapage.hxml',
     metaframe: './build-metaframe.hxml'
@@ -16,7 +16,6 @@ module.exports = {
         loader: 'haxe-loader',
         options: {
           debug: true,
-          sizeReport: true
         }
       }
     ]

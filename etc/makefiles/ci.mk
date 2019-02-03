@@ -30,12 +30,6 @@ help-impl-%:
 help-advanced: ## Print advanced help documentation
 	@grep -h -E '^[a-zA-Z_-]+[a-zA-Z0-9_-]*:.*? ##.* .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?#+[a-z]* "}; {printf "\033[36m%-40s\033[0m %s\n", $$1, $$2}'
 
-.PHONY: help-ci
-help-ci: help-impl-ci ## Print CI/CD commands
-
-.PHONY: help-update-makefile
-help-mk: help-impl-mk ## Print makefile update commands
-
 .DEFAULT_GOAL := help
 
 ##################################################################
@@ -97,6 +91,9 @@ COMPOSE_BUILD_PREPARE     ?= echo "Building tests"
 COMPOSE_PUSH_BUILDER      ?=
 # Push only the final artifact(s)
 COMPOSE_PUSH_ARTIFACT     ?=
+
+.PHONY: help-ci
+help-ci: help-impl-ci ## Print CI/CD commands
 
 .PHONY: ci-pull
 ci-pull: guard-env-DOCKER_REGISTRY ###ci CI: pull images for caching
@@ -208,6 +205,9 @@ DIR_CURRENT             := $(notdir $(patsubst %/,%,$(dir $(MAKEFILE_PATH))))
 MAKEFILE_GITHUB_BRANCH  ?= master
 MAKEFILE_PATH           := $(abspath $(lastword $(MAKEFILE_LIST)))
 MAKEFILE_UPDATE_TARGET  ?= ${MAKEFILE_PATH}
+
+.PHONY: help-mk
+help-mk: help-impl-mk ## Print makefile update commands
 
 # Update this makefile with the latest from the github repo.
 # Requires a github token and the github username

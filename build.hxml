@@ -1,20 +1,15 @@
--lib haxe-misc-tools:git:https://github.com/dionjwa/haxe-misc-tools.git#3da2a1e
--lib haxe-json-rpc:git:https://github.com/dionjwa/haxe-json-rpc.git#d86e0ee
--lib haxe-redux:git:https://github.com/elsassph/haxe-redux#58f05b7
--lib hxassert:0.1.0
+# This is for local development e.g. sublime text, not for any kind
+# of automated build system
 
--cp src/haxe
-
+build-base.hxml
 -debug
 
-# --each
+--each
 
 js.metapage.v1.client.Metapage
-
 -js docs/js/metapage.js
 
-# --next
+--next
 
-# js.metapage.v1.client.Metaframe
-
-# -js docs/js/metaframe.js
+js.metapage.v1.client.Metaframe
+-js docs/js/metaframe.js

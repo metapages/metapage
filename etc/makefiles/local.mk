@@ -1,6 +1,5 @@
+
 #Change the version then run `make tag`, this will trigger a build and publish
-VERSION                    = 0.0.15
-SHELL                      = /bin/bash
 GIT_REPO                   = dionjwa/metapage
 BASE_DIST                  = dist/npm
 DOCKER_COMPOSE             = docker-compose
@@ -40,24 +39,6 @@ test-ci: install compile
 
 .PHONY: publish
 publish: ci-test publish-internal
-
-# This expects NPM_TOKEN in the form: //registry.npmjs.org/:_authToken=XXX
-# as this is what is directly dumped to the ~/.npmrc file (if it doesn't exist in that file)
-.PHONY: publish-internal
-publish-internal:
-	@echo "PUBLISHING ${VERSION}"
-	@if ! grep --no-messages -q "${NPM_TOKEN}" "${HOME}/.npmrc" ; \
-		then echo "${NPM_TOKEN}" > ${HOME}/.npmrc ; \
-	fi
-	for name in "metaframe" "metapage" ; do \
-		rm -rf ${BASE_DIST}/$${name} ; \
-		mkdir -p ${BASE_DIST}/$${name} ; \
-		cp docs/js/$${name}.js ${BASE_DIST}/$${name}/index.js ; \
-		cat etc/npm/package.json | jq ". .version = \"${VERSION}\" | .name = \"$${name}\" | .main = \"$${name}.js\"" > ${BASE_DIST}/$${name}/package.json ; \
-		pushd ${BASE_DIST}/$${name} ; \
-		npm publish . || exit 1 ; \
-		popd ; \
-	done
 
 .PHONY: clean
 clean:
