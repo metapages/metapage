@@ -1,5 +1,7 @@
 class Log
 {
+
+	
 	inline static var FORMAT_DEBUG = 'color:#D1D1E0;';
 	inline static var FORMAT_INFO = 'color:#0f0;';
 	inline static var FORMAT_WARN = 'color:#800080;';

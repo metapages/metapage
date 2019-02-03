@@ -27,6 +27,7 @@ RUN npm i
 # https://github.com/vuejs/vue-cli/issues/3407
 RUN npm i terser@3.14
 ADD build-base.hxml .
+# If this changes, also change etc/makefiles/haxe.mk
 RUN haxelib newrepo && haxelib install --always build-base.hxml
 ADD src ./src
 ADD build-metaframe.hxml .
