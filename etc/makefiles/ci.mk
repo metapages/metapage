@@ -73,17 +73,18 @@ guard-env-%:
 # These commands should 1:1 map to e.g. google cloud build
 # Keep it simple, just use docker-compose for everything
 
-# Assume the project name is the same as the directory name
 PROJECT_NAME              ?= $(shell basename ${PWD})
 # If the default values are modified, also change docker-compose.ci.yml
 DOCKER_REPOSITORY         ?= ${DOCKER_REGISTRY}/${PROJECT_NAME}
+
+# Then just compute the git tag
 # https://stackoverflow.com/questions/21017300/git-command-to-get-head-sha1-with-dirty-suffix-if-workspace-is-not-clean
 DOCKER_TAG                ?= $(shell git describe --match=NeVeRmAtCh --always --abbrev=40 --dirty)
 
 # Prepend env vars to compose commands
 COMPOSE_CI_ENV            ?=
 
-COMPOSE_CI_FILE           ?= docker-compose.ci.yml
+COMPOSE_CI_FILE           ?= docker-compose.yml
 COMPOSE_CI                ?= ${COMPOSE_CI_ENV} DOCKER_REPOSITORY=${DOCKER_REPOSITORY} DOCKER_TAG=${DOCKER_TAG} docker-compose -f ${COMPOSE_CI_FILE}
 
 # Run before beginning tests. Allows user override.

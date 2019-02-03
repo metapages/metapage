@@ -9,9 +9,15 @@ services:
       target: builder
       cache_from:
         - ${DOCKER_REPOSITORY}:builder
-    # command: haxelib install build.hxml && haxe build.hxml
-    # # volumes:
-    # #   - ./:/app
+
+  haxe:
+    image: ${DOCKER_REPOSITORY}:haxe
+    build:
+      context: .
+      target: haxe
+      cache_from:
+        - ${DOCKER_REPOSITORY}:builder
+        - ${DOCKER_REPOSITORY}:haxe
 
   jekyll:
     image: ${DOCKER_REPOSITORY}:jekyll
@@ -20,6 +26,7 @@ services:
       target: jekyll
       cache_from:
         - ${DOCKER_REPOSITORY}:builder
+        - ${DOCKER_REPOSITORY}:haxe
         - ${DOCKER_REPOSITORY}:jekyll
     command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
     ports:

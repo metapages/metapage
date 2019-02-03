@@ -1,5 +1,7 @@
-FROM haxe:3.4.7-alpine3.8 as builder
+FROM docker/compose:1.22.0 as builder
+RUN apk --no-cache add make
 
+FROM haxe:3.4.7-alpine3.8 as haxe
 RUN apk --no-cache add git
 RUN apk --no-cache add nodejs nodejs-npm jq make gcc g++ git
 RUN npm install -g chokidar-cli nodemon webpack-cli webpack
@@ -13,9 +15,9 @@ ADD build.hxml ./build.hxml
 RUN haxelib newrepo && haxelib install --always build.hxml
 ADD src ./src
 
-ARG GITSHA7=none-set
+ARG DOCKER_TAG=none-set
 
-RUN echo "${GITSHA7}" > ./.version
+RUN echo "${DOCKER_TAG}" > ./.version
 RUN webpack
 
 # Jekyll container serving the static website with metapage/frame libraries
