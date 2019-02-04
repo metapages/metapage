@@ -66,16 +66,13 @@ steps:
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:builder'
   id: 'npm'
   secretEnv: ['NPM_TOKEN']
-  env:
-  # - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
   # - 'DOCKER_TAG=$COMMIT_SHA'
-  # - 'PROJECT_NAME=$REPO_NAME'
   - 'TAG_NAME=$TAG_NAME'
   entrypoint: 'bash'
   args:
   - '-c'
   - |
-    # Mount depedencies into the /workspace
+    # Mount dependencies into the /workspace
     ln -s /node_modules .
     ln -s /.haxelib .
     export CURRENT_NPM_VERSION=$$(cat package.json | jq -r .version)
