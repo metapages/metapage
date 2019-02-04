@@ -7,8 +7,6 @@ services:
     build:
       context: .
       target: builder
-      args:
-        - DOCKER_TAG=${DOCKER_TAG:-latest}
       cache_from:
         - ${DOCKER_REPOSITORY}:builder
 

@@ -1,8 +1,9 @@
 {
     "name": "metapage",
     "version": "0.0.1",
-    "description": "Metapage build root",
+    "description": "Connect web pages together",
     "repository": "https://github.com/dionjwa/metapage",
+    "homepage": "https://metapages.org/",
     "dependencies": {
         "terser": "^3.14.1",
         "webpack": "^4.29.0",
@@ -14,6 +15,12 @@
     "resolutions": {
         "terser": "3.14.1"
     },
-    "author": "",
+    "keywords": [
+        "metapage",
+        "metaframe",
+        "iframe",
+        "webworkers"
+    ],
+    "author": "Dion Amago Whitehead <dion@transition9.com>",
     "license": "Apache-2.0"
 }
