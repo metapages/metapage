@@ -15,10 +15,9 @@ npm-publish: guard-env-NPM_TOKEN ###npm NPM publish the packages (metaframe+meta
 	@for name in "metaframe" "metapage" ; do \
 		mkdir -p ${BASE_DIST}/$${name} ; \
 		cat package.json | jq ". .name = \"$${name}\"" > ${BASE_DIST}/$${name}/package.json ; \
-		cp README-PACKAGE.md ${BASE_DIST}/$${name}/ ; \
+		cp README-PACKAGE.md ${BASE_DIST}/$${name}/README.md ; \
 		cp LICENSE ${BASE_DIST}/$${name}/ ; \
 		echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ${BASE_DIST}/$${name}/.npmrc ; \
-		ln -s node_modules ${BASE_DIST}/$${name}/nodemodules ; \
 		pushd ${BASE_DIST}/$${name} ; \
 		npm publish . || exit 1 ; \
 		popd ; \
