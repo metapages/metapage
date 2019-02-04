@@ -12,6 +12,11 @@ run: ###dev Run a development stack, with autoreloading etc
 build: ###dev Build the (dev) libraries, ready for testing/playing
 	npx webpack --mode=development
 
+.PHONY: compile
+compile: ###dev Compile haxe->js
+	haxe build-metaframe.hxml
+	haxe build-metapage.hxml
+
 .PHONY: clean
 clean: ###dev Clean all local files and compose stacks
 	rm -rf .haxelib
