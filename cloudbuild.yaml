@@ -69,4 +69,6 @@ steps:
     ln -s /.haxelib .
     echo 'wat'
     echo "TAG_NAME=$$TAG_NAME"
+    echo "TAG_NAME=$TAG_NAME"
+    env
     RANDOM=$$RANDOM make npm-publish

@@ -23,3 +23,10 @@ npm-publish: guard-env-NPM_TOKEN guard-env-NPM_VERSION ###npm NPM publish the pa
 		npm publish . || exit 1 ; \
 		popd ; \
 	done
+
+# Make a command for updating the version
+# Unless the version is passed in, get the version from the current version
+# and bump it, commit the change, and tag it
+# Make sure to use: npm git push --follow-tags
+
+
