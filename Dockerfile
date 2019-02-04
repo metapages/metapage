@@ -11,8 +11,13 @@ RUN apk --no-cache add \
 
 RUN pip install docker-compose
 RUN npm install -g npx webpack webpack-cli
-WORKDIR /
 
+# Install the 3rd party dependencies into the root
+# because we cannot use the dependencies if they are
+# mounted into the same root folder as the codebase.
+# So they are installed into a place easy to remember
+# to mount from.
+WORKDIR /
 ADD package.json .
 ADD package-lock.json .
 RUN npm i
@@ -22,6 +27,7 @@ RUN npm i terser@3.14
 ADD build-base.hxml .
 # If this changes, also change etc/makefiles/haxe.mk
 RUN haxelib newrepo && haxelib install --always build-base.hxml
+
 
 # FROM builder as haxe
 

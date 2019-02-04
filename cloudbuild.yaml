@@ -87,5 +87,5 @@ steps:
       echo "version $${CURRENT_NPM_VERSION} is not new"
     else
       echo "version is new!"
+      make npm-publish
     fi
-    #RANDOM=$$RANDOM make npm-publish
