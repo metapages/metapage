@@ -1,16 +1,19 @@
+secrets:
+- kmsKeyName: projects/t9-docker-images/locations/global/keyRings/t9_cloud_build/cryptoKeys/cloud_build_key_github_token
+  secretEnv:
+    NPM_TOKEN: |
+      CiQAiVVX3MKdtsTGaR5Xh4GB0KAvfJgqtyBDAg+C9Ig6hv058YISTQDvWY1r1KQnvwBRbdDdwOiSmZWUbzMMPsTyhc/bhzfcT3VsUSRil50Rw4VutbUC4JBzvv30+4gk7r0gusfOwQOAxijGVN+k3530nPbz
+
+steps:
+
 - name: gcr.io/cloud-builders/git
   id: 'test-git-tags'
   args: [tag]
 
 
 
-# secrets:
-# - kmsKeyName: projects/t9-docker-images/locations/global/keyRings/t9_cloud_build/cryptoKeys/cloud_build_key_github_token
-#   secretEnv:
-#     NPM_TOKEN: |
-#       CiQAiVVX3MKdtsTGaR5Xh4GB0KAvfJgqtyBDAg+C9Ig6hv058YISTQDvWY1r1KQnvwBRbdDdwOiSmZWUbzMMPsTyhc/bhzfcT3VsUSRil50Rw4VutbUC4JBzvv30+4gk7r0gusfOwQOAxijGVN+k3530nPbz
 
-# steps:
+
 
 # # Ensure that the builder image exists, if not, build it
 # # The builder image has all tools and dependencies required to build
@@ -60,21 +63,22 @@
 # #       echo "Tests go here"
 
 # - name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
-#   id: 'npm'
-#   secretEnv: ['NPM_TOKEN']
-#   env:
-#   # - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
-#   # - 'DOCKER_TAG=$COMMIT_SHA'
-#   # - 'PROJECT_NAME=$REPO_NAME'
-#   - 'TAG_NAME=$TAG_NAME'
-#   entrypoint: 'bash'
-#   args:
-#   - '-c'
-#   - |
-#     ln -s /node_modules .
-#     ln -s /.haxelib .
-#     echo 'wat'
-#     echo "TAG_NAME=$$TAG_NAME"
-#     echo "TAG_NAME=$TAG_NAME"
-#     env
-#     RANDOM=$$RANDOM make npm-publish
+- name: 'gcr.io/t9-docker-images/$REPO_NAME:builder'
+  id: 'npm'
+  secretEnv: ['NPM_TOKEN']
+  env:
+  # - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
+  # - 'DOCKER_TAG=$COMMIT_SHA'
+  # - 'PROJECT_NAME=$REPO_NAME'
+  - 'TAG_NAME=$TAG_NAME'
+  entrypoint: 'bash'
+  args:
+  - '-c'
+  - |
+    #ln -s /node_modules .
+    #ln -s /.haxelib .
+    echo 'wat'
+    echo "TAG_NAME=$$TAG_NAME"
+    echo "TAG_NAME=$TAG_NAME"
+    env
+    #RANDOM=$$RANDOM make npm-publish
