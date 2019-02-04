@@ -6,9 +6,9 @@ secrets:
 
 steps:
 
-- name: gcr.io/cloud-builders/git
-  id: 'test-git-tags'
-  args: [tag]
+# - name: gcr.io/cloud-builders/git
+#   id: 'test-git-tags'
+#   args: [tag]
 
 
 
