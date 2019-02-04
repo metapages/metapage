@@ -21,3 +21,6 @@ Gemfile.lock
 docs/js/metaframe*
 docs/js/metapage*
 build
+# Normally .npmrc files are tracked, but we're only using ours
+# to store the token for CI
+.npmrc

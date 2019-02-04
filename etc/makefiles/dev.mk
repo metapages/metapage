@@ -8,6 +8,10 @@ run: ###dev Run a development stack, with autoreloading etc
 	@#${COMPOSE_DEV} pull
 	${COMPOSE_DEV} up jekyll
 
+.PHONY: build
+build: ###dev Build the (dev) libraries, ready for testing/playing
+	npx webpack --mode=development
+
 .PHONY: clean
 clean: ###dev Clean all local files and compose stacks
 	rm -rf .haxelib
