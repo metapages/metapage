@@ -21,17 +21,17 @@ steps:
   args:
     - '-c'
     - |
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE pull --ignore-pull-failures --include-deps $$BUILDER_DOCKERFILE_TARGET
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE build $$BUILDER_DOCKERFILE_TARGET
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE push $$BUILDER_DOCKERFILE_TARGET
+      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE pull --ignore-pull-failures
+      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE build
+      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE push
       docker tag $$DOCKER_REPOSITORY:$$BUILDER_DOCKERFILE_TARGET $$DOCKER_REPOSITORY:$BRANCH_NAME
 
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
   id: 'build'
   env:
-  - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
+  # - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
   - 'DOCKER_TAG=$COMMIT_SHA'
-  - 'PROJECT_NAME=$REPO_NAME'
+  # - 'PROJECT_NAME=$REPO_NAME'
   entrypoint: 'sh'
   args:
     - '-c'
@@ -57,13 +57,15 @@ steps:
   id: 'npm'
   secretEnv: ['NPM_TOKEN']
   env:
-  - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
-  - 'DOCKER_TAG=$COMMIT_SHA'
-  - 'PROJECT_NAME=$REPO_NAME'
+  # - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
+  # - 'DOCKER_TAG=$COMMIT_SHA'
+  # - 'PROJECT_NAME=$REPO_NAME'
+  - 'TAG_NAME=$TAG_NAME'
   entrypoint: 'bash'
   args:
   - '-c'
   - |
     ln -s /node_modules .
     ln -s /.haxelib .
+    echo "TAG_NAME=$$TAG_NAME"
     RANDOM=$$RANDOM make npm-publish
