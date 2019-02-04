@@ -80,8 +80,10 @@ steps:
     echo 'wat'
     echo "TAG_NAME=$$TAG_NAME"
     echo "TAG_NAME=$TAG_NAME"
-    env
     export CURRENT_NPM_VERSION=$$(cat package.json | jq -r .version)
+    echo "CURRENT_NPM_VERSION=$${CURRENT_NPM_VERSION}"
+    export CURRENT_NPM_VERSION=$(cat package.json | jq -r .version)
+    echo "CURRENT_NPM_VERSION=${CURRENT_NPM_VERSION}"
     if npm view metapage versions  --json | jq -e '. as $f | "$${CURRENT_NPM_VERSION}" | IN($f[])' ; then
       echo "version $${CURRENT_NPM_VERSION} is not new"
     else
