@@ -25,7 +25,6 @@ steps:
       DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE build $$BUILDER_DOCKERFILE_TARGET
       DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE push $$BUILDER_DOCKERFILE_TARGET
       docker tag $$DOCKER_REPOSITORY:$$BUILDER_DOCKERFILE_TARGET $$DOCKER_REPOSITORY:$BRANCH_NAME
-      #docker run --rm -v node_modules:/node_modules $$DOCKER_REPOSITORY:$BRANCH_NAME cp -r /workspace/node_modules/* /node_modules/
 
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
   id: 'build'
@@ -33,16 +32,10 @@ steps:
   - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
   - 'DOCKER_TAG=$COMMIT_SHA'
   - 'PROJECT_NAME=$REPO_NAME'
-  # volumes:
-  # - name: 'node_modules'
-  #   path: '/workspace/node_modules'
   entrypoint: 'sh'
   args:
     - '-c'
     - |
-      #make ci-pull
-      #make ci-build
-      #make ci-push-builder
       ln -s /node_modules .
       ln -s /.haxelib .
       npx webpack --mode=production
@@ -62,9 +55,6 @@ steps:
 
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
   id: 'npm'
-  # volumes:
-  # - name: 'node_modules'
-  #   path: '/workspace/node_modules'
   secretEnv: ['NPM_TOKEN']
   env:
   - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'

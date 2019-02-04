@@ -10,7 +10,7 @@ RUN apk --no-cache add \
   	py-pip
 
 RUN pip install docker-compose
-RUN npm install -g npx
+RUN npm install -g npx webpack webpack-cli
 WORKDIR /
 
 ADD package.json .
