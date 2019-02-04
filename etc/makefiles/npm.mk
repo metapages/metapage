@@ -12,7 +12,7 @@ NPM_VERSION ?= '0.0.16-${RANDOM}'
 npm-publish: guard-env-NPM_TOKEN guard-env-NPM_VERSION ###npm NPM publish the packages (metaframe+metapage)
 	@echo "PUBLISHING npm version ${NPM_VERSION}"
 	@rm -rf ${BASE_DIST}
-	@npx webpack-cli --mode=production
+	@npx webpack --mode=production
 	@for name in "metaframe" "metapage" ; do \
 		cat etc/npm/package.json | jq ". .version = \"${NPM_VERSION}\" | .name = \"$${name}\" | .main = \"$${name}.js\"" > ${BASE_DIST}/$${name}/package.json ; \
 		pushd ${BASE_DIST}/$${name} ; \
