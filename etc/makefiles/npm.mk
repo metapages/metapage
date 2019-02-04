@@ -18,6 +18,8 @@ npm-publish: guard-env-NPM_TOKEN guard-env-NPM_VERSION ###npm NPM publish the pa
 		pushd ${BASE_DIST}/$${name} ; \
 		echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> .npmrc ; \
 		ln -s ${PWD}/node_modules . ; \
+		cp ${PWD}/README-PACKAGE.md README.md ; \
+		cp ${PWD}/LICENSE . ; \
 		npm publish . || exit 1 ; \
 		popd ; \
 	done
