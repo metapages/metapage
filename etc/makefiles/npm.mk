@@ -1,4 +1,4 @@
-BASE_DIST          = build/npm
+BASE_DIST          = ${PWD}/build/npm
 HELP_NPM           = etc/makefiles/npm-help.md
 
 .PHONY: help-npm
@@ -12,7 +12,7 @@ NPM_VERSION ?= '0.0.16-${RANDOM}'
 npm-publish: guard-env-NPM_TOKEN guard-env-NPM_VERSION ###npm NPM publish the packages (metaframe+metapage)
 	@echo "PUBLISHING npm version ${NPM_VERSION}"
 	@rm -rf ${BASE_DIST}
-	@npx webpack --mode=production
+	@npx webpack-cli --mode=production
 	@for name in "metaframe" "metapage" ; do \
 		cat etc/npm/package.json | jq ". .version = \"${NPM_VERSION}\" | .name = \"$${name}\" | .main = \"$${name}.js\"" > ${BASE_DIST}/$${name}/package.json ; \
 		pushd ${BASE_DIST}/$${name} ; \
