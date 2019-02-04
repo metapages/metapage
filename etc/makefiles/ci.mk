@@ -146,7 +146,8 @@ ci-up: guard-env-DOCKER_REGISTRY ###ci CI: bring all services down
 BRANCH_NAME ?= not-master
 .PHONY: ci-local-test-google-cloud-build
 ci-local-test-google-cloud-build: ci-down ###ci CI: run GCE cloud build locally
-	cloud-build-local --dryrun=false --substitutions REPO_NAME=${PROJECT_NAME},COMMIT_SHA=${DOCKER_TAG},BRANCH_NAME=${BRANCH_NAME} .
+# 	cloud-build-local --dryrun=false --substitutions REPO_NAME=${PROJECT_NAME},COMMIT_SHA=${DOCKER_TAG},BRANCH_NAME=${BRANCH_NAME} .
+	cloud-build-local --dryrun=false --substitutions REPO_NAME=${PROJECT_NAME} .
 
 ##################################################################
 # Continuous integration docker image
