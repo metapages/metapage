@@ -10,13 +10,13 @@ services:
       cache_from:
         - ${DOCKER_REPOSITORY}:builder
 
-  haxe:
-    image: ${DOCKER_REPOSITORY}:haxe
-    build:
-      context: .
-      target: haxe
-      args:
-        - DOCKER_TAG=${DOCKER_TAG:-latest}
-      cache_from:
-        - ${DOCKER_REPOSITORY}:builder
-        - ${DOCKER_REPOSITORY}:haxe
+  # haxe:
+  #   image: ${DOCKER_REPOSITORY}:haxe
+  #   build:
+  #     context: .
+  #     target: haxe
+  #     args:
+  #       - DOCKER_TAG=${DOCKER_TAG:-latest}
+  #     cache_from:
+  #       - ${DOCKER_REPOSITORY}:builder
+  #       - ${DOCKER_REPOSITORY}:haxe

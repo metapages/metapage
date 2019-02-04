@@ -6,24 +6,25 @@ services:
     image: ${DOCKER_REPOSITORY}:jekyll
     build:
       context: .
-      target: jekyll
-      cache_from:
-        - ${DOCKER_REPOSITORY}:builder
-        - ${DOCKER_REPOSITORY}:haxe
-        - ${DOCKER_REPOSITORY}:jekyll
+      dockerfile: etc/jekyll/Dockerfile
+      # target: jekyll
+      # cache_from:
+      #   - ${DOCKER_REPOSITORY}:builder
+      #   # - ${DOCKER_REPOSITORY}:haxe
+      #   - ${DOCKER_REPOSITORY}:jekyll
     command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
     ports:
       - "4000:${PORT_METAPAGE:-4000}"
     volumes:
       - ./docs:/srv/jekyll
 
-  dev:
-    build:
-      context: .
-      target: haxe
-      cache_from:
-        - ${DOCKER_REPOSITORY}:builder
-        - ${DOCKER_REPOSITORY}:haxe
-    command: haxelib install build.hxml && haxe build.hxml
-    volumes:
-      - ./:/app
+  # dev:
+  #   build:
+  #     context: .
+  #     target: haxe
+  #     cache_from:
+  #       - ${DOCKER_REPOSITORY}:builder
+  #       - ${DOCKER_REPOSITORY}:haxe
+  #   command: haxelib install build.hxml && haxe build.hxml
+  #   volumes:
+  #     - ./:/app

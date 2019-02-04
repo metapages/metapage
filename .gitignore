@@ -18,7 +18,6 @@ gitcache
 _site
 .sass-cache
 Gemfile.lock
-dist
 docs/js/metaframe*
 docs/js/metapage*
 build
