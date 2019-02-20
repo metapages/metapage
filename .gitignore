@@ -24,3 +24,6 @@ build
 # Normally .npmrc files are tracked, but we're only using ours
 # to store the token for CI
 .npmrc
+
+# Markdeep, in case we are viewing this locally without internet
+**/markdeep.min.js
