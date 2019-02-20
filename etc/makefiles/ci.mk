@@ -13,8 +13,8 @@ NC                          := \033[0m
 HELP_OVERVIEW_FILE          ?= HELP.md
 
 .PHONY: help
-# via https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
-help: ## Print help documentation
+# Adapted from  https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
+help: ## Help documentation (default)
 	@grep -h -E '^[a-zA-Z_-]+[a-zA-Z0-9_-]*:.*? ## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-40s\033[0m %s\n", $$1, $$2}'
 	@ if [ -f "${HELP_OVERVIEW_FILE}" ]; then \
 		cat "${HELP_OVERVIEW_FILE}" ; \
@@ -24,10 +24,8 @@ help: ## Print help documentation
 help-impl-%:
 	@grep -h -E '^[a-zA-Z_-]+[a-zA-Z0-9_-]*:.*? ###?$* .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*? ###$* "}; {printf "\033[36m%-40s\033[0m %s\n", $$1, $$2}'
 
-
-.PHONY: help-advanced
-# via https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
-help-advanced: ## Print advanced help documentation
+.PHONY: help-all
+help-all: ## All help documentation
 	@grep -h -E '^[a-zA-Z_-]+[a-zA-Z0-9_-]*:.*? ##.* .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?#+[a-z]* "}; {printf "\033[36m%-40s\033[0m %s\n", $$1, $$2}'
 
 .DEFAULT_GOAL := help
@@ -68,7 +66,7 @@ guard-env-%:
 # Keep it simple, just use docker-compose for everything
 
 PROJECT_NAME              ?= $(shell basename ${PWD})
-# If the default values are modified, also change docker-compose.ci.yml
+# If the default values are modified, also change ${COMPOSE_CI_FILE}
 DOCKER_REPOSITORY         ?= ${DOCKER_REGISTRY}/${PROJECT_NAME}
 
 # Then just compute the git tag
@@ -93,7 +91,7 @@ COMPOSE_PUSH_BUILDER      ?=
 COMPOSE_PUSH_ARTIFACT     ?=
 
 .PHONY: help-ci
-help-ci: help-impl-ci ## Print CI/CD commands
+help-ci: help-impl-ci ## CI/CD commands
 
 .PHONY: ci-pull
 ci-pull: guard-env-DOCKER_REGISTRY ###ci CI: pull images for caching
@@ -146,8 +144,7 @@ ci-up: guard-env-DOCKER_REGISTRY ###ci CI: bring all services down
 BRANCH_NAME ?= not-master
 .PHONY: ci-local-test-google-cloud-build
 ci-local-test-google-cloud-build: ci-down ###ci CI: run GCE cloud build locally
-# 	cloud-build-local --dryrun=false --substitutions REPO_NAME=${PROJECT_NAME},COMMIT_SHA=${DOCKER_TAG},BRANCH_NAME=${BRANCH_NAME} .
-	cloud-build-local --dryrun=false --substitutions REPO_NAME=${PROJECT_NAME} .
+	cloud-build-local --dryrun=false --substitutions REPO_NAME=${PROJECT_NAME},COMMIT_SHA=${DOCKER_TAG},BRANCH_NAME=${BRANCH_NAME} .
 
 ##################################################################
 # Continuous integration docker image
@@ -174,6 +171,7 @@ BUILDER_SHELL_PARAMS ?= -e HIST_FILE=/root/.bash_history -v ${HOME}/.bash_histor
 .PHONY: ci-shell
 ci-shell: ci-pull ci-build ci-shell-no-build ###ci BUILD: create a shell inside a docker container will ALL required build tools, and local project mounted. Not host installs required.
 
+# TODO: remove -v ${PWD}:${PWD} \ ?
 # ci-shell but without the build step
 .PHONY: ci-shell-no-build
 ci-shell-no-build:
@@ -182,7 +180,6 @@ ci-shell-no-build:
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		${BUILDER_SHELL_PARAMS} \
 		-e "PS1=\[\033[01;34m\]docker-${PROJECT_NAME} [\W]\[\033[00m\]$$ " \
-		-w ${PWD} \
 		--entrypoint="" \
 		${BUILDER_DOCKER_IMAGE} /bin/bash
 
@@ -191,7 +188,6 @@ ci-shell-%: ###ci BUILD: Convenience command: run the % make command in the buil
 		-v ${PWD}:${PWD} \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		${BUILDER_SHELL_PARAMS} \
-		-w ${PWD} \
 		--entrypoint="" \
 		${BUILDER_DOCKER_IMAGE} make $*
 
@@ -208,7 +204,7 @@ MAKEFILE_PATH           := $(abspath $(lastword $(MAKEFILE_LIST)))
 MAKEFILE_UPDATE_TARGET  ?= ${MAKEFILE_PATH}
 
 .PHONY: help-mk
-help-mk: help-impl-mk ## Print makefile update commands
+help-mk: help-impl-mk ## Makefile update commands
 
 # Update this makefile with the latest from the github repo.
 # Requires a github token and the github username
@@ -224,6 +220,6 @@ makefile-update-from-github: guard-env-MAKEFILE_GITHUB_USER guard-env-MAKEFILE_G
 
 .PHONY: makefile-update-from-docker-image
 makefile-update-from-docker-image: ###mk Replace this makefile with the latest docker image artifact
-	docker pull ${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:latest
-	docker run --rm -v ${PWD}:/workspace ${DOCKER_REGISTRY}/${DOCKER_REPOSITORY}:latest sh -c 'mkdir -p ./etc/makefiles && cp /etc/makefiles/ci.mk ./etc/makefiles/'
+	docker pull gcr.io/t9-docker-images/makefiles:latest
+	docker run --rm -v ${PWD}:/workspace gcr.io/t9-docker-images/makefiles:latest sh -c 'mkdir -p ./etc/makefiles && cp /etc/makefiles/ci.mk ./etc/makefiles/'
 
