@@ -18,9 +18,12 @@ compile: ###dev Compile haxe->js
 	haxe build-metapage.hxml
 
 .PHONY: clean
-clean: ###dev Clean all local files and compose stacks
-	rm -rf .haxelib
-	rm -rf node_modules
+clean: ###dev Delete compiled files
 	rm -rf build
 	rm -rf ./docs/js/meta*
-	${COMPOSE_DEV} down -v
+
+# .PHONY: clean-all
+# clean-all: clean ###dev Clean all local files and compose stacks
+# 	rm -rf .haxelib
+# 	rm -rf node_modules
+# 	${COMPOSE_DEV} down -v

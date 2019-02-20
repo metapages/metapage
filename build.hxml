@@ -7,9 +7,12 @@ build-base.hxml
 --each
 
 js.metapage.v1.client.Metaframe
+# --no-output
 -js docs/js/metaframe.js
 
 --next
 
 js.metapage.v1.client.Metapage
+# --no-output
 -js build/compile/metapage.js
+-cmd webpack

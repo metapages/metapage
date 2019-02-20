@@ -1,11 +1,14 @@
 module.exports = [
-	createConfig('metapage', 'window'),
-	createConfig('metapage', 'commonjs2'),
-	createConfig('metaframe', 'window'),
-	createConfig('metaframe', 'commonjs2'),
+	createConfig('metapage', 'window', '/docs/js/'),
+	createConfig('metapage', 'window', '/build/npm/'),
+	createConfig('metapage', 'commonjs2', '/build/npm/'),
+
+	createConfig('metaframe', 'window', '/docs/js/'),
+	createConfig('metaframe', 'window', '/build/npm/'),
+	createConfig('metaframe', 'commonjs2', '/build/npm/'),
 ];
 
-function createConfig(source, target) {
+function createConfig(source, target, folder) {
 	return {
 		mode: 'development',
 		devtool: 'cheap-module-eval-source-map',
@@ -13,8 +16,8 @@ function createConfig(source, target) {
 		output: {
 			library: source,
 			libraryTarget: target,
-			filename: 'index.js',
-			path: __dirname + (target == 'window' ? '/docs/js/' : '/build/npm/') + source
+			filename: (target == 'window' ? 'browser.js' : 'index.js'),
+			path: __dirname + folder + source
 		},
 		module: {
 			rules: [

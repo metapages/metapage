@@ -3,7 +3,7 @@ version: '2.3'
 services:
 
   jekyll:
-    image: ${DOCKER_REPOSITORY}:jekyll
+    image: jekyll/jekyll:3.8.5
     build:
       context: .
       dockerfile: etc/jekyll/Dockerfile
