@@ -1,34 +1,53 @@
-FROM haxe:3.4.7-alpine3.8 as base
+FROM haxe:3.4.7-alpine3.8 as builder
+RUN apk --no-cache add \
+	bash \
+	g++ \
+	gcc \
+	git \
+	jq \
+	make \
+	nodejs nodejs-npm \
+  	py-pip
 
-RUN apk --no-cache add git
+RUN pip install docker-compose
+RUN npm install -g npx webpack webpack-cli
 
-# Local code-watching dev image, based off the builder
-FROM base as dev
-RUN apk --no-cache add nodejs nodejs-npm jq make gcc g++
-RUN npm install -g chokidar-cli nodemon webpack-cli webpack
+# Install the 3rd party dependencies into the root
+# because we cannot use the dependencies if they are
+# mounted into the same root folder as the codebase.
+# So they are installed into a place easy to remember
+# to mount from.
+WORKDIR /
+ADD package.json .
+ADD package-lock.json .
+RUN npm i
+# Can remove this soon I hope
+# https://github.com/vuejs/vue-cli/issues/3407
+RUN npm i terser@3.14
+ADD build-base.hxml .
+# If this changes, also change etc/makefiles/haxe.mk
+RUN haxelib newrepo && haxelib install --always build-base.hxml
 
-# First build the metapage/metaframe javascript libraries
-# by compiling the haxe->js
-# FROM dionjwa/haxe-watch:v0.15.0 as client-builder
-FROM base as client-build
 
-# TODO: add git version hash and package version to bind
-# the build step.
+# FROM builder as haxe
 
-WORKDIR /client
-ADD build.hxml /client/build.hxml
-RUN haxelib newrepo && haxelib install --always build.hxml
-ADD src /client/src
+# # First build the metapage/metaframe javascript libraries
+# # by compiling the haxe->js
 
-ARG GITSHA7=none-set
+# ADD src ./src
+# ADD build-metaframe.hxml .
+# ADD build-metapage.hxml .
+# ADD webpack.config.js .
 
-RUN echo "${GITSHA7}" > /client/.version
-RUN haxe build.hxml
+# ARG DOCKER_TAG=none-set
 
-# Jekyll container serving the static website with metapage/frame libraries
-FROM jekyll/jekyll:latest as prod
-ADD ./docs /srv/jekyll
-RUN bundle install
+# RUN echo "${DOCKER_TAG}" > ./.version
+# RUN npx webpack --mode=production
 
-COPY --from=client-build /client/docs/js/*  /srv/jekyll/js/
-RUN ls /srv/jekyll/js
+# # Jekyll container serving the static website with metapage/frame libraries
+# FROM jekyll/jekyll:latest as jekyll
+# ADD ./docs /srv/jekyll
+# RUN bundle install
+
+# COPY --from=haxe /workspace/docs/js/*  /srv/jekyll/js/
+# RUN ls /srv/jekyll/js

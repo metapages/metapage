@@ -43,7 +43,7 @@ window.store = {
 
 
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:false});
+var metaframe = new metaframe.Metaframe({debug:false});
 
 var inputElement = document.getElementById("input");
 function handleFiles() {

@@ -1,0 +1,30 @@
+{
+    "name": "metapage",
+    "version": "0.1.29",
+    "description": "Connect web pages together",
+    "repository": "https://github.com/dionjwa/metapage",
+    "homepage": "https://metapages.org/",
+    "dependencies": {
+        "terser": "^3.14.1",
+        "webpack": "^4.29.0"
+    },
+    "devDependencies": {
+        "haxe-loader": "^0.9.0",
+        "webpack-cli": "^3.2.1"
+    },
+    "resolutions": {
+        "terser": "3.14.1"
+    },
+    "keywords": [
+        "metapage",
+        "metaframe",
+        "iframe",
+        "webworkers"
+    ],
+    "author": "Dion Amago Whitehead <dion@transition9.com>",
+    "scripts": {
+        "version": "make publish-update-jekyll-script-links && git add -u .",
+        "postversion": "git push && git push --tags && rm -rf build"
+    },
+    "license": "Apache-2.0"
+}

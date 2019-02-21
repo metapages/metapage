@@ -5,7 +5,7 @@ var urlObject = new URL(window.location.href);
 var urlParam = urlObject.searchParams.get('url');
 var debugParam = urlObject.searchParams.get('debug') == '1' || urlObject.searchParams.get('debug') == 'true';
 
-var metapage = new Metapage({debug:debugParam});
+var mp = new metapage.Metapage({debug:debugParam});
 var metaframe;
 
 var lastWidth = document.getElementById('iframe-wrapper').offsetWidth;
@@ -24,7 +24,7 @@ new ResizeObserver(outputsize).observe(metaframeDiv);
 
 
 if (urlParam) {
-	metaframe = metapage.createIFrame(urlParam);
+	metaframe = mp.createIFrame(urlParam);
 	metaframeDiv.appendChild(metaframe.iframe);
 } else {
 	var fullUrl = `${window.location.href}?url=${window.location.origin}/metapage/metaframes/passthrough/`;

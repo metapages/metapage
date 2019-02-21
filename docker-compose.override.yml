@@ -1,0 +1,14 @@
+version: '2.3'
+
+services:
+
+  jekyll:
+    image: jekyll/jekyll:3.8.5
+    build:
+      context: .
+      dockerfile: etc/jekyll/Dockerfile
+    command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
+    ports:
+      - "4000:${PORT_METAPAGE:-4000}"
+    volumes:
+      - ./docs:/srv/jekyll

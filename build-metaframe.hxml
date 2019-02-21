@@ -1,0 +1,6 @@
+build-base.hxml
+
+-debug
+
+js.metapage.v1.client.Metaframe
+-js docs/js/metaframe.js
