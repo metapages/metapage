@@ -1,5 +1,3 @@
-<meta charset="utf-8">
-
 # Developers
 
 The final products of this repository are:
@@ -31,25 +29,18 @@ One time setup:
     webpack
     ```
 4. Compiles js libraries are exported in two places:
-    1. `docs/js`: for embedding directly in websites
-    2. `build/npm`: for building the npm libraries
-5. 
+    1. `docs/js`: for local development
+    2. `build/npm`: for building the npm+browser libraries
+5. View the updates.
+6. TODO: functional tests
 
 ### Deployment pipeline
 
-1. On master branch: ```npm version patch -m "Upgrade to %s for reasons"```
-3. Google Cloud Build ([./cloudbuild.yaml](./cloudbuild.yaml)) sees the npm version is new, so creates new npm packages via `make npm-publish`
-3. Compiles js libraries are exported in two places:
-    1. `docs/js`: for embedding directly in websites
-    2. `build/npm`: for building the npm libraries
-4. 
+1. On master branch: ```make publish-new-version```
+2. Google Cloud Build ([./cloudbuild.yaml](./cloudbuild.yaml)) sees the npm version is new, so creates and publishes new npm packages via `make npm-publish`
 
 ## 2) Documentation
 
 The docs and examples are static webpages built by jekyll and server via github pages:
 
 https://help.github.com/articles/using-jekyll-as-a-static-site-generator-with-github-pages/
-
-
-
-<!-- Markdeep: --><style class="fallback">body{visibility:hidden;white-space:pre;font-family:monospace}</style><script src="markdeep.min.js" charset="utf-8"></script><script src="https://casual-effects.com/markdeep/latest/markdeep.min.js" charset="utf-8"></script><script>window.alreadyProcessedMarkdeep||(document.body.style.visibility="visible")</script>

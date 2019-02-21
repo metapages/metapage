@@ -1,11 +1,8 @@
-# Metapages
+# [Metapages](https://metapages.org/)
 
-A **metapage** is a webpage that consists of embedded and connected webpages.
+A **metapage** is a webpage that consists of a network of other embedded webpages.
 
-For documentation and examples: [https://dionjwa.github.io/metapage/](https://dionjwa.github.io/metapage/)
+For documentation and examples: [https://metapages.org/](https://metapages.org/)
 
-## Developmers:
+## [Developmers](./DEVELOPERS.md)
 
-    `make run`
-
-Then edit code, compile (`haxe build.hxml`) and the changes are picked up and served by jekyll.
