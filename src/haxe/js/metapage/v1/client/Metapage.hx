@@ -7,7 +7,6 @@ package js.metapage.v1.client;
   // This object is react-friendly (value equality failure equals state change)
   var Outputs : MetapageEvents<MetapageInstanceInputs->Void> = "outputs";
 }
-
 @:expose("Metapage")
 @:keep
 class Metapage extends EventEmitter

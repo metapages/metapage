@@ -1,19 +1,18 @@
--lib haxe-misc-tools:git:https://github.com/dionjwa/haxe-misc-tools.git#3da2a1e
--lib haxe-json-rpc:git:https://github.com/dionjwa/haxe-json-rpc.git#d86e0ee
--lib hxassert:0.1.0
+# This build file is used primarily by e.g. sublime text, not by any CI or automated systems.
 
--cp src/haxe
+build-base.hxml
 
 -debug
 
 --each
 
-js.metapage.v1.client.Metapage
-
--js docs/js/metapage.js
+js.metapage.v1.client.Metaframe
+# --no-output
+-js docs/js/metaframe.js
 
 --next
 
-js.metapage.v1.client.Metaframe
-
--js docs/js/metaframe.js
+js.metapage.v1.client.Metapage
+# --no-output
+-js build/compile/metapage.js
+-cmd webpack

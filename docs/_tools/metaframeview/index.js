@@ -90,7 +90,7 @@ function buildEditorWithInitialInputs(startInputs) {
 	startState[idInputs] = startInputs;
 	startState[idTarget] = startInputs;
 
-	var metapage = Metapage.fromDefinition(metapageDef, startState);
+	var metapage = metapage.Metapage.fromDefinition(metapageDef, startState);
 	var metaframe = metapage.getMetaframe(idTarget);
 	var metaframeInputs = metapage.getMetaframe(idInputs);
 	var metaframeOutputs = metapage.getMetaframe(idOutputs);

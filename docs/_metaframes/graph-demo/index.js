@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new Metaframe();
+var metaframe = new metaframe.Metaframe();
 
 /*
  * On input pipe update, send value to the graph

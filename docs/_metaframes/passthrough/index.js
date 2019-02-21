@@ -3,7 +3,7 @@ var disableEditParam = urlObject.searchParams.get('edit') == '0' || urlObject.se
 var debugParam = urlObject.searchParams.get('debug') == '1' || urlObject.searchParams.get('debug') == 'true';
 
 /* Set up the metaframe channel */
-var metaframe = new Metaframe({debug:false});
+var mf = new metaframe.Metaframe({debug:false});
 
 /*
  * On input pipe update, show value, and pass to output pipe
@@ -17,7 +17,7 @@ function htmlDecode(input){
 }
 
 function rename(prev, next) {
-	if (!metaframe.getInput(prev) || !inputElements[prev]) {
+	if (!mf.getInput(prev) || !inputElements[prev]) {
 		return;
 	}
 	if (prev == next) {
@@ -27,11 +27,11 @@ function rename(prev, next) {
 	var previousBlob = inputElements[prev];
 	var rowBlob = createRow(next, previousBlob.row);
 	inputElements[next] = rowBlob;
-	var valueBlob = metaframe.getInput(prev);
+	var valueBlob = mf.getInput(prev);
 	valueBlob.v = 1;
-	metaframe.setInput(next, valueBlob);
+	mf.setInput(next, valueBlob);
 	//This causes downstream cleanup
-	metaframe.deleteInput(prev);
+	mf.deleteInput(prev);
 }
 
 //Creates javascript object with methods
@@ -114,7 +114,7 @@ function createRow(name, previousDiv) {
 			// value = value.replace('&amp;', '&');
 			value = htmlDecode(value);
 		}
-		metaframe.setInput(name, {value:value});
+		mf.setInput(name, {value:value});
 		valueDiv.onkeydown = null;
 		valueDiv.setAttribute("contenteditable", false);
 		setTimeout(function() {
@@ -174,7 +174,7 @@ function createRow(name, previousDiv) {
 		nameDiv.removeEventListener("input", inputListenerName);
 		nameDiv.onkeydown = null;
 		valueDiv.removeEventListener("input", inputListenerValue);
-		metaframe.deleteInputs(name);
+		mf.deleteInputs(name);
 	}
 
 	if (deleteButton) {
@@ -266,14 +266,14 @@ function updateWithNewInputs(inputMap) {
 		}
 	}
 	//Then pass all through
-	metaframe.setOutputs(inputMap);
+	mf.setOutputs(inputMap);
 }
 
-metaframe.addEventListener(Metaframe.INPUTS, function(inputMap) {
+mf.addEventListener(metaframe.Metaframe.INPUTS, function(inputMap) {
 	updateWithNewInputs(inputMap);
 });
 
-metaframe.addEventListener(Metaframe.INPUTSDELETE, function(inputsArray) {
+mf.addEventListener(metaframe.Metaframe.INPUTSDELETE, function(inputsArray) {
 	inputsArray.forEach(deleteRow);
 });
 
@@ -303,13 +303,13 @@ if (disableEditParam) {
 			}
 			while(!ok);
 		}
-		metaframe.setInput(proposedName, {value:`replaceme`});
+		mf.setInput(proposedName, {value:`replaceme`});
 	}
 }
 
 
-metaframe.ready.then(function() {
-	// metaframe.sendDimensions();
+mf.ready.then(function() {
+	// mf.sendDimensions();
 }, function(err) {
-	metaframe.error('Error setting up the metaframe connection');
+	mf.error('Error setting up the metaframe connection');
 });

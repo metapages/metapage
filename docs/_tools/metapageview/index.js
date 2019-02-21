@@ -3,7 +3,7 @@ $('#showMetapageButton').on('click', function (e) {
 	try {
 		var metaPageDefinition = JSON.parse(text);
 
-		var metapage = Metapage.fromDefinition(metaPageDefinition);
+		var metapage = metapage.Metapage.fromDefinition(metaPageDefinition);
 	  	var iframes = metapage.get_iframes();
 
 	  	for (var key in iframes) {

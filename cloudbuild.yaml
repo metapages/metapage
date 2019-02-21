@@ -1,16 +1,78 @@
+secrets:
+- kmsKeyName: projects/t9-docker-images/locations/global/keyRings/t9_cloud_build/cryptoKeys/cloud_build_key_github_token
+  secretEnv:
+    NPM_TOKEN: |
+      CiQAiVVX3MKdtsTGaR5Xh4GB0KAvfJgqtyBDAg+C9Ig6hv058YISTQDvWY1r1KQnvwBRbdDdwOiSmZWUbzMMPsTyhc/bhzfcT3VsUSRil50Rw4VutbUC4JBzvv30+4gk7r0gusfOwQOAxijGVN+k3530nPbz
+
 steps:
-- name: 'gcr.io/cloud-builders/docker'
+
+# Ensure that the builder image exists, if not, build it
+# The builder image has all tools and dependencies required to build
+# the final artifact(s)
+- name: 'docker/compose:1.22.0'
+  id: 'builder'
+  env:
+  - 'DOCKER_REPOSITORY=gcr.io/t9-docker-images/$REPO_NAME'
+  - 'BUILDER_DOCKER_COMPOSE=docker-compose.yml'
+  # "builder" is the docker image target used for all further operations
+  # It is renamed to the branch name for later steps
+  - 'BUILDER_DOCKERFILE_TARGET=builder'
+  entrypoint: 'sh'
+  args:
+    - '-c'
+    - |
+      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE pull --ignore-pull-failures $$BUILDER_DOCKERFILE_TARGET
+      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE build $$BUILDER_DOCKERFILE_TARGET
+      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE push $$BUILDER_DOCKERFILE_TARGET
+      docker tag $$DOCKER_REPOSITORY:$$BUILDER_DOCKERFILE_TARGET $$DOCKER_REPOSITORY:$BRANCH_NAME
+
+- name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
+  id: 'build'
+  env:
+  - 'DOCKER_TAG=$COMMIT_SHA'
+  entrypoint: 'sh'
+  args:
+    - '-c'
+    - |
+      ln -s /node_modules .
+      ln -s /.haxelib .
+      npx webpack --mode=production
+
+- name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
+  id: 'test'
+  env:
+  - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
+  - 'DOCKER_TAG=$COMMIT_SHA'
+  - 'PROJECT_NAME=$REPO_NAME'
+  - 'BRANCH_NAME=$BRANCH_NAME'
+  entrypoint: 'sh'
+  args:
+    - '-c'
+    - |
+      if [[ "$$BRANCH_NAME" == "master" ]]; then echo "branch:master, not testing"; exit 0; fi;
+      echo "Tests go here"
+
+- name: 'gcr.io/t9-docker-images/$REPO_NAME:builder'
+  id: 'npm'
+  secretEnv: ['NPM_TOKEN']
+  env:
+  - 'DOCKER_TAG=$COMMIT_SHA'
+  - 'PROJECT_NAME=$REPO_NAME'
+  - 'BRANCH_NAME=$BRANCH_NAME'
   entrypoint: 'bash'
   args:
   - '-c'
   - |
-    echo "TEST/BUILD"
-    docker build -t gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA --target prod --build-arg TAG=$SHORT_SHA .
-- name: 'gcr.io/cloud-builders/docker'
-  entrypoint: 'bash'
-  args:
-  - '-c'
-  - |
-    echo "PUSH"
-    if [[ "$BRANCH_NAME" != "master" ]]; then echo "Not master, not pushing"; exit 0; fi;
-    docker push gcr.io/$PROJECT_ID/$REPO_NAME:$SHORT_SHA
+    if [[ "$$BRANCH_NAME" != "master" ]]; then echo "branch != master, not deploying"; exit 0; fi;
+    # Mount dependencies into the /workspace
+    ln -s /node_modules .
+    ln -s /.haxelib .
+    export CURRENT_NPM_VERSION=$$(cat package.json | jq -r .version)
+    echo "CURRENT_NPM_VERSION=$${CURRENT_NPM_VERSION}"
+
+    if npm view metapage versions  --json | jq -e '. as $$f | "$${CURRENT_NPM_VERSION}" | IN($$f[])' ; then
+      echo "version $${CURRENT_NPM_VERSION} exists"
+    else
+      echo "npm version is new, publishing..."
+      make npm-publish
+    fi
