@@ -3,7 +3,9 @@
 The final products of this repository are:
 
 1. javascript libraries for running metapages, which are websites that run networks of connected websites
-2. documentation with running, interactive examples.
+    1. [metapage](https://www.npmjs.com/package/metapage)
+    2. [metaframe](https://www.npmjs.com/package/metaframe)
+2. [documentation](https://metapages.org/documentation/) with running, interactive examples.
 
 ## 1) Javascript Libraries
 

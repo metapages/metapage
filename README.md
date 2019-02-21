@@ -4,5 +4,5 @@ A **metapage** is a webpage that consists of a network of other embedded webpage
 
 For documentation and examples: [https://metapages.org/](https://metapages.org/)
 
-## [Developmers](./DEVELOPERS.md)
+## [Developers](./DEVELOPERS.md)
 
