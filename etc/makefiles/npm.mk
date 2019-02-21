@@ -24,14 +24,15 @@ npm-publish: guard-env-NPM_TOKEN ###npm NPM publish the packages (metaframe+meta
 		popd ; \
 	done
 
-# Bump the npm+git-tag version
-# Also update the version in other files that need it
-#@#npm version ${NEW_VERSION}
-NEW_VERSION ?= patch
-.PHONY: publish-new-version
-publish-new-version: guard-env-NEW_VERSION ###npm npm version, git tag, and push to release a new version and publish docs
+.PHONY: publish-update-jekyll-script-links
+publish-update-jekyll-script-links:
 	export VERSION=$$(cat package.json | jq -r '.version') && \
 		sed -i "s#[0-9]\+\.[0-9]\+\.[0-9]\+#$${VERSION}#g" docs/_includes/metaframe_lib_script.html && \
 		sed -i "s#[0-9]\+\.[0-9]\+\.[0-9]\+#$${VERSION}#g" docs/_includes/metapage_lib_script.html
 
-	
+
+# Bump the npm+git-tag version
+NEW_VERSION ?= patch
+.PHONY: publish-new-version
+publish-new-version: guard-env-NEW_VERSION ###npm npm version, git tag, and push to release a new version and publish docs
+	npm version ${NEW_VERSION}
