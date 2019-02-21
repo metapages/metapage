@@ -26,10 +26,12 @@ npm-publish: guard-env-NPM_TOKEN ###npm NPM publish the packages (metaframe+meta
 
 # Bump the npm+git-tag version
 # Also update the version in other files that need it
+#@#npm version ${NEW_VERSION}
 NEW_VERSION ?= patch
-.PHONY: npm-publish
-npm-publish: guard-env-NEW_VERSION ###npm NPM publish the packages (metaframe+metapage)
-	@#npm version ${NEW_VERSION}
-	sed -i 's/old-text/new-text/g' docs/_includes/metaframe_lib_script.html
-	<script src="https://cdn.jsdelivr.net/npm/metapage@0.0.15/browser.js"></script>
+.PHONY: publish-new-version
+publish-new-version: guard-env-NEW_VERSION ###npm npm version, git tag, and push to release a new version and publish docs
+	export VERSION=$$(cat package.json | jq -r '.version') && \
+		sed -i "s#[0-9]\+\.[0-9]\+\.[0-9]\+#$${VERSION}#g" docs/_includes/metaframe_lib_script.html && \
+		sed -i "s#[0-9]\+\.[0-9]\+\.[0-9]\+#$${VERSION}#g" docs/_includes/metapage_lib_script.html
+
 	
