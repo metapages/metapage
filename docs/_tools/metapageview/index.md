@@ -32,11 +32,10 @@ layout: vanilla
 
 <div class="panel panel-default">
   <div class="panel-heading">
-  <input class="btn btn-default" id="showMetapageButton" type="button" value="Show Metapage:">
-    <!-- <h3 class="panel-title">Metapage:</h3> -->
+    <input class="btn btn-default" id="showMetapageButton" type="button" value="Show Metapage:">
+      <!-- <h3 class="panel-title">Metapage:</h3> -->
   </div>
   <div class="vertical" id="metapage"></div>
-  </div>
 </div>
 
 </body>

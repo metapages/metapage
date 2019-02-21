@@ -90,10 +90,10 @@ function buildEditorWithInitialInputs(startInputs) {
 	startState[idInputs] = startInputs;
 	startState[idTarget] = startInputs;
 
-	var metapage = metapage.Metapage.fromDefinition(metapageDef, startState);
-	var metaframe = metapage.getMetaframe(idTarget);
-	var metaframeInputs = metapage.getMetaframe(idInputs);
-	var metaframeOutputs = metapage.getMetaframe(idOutputs);
+	var mp = metapage.Metapage.fromDefinition(metapageDef, startState);
+	var metaframe = mp.getMetaframe(idTarget);
+	var metaframeInputs = mp.getMetaframe(idInputs);
+	var metaframeOutputs = mp.getMetaframe(idOutputs);
 
 	document.getElementById("container-inputs").appendChild(metaframeInputs.iframe);
 	document.getElementById("container-outputs").appendChild(metaframeOutputs.iframe);
