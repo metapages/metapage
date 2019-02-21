@@ -70,7 +70,7 @@ steps:
     export CURRENT_NPM_VERSION=$$(cat package.json | jq -r .version)
     echo "CURRENT_NPM_VERSION=$${CURRENT_NPM_VERSION}"
 
-    if npm view metapage versions  --json | jq -e '. as $$f | "$${CURRENT_NPM_VERSION}" | IN($$f[])' ; then
+    if npm view metapage versions  --json | jq --arg v $$CURRENT_NPM_VERSION -e '. as $f | $v | IN($f[])' ; then
       echo "version $${CURRENT_NPM_VERSION} exists"
     else
       echo "npm version is new, publishing..."
