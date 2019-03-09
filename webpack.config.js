@@ -26,7 +26,8 @@ function createConfig(source, target, folder) {
 					test: /\.hxml$/,
 					loader: 'haxe-loader',
 					options: {
-						debug: true,
+						// Webpack builds the production versions, so keep this false
+						debug: false,
 					}
 				}
 			]
