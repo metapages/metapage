@@ -11,6 +11,62 @@ package js.metapage.v1.client;
 @:keep
 class Metapage extends EventEmitter
 {
+	/**
+	 * Entrypoint for this script. It looks for a metapage.json file
+	 * in the same parent path. If it doesn't find one, it searches down
+	 * to the root domain. If none are found execution halts for good.
+	 * 
+	 */
+	public static function main()
+	{
+		var f :String->Promise<MetapageDefinition>;
+		// path will always end with a /
+		f = function(path :String) :Promise<MetapageDefinition> {
+			if (path == null || path.length == 0) {
+				//Exit condition
+				return Promise.resolve(null);
+			}
+			return new Promise(function(resolve, reject) {
+				var metapagePath = path + 'metapage.json';
+				var _fetch :String->Dynamic->Promise<Dynamic> = untyped __js__('fetch');
+				_fetch(metapagePath, {})
+					.then(function(res) {
+						var r :{json:Void->Promise<MetapageDefinition>} = res;
+						return res.json();	
+					})
+					.then(function(metapageDef) {
+						resolve(metapageDef);
+					})
+					.catchError(function(err) {
+						if (path == '/') {
+							resolve(null);
+						} else {
+							// Nothing found. Now chop the path down and keep going recursive
+							path = path.substr(0, path.length - 1);
+							var paths = path.split('/');
+							paths.pop();
+							path = paths.join('/');
+							f(path)
+								.then(function(metapageDef2) {
+									resolve(metapageDef2);
+								});
+						}
+					});
+			});
+		};
+		// Make sure the search path starts with a '/' so that
+		// we can search simply down the path structure.
+		var pathname = Browser.window.location.pathname;
+		f(pathname.endsWith('/') ? pathname : pathname + '/')
+			.then(function(metaPageDef) {
+				if (metaPageDef != null) {
+					trace("Metapage found");
+				} else {
+					js.Browser.console.log('No metapage.json found in this domain. Metapage exiting.');
+				}
+			});
+	}
+
 	public static function fromDefinition(metaPageDef :MetapageDefinition, ?inputs :MetapageInstanceInputs)
 	{
 		var metapage = new Metapage(metaPageDef.options);

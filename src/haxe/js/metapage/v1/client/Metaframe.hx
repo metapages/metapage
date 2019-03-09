@@ -156,6 +156,7 @@ class Metaframe extends EventEmitter
 		if (event == MetaframeEvents.Inputs) {
 			Browser.window.setTimeout(function() {
 				if (_inputPipeValues != null) {
+					//TODO damn remove this waste of CPU
 					listener(Json.parse(Json.stringify(_inputPipeValues)));
 				}
 			}, 0);
@@ -168,6 +169,7 @@ class Metaframe extends EventEmitter
 	{
 		return addEventListener(MetaframeEvents.Inputs, function(inputs :MetaframeInputMap) {
 			if (inputs.exists(pipeId)) {
+				//TODO damn remove this waste of CPU
 				listener(Json.parse(Json.stringify(inputs.get(pipeId))));
 			}
 		});
