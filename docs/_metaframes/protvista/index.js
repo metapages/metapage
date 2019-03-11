@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new metaframe.Metaframe({debug:false});
+var metaframe = new metaframe.Metaframe();
 
 metaframe.ready.then(function() {
 	metaframe.sendDimensions();
@@ -11,7 +11,7 @@ function on_uniprot_id(blob) {
     if (!blob) {
         return;
     }
-    loadUniprotId(blob.value);
+    loadUniprotId(blob);
 }
 
 function loadUniprotId(uniprotId) {

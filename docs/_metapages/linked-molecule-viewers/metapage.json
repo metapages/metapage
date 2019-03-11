@@ -2,120 +2,73 @@
 ---
 
 {
-    "version": "0.1-alpha",
-    "options": {
-      "debug": false
+  "version": "0.1.0",
+  "iframes": {
+    "input-button": {
+      "url": "{{site.baseurl}}/metaframes/pdb-input-button/"
     },
-    "iframes": {
-      "input-button": {
-        "url": "{{site.baseurl}}/metaframes/pdb-input-button/"
-      },
-      "viewer1": {
-        "url": "{{site.baseurl}}/metaframes/molviewer-pv/"
-      },
-      "viewer2": {
-        "url": "{{site.baseurl}}/metaframes/molviewer-pv/"
-      },
-      "viewer3": {
-        "url": "{{site.baseurl}}/metaframes/molviewer-pv/"
-      },
-      "passthrough1": {
-        "url": "{{site.baseurl}}/metaframes/passthrough/"
-      },
-      "passthrough2": {
-        "url": "{{site.baseurl}}/metaframes/passthrough/"
-      }
+    "viewer1": {
+      "url": "{{site.baseurl}}/metaframes/molviewer-pv/",
+      "inputs": [
+        {
+          "metaframe": "input-button",
+          "source": "pdb_data"
+        }
+      ]
     },
-    "pipes": [
-      {
-        "source": {
-          "id": "input-button",
-          "name": "pdb_data"
+    "viewer2": {
+      "url": "{{site.baseurl}}/metaframes/molviewer-pv/",
+      "inputs": [
+        {
+          "metaframe": "input-button",
+          "source": "pdb_data"
         },
-        "target": {
-          "id": "viewer1",
-          "name": "pdb_data"
-        }
-      },
-      {
-        "source": {
-          "id": "input-button",
-          "name": "pdb_data"
+        {
+          "metaframe": "viewer1",
+          "source": "camera_out",
+          "target": "camera_in"
         },
-        "target": {
-          "id": "viewer2",
-          "name": "pdb_data"
+        {
+          "metaframe": "passthrough2",
+          "source": "zoom"
         }
-      },
-      {
-        "source": {
-          "id": "input-button",
-          "name": "pdb_data"
+      ]
+    },
+    "viewer3": {
+      "url": "{{site.baseurl}}/metaframes/molviewer-pv/",
+      "inputs": [
+        {
+          "metaframe": "input-button",
+          "source": "pdb_data"
         },
-        "target": {
-          "id": "viewer3",
-          "name": "pdb_data"
-        }
-      },
-      {
-        "source": {
-          "id": "viewer1",
-          "name": "camera_out"
+        {
+          "metaframe": "viewer1",
+          "source": "camera_out",
+          "target": "camera_in"
         },
-        "target": {
-          "id": "viewer2",
-          "name": "camera_in"
+        {
+          "metaframe": "passthrough1",
+          "source": "rotation"
         }
-      },
-      {
-        "source": {
-          "id": "viewer1",
-          "name": "camera_out"
-        },
-        "target": {
-          "id": "viewer3",
-          "name": "camera_in"
+      ]
+    },
+    "passthrough1": {
+      "url": "{{site.baseurl}}/metaframes/passthrough/",
+      "inputs": [
+        {
+          "metaframe": "viewer1",
+          "source": "rotation"
         }
-      },
-      {
-        "source": {
-          "id": "viewer1",
-          "name": "zoom"
-        },
-        "target": {
-          "id": "passthrough2",
-          "name": "zoom"
+      ]
+    },
+    "passthrough2": {
+      "url": "{{site.baseurl}}/metaframes/passthrough/",
+      "inputs": [
+        {
+          "metaframe": "viewer1",
+          "source": "zoom"
         }
-      },
-      {
-        "source": {
-          "id": "passthrough2",
-          "name": "zoom"
-        },
-        "target": {
-          "id": "viewer2",
-          "name": "zoom"
-        }
-      },
-      {
-        "source": {
-          "id": "viewer1",
-          "name": "rotation"
-        },
-        "target": {
-          "id": "passthrough1",
-          "name": "rotation"
-        }
-      },
-      {
-        "source": {
-          "id": "passthrough1",
-          "name": "rotation"
-        },
-        "target": {
-          "id": "viewer3",
-          "name": "rotation"
-        }
-      }
-    ]
+      ]
+    }
+  }
 }

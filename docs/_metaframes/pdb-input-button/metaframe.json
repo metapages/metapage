@@ -1,20 +1,17 @@
 {
-	"version": "0.1-alpha",
+	"version": "0.1.0",
 	"metadata": {
 		"version": "0.1",
 		"title": "PDB loader",
 		"image": "http://cdn.rcsb.org/rcsb-pdb/v2/common/images/rcsb_logo.png",
 		"author": "Dion Whitehead"
 	},
-	"outputs": [
-		{
-			"name": "pdb_data",
+	"outputs": {
+		"pdb_data": {
 			"type": "string"
 		},
-		{
-			"name": "pdb_id",
-			"type": "string",
-			"value": "1c7d"
+		"pdb_id": {
+			"type": "string"
 		}
-	]
+	}
 }

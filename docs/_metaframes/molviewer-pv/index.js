@@ -1,4 +1,4 @@
-var metaframe = new metaframe.Metaframe({debug:false});
+var connection = new metaframe.Metaframe();
 
 //Initialize the viewer
 // override the default options with something less restrictive.
@@ -62,7 +62,7 @@ function onPdbData(pdb_data) {
 		return;
 	}
 	if (pdb_data != null) {
-		metaframe.debug('Setting pdb data to pv viewer');
+		connection.log('Setting pdb data to pv viewer');
 	    var structure = pv.io.pdb(pdb_data);
 	    showStructure(structure);
 	} else {
@@ -74,7 +74,7 @@ function onPdbId(pdb_id) {
 	if (!viewerReady) {
 		return;
 	}
-	metaframe.debug('pdb_id=' + pdb_id);
+	connection.log('pdb_id=' + pdb_id);
 	if (pdb_id && viewerReady && typeof(pdb_id) === 'string') {
 		setLabel("pdb_id=" + pdb_id);
 		pv.io.fetchPdb('https://files.rcsb.org/download/' + pdb_id + '.pdb', function(structure) {
@@ -86,11 +86,11 @@ function onPdbId(pdb_id) {
 	}
 }
 
-function onPdbUrl(pdb_id) {
+function onPdbUrl(pdb_url) {
 	if (!viewerReady) {
 		return;
 	}
-	metaframe.debug('pdb_url=' + pdb_url);
+	connection.log('pdb_url=' + pdb_url);
 	if (pdb_url != null) {
 		setLabel("pdb_url=" + pdb_url);
 		pv.io.fetchPdb(pdb_url, function(structure) {
@@ -120,69 +120,65 @@ function setRotationFromValue(rotation) {
 /*
  * On input pipe update, send value to the graph
  */
-metaframe.onInput("pdb_data", function(inputBlob) {
+connection.onInput("pdb_data", function(inputBlob) {
 	if (!viewerReady) {
 		return;
 	}
-	onPdbData(inputBlob.value);
+	onPdbData(inputBlob);
 });
 
-metaframe.onInput("pdb_id", function(inputBlob) {
+connection.onInput("pdb_id", function(inputBlob) {
 	if (!viewerReady) {
 		return;
 	}
-	onPdbId(inputBlob.value);
+	onPdbId(inputBlob);
 });
 
-metaframe.onInput("pdb_url", function(inputBlob) {
+connection.onInput("pdb_url", function(inputBlob) {
 	if (!viewerReady) {
 		return;
 	}
-	onPdbUrl(inputBlob.value);
+	onPdbUrl(inputBlob);
 });
 
-metaframe.onInput("rotation", function(inputBlob) {
+connection.onInput("rotation", function(inputBlob) {
 	incomingExternalCoords = true;
 	if (!viewerReady) {
 		return;
 	}
-	var rotation = inputBlob.value;
+	var rotation = inputBlob;
 	if (rotation != null && typeof(rotation) === 'object') {
 		setRotationFromValue(rotation);
 	} else {
-		metaframe.debug('rotation == null or !viewerReady');
+		connection.log('rotation == null or !viewerReady');
 	}
 });
 
-metaframe.onInput("zoom", function(inputBlob) {
+connection.onInput("zoom", function(inputBlob) {
 	incomingExternalCoords = true;
 	if (!viewerReady) {
 		return;
 	}
-	setZoomFromValue(inputBlob.value);
+	setZoomFromValue(inputBlob);
 });
 
-/* Set up the metaframe channel */
-metaframe.ready
+/* Set up the connection channel */
+connection.ready
 	.then(function() {
-		if (metaframe.getInput(ZOOM_INPUT_INTERNAL)
-			&& metaframe.getInput(ZOOM_INPUT_INTERNAL).value
-			&& metaframe.getInput(ROTATION_INPUT_INTERNAL)
-			&& metaframe.getInput(ROTATION_INPUT_INTERNAL).value) {
+		if (connection.getInput(ZOOM_INPUT_INTERNAL)
+			&& connection.getInput(ROTATION_INPUT_INTERNAL)) {
 
-			// initialZoom = metaframe.getInput(ZOOM_INPUT_INTERNAL).value;
-			// initialRotation = metaframe.getInput(ROTATION_INPUT_INTERNAL).value;
 			initialState = {
-				zoom: metaframe.getInput(ZOOM_INPUT_INTERNAL).value,
-				rotation: metaframe.getInput(ROTATION_INPUT_INTERNAL).value,
+				zoom: connection.getInput(ZOOM_INPUT_INTERNAL),
+				rotation: connection.getInput(ROTATION_INPUT_INTERNAL),
 			};
 		}
 
 
-		metaframe.debug('READY');
-		metaframe.sendDimensions({width:width,height:height});
+		connection.log('READY');
+		connection.sendDimensions({width:width,height:height});
 	}, function(err) {
-		metaframe.error('molviewer: Error setting up the metaframe connection error=' + JSON.stringify(err));
+		connection.error('molviewer: Error setting up the metaframe connection error=' + JSON.stringify(err));
 	})
 	.then(function() {
 		return viewerReadyPromise;
@@ -191,9 +187,9 @@ metaframe.ready
 		//The view is ready and the metaframe connection is ready
 		viewer.on('viewpointChanged', function(cam) {
 			var rotationArray = Array.prototype.slice.call(viewer.rotation());
-			var newRotationBlob = {value:rotationArray};
-			var newZoomBlob = {value:viewer.zoom()};
-			metaframe.setOutputs({
+			var newRotationBlob = rotationArray;
+			var newZoomBlob = viewer.zoom();
+			connection.setOutputs({
 				//Clone rotation because internally it uses the same object, so
 				//equality checks fail
 				"rotation": newRotationBlob,
@@ -205,7 +201,7 @@ metaframe.ready
 				var inputs = {};
 				inputs[ZOOM_INPUT_INTERNAL] = newZoomBlob;
 				inputs[ROTATION_INPUT_INTERNAL] = newRotationBlob;
-				metaframe.setInputs(inputs);
+				connection.setInputs(inputs);
 			}
 		});
 
@@ -217,14 +213,14 @@ metaframe.ready
 			// }
 		});
 
-		if (metaframe.getInput("pdb_data") != null) {
-			onPdbData(metaframe.getInput("pdb_data"));
-			if (metaframe.getInput("pdb_id") != null) {
-				setLabel("pdb_id=" + metaframe.getInput("pdb_id").value);
+		if (connection.getInput("pdb_data") != null) {
+			onPdbData(connection.getInput("pdb_data"));
+			if (connection.getInput("pdb_id") != null) {
+				setLabel("pdb_id=" + connection.getInput("pdb_id"));
 			}
-		} else if (metaframe.getInput("pdb_id") != null) {
-			onPdbId(metaframe.getInput("pdb_id"));
-		} else if (metaframe.getInput("pdb_url") != null) {
-			onPdbUrl(metaframe.getInput("pdb_url"));
+		} else if (connection.getInput("pdb_id") != null) {
+			onPdbId(connection.getInput("pdb_id"));
+		} else if (connection.getInput("pdb_url") != null) {
+			onPdbUrl(connection.getInput("pdb_url"));
 		}
 	});

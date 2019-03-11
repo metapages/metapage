@@ -2,31 +2,20 @@
 ---
 
 {
-    "version": "0.1-alpha",
+    "version": "0.1.0",
     "iframes": {
       "button": {
-        "url": "{{site.baseurl}}/metaframes/button-demo/",
-        "outputs": {
-          "button_out": {}
-        }
+        "url": "{{site.baseurl}}/metaframes/button-demo/"
       },
       "graph": {
         "url": "{{site.baseurl}}/metaframes/graph-demo/",
-        "inputs": {
-          "graph_input": {}
-        }
+        "inputs": [
+          {
+            "metaframe": "button",
+            "source": "button_out",
+            "target": "graph_input"
+          }
+        ]
       }
-    },
-    "pipes": [
-      {
-        "source": {
-          "id": "button",
-          "name": "button_out"
-        },
-        "target": {
-          "id": "graph",
-          "name": "graph_input"
-        }
-      }
-    ]
+    }
 }

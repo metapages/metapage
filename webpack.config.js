@@ -27,7 +27,7 @@ function createConfig(source, target, folder) {
 					loader: 'haxe-loader',
 					options: {
 						// Webpack builds the production versions, so keep this false
-						debug: false,
+						debug: true,
 					}
 				}
 			]

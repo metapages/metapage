@@ -57,10 +57,10 @@ layout: vanilla
 </head>
 <body>
 
-<div style="max-width: 900px; max-height: 400px; padding: 10px">
+<div style="max-width: 600px; max-height: 400px; padding: 10px">
 
   <div class="well">
-    <h4>D3 Based Real Time Chart with Multiple Data Streams 
+    <h4>D3 Based Real Time Chart with Multiple Data Streams </h4>
   </div>
   <input id="debug" type="checkbox" name="debug" value="debug" style="margin-bottom: 10px" /> Debug
   <input id="halt" type="checkbox" name="halt" value="halt" style="margin-bottom: 10px" /> Halt

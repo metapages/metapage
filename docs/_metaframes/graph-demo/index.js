@@ -1,10 +1,10 @@
 /* Set up the metaframe channel */
-var metaframe = new metaframe.Metaframe();
+var connection = new metaframe.Metaframe();
 
 /*
  * On input pipe update, send value to the graph
  */
-metaframe.onInput("graph_input", function(category) {
+connection.onInput("graph_input", function(category) {
 	var now = new Date();
 	if (category != null) {
 		var obj = {
@@ -12,7 +12,7 @@ metaframe.onInput("graph_input", function(category) {
 			time: now,
 			color: color(d % 10),
 			opacity: Math.max(Math.random(), 0.3),
-			category: category.value,
+			category: category,
 			// category: randomNumberFromClick,//"Category2",
 			//type: shapes[Math.round(Math.random() * (shapes.length - 1))], // the module currently doesn't support dynamically changed svg types (need to add key function to data, or method to dynamically replace svg object – tbd)
 			type: "circle",
@@ -22,8 +22,8 @@ metaframe.onInput("graph_input", function(category) {
 	}
 });
 
-metaframe.ready.then(function() {
-	metaframe.sendDimensions();
+connection.ready.then(function() {
+	connection.sendDimensions();
 
 }, function(err) {
 	console.error('Error setting up the metaframe connection');

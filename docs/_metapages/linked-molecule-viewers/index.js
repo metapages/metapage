@@ -1,6 +1,8 @@
-axios.get('metapage.json')
-  .then(function (response) {
-  	var metaPageDefinition = response.data;
+fetch('metapage.json')
+  .then((response) => {
+    return response.json();
+  })
+  .then((metaPageDefinition) => {
   	var mp = metapage.Metapage.fromDefinition(metaPageDefinition);
   	var iframes = mp.get_iframes();
 

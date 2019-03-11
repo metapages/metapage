@@ -1,9 +1,8 @@
 var urlObject = new URL(window.location.href);
 var disableEditParam = urlObject.searchParams.get('edit') == '0' || urlObject.searchParams.get('debug') == 'false';
-var debugParam = urlObject.searchParams.get('debug') == '1' || urlObject.searchParams.get('debug') == 'true';
 
 /* Set up the metaframe channel */
-var mf = new metaframe.Metaframe({debug:false});
+var mf = new metaframe.Metaframe();
 
 /*
  * On input pipe update, show value, and pass to output pipe
@@ -114,7 +113,7 @@ function createRow(name, previousDiv) {
 			// value = value.replace('&amp;', '&');
 			value = htmlDecode(value);
 		}
-		mf.setInput(name, {value:value});
+		mf.setInput(name, value);
 		valueDiv.onkeydown = null;
 		valueDiv.setAttribute("contenteditable", false);
 		setTimeout(function() {
@@ -197,24 +196,16 @@ function createRow(name, previousDiv) {
 		// type: typeDiv,
 		delete: deleteDiv,
 		update: function(blob) {
-			if (blob) {
-				if (!blob.value) {
+			if (blob === undefined) {
+				deleteRow();
+			} else {
+				if (!blob) {
 					valueDiv.innerHTML = null;
-					// valueTextArea.value = null;
-				} else if (typeof(blob.value) == 'object') {
-					valueDiv.innerHTML = JSON.stringify(blob.value);
-					// valueTextArea.value = JSON.stringify(blob.value);
+				} else if (typeof(blob) == 'object') {
+					valueDiv.innerHTML = JSON.stringify(blob);
 				} else {
-					if (blob.encoding == 'base64') {
-						valueDiv.innerHTML = atob(blob.value);
-						// valueTextArea.value = atob(blob.value);
-					} else {
-						valueDiv.innerHTML = `${blob.value}`;
-						// valueTextArea.value = `${blob.value}`;
-					}
+					valueDiv.innerHTML = `${blob}`;
 				}
-				//Not all types are directly editable here
-				valueDiv.setAttribute("contenteditable", blob.encoding == null || blob.encoding == 'utf8' || blob.encoding == 'json');
 			}
 		},
 		deleteRow: deleteRow,
@@ -269,12 +260,8 @@ function updateWithNewInputs(inputMap) {
 	mf.setOutputs(inputMap);
 }
 
-mf.addEventListener(metaframe.Metaframe.INPUTS, function(inputMap) {
+mf.onInputs((inputMap) => {
 	updateWithNewInputs(inputMap);
-});
-
-mf.addEventListener(metaframe.Metaframe.INPUTSDELETE, function(inputsArray) {
-	inputsArray.forEach(deleteRow);
 });
 
 if (disableEditParam) {
@@ -303,7 +290,7 @@ if (disableEditParam) {
 			}
 			while(!ok);
 		}
-		mf.setInput(proposedName, {value:`replaceme`});
+		mf.setInput(proposedName, `replaceme`);
 	}
 }
 

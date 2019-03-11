@@ -1,5 +1,5 @@
 {
-  "version": "0.1-alpha",
+  "version": "0.1.0",
   "metadata": {
     "version": "0.1",
     "title": "PV Protein Viewer",
@@ -7,7 +7,6 @@
   },
   "inputs": {
     "pdb_id": {
-      "value": "1C7D",
       "type": "pdb_id:rcsb.org"
     },
     "pdb_data": {},

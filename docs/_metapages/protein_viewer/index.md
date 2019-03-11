@@ -22,4 +22,29 @@ layout: vanilla
 </body>
 {% include metapage_lib_script.html %}
 <script src="{{site.baseurl}}{{site.data.urls.axios_path}}"></script>
-<script src="index.js"></script>
+<script>
+fetch('metapage.json')
+  	.then((response) => {
+		return response.json();
+	})
+	.then(function (metaPageDefinition) {
+  	var mp = metapage.Metapage.fromDefinition(metaPageDefinition);
+  	var iframes = mp.get_iframes();
+
+  	for (var key in iframes) {
+      var parent = document.getElementById("_" + key);
+      if (parent) {
+        parent.appendChild(iframes[key]);
+      } else {
+        parent = document.getElementById("body");
+        var div = document.createElement("div");
+        div.appendChild(iframes[key]);
+        parent.appendChild(div);
+      }
+  	}
+
+  })
+  .catch(function (error) {
+    console.error(error);
+  });
+</script>

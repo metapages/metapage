@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new metaframe.Metaframe({debug:false});
+var metaframe = new metaframe.Metaframe();
 
 function setText(text) {
 	document.getElementById("output").innerHTML = text;
@@ -16,23 +16,23 @@ metaframe.ready.then(function() {
 var pdbToUniprotMap = null;
 
 function maybeSendPdbId() {
-	if (pdbToUniprotMap && metaframe.getInput('pdb_id') && metaframe.getInput('pdb_id').value != null) {
-  		var pdbId = metaframe.getInput('pdb_id').value.toUpperCase();
+	if (pdbToUniprotMap && metaframe.getInput('pdb_id') != null) {
+  		var pdbId = metaframe.getInput('pdb_id').toUpperCase();
   		// setText(pdbId + "=> NOT READY");
   		if (pdbToUniprotMap && pdbId) {
 			if (pdbToUniprotMap[pdbId]) {
 				  setText(pdbId + "=>" + (pdbToUniprotMap[pdbId] ? pdbToUniprotMap[pdbId] : "none"));
-		  		metaframe.setOutput('uniprot_id', {value:pdbToUniprotMap[pdbId]});
+		  		metaframe.setOutput('uniprot_id', pdbToUniprotMap[pdbId]);
 		  	} else {
 		  		setText(pdbId + "=> none");
-          metaframe.setOutput('uniprot_id', {value:null});
-		  		metaframe.setOutput('error', {value:"No mapping for " + pdbId});
+          metaframe.setOutput('uniprot_id', null);
+		  		metaframe.setOutput('error', "No mapping for " + pdbId);
 		  	}
 		}
   	}
 }
 
-metaframe.setOutput('status', {value:'loading'});
+metaframe.setOutput('status', 'loading');
 
 fetch('data.json')
   .then(function (response) {
@@ -41,7 +41,7 @@ fetch('data.json')
   .then(function(jsonResponse) {
   	pdbToUniprotMap = jsonResponse;
   	setText("Ready.");
-  	metaframe.setOutput('status', {value:'ready'});
+  	metaframe.setOutput('status', 'ready');
   	maybeSendPdbId();
   })
   .catch(function (error) {

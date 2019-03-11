@@ -1,4 +1,4 @@
 build-base.hxml
 
-js.metapage.v1.client.Metapage
+js.metapage.v0_1_0.client.Metapage
 -js docs/js/metapage.js
