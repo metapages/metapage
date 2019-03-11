@@ -3,7 +3,6 @@
 
 var urlObject = new URL(window.location.href);
 var urlParam = urlObject.searchParams.get('url');
-var debugParam = urlObject.searchParams.get('debug') == '1' || urlObject.searchParams.get('debug') == 'true';
 
 document.getElementById("url").innerHTML = urlParam;
 console.log('urlParam', urlParam);
@@ -22,7 +21,7 @@ if (urlParam != null) {
 			}
 			metaframeDataUrl.pathname = metaframeDataUrl.pathname + '/metaframe.json';
 		}
-
+		console.log('metaframeDataUrl', metaframeDataUrl);
 		fetch(metaframeDataUrl.toString(), {method: 'get',mode: 'cors', redirect: 'follow', cache: 'no-cache'})
 			.then(function(response) {
 				if(response.ok) {
@@ -31,6 +30,7 @@ if (urlParam != null) {
 				throw new Error(`fetch ${metaframeDataUrl.toString()} failed status=${response.status } error=${Response.statusText}`);
 			})
 			.then(function(metaframeJson) {
+				console.log(metaframeJson);
 				buildEditorWithInitialInputs(metaframeJson.inputs);
 			})
 			.catch(function(error) {
@@ -46,6 +46,7 @@ function buildEditorWithInitialInputs(startInputs) {
 	var idTarget = 'target';
 	var metapageDef = {
 		id: '_',
+		version: '0.1.0',
 		iframes: {},
 		pipes: [
 			{
@@ -73,22 +74,32 @@ function buildEditorWithInitialInputs(startInputs) {
 
 	metapageDef.iframes[idInputs] = {
 		url: '{{site.baseurl}}/metaframes/passthrough/?edit=1',
-		inputs: startInputs,
-		outputs: startInputs,
+		// state: startInputs,
+		inputs: []
 	};
-
+	
 	metapageDef.iframes[idOutputs] = {
 		url: '{{site.baseurl}}/metaframes/passthrough/?edit=0',
+		inputs: [],
 	};
+	metapageDef.iframes[idOutputs].inputs.push({
+		metaframe: idTarget,
+		source: '*',
+	});
 
 	metapageDef.iframes[idTarget] = {
 		url: urlParam,
-		inputs: startInputs,
+		// state: startInputs,
+		inputs: []
 	};
+	metapageDef.iframes[idTarget].inputs.push({
+		metaframe: idInputs,
+		source: '*',
+	});
 
 	var startState = {};
-	startState[idInputs] = startInputs;
-	startState[idTarget] = startInputs;
+	// startState[idInputs] = startInputs;
+	// startState[idTarget] = startInputs;
 
 	var mp = metapage.Metapage.fromDefinition(metapageDef, startState);
 	var metaframe = mp.getMetaframe(idTarget);

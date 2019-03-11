@@ -2,35 +2,27 @@
 ---
 
 {
-    "version": "0.1-alpha",
-    "iframes": {
+    "version": "0.1.0",
+    "metaframes": {
       "metaframe1": {
-        "url": "{{site.baseurl}}/metaframes/example00_iframe1/"
+        "url": "{{site.baseurl}}/metaframes/example00_iframe1/",
+        "inputs": [
+          {
+            "metaframe":"metaframe2",
+            "source": "barOut",
+            "target": "barIn",
+          }
+        ]
       },
       "metaframe2": {
-        "url": "{{site.baseurl}}/metaframes/example00_iframe2/"
+        "url": "{{site.baseurl}}/metaframes/example00_iframe2/",
+        "inputs": [
+          {
+            "metaframe":"metaframe1",
+            "source": "fooOut",
+            "target": "fooIn",
+          }
+        ]
       }
-    },
-    "pipes": [
-      {
-        "from": {
-          "id": "metaframe1",
-          "pipe": "fooOut"
-        },
-        "to": {
-          "id": "metaframe2",
-          "pipe": "fooIn"
-        }
-      },
-      {
-        "from": {
-          "id": "metaframe2",
-          "pipe": "barOut"
-        },
-        "to": {
-          "id": "metaframe1",
-          "pipe": "barIn"
-        }
-      }
-    ]
+    }
 }

@@ -1,5 +1,5 @@
 {
-	"version": "0.1-alpha",
+	"version": "0.1.0",
 	"metadata": {
 		"version": "0.1",
 		"title": "Protvista (protein sequence features)",
@@ -7,8 +7,7 @@
 	},
 	"inputs": {
 		"uniprot_id": {
-			"value": "P68871"
+			"type": "string"
 		}
-	},
-	"outputs": {}
+	}
 }

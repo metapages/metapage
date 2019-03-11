@@ -2,8 +2,6 @@ package js.metapage;
 
 @:enum
 abstract MetapageVersion(String) from String {
-	var Alpha = "alpha";
-	var V1 = "1";
+	var V0_0_1 = "0.0.1";
+	var V0_1_0 = "0.1.0";
 }
-
-

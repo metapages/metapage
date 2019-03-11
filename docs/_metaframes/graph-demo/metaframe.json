@@ -1,15 +1,13 @@
 {
-	"version": "0.1-alpha",
+	"version": "0.1.0",
 	"metadata": {
 		"version": "0.1",
 		"title": "Example animated input graph",
 		"author": "Dion Whitehead"
 	},
-	"inputs": [
-		{
-			"name": "graph_input",
-			"type": "string",
-			"value": "Category1"
+	"inputs": {
+		"graph_input": {
+			"type": "string"
 		}
-	]
+	}
 }

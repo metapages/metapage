@@ -2,51 +2,37 @@
 ---
 
 {
-    "version": "0.1-alpha",
+    "version": "0.1.0",
     "iframes": {
       "input-button": {
         "url": "{{site.baseurl}}/metaframes/pdb-input-button/"
       },
       "viewer1": {
-        "url": "{{site.baseurl}}/metaframes/molviewer-pv/"
+        "url": "{{site.baseurl}}/metaframes/molviewer-pv/",
+        "inputs": [
+          {
+            "metaframe": "input-button",
+            "source": "pdb_data"
+          }
+        ]
       },
       "pdb-to-uniprot": {
-        "url": "{{site.baseurl}}/metaframes/pdb-to-uniprot/"
+        "url": "{{site.baseurl}}/metaframes/pdb-to-uniprot/",
+        "inputs": [
+          {
+            "metaframe": "input-button",
+            "source": "pdb_id"
+          }
+        ]
       },
       "protvista": {
-        "url": "{{site.baseurl}}/metaframes/protvista/"
+        "url": "{{site.baseurl}}/metaframes/protvista/",
+        "inputs": [
+          {
+            "metaframe": "pdb-to-uniprot",
+            "source": "uniprot_id"
+          }
+        ]
       }
-    },
-    "pipes": [
-      {
-        "source": {
-          "id": "input-button",
-          "name": "pdb_id"
-        },
-        "target": {
-          "id": "pdb-to-uniprot",
-          "name": "pdb_id"
-        }
-      },
-      {
-        "source": {
-          "id": "pdb-to-uniprot",
-          "name": "uniprot_id"
-        },
-        "target": {
-          "id": "protvista",
-          "name": "uniprot_id"
-        }
-      },
-      {
-        "source": {
-          "id": "input-button",
-          "name": "pdb_data"
-        },
-        "target": {
-          "id": "viewer1",
-          "name": "pdb_data"
-        }
-      }
-    ]
+    }
 }

@@ -5,6 +5,7 @@
     "repository": "https://github.com/dionjwa/metapage",
     "homepage": "https://metapages.org/",
     "dependencies": {
+        "minimatch": "^3.0.4",
         "terser": "^3.14.1",
         "webpack": "^4.29.0"
     },

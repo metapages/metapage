@@ -50,5 +50,39 @@ These metaframes add a random letter to the input string then pass it back:
 </div>
 
 </body>
-<script src="script1.js"></script>
-<script src="script2.js"></script>
+<script>
+var connectionManager = new metapage.Metapage();
+
+var url1 = '{{site.baseurl}}/metaframes/example00_iframe1/';
+var iframe1 = connectionManager.createIFrame(url1, 'iframe1');
+document.getElementById("left").appendChild(iframe1.iframe);
+
+var url2 = '{{site.baseurl}}/metaframes/example00_iframe2/';
+var iframe2 = connectionManager.createIFrame(url2, 'iframe2');
+document.getElementById("right").appendChild(iframe2.iframe);
+
+connectionManager.addPipe(iframe2.id, {metaframe:iframe1.id, source:'fooOut', target:'fooIn'});
+connectionManager.addPipe(iframe1.id, {metaframe:iframe2.id, source:'barOut', target:'barIn'});
+
+var a1 = document.createElement('a');
+a1.setAttribute('href', url1);
+a1.innerHTML = 'Go to metaframe';
+document.getElementById("left").appendChild(a1);
+
+var a2 = document.createElement('a');
+var urlInspect = '{{site.baseurl}}/tools/metaframeview?url=' + url1;
+a2.setAttribute('href', urlInspect);
+a2.innerHTML = 'Inspect metaframe';
+document.getElementById("left").appendChild(a2);
+
+var b1 = document.createElement('a');
+b1.setAttribute('href', url2);
+b1.innerHTML = 'Go to metaframe';
+document.getElementById("right").appendChild(b1);
+
+var b2 = document.createElement('a');
+var urlInspect = '{{site.baseurl}}/tools/metaframeview?url=' + url2;
+b2.setAttribute('href', urlInspect);
+b2.innerHTML = 'Inspect metaframe';
+document.getElementById("right").appendChild(b2);
+</script>

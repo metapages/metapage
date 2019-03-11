@@ -43,7 +43,7 @@ window.store = {
 
 
 /* Set up the metaframe channel */
-var metaframe = new metaframe.Metaframe({debug:false});
+var connection = new metaframe.Metaframe();
 
 var inputElement = document.getElementById("input");
 function handleFiles() {
@@ -53,7 +53,7 @@ function handleFiles() {
   var reader = new FileReader();
 	reader.onload = function(e) {
 		var text = reader.result;
-		metaframe.setOutput({name:"pdb_data", value:text});
+		connection.setOutput("pdb_data", text);
 	}
 
 	reader.readAsText(file);
@@ -67,29 +67,29 @@ function sendPdbId() {
 	fetch(url)
 		.then(function (response) {
 			if(response.ok) {
-				metaframe.setOutput("pdb_id", {value:pdbId});
-				metaframe.setInput("pdb_id", {value:pdbId});
+				connection.setOutput("pdb_id", pdbId);
+				connection.setInput("pdb_id", pdbId);
 				return response.text();
 			} else {
-				metaframe.debug(response);
-				metaframe.setOutput("pdb_data", {value:null});
+				connection.log(response);
+				connection.setOutput("pdb_data", null);
 				return null;
 			}
 		})
 		.then(function(pdb_data) {
 			if (pdb_data != null) {
-				metaframe.setOutput("pdb_data", {value:pdb_data});
+				connection.setOutput("pdb_data", pdb_data);
 				//Cache locally for when we're offline
 				store.set(pdbId, pdb_data);
 			}
 		})
 		.catch(function (error) {
-			metaframe.debug(error);
+			connection.error(error);
 			var cachedValue = store.get(pdbId);
 			if (cachedValue) {
-				metaframe.setOutput("pdb_data", {value:cachedValue});
+				connection.setOutput("pdb_data", cachedValue);
 			} else {
-				metaframe.setOutput("pdb_data", {value:null});
+				connection.setOutput("pdb_data", null);
 			}
 		});
 }
@@ -101,10 +101,10 @@ document.getElementById('pdbid').addEventListener('keypress', function (e) {
 	}
 });
 
-metaframe.ready.then(function() {
-	metaframe.sendDimensions();
-	if (metaframe.getInputs() && metaframe.getInputs()['pdb_id']) {
-		document.getElementById('pdbid').value = metaframe.getInputs()['pdb_id'].value;
+connection.ready.then(function() {
+	connection.sendDimensions();
+	if (connection.getInputs() && connection.getInputs()['pdb_id']) {
+		document.getElementById('pdbid').value = connection.getInputs()['pdb_id'];
 	} else {
 		document.getElementById('pdbid').value = "1C7D";
 	}
