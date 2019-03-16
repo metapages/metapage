@@ -28,26 +28,5 @@ ADD build-base.hxml .
 # If this changes, also change etc/makefiles/haxe.mk
 RUN haxelib newrepo && haxelib install --always build-base.hxml
 
-
-# FROM builder as haxe
-
-# # First build the metapage/metaframe javascript libraries
-# # by compiling the haxe->js
-
-# ADD src ./src
-# ADD build-metaframe.hxml .
-# ADD build-metapage.hxml .
-# ADD webpack.config.js .
-
-# ARG DOCKER_TAG=none-set
-
-# RUN echo "${DOCKER_TAG}" > ./.version
-# RUN npx webpack --mode=production
-
-# # Jekyll container serving the static website with metapage/frame libraries
-# FROM jekyll/jekyll:latest as jekyll
-# ADD ./docs /srv/jekyll
-# RUN bundle install
-
-# COPY --from=haxe /workspace/docs/js/*  /srv/jekyll/js/
-# RUN ls /srv/jekyll/js
+# There is no building/compiling here, it happens in the
+# builder containers, not the base image

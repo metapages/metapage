@@ -510,21 +510,9 @@ class IFrameRpcClient
 			var location = js.Browser.location;
 			url = location.protocol + '//' + location.hostname + (location.port != null && location.port != '' ? ':' + location.port: '') + '/' + url;
 		}
+		_origin = url;
 
 		// Add the custom URL params
-
-
-		// https://stackoverflow.com/questions/27745/getting-parts-of-a-url-regex
-		var urlRegex = ~/^(.*:)\/\/([A-Za-z0-9\-\.]+)(:[0-9]+)?\/(.*)$/;
-		if (!urlRegex.match(url)) {
-			throw '${url} invalid';
-		}
-		var protocol = urlRegex.matched(1);
-		var domain = urlRegex.matched(2);
-		var port = urlRegex.matched(3);
-
-		_origin = '${protocol}${domain}${port != null ? port : ""}';
-
 		var urlBlob = new js.html.URL(url);
 		var searchParams = new js.html.URLSearchParams(urlBlob.search);
 		searchParams.set(URL_PARAM_METAFRAME_ID, iframeId);
