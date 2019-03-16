@@ -1,4 +1,5 @@
 COMPOSE_DEV ?= DOCKER_REPOSITORY=${DOCKER_REPOSITORY} DOCKER_TAG=${DOCKER_TAG} docker-compose
+NPM_MODE=development
 
 .PHONY: help-dev
 help-dev: help-impl-dev ## Development commands
@@ -10,12 +11,14 @@ run: ###dev Run a development stack, with autoreloading etc
 
 .PHONY: build
 build: ###dev Build the (dev) libraries, ready for testing/playing
-	npx webpack --mode=development
+	webpack --mode=${NPM_MODE}
+
 
 .PHONY: compile
-compile: ###dev Compile haxe->js
-	haxe build-metaframe.hxml
-	haxe build-metapage.hxml
+compile: build ###dev Compile haxe->js
+	# haxe build-metaframe.hxml
+	# haxe build-metapage.hxml
+	# webpack
 
 .PHONY: clean
 clean: ###dev Delete compiled files

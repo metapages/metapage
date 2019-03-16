@@ -36,7 +36,7 @@ steps:
     - |
       ln -s /node_modules .
       ln -s /.haxelib .
-      npx webpack --mode=production
+      NPM_MODE=production make build
 
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
   id: 'test'
