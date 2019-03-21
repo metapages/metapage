@@ -201,19 +201,14 @@ class Metaframe extends EventEmitter
 	function setInputsInternal(inputs :MetaframeInputMap, notifyParent :Bool)
 	{
 		log('setInputsInternal ${inputs}');
-		if (inputs == null) {
-			return;
-		}
-		_inputPipeValues = _inputPipeValues.merge(inputs);
-		if (notifyParent) {
+		if (!_inputPipeValues.merge(inputs)) {
 			// Tell the metapage parent
 			sendRpc(JsonRpcMethodsFromChild.InputsUpdate, inputs);
+			for (pipeId in inputs.keys()) {
+				emit(MetaframeEvents.Input, pipeId, inputs[pipeId]);
+			}
+			emit(MetaframeEvents.Inputs, _inputPipeValues);
 		}
-		
-		for (pipeId in inputs.keys()) {
-			emit(MetaframeEvents.Input, pipeId, inputs[pipeId]);
-		}
-		emit(MetaframeEvents.Inputs, _inputPipeValues);
 	}
 
 	/**
@@ -268,10 +263,9 @@ class Metaframe extends EventEmitter
 
 	public function setOutputs(outputs :MetaframeInputMap) :Void
 	{
-		if (outputs == null) {
+		if (!_outputPipeValues.merge(outputs)) {
 			return;
 		}
-		_outputPipeValues = _outputPipeValues.merge(outputs);
 		sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
 	}
 
