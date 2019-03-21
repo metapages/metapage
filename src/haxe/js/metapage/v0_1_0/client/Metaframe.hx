@@ -202,13 +202,14 @@ class Metaframe extends EventEmitter
 	{
 		log('setInputsInternal ${inputs}');
 		if (!_inputPipeValues.merge(inputs)) {
-			// Tell the metapage parent
-			sendRpc(JsonRpcMethodsFromChild.InputsUpdate, inputs);
-			for (pipeId in inputs.keys()) {
-				emit(MetaframeEvents.Input, pipeId, inputs[pipeId]);
-			}
-			emit(MetaframeEvents.Inputs, _inputPipeValues);
+			return;
 		}
+		// Tell the metapage parent
+		sendRpc(JsonRpcMethodsFromChild.InputsUpdate, inputs);
+		for (pipeId in inputs.keys()) {
+			emit(MetaframeEvents.Input, pipeId, inputs[pipeId]);
+		}
+		emit(MetaframeEvents.Inputs, _inputPipeValues);
 	}
 
 	/**
