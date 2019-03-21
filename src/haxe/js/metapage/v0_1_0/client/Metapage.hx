@@ -514,10 +514,9 @@ class IFrameRpcClient
 
 		// Add the custom URL params
 		var urlBlob = new js.html.URL(url);
-		var searchParams = new js.html.URLSearchParams(urlBlob.search);
-		searchParams.set(URL_PARAM_METAFRAME_ID, iframeId);
+		urlBlob.searchParams.set(URL_PARAM_METAFRAME_ID, iframeId);
 		if (debug) {
-			searchParams.set(URL_PARAM_DEBUG, '1');
+			urlBlob.searchParams.set(URL_PARAM_DEBUG, '1');
 		}
 		url = urlBlob.href;
 
@@ -554,14 +553,11 @@ class IFrameRpcClient
 	/**
 	 * Sends the updated inputs to the iframe
 	 */
+	var _cachedEventInputsUpdate = {iframeId:null,inputs:null};
 	public function setInputs(maybeNewInputs :MetaframeInputMap)
 	{
 		log({m:'IFrameRpcClient', inputs:maybeNewInputs});
-
-		var previous = _inputs;
-		_inputs = _inputs.merge(maybeNewInputs);
-
-		if (_inputs == previous) {
+		if (!_inputs.merge(maybeNewInputs)) {
 			return;
 		}
 		if (!_loaded) {
@@ -575,8 +571,9 @@ class IFrameRpcClient
 		}
 		// Send all of the inputs. Consumers can use nested equality
 		// to know what has actually been updated.
-		var e = {iframeId:id, inputs:_inputs};
-		_metapage.emit(JsonRpcMethodsFromParent.InputsUpdate, e);
+		_cachedEventInputsUpdate.iframeId = id;
+		_cachedEventInputsUpdate.inputs = _inputs;
+		_metapage.emit(JsonRpcMethodsFromParent.InputsUpdate, _cachedEventInputsUpdate);
 	}
 
 	public function setOutput(pipeId :MetaframePipeId, updateBlob :Dynamic)
@@ -587,11 +584,10 @@ class IFrameRpcClient
 		setOutputs(outputs);
 	}
 
+	var _cachedEventOutputsUpdate = {iframeId:null,inputs:null};
 	public function setOutputs(maybeNewOutputs :MetaframeInputMap)
 	{
-		var previous = _outputs;
-		_outputs = _outputs.merge(maybeNewOutputs);
-		if (previous == _outputs) {
+		if (!_outputs.merge(maybeNewOutputs)) {
 			return;
 		}
 		_metapage.emit(JsonRpcMethodsFromChild.OutputsUpdate, _outputs);

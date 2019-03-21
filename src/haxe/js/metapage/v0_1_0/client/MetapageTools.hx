@@ -5,34 +5,27 @@ class MetapageTools
 	public static var URL_PARAM_DEBUG = 'MP_DEBUG';
 	public static var URL_PARAM_METAFRAME_ID = 'MF_ID';
 	/**
-	 * Merge rules:
-	 *  - if the new object is null, or empty, just return the existing
-	 *  - otherwise set/update the corresponding values from new to a new current
-	 *  - undefined means remove the key 
-	 * 
+	 * Merges new values into the current object.
+	 * Does NOT check if there are actually new keys.
+	 * Returns true if the original map was modified.
 	 * Use this function via Static Extensions
 	 */
-	public static function merge(current :MetaframeInputMap, newInputs :MetaframeInputMap) :MetaframeInputMap
+	public static function merge(current :MetaframeInputMap, newInputs :MetaframeInputMap) :Bool
 	{
 		if (newInputs == null) {
-			return current;
+			return false;
 		}
-		var newInputsKeys = newInputs.keys();
-		if (newInputsKeys.length == 0) {
-			return current;
-		}
-		var freshInputs :MetaframeInputMap = {};
-		for (pipeId in current.keys()) {
-			freshInputs[pipeId] = current[pipeId];
-		}
-		for (pipeId in newInputsKeys) {
-			freshInputs[pipeId] = newInputs[pipeId];
+		var modified = false;
+		for (pipeId in newInputs.keys()) {
+			modified = true;
 			// Undefined means remove the key
 			if (untyped __strict_eq__(newInputs[pipeId], js.Lib.undefined)) {
-				freshInputs.remove(pipeId);
+				current.remove(pipeId);
+			} else {
+				current[pipeId] = newInputs[pipeId];
 			}
 		}
-		return freshInputs;
+		return modified;
 	}
 
 	public static function getUrlParam(key :String) :Null<String>
