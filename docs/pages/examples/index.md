@@ -1,39 +1,68 @@
 ---
-layout: page
-title: Examples2
-permalink: /examples2/
+layout: default
+title: Examples
+permalink: /examples/
+nav_order: 5
 ---
 
-<h1>Metapage Examples:</h1>
-<ul>
-	<li>
-		<a href="example00-basic/index.html">Example 00: Basic data flow</a>
-		<ul>
-			<li><a href="example00-basic/iframe1/index.html">metaframe1</a></li>
-			<li><a href="example00-basic/iframe2/index.html">metaframe2</a></li>
-		</ul>
-	</li>
-	<li>
-		<a href="example01-updategraph/index.html">Example 01: Piping data from button clicks to a graph</a>
-		<ul>
-			<li><a href="example01-updategraph/button/index.html">button</a></li>
-			<li><a href="example01-updategraph/graph/index.html">graph</a></li>
-		</ul>
-	</li>
-	<li>
-		<a href="example02-workflow-convert-pdb/index.html">Example 02: A workflow converting a protein molecule</a>
-		<ul>
-			<li><a href="example02-workflow-convert-pdb/input-button/index.html">button</a></li>
-			<li><a href="example02-workflow-convert-pdb/molviewer-pv/index.html">graph</a></li>
-		</ul>
-	</li>
-	<li>
-		<a href="example03-linked-molecule-viewers/index.html">Example 03: Linked protein viewers.</a>
-		<ul>
-			<li><a href="example02-workflow-convert-pdb/molviewer-pv/index.html">molviewer-pv</a></li>
-		</ul>
-	</li>
+Metaframes:
+<ul id="metaframes"></ul>
 
 
-</ul>
+Metapages:
+<ul id="metapages"></ul>
 
+
+<script>
+
+function getFirstTokenAfter(s, target) {
+	var tokens = s.split('/');
+	var index = tokens.indexOf(target);
+	if (index > -1) {
+		return tokens[index + 1];
+	} else {
+		return null;
+	}
+}
+
+var metaframes = {};
+var metapages = {};
+
+[
+	{% for metaframe in site.metaframes %}
+	  "{{site.baseurl}}{{ metaframe.id }}".replace('/index', ''),
+	{% endfor %}
+].forEach(function(e) {
+	var token = getFirstTokenAfter(e, 'metaframes');
+	var tokens = e.split('/');
+	var i = tokens.indexOf(token);
+	tokens = tokens.slice(0, i + 1);
+	e = "{{site.url}}" + tokens.join('/');
+	if (!metaframes[token]) {
+		metaframes[token] = true;
+		var element = document.createElement("li");
+		element.innerHTML = '<a href="' + e + '/">' + token + '</a>  <a href="{{site.url}}/tools/metaframeview?url=' + e + '/">inspect</a>';
+		document.getElementById("metaframes").appendChild(element);
+	}
+});
+
+[
+	{% for metapage in site.metapages %}
+	  "{{site.baseurl}}{{ metapage.id }}".replace('/index', ''),
+	{% endfor %}
+].forEach(function(e) {
+	var token = getFirstTokenAfter(e, 'metapages');
+	var tokens = e.split('/');
+	var i = tokens.indexOf(token);
+	tokens = tokens.slice(0, i + 1);
+	e = tokens.join('/');
+	if (!metapages[token]) {
+		metapages[token] = true;
+		// Link to the metapage, metapage.json, metapage in debug mode
+		var element = document.createElement("li");
+		element.innerHTML = '<a href="' + e + '/">' + e.split('/').pop() + '</a>  <a href="{{site.baseurl}}/metapages/' + token + '/metapage.json">metapage.json</a> <a href="{{site.baseurl}}/metapages/' + token + '/?MP_DEBUG=1">debug</a>';
+		document.getElementById("metapages").appendChild(element);
+	}
+});
+
+</script>

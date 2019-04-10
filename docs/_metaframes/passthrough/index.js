@@ -2,7 +2,7 @@ var urlObject = new URL(window.location.href);
 var disableEditParam = urlObject.searchParams.get('edit') == '0' || urlObject.searchParams.get('debug') == 'false';
 
 /* Set up the metaframe channel */
-var mf = new metaframe.Metaframe();
+var mf = new Metaframe();
 
 /*
  * On input pipe update, show value, and pass to output pipe

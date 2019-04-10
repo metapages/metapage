@@ -1,5 +1,9 @@
 ---
 layout: vanilla
+title: Tools
+permalink: /tools/resizer
+parent: Tools
+nav_order: 1
 ---
 
 <head>
@@ -32,7 +36,7 @@ layout: vanilla
 var urlObject = new URL(window.location.href);
 var urlParam = urlObject.searchParams.get('url');
 
-var mp = new metapage.Metapage();
+var mp = new Metapage();
 var metaframe;
 
 var lastWidth = document.getElementById('iframe-wrapper').offsetWidth;
@@ -50,7 +54,7 @@ function outputsize() {
 new ResizeObserver(outputsize).observe(metaframeDiv);
 
 if (urlParam) {
-	metaframe = mp.createIFrame(urlParam);
+	metaframe = mp.addMetaframe(urlParam);
 	metaframeDiv.appendChild(metaframe.iframe);
 } else {
 	var fullUrl = `${window.location.href}?url=${window.location.origin}/metapage/metaframes/passthrough/`;

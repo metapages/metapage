@@ -10,11 +10,11 @@ module.exports = [
 
 function createConfig(source, target, folder) {
 	return {
-		mode: 'development',
-		devtool: 'cheap-module-eval-source-map',
+		mode: 'production',
+		// devtool: 'cheap-module-eval-source-map',
 		entry: './build-' + source + '.hxml',
 		output: {
-			library: source,
+			// library: source,
 			libraryTarget: target,
 			filename: (target == 'window' ? 'browser.js' : 'index.js'),
 			path: __dirname + folder + source
@@ -27,7 +27,7 @@ function createConfig(source, target, folder) {
 					loader: 'haxe-loader',
 					options: {
 						// Webpack builds the production versions, so keep this false
-						debug: true,
+						debug: false,
 					}
 				}
 			]

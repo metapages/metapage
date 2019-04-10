@@ -16,8 +16,6 @@ layout: vanilla
 	}
 </style>
 
-
-
 </head>
 
 <body>

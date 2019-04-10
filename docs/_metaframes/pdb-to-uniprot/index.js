@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new metaframe.Metaframe();
+var metaframe = new Metaframe();
 
 function setText(text) {
 	document.getElementById("output").innerHTML = text;

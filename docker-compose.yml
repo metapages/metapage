@@ -1,5 +1,9 @@
 version: '2.3'
 
+networks:
+  bridge:
+    driver: bridge
+
 services:
 
   builder:
@@ -9,3 +13,31 @@ services:
       target: builder
       cache_from:
         - ${DOCKER_REPOSITORY}:builder
+    networks:
+      - bridge
+
+  test:
+    depends_on:
+      jekyll:
+        condition: service_healthy
+    build:
+      context: .
+      target: test
+      cache_from:
+        - ${DOCKER_REPOSITORY}:builder
+    networks:
+      - bridge
+
+  jekyll:
+    image: ${DOCKER_REPOSITORY}:jekyll
+    build:
+      context: ./docs
+      cache_from:
+        - ${DOCKER_REPOSITORY}:jekyll
+    command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
+    ports:
+      - "4000:${PORT_METAPAGE:-4000}"
+    networks:
+      - bridge
+    environment:
+     - "JEKYLL_GITHUB_TOKEN=${JEKYLL_GITHUB_TOKEN}"

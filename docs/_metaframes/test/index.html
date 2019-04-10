@@ -1,0 +1,105 @@
+---
+layout: vanilla
+---
+<!-- 
+    This is a metaframe for functionally testing core functionality and verifiying
+    ALL versions of metaframes work with ALL versions of metapages.
+ -->
+<head>
+        <script src="https://cdn.jsdelivr.net/npm/compare-versions@3.4.0/index.js"></script>
+</head>
+<body style="background-color:yellow;">
+    <div id='body'></div>
+    <div id='status'>RUNNING TESTS...</div>
+</body>
+
+<script>
+
+// Download the specific metaframe library version
+// to make it easier to test all versions against all
+var urlParams = new URLSearchParams(window.location.search);
+var VERSION = urlParams.get('VERSION');
+VERSION = VERSION == null ? 'latest' : VERSION;
+document.getElementById('body').innerText = `Metaframe version=${VERSION}`;
+var head = document.getElementsByTagName('head').item(0);
+var script = document.createElement('script');
+script.setAttribute('type', 'text/javascript');
+if (VERSION == 'latest') {
+    script.setAttribute('src', `/js/metaframe/browser.js`);
+} else {
+    script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/browser.js`);
+}
+head.appendChild(script);
+
+const runTest = async() => {
+    if (VERSION == 'latest') {
+        var mf = new Metaframe();
+    } else if (window.compareVersions('0.1.35', VERSION) <= 0) {
+        // earlier versions have the annoying package name (since removed)
+        var mf = new metaframe.Metaframe();
+    } else {
+        var mf = new Metaframe();
+    }
+    await mf.ready;
+
+    var promises = [
+        new Promise((resolve, reject) => {
+            let unbind;
+            unbind = mf.onInput('save-input-check', function(value) {
+                if (value == mf._iframeId) {
+                    resolve(true);
+                } else {
+                    reject(`'save-input-check' != '${mf._iframeId}'`);
+                }
+                unbind();
+            });
+        }),
+        new Promise((resolve, reject) => {
+            let unbind;
+            unbind = mf.onInput('input', function(value) {
+                resolve(true);
+                unbind();
+            });
+        }),
+    ];
+
+    // The metapage will verify that inputs can be sent from the metaframe
+    mf.setInput('save-input-check', mf._iframeId);
+
+    const onUpdate = (value) => {
+        if (value == null) {
+            return;
+        }
+        if (typeof(value) === 'object') {
+            value.versions = value.versions ? value.versions : [];
+            value.versions.push(VERSION);
+            if (mf.getOutput('output') == null || JSON.stringify(mf.getOutput('output').versions) != JSON.stringify(value.versions)) {
+                mf.setOutput("output", value);
+            }
+        }
+    }
+    
+    // Update from the initial inputs
+    onUpdate(mf.getInput('input'));
+
+    // When I get the input array, add my version to the list
+    // This will be passed around to all metaframe in the version list
+    mf.onInput('input', function(value) {
+        onUpdate(value);
+    });
+
+    Promise.all(promises)
+        .then(() => {
+            document.body.style.backgroundColor = "green";
+            document.getElementById('status').innerText = "METAFRAME TESTS PASS!";
+        })
+        .catch((err) => {
+            document.body.style.backgroundColor = "red";
+            document.getElementById('status').innerText = "METAFRAME TESTS FAIL:<br/>" + err;
+        });
+}
+
+// Run the test only when the metaframe library is loaded
+window.onload = runTest;
+
+</script>

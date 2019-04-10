@@ -1,14 +1,12 @@
-#Site settings
-source: ./
-title: Metapages
-baseurl: ""
-
 #Controls logic for changing asset urls
 environment: production
 
-# Build settings
-markdown: kramdown
-theme: minima
+#Site settings
+source: ./
+title: Metapages
+# description: A short description of your site's purpose
+baseurl: ""
+repository: dionjwa/metapage
 
 include: ['pages']
 collections:
@@ -22,3 +20,18 @@ collections:
 webrick:
   headers:
     "Access-Control-Allow-Origin": "*"
+
+# Build settings
+markdown: kramdown
+# How to change themes: https://jekyllrb.com/docs/themes/
+# theme: jekyll-theme-minimal
+
+remote_theme: pmarsceill/just-the-docs
+# https://pmarsceill.github.io/just-the-docs//docs/configuration/
+# Enable or disable the site search
+# This doesn't work yet
+# theme: just-the-docs
+plugins:
+  - jekyll-remote-theme
+# search_enabled: false
+# remote_theme: null
