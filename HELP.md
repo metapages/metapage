@@ -15,6 +15,10 @@ Publishing:
 
     # release a new patch version
     make publish-new-version
+    OR
+    NEW_VERSION=<patch|exact semver|etc> make publish-new-version
+    E.G.:
+    NEW_VERSION=0.2.0 make publish-new-version
 
     # create a new library version (as automated as possible)
     # 1. ensure the version is good in haxe. change haxe versions rarely, these correspond to major API versions
