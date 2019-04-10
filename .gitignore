@@ -17,7 +17,6 @@ client/bridge/lib/workflow-client.js
 gitcache
 _site
 .sass-cache
-Gemfile.lock
 docs/js/metaframe*
 docs/js/metapage*
 build

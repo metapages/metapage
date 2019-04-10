@@ -17,7 +17,7 @@ Metaframe 1 (an iframe)
 
 {% include metaframe_lib_script.html %}
 <script>
-var connection = new metaframe.Metaframe();
+var connection = new Metaframe();
 
 var letters = '♞☯☭☢€☎∞❄♫☂★☀✓❤✆✇✈✂✄❀❁❂❃✻✼✽✾✿✧✨✩✪✫✍✎✏';
 

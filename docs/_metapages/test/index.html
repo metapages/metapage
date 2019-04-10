@@ -1,0 +1,131 @@
+---
+layout: vanilla
+---
+
+<head></head>
+<body style="background-color:yellow;">
+    <div id='version'></div>
+    <div id='status'>RUNNING TESTS...</div>
+    <div id='body'></div>
+</body>
+
+<script>
+// Download the specific metaPAGE library version
+// to make it easier to test all versions against all
+var urlParams = new URLSearchParams(window.location.search);
+var VERSION = urlParams.get('VERSION');
+VERSION = VERSION == null ? 'latest' : VERSION;
+document.getElementById('version').innerText = `Metapage version=${VERSION}`;
+var head = document.getElementsByTagName('head').item(0);
+var script = document.createElement('script');
+script.setAttribute('type', 'text/javascript');
+if (VERSION == 'latest') {
+    script.setAttribute('src', `/js/metapage/browser.js`);
+} else {
+    script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metapage@${VERSION}/browser.js`);
+}
+head.appendChild(script);
+
+window.onload = function() {
+
+    //TODO generate this dynamically 
+    const metaPageDefinition = {
+        version: "0.2",
+        metaframes: {},
+    };
+
+    // The metaframes are arranged in a line, latest first
+    // each will pass the next a data blob. At the end the
+    // metapage will verify that all metaframes added their versions
+    const VERSIONS_METAFRAME = ['latest', '0.1.35'];
+    VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
+        // const url = `{{site.url}}/metaframes/test/?VERSION=${versionMetaframe}`;
+        const url = `/metaframes/test/?VERSION=${versionMetaframe}`;
+        metaPageDefinition.metaframes[versionMetaframe] = {"url": url};
+        if (index > 0) {
+            metaPageDefinition.metaframes[versionMetaframe].inputs = [
+                {
+                    metaframe: VERSIONS_METAFRAME[index - 1],
+                    source: 'output',
+                    target: 'input',
+                }
+            ]
+        }
+    });
+
+    console.log(JSON.stringify(metaPageDefinition));
+
+    var metapage = Metapage.from(metaPageDefinition);
+
+    // Ensure all metaframes can send inputs
+    var promises = [];
+    metapage.metaframeIds().forEach((metaframeId) => {
+        promises.push(new Promise((resolve, reject) => {
+            const metaframe = metapage.get(metaframeId);
+            let hasSendTestInputsFromMetaframe = false;
+            metaframe.onInputs((inputs) => {
+                // console.log('metaframe inputs', inputs);
+                if (!hasSendTestInputsFromMetaframe) {
+                    if (inputs['save-input-check']) {
+                        hasSendTestInputsFromMetaframe = true;
+                        if (inputs['save-input-check'] == metaframeId) {
+                            resolve(true);
+                        } else {
+                            reject(`'save-input-check' != '${metaframeId}'`);
+                        }
+                    }
+                }
+            });
+        }));
+    });
+
+    // Look to the outputs of the LAST metaframe
+    promises.push(new Promise((resolve, reject) => {
+        const lastMetaframe = metapage.get(VERSIONS_METAFRAME[VERSIONS_METAFRAME.length - 1]);
+        let hasFinalOutputs = false
+        lastMetaframe.onOutputs((outputs) => {
+            if (outputs['output']) {
+                hasFinalOutputs = true;
+                const finalVersions = outputs['output'].versions;
+                if (JSON.stringify(VERSIONS_METAFRAME) == JSON.stringify(finalVersions)) {
+                    resolve(true);
+                } else {
+                    reject(`VERSIONS_METAFRAME != '${finalVersions}'`);
+                }
+            }
+        });
+    }));
+
+
+
+    
+    var iframes = metapage.iframes();
+    // Add the metaframe iframes to the page
+    for (var key in iframes) {
+        var div = document.createElement("div");
+        div.appendChild(iframes[key]);
+        document.getElementById("body").appendChild(div);
+    }
+
+    // Start the train. Metaframes will add their version to the
+    // array and pass it on
+    metapage.setInput({
+        latest: {
+            input: {
+                versions:[]
+            }
+        }
+    });
+
+    Promise.all(promises)
+        .then(() => {
+            document.body.style.backgroundColor = "green";
+            document.getElementById('status').innerText = "METAPAGE TESTS PASS!";
+        })
+        .catch((err) => {
+            document.body.style.backgroundColor = "red";
+            document.getElementById('status').innerText = "METAPAGE TESTS FAIL:<br/>" + err;
+        })
+};
+
+</script>

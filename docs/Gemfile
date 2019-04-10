@@ -6,8 +6,9 @@ gem "jekyll-sitemap"
 gem "jekyll-feed"
 gem "jekyll-paginate"
 gem "jekyll-gist"
-gem "minima"
 gem "kramdown"
 gem "rouge"
 gem "jekyll-watch"
-# gem "github-pages", group: :jekyll_plugins
+gem "jekyll-remote-theme"
+gem "github-pages", group: :jekyll_plugins
+gem "just-the-docs"

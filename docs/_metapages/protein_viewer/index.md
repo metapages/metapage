@@ -28,8 +28,8 @@ fetch('metapage.json')
 		return response.json();
 	})
 	.then(function (metaPageDefinition) {
-  	var mp = metapage.Metapage.fromDefinition(metaPageDefinition);
-  	var iframes = mp.get_iframes();
+  	var mp = Metapage.from(metaPageDefinition);
+  	var iframes = mp.iframes();
 
   	for (var key in iframes) {
       var parent = document.getElementById("_" + key);

@@ -1,7 +1,3 @@
-.PHONY: serve
-serve: install compile
-	cd docs && ${DOCKER_COMPOSE} up
-
 .PHONY: tag
 tag:
 	sed -i '' "s#<script src=\"https://cdn.jsdelivr.net.*#<script src=\"https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/index.js\"></script>#" docs/_includes/metaframe_lib_script.html

@@ -1,21 +1,20 @@
 ---
 ---
-
 {
-    "version": "0.1.0",
-    "iframes": {
-      "button": {
-        "url": "{{site.baseurl}}/metaframes/button-demo/"
-      },
-      "graph": {
-        "url": "{{site.baseurl}}/metaframes/graph-demo/",
-        "inputs": [
-          {
-            "metaframe": "button",
-            "source": "button_out",
-            "target": "graph_input"
-          }
-        ]
-      }
+  "version": "0.2",
+  "metaframes": {
+    "button": {
+      "url": "{{site.url}}/metaframes/button-demo/"
+    },
+    "graph": {
+      "url": "{{site.url}}/metaframes/graph-demo/",
+      "inputs": [
+        {
+          "metaframe": "button",
+          "source": "button_out",
+          "target": "graph_input"
+        }
+      ]
     }
+  }
 }

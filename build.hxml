@@ -6,10 +6,10 @@ build-base.hxml
 
 --each
 
-js.metapage.v0_1_0.client.Metaframe
+js.metapage.client.Metaframe
 -js docs/js/metaframe.js
 
 --next
 
-js.metapage.v0_1_0.client.Metapage
+js.metapage.client.Metapage
 -js build/compile/metapage.js

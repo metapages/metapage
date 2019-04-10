@@ -46,7 +46,25 @@ layout: vanilla
 	</div>
 	
 	{% include metapage_lib_script.html %}
-	<script src="index.js"></script>
+<script>
+fetch('metapage.json')
+	.then((response) => {
+		return response.json();
+	})
+	.then((metaPageDefinition) => {
+		var metapage = Metapage.from(metaPageDefinition);
+		metapage.metaframeIds().forEach((key) => {
+			if (window.document.getElementById(key) != null) {
+				window.document.getElementById(key).appendChild(metapage.get(key).iframe);
+			} else {
+				window.document.body.appendChild(metapage.get(key).iframe);
+			}
+		});
+	})
+	.catch(function (error) {
+		console.error(error);
+	});
+</script>
 </body>
 
 

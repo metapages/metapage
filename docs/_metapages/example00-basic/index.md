@@ -51,14 +51,14 @@ These metaframes add a random letter to the input string then pass it back:
 
 </body>
 <script>
-var connectionManager = new metapage.Metapage();
+var connectionManager = new Metapage();
 
 var url1 = '{{site.baseurl}}/metaframes/example00_iframe1/';
-var iframe1 = connectionManager.createIFrame(url1, 'iframe1');
+var iframe1 = connectionManager.addMetaframe(url1, 'iframe1');
 document.getElementById("left").appendChild(iframe1.iframe);
 
 var url2 = '{{site.baseurl}}/metaframes/example00_iframe2/';
-var iframe2 = connectionManager.createIFrame(url2, 'iframe2');
+var iframe2 = connectionManager.addMetaframe(url2, 'iframe2');
 document.getElementById("right").appendChild(iframe2.iframe);
 
 connectionManager.addPipe(iframe2.id, {metaframe:iframe1.id, source:'fooOut', target:'fooIn'});

@@ -118,6 +118,7 @@ ci-test-no-build: guard-env-DOCKER_REGISTRY
 	@# Cycle through all test services one at a time
 	@grep "^  test[a-zA-Z0-9_.-]*:" ${COMPOSE_CI_FILE} | while read -r line ; do \
 		export COMPOSE_TEST_SERVICE=$$(cut -d':' -f1 <<<"$${line}") ; \
+		echo "${COMPOSE_CI} up --abort-on-container-exit --remove-orphans --exit-code-from $${COMPOSE_TEST_SERVICE} $${COMPOSE_TEST_SERVICE}" ; \
 		${COMPOSE_CI} up --abort-on-container-exit --remove-orphans --exit-code-from $${COMPOSE_TEST_SERVICE} $${COMPOSE_TEST_SERVICE} ; \
 	done
 
@@ -165,30 +166,33 @@ ci-local-test-google-cloud-build: ci-down ###ci CI: run GCE cloud build locally
 # Typically this should not be changed.
 BUILDER_DOCKER_IMAGE ?= ${DOCKER_REGISTRY}/${PROJECT_NAME}:builder
 
-BUILDER_SHELL_PARAMS ?= -e HIST_FILE=/root/.bash_history -v ${HOME}/.bash_history:/root/.bash_history
+BUILDER_SHELL_PARAMS      ?= -e HIST_FILE=/root/.bash_history -v ${HOME}/.bash_history:/root/.bash_history
+BUILDER_SHELL_PWD_MOUNT   ?= /workspace
+BUILDER_SHELL_WORKING_DIR ?= /workspace
+BUILDER_SHELL_SHELL       ?= /bin/bash
 
 # Mount docker first
 .PHONY: ci-shell
 ci-shell: ci-pull ci-build ci-shell-no-build ###ci BUILD: create a shell inside a docker container will ALL required build tools, and local project mounted. Not host installs required.
 
-# TODO: remove -v ${PWD}:${PWD} \ ?
 # ci-shell but without the build step
 .PHONY: ci-shell-no-build
 ci-shell-no-build:
 	@docker run --rm -ti \
-		-v ${PWD}:${PWD} \
+		-v ${PWD}:${BUILDER_SHELL_PWD_MOUNT}:cached \
+		-w ${BUILDER_SHELL_WORKING_DIR} \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		${BUILDER_SHELL_PARAMS} \
 		-e "PS1=\[\033[01;34m\]docker-${PROJECT_NAME} [\W]\[\033[00m\]$$ " \
-		--entrypoint="" \
-		${BUILDER_DOCKER_IMAGE} /bin/bash
+		${BUILDER_DOCKER_IMAGE} ${BUILDER_SHELL_SHELL}
+
 
 ci-shell-%: ###ci BUILD: Convenience command: run the % make command in the builder environment
 	@docker run --rm -ti \
-		-v ${PWD}:${PWD} \
+		-v ${PWD}:${BUILDER_SHELL_PWD_MOUNT}:cached \
+		-w ${BUILDER_SHELL_WORKING_DIR} \
 		-v /var/run/docker.sock:/var/run/docker.sock \
 		${BUILDER_SHELL_PARAMS} \
-		--entrypoint="" \
 		${BUILDER_DOCKER_IMAGE} make $*
 
 ##################################################################

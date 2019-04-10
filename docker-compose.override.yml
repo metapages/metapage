@@ -1,14 +1,25 @@
 version: '2.3'
 
 services:
+  build:
+    volumes:
+     # We need to mount all this shit because node_modules must be in the project root
+      - ./build:/workspace/build
+      - ./docs:/workspace/docs
+      - ./etc:/workspace/etc
+      - ./src:/workspace/src
+      - ./build-base.hxml:/workspace/build-base.hxml
+      - ./build-metaframe.hxml:/workspace/build-metaframe.hxml
+      - ./build-metapage.hxml:/workspace/build-metapage.hxml
+      - ./webpack.config.js:/workspace/webpack.config.js
+
+  test:
+    command: ["/bin/sh", "-c", "nodemon --watch docs/js test/test.js"]
+    volumes:
+      - ./docs:/workspace/docs
+      - ./etc:/workspace/etc
+      - ./test:/workspace/test
 
   jekyll:
-    image: jekyll/jekyll:3.8.5
-    build:
-      context: .
-      dockerfile: etc/jekyll/Dockerfile
-    command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
-    ports:
-      - "4000:${PORT_METAPAGE:-4000}"
     volumes:
-      - ./docs:/srv/jekyll
+      - ./docs:/srv/jekyll:cached

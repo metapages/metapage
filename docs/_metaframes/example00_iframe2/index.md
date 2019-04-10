@@ -17,7 +17,7 @@ Metaframe 2 (an iframe)
 <script>
 var letters = '♞☯☭☢€☎∞❄♫☂★☀✓❤✆✇✈✂✄❀❁❂❃✻✼✽✾✿✧✨✩✪✫✍✎✏';
 
-var connection = new metaframe.Metaframe();
+var connection = new Metaframe();
 
 connection.onInput('fooIn', function(value) {
   connection.log('got fooIn: ' + value);

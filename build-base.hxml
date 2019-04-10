@@ -4,3 +4,5 @@
 -lib hxassert:0.1.0
 
 -cp src/haxe
+
+-D webpack_nonamedchunks
