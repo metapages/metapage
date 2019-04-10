@@ -17,24 +17,14 @@
         "iframe",
         "metaframe",
         "metapage",
-        "webworkers"
+        "postmessage",
+        "workflow"
     ],
     "author": "Dion Amago Whitehead <dion@transition9.com>",
     "scripts": {
         "postversion": "git push && git push --tags && rm -rf build",
-        "test": "jest --runInBand test/jest.test.js",
+        "test": "node test/test.js",
         "version": "make publish-update-jekyll-script-links && git add -u ."
     },
-    "license": "Apache-2.0",
-    "jest": {
-        "verbose": true,
-        "preset": "jest-puppeteer",
-        "modulePathIgnorePatterns": [
-            "<rootDir>/.haxelib/",
-            "<rootDir>/src/",
-            "<rootDir>/.git/",
-            "<rootDir>/docs/",
-            "<rootDir>/build/"
-        ]
-    }
+    "license": "Apache-2.0"
 }
