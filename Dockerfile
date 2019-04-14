@@ -13,7 +13,9 @@ RUN apk --no-cache add \
 	nodejs nodejs-npm \
 	python-dev \
   	py-pip \
-	openssl-dev libffi-dev
+	openssl-dev \
+	libffi-dev \
+	the_silver_searcher
 
 RUN pip install --upgrade pip==19.0.3
 

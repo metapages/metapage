@@ -4,6 +4,9 @@ class MetapageTools
 {
 	public static var URL_PARAM_DEBUG = 'MP_DEBUG';
 	public static var URL_PARAM_METAFRAME_ID = 'MF_ID';
+
+	static var minimatch :String->String->Bool = js.Lib.require('minimatch');
+	
 	/**
 	 * Merges new values into the current object.
 	 * Does NOT check if there are actually new keys.
@@ -26,6 +29,20 @@ class MetapageTools
 			}
 		}
 		return modified;
+	}
+
+	public static function getMatchingVersion(version :String) :MetaframeDefinitionVersion
+	{
+		if (minimatch(version, '0.0.*')) {
+			return MetaframeDefinitionVersion.V0_0_1;
+		} else if (minimatch(version, '0.1.*') || minimatch(version, '0.1')) {
+			return MetaframeDefinitionVersion.V0_1_0;
+		} else if (minimatch(version, '0.2.*') || minimatch(version, '0.2')) {
+			return MetaframeDefinitionVersion.V0_2;
+		} else {
+			// Return something, assume latest
+			return MetaframeDefinitionVersion.V0_2;
+		}
 	}
 
 	public static function getUrlParam(key :String) :Null<String>

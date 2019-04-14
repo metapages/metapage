@@ -14,7 +14,11 @@ layout: vanilla
 // to make it easier to test all versions against all
 var urlParams = new URLSearchParams(window.location.search);
 var VERSION = urlParams.get('VERSION');
+{% if jekyll.environment == "production" %}
+VERSION = VERSION == null ? '{{site.data.lib_versions.metapage}}' : VERSION;
+{% else %}
 VERSION = VERSION == null ? 'latest' : VERSION;
+{% endif %}
 document.getElementById('version').innerText = `Metapage version=${VERSION}`;
 var head = document.getElementsByTagName('head').item(0);
 var script = document.createElement('script');
@@ -30,14 +34,21 @@ window.onload = function() {
 
     //TODO generate this dynamically 
     const metaPageDefinition = {
-        version: "0.2",
+        version: "{{site.data.lib_versions.all.last}}",
         metaframes: {},
     };
 
     // The metaframes are arranged in a line, latest first
     // each will pass the next a data blob. At the end the
     // metapage will verify that all metaframes added their versions
-    const VERSIONS_METAFRAME = ['latest', '0.1.35'];
+    const VERSIONS_METAFRAME = [];
+{% for v in site.data.lib_versions.all %}
+    VERSIONS_METAFRAME.push("{{v}}");
+{% endfor %}
+{% if jekyll.environment != "production" %}
+    VERSIONS_METAFRAME.push('latest');
+{% endif %}
+    
     VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
         // const url = `{{site.url}}/metaframes/test/?VERSION=${versionMetaframe}`;
         const url = `/metaframes/test/?VERSION=${versionMetaframe}`;

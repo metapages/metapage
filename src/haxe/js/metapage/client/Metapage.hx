@@ -12,6 +12,7 @@ class Metapage extends EventEmitter
 {
 	public static var INPUTS = MetapageEvents.Inputs;
 	public static var OUTPUTS = MetapageEvents.Outputs;
+	static var minimatch :String->String->Bool = js.Lib.require('minimatch');
 
 	public static function from(metaPageDef :Dynamic, ?inputs :Dynamic)
 	{
@@ -25,12 +26,11 @@ class Metapage extends EventEmitter
 				throw 'Cannot parse into JSON:\n${metaPageDef}';
 			}
 		}
-		var version :MetaframeDefinitionVersion = metaPageDef.version;
-		return switch(version) {
+		return switch(getMatchingVersion(metaPageDef.version)) {
 			case V0_0_1: return fromDefinitionV0_0_1(metaPageDef);
 			case V0_1_0: return fromDefinitionV0_1_0(metaPageDef, inputs);
 			case V0_2:   return fromDefinitionV0_2(metaPageDef, inputs);
-			default: throw 'Unknown metapage version: ${version}';
+			default: throw 'Unknown metapage version: ${metaPageDef.version}';
 		}
 	}
 
@@ -229,7 +229,7 @@ class Metapage extends EventEmitter
 	//       }
 	//     }
 	// }
-	static var minimatch :String->String->Bool = js.Lib.require('minimatch');
+	
 	function getInputsFromOutput(source :MetaframeId, outputPipeId :MetaframePipeId) :Array<{metaframe :MetaframeId, pipe :MetaframePipeId}>
 	{
 		// Do all the cache checking
