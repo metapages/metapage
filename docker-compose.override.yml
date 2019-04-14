@@ -1,7 +1,7 @@
 version: '2.3'
 
 services:
-  build:
+  builder:
     volumes:
      # We need to mount all this shit because node_modules must be in the project root
       - ./build:/workspace/build
