@@ -10,6 +10,7 @@ package js.metapage.client;
 @:keep
 class Metapage extends EventEmitter
 {
+	inline public static var version :MetaframeDefinitionVersion = MetaframeDefinitionVersion.V0_2;
 	public static var INPUTS = MetapageEvents.Inputs;
 	public static var OUTPUTS = MetapageEvents.Outputs;
 	static var minimatch :String->String->Bool = js.Lib.require('minimatch');
@@ -32,6 +33,11 @@ class Metapage extends EventEmitter
 			case V0_2:   return fromDefinitionV0_2(metaPageDef, inputs);
 			default: throw 'Unknown metapage version: ${metaPageDef.version}';
 		}
+	}
+
+	public static function getLibraryVersionMatching(version :String) :MetaframeDefinitionVersion
+	{
+		return MetapageTools.getMatchingVersion(version);
 	}
 
 	// Current input values
@@ -351,7 +357,6 @@ class Metapage extends EventEmitter
 				 * The response is idempotent.
 				 */
 				case SetupIframeClientRequest:
-					log('SetupIframeClientRequest from unknown, registered all metaframes');
 					for (iframeId in _iframes.keys()) {
 						var iframeClient = _iframes.get(iframeId);
 						iframeClient.register();
@@ -359,7 +364,6 @@ class Metapage extends EventEmitter
 
 				/* A client iframe responded */
 				case SetupIframeServerResponseAck:
-					log('SetupIframeServerResponseAck iframeId=${jsonrpc.iframeId} jsonrpc.params=${Json.stringify(jsonrpc.params, null, "  ")}');
 					/* Send all inputs when a client has registered.*/
 					var params :SetupIframeClientAckData = jsonrpc.params;
 					var iframe = _iframes.get(jsonrpc.iframeId);
@@ -416,19 +420,6 @@ class Metapage extends EventEmitter
 					// Set the global inputs cache
 					// Currently on for setting metaframe inputs that haven't loaded yet
 					setInputCache(metaframeId, inputs);
-				case Dimensions:
-					log('${jsonrpc.iframeId} Dimensions ${Json.stringify(jsonrpc.params).substr(0, 200)}');
-					// var dimensions :{height:Float,width:Float} = jsonrpc.params;
-					// debug('${jsonrpc.iframeId} Dimensions ${dimensions}');
-					// var iframe = _iframes.get(jsonrpc.iframeId);
-					// if (iframe != null) {
-					// 	if (dimensions.height != null) {
-					// 		iframe.iframe.height = '${dimensions.height}px';
-					// 	}
-					// 	if (dimensions.width != null) {
-					// 		iframe.iframe.width = '${dimensions.width}px';
-					// 	}
-					// }
 			}
 
 			emit(OtherEvents.Message, jsonrpc);
@@ -579,7 +570,7 @@ class IFrameRpcClient extends EventEmitter
 	var _cachedEventInputsUpdate = {iframeId:null,inputs:null};
 	public function setInputs(maybeNewInputs :MetaframeInputMap)
 	{
-		log({m:'IFrameRpcClient', inputs:maybeNewInputs});
+		// log({m:'IFrameRpcClient', inputs:maybeNewInputs});
 		if (!_inputs.merge(maybeNewInputs)) {
 			return;
 		}
@@ -587,10 +578,13 @@ class IFrameRpcClient extends EventEmitter
 			_sendInputsAfterRegistration = true;
 		}
 		// Only send the new inputs to the actual metaframe iframe
+		// if it's not registered, don't worry, inputs are merged,
+		// and when the metaframe is registered, current inputs will
+		// be sent
 		if (this.iframe.parentNode != null && _loaded) {
 			sendInputs(maybeNewInputs);
-		} else {
-			log('Not setting input bc _loaded=$_loaded');
+		// } else {
+		// 	log('Not setting input bc _loaded=$_loaded');
 		}
 
 		// Notify
@@ -621,6 +615,10 @@ class IFrameRpcClient extends EventEmitter
 			return;
 		}
 		this.emit(MetapageEvents.Outputs, maybeNewOutputs);
+
+		for (outputPipeId in maybeNewOutputs.keys()) {
+			log('output [${outputPipeId}]');
+		}
 		if (_metapage.isListeners(MetapageEvents.Outputs)) {
 			var outputsUpdate :MetapageInstanceInputs = {};
 			outputsUpdate[this.id] = _outputs;
@@ -680,9 +678,7 @@ class IFrameRpcClient extends EventEmitter
 	}
 
 	/**
-	 * 
-	 * Request that the parent metapage tell us what our
-	 * id is
+	 * Request that the parent metapage tell us what our id is
 	 */
 	public function register()
 	{
@@ -691,11 +687,12 @@ class IFrameRpcClient extends EventEmitter
 		}
 		
 		var response :SetupIframeServerResponseData = {
-			state: {inputs:_inputs},
 			iframeId: id,
 			parentId: _parentId,
+			state   : {inputs:_inputs},
+			version : Metapage.version,
 		};
-		log('register ${Json.stringify(response)}');
+		// log('register ${Json.stringify(response)}');
 		sendRpcInternal(JsonRpcMethodsFromParent.SetupIframeServerResponse, response);
 	}
 
@@ -705,6 +702,8 @@ class IFrameRpcClient extends EventEmitter
 			return;
 		}
 		this.version = version;
+		// Only very old versions don't send their version info
+		// Obsoleted?
 		if (this.version == null) {
 			this.version = MetaframeDefinitionVersion.V0_1_0;
 		}
@@ -719,7 +718,7 @@ class IFrameRpcClient extends EventEmitter
 		if (_sendInputsAfterRegistration) {
 			sendInputs(_inputs);
 		}
-		log('registered version=${this.version}');
+		// log('registered version=${this.version}');
 	}
 
 	function sendInputs(inputs :MetaframeInputMap)

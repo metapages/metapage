@@ -10,7 +10,7 @@ package js.metapage.client;
 @:keep
 class Metaframe extends EventEmitter
 {
-	public static inline var VERSION = MetaframeDefinitionVersion.V0_2;
+	inline public static var version :MetaframeDefinitionVersion = MetaframeDefinitionVersion.V0_2;
 	public static var INPUT = MetaframeEvents.Input;
 	public static var INPUTS = MetaframeEvents.Inputs;
 	public static var MESSAGE = MetaframeEvents.Message;
@@ -19,11 +19,14 @@ class Metaframe extends EventEmitter
 	var _outputPipeValues :MetaframeInputMap = {};
 	var _iframeId :MetaframeId;
 	var _parentId :MetapageId;
-	var _color :String = '';
+	var _parentVersion :MetaframeDefinitionVersion;
 	var _isIframe :Bool;
 
+	
 	public var debug :Bool = false;
 	public var ready(default, null) :Promise<Bool>;
+	public var color :String = '000';
+	
 
 	/**
 	 * This is the (locally) unique id that the parent metapage
@@ -53,32 +56,25 @@ class Metaframe extends EventEmitter
 
 		//Get ready, request the parent to register to establish messaging pipes
 		ready = new Promise(function(resolve, reject) {
+			// First listen to the parent metapage response
 			once(JsonRpcMethodsFromParent.SetupIframeServerResponse, function(params :SetupIframeServerResponseData) {
 
 				if (_iframeId == null) {
 					_iframeId = params.iframeId;
-					_color = MetapageTools.stringToRgb(_iframeId);
+					_parentVersion = params.version;
+					this.color = MetapageTools.stringToRgb(_iframeId);
 					_parentId = params.parentId;
-
-					log('SetupIframeServerResponse params=${Std.string(params)}');
+					log('metapage[${_parentId}](v${_parentVersion != null ? _parentVersion : "unknown"}) registered');
 
 					_inputPipeValues = params.state != null && params.state.inputs != null
 						? params.state.inputs
 						: _inputPipeValues;
 
-					// _outputPipeValues = params.state != null && params.state.outputs != null
-					// 	? params.state.outputs
-					// 	: _outputPipeValues;
-
-					// log('SetupIframeServerResponse _inputPipeValues=${Json.stringify(_inputPipeValues, null, "  ")}');
-					// log('SetupIframeServerResponse _outputPipeValues=${Json.stringify(_outputPipeValues, null, "  ")}');
-
 					//Tell the parent we have registered.
-					sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {version:VERSION});
+					sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {version:version});
 
 					//Send notifications of initial inputs (if non-null)
-					//so you don't have to listen to the ready event if you don't
-					//want to
+					//so you don't have to listen to the ready event if you don't want to
 					if (_inputPipeValues != null && _inputPipeValues.keys().length > 0) {
 						emit(MetaframeEvents.Inputs, _inputPipeValues);
 						for (pipeId in _inputPipeValues.keys()) {
@@ -94,13 +90,14 @@ class Metaframe extends EventEmitter
 					//*** Does this distinction make sense?
 					resolve(true);
 
-					window.addEventListener('resize', sendWindowDimensions);
-					sendWindowDimensions();
+					// window.addEventListener('resize', sendWindowDimensions);
+					// sendWindowDimensions();
 				} else {
 					log('Got JsonRpcMethods.SetupIframeServerResponse but already resolved');
 				}
 			});
-			sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {});
+			// Now that we're listening, request to the parent to register us
+			sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {version:version});
 		});
 	}
 
@@ -109,7 +106,7 @@ class Metaframe extends EventEmitter
 		if (!debug) {
 			return;
 		}
-		logInternal(o, null, null);
+		logInternal(o, color != null ? color : this.color, null);
 	}
 
 	public function warn(o :Dynamic, ?pos:haxe.PosInfos)
@@ -117,13 +114,13 @@ class Metaframe extends EventEmitter
 		if (!debug) {
 			return;
 		}
-		logInternal(o, "000", _color);
+		logInternal(o, "000", color);
 	}
 
 	// public function error(err :Dynamic, ?pos:haxe.PosInfos)
 	public function error(err :Dynamic)
 	{
-		logInternal(err, _color, "f00");
+		logInternal(err, color, "f00");
 	}
 
 	// function logInternal(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
@@ -135,7 +132,7 @@ class Metaframe extends EventEmitter
 			default: Json.stringify(o);
 		}
 
-		color = color != null ? color + '' : _color;
+		color = color != null ? color + '' : color;
 
 		s = (_iframeId != null ? 'Metaframe[$_iframeId] ' : '')  + Std.string(s);
 		MetapageTools.log(s, color, backgroundColor);
@@ -207,12 +204,12 @@ class Metaframe extends EventEmitter
 	}
 
 	function setInternalInputsAndNotify(inputs :MetaframeInputMap)
-	{
-		log('setInternalInputsAndNotify ${inputs}');
+	{		
 		if (!_inputPipeValues.merge(inputs)) {
 			return;
 		}
 		for (pipeId in inputs.keys()) {
+			log('input [${pipeId}]');
 			emit(MetaframeEvents.Input, pipeId, inputs[pipeId]);
 		}
 		emit(MetaframeEvents.Inputs, inputs);
@@ -286,7 +283,6 @@ class Metaframe extends EventEmitter
 			var jsonrpc :MinimumClientMessage = e.data;
 			if (jsonrpc.jsonrpc == '2.0') {//Make sure this is a jsonrpc object
 				var method :JsonRpcMethodsFromParent = cast jsonrpc.method;
-				log('${Json.stringify(jsonrpc, null, "  ")}');
 				if (!(method == JsonRpcMethodsFromParent.SetupIframeServerResponse || (
 					jsonrpc.parentId == _parentId &&
 					jsonrpc.iframeId == _iframeId))) {
@@ -310,39 +306,39 @@ class Metaframe extends EventEmitter
 		}
 	}
 
-	function sendWindowDimensions()
-	{
-		sendDimensions();
-	}
+	// function sendWindowDimensions()
+	// {
+	// 	sendDimensions();
+	// }
 
-	function sendDimensions(?dimensions :{width :Float, height:Float})
-	{
-		var window = Browser.window;
-		if (dimensions == null) {
-			var height = window.document.documentElement.scrollHeight != null ? window.document.documentElement.scrollHeight : window.document.body.scrollHeight;
-			dimensions = {
-				width: null,
-				height:height,
-				"window.innerWidth": window.innerWidth,
-				"window.innerHeight": window.innerHeight,
-				"window.outerWidth": window.outerWidth,
-				"window.outerHeight": window.outerHeight,
-				"window.document.body.scrollHeight": window.document.body.scrollHeight,
-				"window.document.body.scrollWidth": window.document.body.scrollWidth,
-				"window.document.documentElement.scrollHeight": window.document.documentElement.scrollHeight,
-				"window.document.documentElement.scrollWidth": window.document.documentElement.scrollWidth,
-			};
-		} else {
-			if (js.Syntax.typeof(dimensions) != 'object') {
-				throw {dimensions:dimensions, error:'sendDimensions(..) expecting {width:Float, height:Float}'};
-			} else {
-				if (!(Reflect.hasField(dimensions, 'width') && Reflect.hasField(dimensions, 'height'))) {
-					throw {dimensions:dimensions, error:'sendDimensions(..) missing either width or height field, expecting: {width:Float, height:Float}'};
-				}
-			}
-		}
-		sendRpc(JsonRpcMethodsFromChild.Dimensions, dimensions);
-	}
+	// function sendDimensions(?dimensions :{width :Float, height:Float})
+	// {
+	// 	var window = Browser.window;
+	// 	if (dimensions == null) {
+	// 		var height = window.document.documentElement.scrollHeight != null ? window.document.documentElement.scrollHeight : window.document.body.scrollHeight;
+	// 		dimensions = {
+	// 			width: null,
+	// 			height:height,
+	// 			"window.innerWidth": window.innerWidth,
+	// 			"window.innerHeight": window.innerHeight,
+	// 			"window.outerWidth": window.outerWidth,
+	// 			"window.outerHeight": window.outerHeight,
+	// 			"window.document.body.scrollHeight": window.document.body.scrollHeight,
+	// 			"window.document.body.scrollWidth": window.document.body.scrollWidth,
+	// 			"window.document.documentElement.scrollHeight": window.document.documentElement.scrollHeight,
+	// 			"window.document.documentElement.scrollWidth": window.document.documentElement.scrollWidth,
+	// 		};
+	// 	} else {
+	// 		if (js.Syntax.typeof(dimensions) != 'object') {
+	// 			throw {dimensions:dimensions, error:'sendDimensions(..) expecting {width:Float, height:Float}'};
+	// 		} else {
+	// 			if (!(Reflect.hasField(dimensions, 'width') && Reflect.hasField(dimensions, 'height'))) {
+	// 				throw {dimensions:dimensions, error:'sendDimensions(..) missing either width or height field, expecting: {width:Float, height:Float}'};
+	// 			}
+	// 		}
+	// 	}
+	// 	sendRpc(JsonRpcMethodsFromChild.Dimensions, dimensions);
+	// }
 
 	public static function isIframe() :Bool
 	{

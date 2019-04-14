@@ -1,5 +1,7 @@
 package js.metapage.client;
 
+import js.npm.compareversions.CompareVersions.compareVersions;
+
 class MetapageTools
 {
 	public static var URL_PARAM_DEBUG = 'MP_DEBUG';
@@ -33,14 +35,15 @@ class MetapageTools
 
 	public static function getMatchingVersion(version :String) :MetaframeDefinitionVersion
 	{
-		if (minimatch(version, '0.0.*')) {
+		if (compareVersions(version, '0.0.x') <= 0) {
 			return MetaframeDefinitionVersion.V0_0_1;
-		} else if (minimatch(version, '0.1.*') || minimatch(version, '0.1')) {
+		} else if (compareVersions(version, '0.1.36') <= 0) {
 			return MetaframeDefinitionVersion.V0_1_0;
-		} else if (minimatch(version, '0.2.*') || minimatch(version, '0.2')) {
+		} else if (compareVersions(version, '0.2') >= 0) {
 			return MetaframeDefinitionVersion.V0_2;
 		} else {
 			// Return something, assume latest
+			js.Browser.window.console.log('Could not match version=${version} to any known version, assuming ${MetaframeDefinitionVersion.V0_2}');
 			return MetaframeDefinitionVersion.V0_2;
 		}
 	}
