@@ -1,9 +1,14 @@
 package js.metapage.client;
 
+import js.npm.compareversions.CompareVersions.compareVersions;
+
 class MetapageTools
 {
 	public static var URL_PARAM_DEBUG = 'MP_DEBUG';
 	public static var URL_PARAM_METAFRAME_ID = 'MF_ID';
+
+	static var minimatch :String->String->Bool = js.Lib.require('minimatch');
+	
 	/**
 	 * Merges new values into the current object.
 	 * Does NOT check if there are actually new keys.
@@ -26,6 +31,21 @@ class MetapageTools
 			}
 		}
 		return modified;
+	}
+
+	public static function getMatchingVersion(version :String) :MetaframeDefinitionVersion
+	{
+		if (compareVersions(version, '0.0.x') <= 0) {
+			return MetaframeDefinitionVersion.V0_0_1;
+		} else if (compareVersions(version, '0.1.36') <= 0) {
+			return MetaframeDefinitionVersion.V0_1_0;
+		} else if (compareVersions(version, '0.2') >= 0) {
+			return MetaframeDefinitionVersion.V0_2;
+		} else {
+			// Return something, assume latest
+			js.Browser.window.console.log('Could not match version=${version} to any known version, assuming ${MetaframeDefinitionVersion.V0_2}');
+			return MetaframeDefinitionVersion.V0_2;
+		}
 	}
 
 	public static function getUrlParam(key :String) :Null<String>

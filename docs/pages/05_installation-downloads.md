@@ -21,11 +21,11 @@ nav_order: 5
 <script src="https://cdn.jsdelivr.net/npm/metapage@{{site.data.lib_versions.metapage}}/browser.js"></script>
 ```
 
-## node.js
+## webpack/node.js/grunt etc
 
 ```bash
-npm i metapage
-npm i metaframe
+npm i --save metapage
+npm i --save metaframe
 ```
 
 ## Previous Versions

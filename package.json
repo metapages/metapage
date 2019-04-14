@@ -5,6 +5,7 @@
     "repository": "https://github.com/dionjwa/metapage",
     "homepage": "https://metapages.org/",
     "dependencies": {
+        "compare-versions": "^3.4.0",
         "minimatch": "^3.0.4"
     },
     "devDependencies": {

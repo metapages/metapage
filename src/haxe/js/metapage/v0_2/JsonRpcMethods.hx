@@ -4,16 +4,15 @@ import haxe.remoting.JsonRpc;
 
 @:enum
 abstract JsonRpcMethodsFromChild(String) to String {
-  var InputsUpdate = "InputsUpdate";
-  var OutputsUpdate = "OutputsUpdate";
-  var SetupIframeClientRequest = "SetupIframeClientRequest";
+  var InputsUpdate                 = "InputsUpdate";
+  var OutputsUpdate                = "OutputsUpdate";
+  var SetupIframeClientRequest     = "SetupIframeClientRequest";
   var SetupIframeServerResponseAck = "SetupIframeServerResponseAck";
-  var Dimensions = "Dimensions";
 }
 
 @:enum
 abstract JsonRpcMethodsFromParent(String) to String {
-  var InputsUpdate = "InputsUpdate";
+  var InputsUpdate              = "InputsUpdate";
   var SetupIframeServerResponse = "SetupIframeServerResponse";
 }
 
@@ -23,9 +22,11 @@ abstract OtherEvents(String) to String {
 }
 
 typedef SetupIframeServerResponseData = {
-	var iframeId :MetaframeId;
-	var parentId :MetapageId;
-  var state: {inputs:MetaframeInputMap};
+	var iframeId: MetaframeId;
+	var parentId: MetapageId;
+	var state   : {inputs:MetaframeInputMap};
+  // Allow newer metaframes to handle older metapage versions
+	var version : MetaframeDefinitionVersion;
 }
 
 typedef MinimumClientMessage = {>RequestDef,

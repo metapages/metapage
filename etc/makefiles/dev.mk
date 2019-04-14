@@ -9,6 +9,15 @@ run: ###dev Run a development stack, with autoreloading etc
 	${COMPOSE_DEV} pull
 	${COMPOSE_DEV} up --build jekyll
 
+.PHONY: run-no-build
+run-no-build: ###dev Run a development stack, with autoreloading etc
+	${COMPOSE_DEV} up jekyll
+
+
+.PHONY: stop
+stop: ###dev Stop a development stack
+	${COMPOSE_DEV} down -v
+
 .PHONY: compile
 compile: set-context ###dev Build the libraries, ready for testing/playing/packaging
 	webpack --mode=${NPM_MODE}

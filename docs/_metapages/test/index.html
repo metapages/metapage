@@ -2,6 +2,15 @@
 layout: vanilla
 ---
 
+<!-- 
+    This metapage is part of the functional test suite.
+    It creates a metaframe for each existing version, and linking each
+    metaframe with the next. The first metaframe gets some input, and
+    concats the input array with its version and passes it to the next.
+    At the end, the metapage should get a notification from the 
+    last metaframe with all versions appended to the array.
+ -->
+
 <head></head>
 <body style="background-color:yellow;">
     <div id='version'></div>
@@ -14,7 +23,11 @@ layout: vanilla
 // to make it easier to test all versions against all
 var urlParams = new URLSearchParams(window.location.search);
 var VERSION = urlParams.get('VERSION');
+{% if jekyll.environment == "production" %}
+VERSION = VERSION == null ? '{{site.data.lib_versions.metapage}}' : VERSION;
+{% else %}
 VERSION = VERSION == null ? 'latest' : VERSION;
+{% endif %}
 document.getElementById('version').innerText = `Metapage version=${VERSION}`;
 var head = document.getElementsByTagName('head').item(0);
 var script = document.createElement('script');
@@ -30,14 +43,23 @@ window.onload = function() {
 
     //TODO generate this dynamically 
     const metaPageDefinition = {
-        version: "0.2",
+        version: "{{site.data.lib_versions.all.last}}",
         metaframes: {},
     };
 
     // The metaframes are arranged in a line, latest first
     // each will pass the next a data blob. At the end the
     // metapage will verify that all metaframes added their versions
-    const VERSIONS_METAFRAME = ['latest', '0.1.35'];
+    const VERSIONS_METAFRAME = [];
+{% if jekyll.environment != "production" %}
+    VERSIONS_METAFRAME.push('latest');
+{% endif %}
+{% for v in site.data.lib_versions.all %}
+    VERSIONS_METAFRAME.push("{{v}}");
+{% endfor %}
+
+    console.log('metaframe versions', VERSIONS_METAFRAME);
+    
     VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
         // const url = `{{site.url}}/metaframes/test/?VERSION=${versionMetaframe}`;
         const url = `/metaframes/test/?VERSION=${versionMetaframe}`;
@@ -53,7 +75,7 @@ window.onload = function() {
         }
     });
 
-    console.log(JSON.stringify(metaPageDefinition));
+    console.log(JSON.stringify(metaPageDefinition, null, '  '));
 
     var metapage = Metapage.from(metaPageDefinition);
 
@@ -90,14 +112,11 @@ window.onload = function() {
                 if (JSON.stringify(VERSIONS_METAFRAME) == JSON.stringify(finalVersions)) {
                     resolve(true);
                 } else {
-                    reject(`VERSIONS_METAFRAME != '${finalVersions}'`);
+                    reject(`VERSIONS_METAFRAME(${JSON.stringify(VERSIONS_METAFRAME)}) != finalVersions('${finalVersions})'`);
                 }
             }
         });
     }));
-
-
-
     
     var iframes = metapage.iframes();
     // Add the metaframe iframes to the page
@@ -124,7 +143,7 @@ window.onload = function() {
         })
         .catch((err) => {
             document.body.style.backgroundColor = "red";
-            document.getElementById('status').innerText = "METAPAGE TESTS FAIL:<br/>" + err;
+            document.getElementById('status').innerHTML = "METAPAGE TESTS FAIL:<br/>" + err;
         })
 };
 

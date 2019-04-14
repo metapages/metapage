@@ -6,7 +6,7 @@ layout: vanilla
     ALL versions of metaframes work with ALL versions of metapages.
  -->
 <head>
-        <script src="https://cdn.jsdelivr.net/npm/compare-versions@3.4.0/index.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/compare-versions@3.4.0/index.js"></script>
 </head>
 <body style="background-color:yellow;">
     <div id='body'></div>
@@ -18,6 +18,7 @@ layout: vanilla
 // Download the specific metaframe library version
 // to make it easier to test all versions against all
 var urlParams = new URLSearchParams(window.location.search);
+// Allow specifying the metaframe version tested
 var VERSION = urlParams.get('VERSION');
 VERSION = VERSION == null ? 'latest' : VERSION;
 document.getElementById('body').innerText = `Metaframe version=${VERSION}`;
@@ -34,13 +35,15 @@ head.appendChild(script);
 const runTest = async() => {
     if (VERSION == 'latest') {
         var mf = new Metaframe();
-    } else if (window.compareVersions('0.1.35', VERSION) <= 0) {
+    } else if (window.compareVersions(VERSION, '0.1.36') <= 0) {
         // earlier versions have the annoying package name (since removed)
         var mf = new metaframe.Metaframe();
     } else {
         var mf = new Metaframe();
     }
     await mf.ready;
+
+    document.body.style.backgroundColor = mf._color || mf.color;
 
     var promises = [
         new Promise((resolve, reject) => {

@@ -83,3 +83,6 @@ secrets:
       CiQAiVVX3MKdtsTGaR5Xh4GB0KAvfJgqtyBDAg+C9Ig6hv058YISTQDvWY1r1KQnvwBRbdDdwOiSmZWUbzMMPsTyhc/bhzfcT3VsUSRil50Rw4VutbUC4JBzvv30+4gk7r0gusfOwQOAxijGVN+k3530nPbz
     JEKYLL_GITHUB_TOKEN: |
       CiQAiVVX3MvIdDiIMT7NxseDLtnJgOLGcxYSgck0DMXYuyuz/MYSUQDvWY1rdceIF3qy0CIplRB1rBywgd22RYvuYTmXF0QWyxrZPIIKhphSXEmUQnMAvJeFuXpyDuT1kUM+G7o2qKJ5N5D01OneZm/4k0afExAlXA==
+
+# Sometimes the default of 10m is not enough when the images must all be rebuilt
+timeout: 900s
