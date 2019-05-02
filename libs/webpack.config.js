@@ -1,9 +1,9 @@
 module.exports = [
-	createConfig('metapage', 'window', '/docs/js/'),
+	createConfig('metapage', 'window', '/site/js/'),
 	createConfig('metapage', 'window', '/build/npm/'),
 	createConfig('metapage', 'commonjs2', '/build/npm/'),
 
-	createConfig('metaframe', 'window', '/docs/js/'),
+	createConfig('metaframe', 'window', '/site/js/'),
 	createConfig('metaframe', 'window', '/build/npm/'),
 	createConfig('metaframe', 'commonjs2', '/build/npm/'),
 ];

@@ -1,11 +1,8 @@
 .DS_Store
 .haxelib
 .git
-build/
 node_modules/
 tmp/
 metapage.sublime**
 README.md
-gitcache
-_site
-dist
+libs

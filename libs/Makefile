@@ -2,7 +2,7 @@
 -include .env
 
 COMPOSE_CI_FILE       = docker-compose.yml
-COMPOSE_PUSH_BUILDER  = builder builder-haxe jekyll
+COMPOSE_PUSH_BUILDER  = builder jekyll
 # COMPOSE_BUILD_PREPARE ensures that code is built before jekyll image is built
 # COMPOSE_BUILD_PREPARE = ${MAKE} compile
 
