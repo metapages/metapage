@@ -6,22 +6,21 @@ steps:
 - name: 'docker/compose:1.22.0'
   id: 'builder'
   env:
-  - 'DOCKER_REPOSITORY=gcr.io/t9-docker-images/$REPO_NAME'
   - 'BUILDER_DOCKER_COMPOSE=docker-compose.yml'
   # "builder" is the docker image target used for all further operations
   # It is renamed to the branch name for later steps
-  - 'BUILDER_DOCKERFILE_TARGET=builder'
+  - 'BUILDER_DOCKERFILE_TARGET=builder builder-haxe'
   entrypoint: 'sh'
   args:
     - '-c'
     - |
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE pull --ignore-pull-failures $$BUILDER_DOCKERFILE_TARGET
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE build $$BUILDER_DOCKERFILE_TARGET
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE push $$BUILDER_DOCKERFILE_TARGET
-      docker tag $$DOCKER_REPOSITORY:$$BUILDER_DOCKERFILE_TARGET $$DOCKER_REPOSITORY:$BRANCH_NAME
+      docker-compose -f $$BUILDER_DOCKER_COMPOSE pull --ignore-pull-failures $$BUILDER_DOCKERFILE_TARGET
+      docker-compose -f $$BUILDER_DOCKER_COMPOSE build $$BUILDER_DOCKERFILE_TARGET
+      docker-compose -f $$BUILDER_DOCKER_COMPOSE push $$BUILDER_DOCKERFILE_TARGET
 
-- name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
+- name: 'gcr.io/t9-docker-images/$REPO_NAME:builder-haxe'
   id: 'compile'
+  dir: 'libs'
   env:
   - 'DOCKER_TAG=$COMMIT_SHA'
   - 'NPM_MODE=production'
@@ -31,12 +30,11 @@ steps:
     - |
       make compile
 
-- name: 'gcr.io/t9-docker-images/$REPO_NAME:$BRANCH_NAME'
+- name: 'gcr.io/t9-docker-images/$REPO_NAME:builder'
   id: 'test'
   secretEnv: ['JEKYLL_GITHUB_TOKEN']
   env:
   - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
-  - 'DOCKER_REPOSITORY=gcr.io/t9-docker-images/$REPO_NAME'
   - 'BUILDER_DOCKER_COMPOSE=docker-compose.yml'
   - 'DOCKER_TAG=$COMMIT_SHA'
   - 'PROJECT_NAME=$REPO_NAME'
@@ -47,14 +45,15 @@ steps:
     - '-c'
     - |
       # Pull,build,cache the jekyll image before running tests, it's the only image (apart from builder) that needs to be cached 
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE pull --ignore-pull-failures jekyll
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE build jekyll
-      DOCKER_REPOSITORY=$$DOCKER_REPOSITORY docker-compose -f $$BUILDER_DOCKER_COMPOSE push jekyll
+      docker-compose -f $$BUILDER_DOCKER_COMPOSE pull --ignore-pull-failures jekyll
+      docker-compose -f $$BUILDER_DOCKER_COMPOSE build jekyll
+      docker-compose -f $$BUILDER_DOCKER_COMPOSE push jekyll
       # Now run the functional tests
       JEKYLL_GITHUB_TOKEN=$$JEKYLL_GITHUB_TOKEN make ci-test
 
-- name: 'gcr.io/t9-docker-images/$REPO_NAME:builder'
+- name: 'gcr.io/t9-docker-images/$REPO_NAME:builder-haxe'
   id: 'npm'
+  dir: 'libs'
   secretEnv: ['NPM_TOKEN']
   env:
   - 'DOCKER_TAG=$COMMIT_SHA'

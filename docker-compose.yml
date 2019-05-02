@@ -7,33 +7,43 @@ networks:
 services:
 
   builder:
-    image: ${DOCKER_REPOSITORY}:builder
+    image: gcr.io/t9-docker-images/metapage:builder
     build:
       context: .
       target: builder
       cache_from:
-        - ${DOCKER_REPOSITORY}:builder
+        - gcr.io/t9-docker-images/metapage:builder
     networks:
       - bridge
+
+  builder-haxe:
+    image: gcr.io/t9-docker-images/metapage:builder-haxe
+    build:
+      context: libs/
+      target: builder-haxe
+      cache_from:
+        - gcr.io/t9-docker-images/metapage:builder
+        - gcr.io/t9-docker-images/metapage:builder-haxe
 
   test:
     depends_on:
       jekyll:
         condition: service_healthy
     build:
-      context: .
+      context: libs/
       target: test
       cache_from:
-        - ${DOCKER_REPOSITORY}:builder
+        - gcr.io/t9-docker-images/metapage:builder
+        - gcr.io/t9-docker-images/metapage:builder-haxe
     networks:
       - bridge
 
   jekyll:
-    image: ${DOCKER_REPOSITORY}:jekyll
+    image: gcr.io/t9-docker-images/metapage:jekyll
     build:
-      context: ./docs
+      context: ./libs/site
       cache_from:
-        - ${DOCKER_REPOSITORY}:jekyll
+        - gcr.io/t9-docker-images/metapage:jekyll
     command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
     ports:
       - "4000:${PORT_METAPAGE:-4000}"

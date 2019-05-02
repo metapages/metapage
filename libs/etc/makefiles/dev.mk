@@ -46,12 +46,12 @@ set-context-host: ###dev This must be run OUTSIDE a container
 		exit 1; \
 	fi
 	@echo "Context: host"
-	mkdir -p ../mps_node_modules
-	mkdir -p ../mps_haxelib
+	mkdir -p ../../mps_node_modules
+	mkdir -p ../../mps_haxelib
 	rm -rf node_modules
 	rm -rf .haxelib
-	ln -s ../mps_node_modules node_modules
-	ln -s ../mps_haxelib .haxelib
+	ln -s ../../mps_node_modules node_modules
+	ln -s ../../mps_haxelib .haxelib
 
 # container libraries are installed in the root so that mounting
 # in the project root does not hide the previously installed libs
