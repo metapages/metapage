@@ -17,26 +17,19 @@ run: ###dev Run a development stack, with autoreloading etc
 run-no-build: ###dev Run a development stack, with autoreloading etc
 	${COMPOSE_DEV} up jekyll
 
+.PHONY: stop
+stop: ###dev Stop a development stack
+	${COMPOSE_DEV} down -v
 
-# .PHONY: stop
-# stop: ###dev Stop a development stack
-# 	${COMPOSE_DEV} down -v
+.PHONY: clean
+clean: ###dev Delete compiled files
+	rm -rf lib/build
+	rm -rf ./site/js/meta*
 
-
-# # Don't build before this command, too many places don't want to auto-build
-# .PHONY: test
-# test: ###dev Build the libraries, ready for testing/playing/packaging
-# 	node test/test.js
-
-# .PHONY: clean
-# clean: ###dev Delete compiled files
-# 	rm -rf build
-# 	rm -rf ./docs/js/meta*
-
-# # shell into the test container, will likely have linked services
-# .PHONY: ci-test-shell
-# ci-test-shell:
-# 	${COMPOSE_CI} run --rm \
-# 		-e "PS1=\[\033[01;34m\]docker-${PROJECT_NAME} [\W]\[\033[00m\]$$ " \
-# 		test /bin/sh
+# shell into the test container, will likely have linked services
+.PHONY: ci-test-shell
+ci-test-shell:
+	${COMPOSE_CI} run --rm \
+		-e "PS1=\[\033[01;34m\]docker-${PROJECT_NAME} [\W]\[\033[00m\]$$ " \
+		test /bin/sh
 
