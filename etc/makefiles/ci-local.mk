@@ -1,12 +1,16 @@
 COMPOSE_DEV ?= DOCKER_REPOSITORY=${DOCKER_REPOSITORY} DOCKER_TAG=${DOCKER_TAG} docker-compose
 NPM_MODE    ?= production
 
+.PHONY: shell-haxe
+shell-haxe: ###dev Shell into haxe container
+	${COMPOSE_DEV} run builder-haxe /bin/bash
+
 .PHONY: help-dev
 help-dev: help-impl-dev ## Development commands
 
 .PHONY: compile
 compile: ###dev Build the libraries, ready for testing/playing/packaging
-	${COMPOSE_DEV} run builder-haxe make compile
+	cd libs && ${MAKE} compile
 
 .PHONY: run
 run: ###dev Run a development stack, with autoreloading etc

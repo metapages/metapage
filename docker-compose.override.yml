@@ -3,24 +3,16 @@ version: '2.3'
 services:
   builder-haxe:
     volumes:
-     # We need to mount all this shit because node_modules must be in the project root
+     - ./docs:/docs
      - ./libs:/workspace
-      # - ./libs/build:/workspace/build
-      # - ./libs/site:/workspace/site
-      # - ./libs/etc:/workspace/etc
-      # - ./libs/src:/workspace/src
-      # - ./libs/build-base.hxml:/workspace/build-base.hxml
-      # - ./libs/build-metaframe.hxml:/workspace/build-metaframe.hxml
-      # - ./libs/build-metapage.hxml:/workspace/build-metapage.hxml
-      # - ./libs/webpack.config.js:/workspace/webpack.config.js
 
   test:
-    command: ["/bin/sh", "-c", "nodemon --watch site/js test/test.js"]
+    command: ["/bin/sh", "-c", "nodemon --watch /docs/js test/test.js"]
     volumes:
-      - ./libs/site:/workspace/site
+      - ./docs:/docs
       - ./libs/etc:/workspace/etc
       - ./libs/test:/workspace/test
 
   jekyll:
     volumes:
-      - ./libs/site:/srv/jekyll:cached
+      - ./docs:/srv/jekyll:cached

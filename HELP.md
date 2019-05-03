@@ -3,7 +3,10 @@ Developing:
 
     make run
 
-Then compile with host `haxe build*.hxml` or `webpack`
+Then compile with:
+
+    make shell-haxe
+    make compile
 
 Updating jekyll gems:
 

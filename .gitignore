@@ -6,16 +6,15 @@ tmp
 npm-debug.log
 .haxelib
 .bundle
-**/outputs
 .idea
 .aws
 .env
 gitcache
 _site
 .sass-cache
-site/js/metaframe*
-site/js/metapage*
 libs/build
+docs/js/meta*
+
 # Normally .npmrc files are tracked, but we're only using ours
 # to store the token for CI
 .npmrc

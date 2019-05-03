@@ -19,7 +19,7 @@ services:
   builder-haxe:
     image: gcr.io/t9-docker-images/metapage:builder-haxe
     build:
-      context: libs/
+      context: ./libs
       target: builder-haxe
       cache_from:
         - gcr.io/t9-docker-images/metapage:builder
@@ -30,7 +30,7 @@ services:
       jekyll:
         condition: service_healthy
     build:
-      context: libs/
+      context: ./libs
       target: test
       cache_from:
         - gcr.io/t9-docker-images/metapage:builder
@@ -41,7 +41,7 @@ services:
   jekyll:
     image: gcr.io/t9-docker-images/metapage:jekyll
     build:
-      context: ./libs/site
+      context: ./docs
       cache_from:
         - gcr.io/t9-docker-images/metapage:jekyll
     command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
