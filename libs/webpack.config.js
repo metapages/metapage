@@ -1,9 +1,11 @@
+const path = require('path');
+
 module.exports = [
-	createConfig('metapage', 'window', '/site/js/'),
+	createConfig('metapage', 'window', '/../docs/js/'),
 	createConfig('metapage', 'window', '/build/npm/'),
 	createConfig('metapage', 'commonjs2', '/build/npm/'),
 
-	createConfig('metaframe', 'window', '/site/js/'),
+	createConfig('metaframe', 'window', '/../docs/js/'),
 	createConfig('metaframe', 'window', '/build/npm/'),
 	createConfig('metaframe', 'commonjs2', '/build/npm/'),
 ];
@@ -17,7 +19,7 @@ function createConfig(source, target, folder) {
 			// library: source,
 			libraryTarget: target,
 			filename: (target == 'window' ? 'browser.js' : 'index.js'),
-			path: __dirname + folder + source
+			path: path.join(__dirname + folder + source),
 		},
 		module: {
 			rules: [
