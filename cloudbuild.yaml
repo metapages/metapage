@@ -16,7 +16,9 @@ steps:
       docker-compose -f $$BUILDER_DOCKER_COMPOSE build $$BUILDER_DOCKERFILE_TARGET
       docker-compose -f $$BUILDER_DOCKER_COMPOSE push $$BUILDER_DOCKERFILE_TARGET
 
-# From [libs] builds [docs/js/meta* and libs/build/npm/meta*]
+# From [libs] builds: 
+#                   [docs/js/meta*]
+#                   [libs/build/npm/meta*]
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:builder-haxe'
   id: 'compile'
   # dir: 'docs/libs'
@@ -54,7 +56,7 @@ steps:
 # Uploads npm package from [libs/build/npm/meta*]
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:builder-haxe'
   id: 'npm'
-  dir: 'docs/libs'
+  dir: 'libs'
   secretEnv: ['NPM_TOKEN']
   env:
   - 'DOCKER_TAG=$COMMIT_SHA'
