@@ -8,6 +8,7 @@ import hxassert.Assert.*;
 	import js.html.*;
 	import js.Browser;
 	import js.Promise;
+	import js.Lib;
 #end
 
 import js.metapage.v0_2.*;
