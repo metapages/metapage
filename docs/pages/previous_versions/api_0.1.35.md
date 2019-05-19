@@ -1,26 +1,11 @@
 ---
 layout: default-with-mermaid
-title: api_0.1.34
-permalink: /previous_versions/api_0.1.34/
+title: api_0.1.35
+permalink: /previous_versions/api_0.1.35/
 nav_exclude: true
 ---
 
-
-
-<!-- # API Reference
-{: .no_toc }
-
-## Table of contents
-{: .no_toc .text-delta }
-
-
-1. TOC
-{:toc} -->
-
-
-
-
-Metapage v0.1.35
+Metapage API v0.1.35
 -----
 
 A metapage manages piping metaframe outputs to metaframe inputs.
@@ -60,7 +45,7 @@ Defined by:
 ```json
 {
     "version": "0.1.0",
-    "metaframes": {
+    "iframes": {
       "metaframe1": {
         "url": "{{site.url}}/metaframes/example00_iframe1/",
         "inputs": [

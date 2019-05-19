@@ -1,0 +1,19 @@
+{
+	"version": "0.2",
+	"metadata": {
+		"version": "1",
+		"title": "Random Data Generator",
+		"author": "Dion Whitehead"
+	},
+	"outputs": {
+		"x": {
+			"type": "number"
+        },
+        "y": {
+			"type": "number"
+        },
+        "z": {
+			"type": "number"
+		}
+	}
+}

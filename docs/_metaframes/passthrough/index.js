@@ -293,10 +293,3 @@ if (disableEditParam) {
 		mf.setInput(proposedName, `replaceme`);
 	}
 }
-
-
-mf.ready.then(function() {
-	// mf.sendDimensions();
-}, function(err) {
-	mf.error('Error setting up the metaframe connection');
-});

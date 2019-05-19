@@ -25,9 +25,13 @@ Publishing:
 
     # create a new library version (as automated as possible)
     # 1. ensure the version is good in haxe. change haxe versions rarely, these correspond to major API versions
-    # 2. copy the previous docs e.g: `docs/pages/previous_versions/api_0.1.34.md`
-    # 3. add the previous version in the testing framework, see test metapage/frame
-    # 4. make publish-new-version <the exact version> #https://docs.npmjs.com/cli/version.html
+    # 2. ensure any hard-coded versions in haxe still make sense. Update the static version references. 
+    # 3. copy the previous docs e.g: `docs/pages/previous_versions/api_0.1.34.md`
+    # 4. edit libs/test/test.js (add the versions)
+    # 4. add the previous version in the testing framework, see test metapage/frame, `docs/_data/lib_versions.yml`
+    # 5. make publish-new-version <the exact version> #https://docs.npmjs.com/cli/version.html
+
+    # Deprecate: `npm deprecate metapage@0.1.36`
 
 
 

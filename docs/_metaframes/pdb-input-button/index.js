@@ -102,7 +102,6 @@ document.getElementById('pdbid').addEventListener('keypress', function (e) {
 });
 
 connection.ready.then(function() {
-	connection.sendDimensions();
 	if (connection.getInputs() && connection.getInputs()['pdb_id']) {
 		document.getElementById('pdbid').value = connection.getInputs()['pdb_id'];
 	} else {

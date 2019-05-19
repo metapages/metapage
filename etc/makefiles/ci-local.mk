@@ -1,9 +1,14 @@
 COMPOSE_DEV ?= DOCKER_REPOSITORY=${DOCKER_REPOSITORY} DOCKER_TAG=${DOCKER_TAG} docker-compose
 NPM_MODE    ?= production
 
+.PHONY: version-update-idempotent
+version-update-idempotent: ###ci Get versions from npm, and local, and update all relevant version links. Run this anytime, esp before version bumping
+	@printf "versions: `npm show metapage versions --json | jq -cr`" > docs/_data/versions.yml
+	@printf "docs/_data/versions.yml:\n" && cat docs/_data/versions.yml 
+
 .PHONY: shell-haxe
 shell-haxe: ###dev Shell into haxe container
-	${COMPOSE_DEV} run builder-haxe /bin/bash
+	${COMPOSE_DEV} run -v ${PWD}:/workspace builder-haxe /bin/bash
 
 .PHONY: help-dev
 help-dev: help-impl-dev ## Development commands

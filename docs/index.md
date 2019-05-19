@@ -10,22 +10,19 @@ A metapage is a webpage that consists of **embedded** and **connected** webpages
 
 Embedded webpages are called **metaframes**. A metaframe can be any webpage that runs a small piece of javascript code that creates data pipes.
 
-An example metapage showing two metaframes passing characters back and forth:
+An example metapage showing two metaframes, one generating randome data, the other plotting whatever date it gets:
 
 
-<div class="row">
-  <div class="column" id="left">
-  </div>
-  <div class="column" id="middle">
-    <div class="ArrowLeft"></div>
-    <div class="ArrowRight"></div>
-  </div>
-  <div class="column" id="right">
-  </div>
-</div>
-<!-- <link rel="stylesheet" href="{{site.baseurl}}/metapages/example00-basic/styles.css"> -->
-{% include metapage_lib_script.html %}
-<!-- <script src="{{site.baseurl}}/metapages/example00-basic/script1.js"></script> -->
+{% if jekyll.environment == "production" %}
+  [https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/&header=0](https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/&header=0)
+  <iframe src="https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/&header=0" style="width:600px;height:400px"></iframe>
+  production?
+{% else %}
+  [http://localhost:4010/#url={{site.url}}/metapages/dynamic-plot/&header=0](http://localhost:4010/#url={{site.url}}/metapages/dynamic-plot/&header=0)
+  <iframe src="http://localhost:4010/#url={{site.url}}/metapages/dynamic-plot/&header=0" style="width:600px;height:400px"></iframe>
+{% endif %}
+
+The two pages above are completely separate websites, and have no idea about the other. One simply passes data to the other, controlled by the metapage code running in the parent page.
 
 # Why would you want to do this?
 

@@ -1,0 +1,13 @@
+{
+	"version": "0.2",
+	"metadata": {
+		"version": "0.1",
+		"title": "Metapage Graph",
+		"author": "Dion Amago Whitehead"
+	},
+	"inputs": {
+		"definition": {
+			"type": "metapage/definition"
+		}
+	}
+}

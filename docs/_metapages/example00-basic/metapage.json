@@ -5,7 +5,7 @@
     "version": "0.1.0",
     "metaframes": {
       "metaframe1": {
-        "url": "{{site.baseurl}}/metaframes/example00_iframe1/",
+        "url": "{{site.url}}/metaframes/example00_iframe1/",
         "inputs": [
           {
             "metaframe":"metaframe2",
@@ -15,7 +15,7 @@
         ]
       },
       "metaframe2": {
-        "url": "{{site.baseurl}}/metaframes/example00_iframe2/",
+        "url": "{{site.url}}/metaframes/example00_iframe2/",
         "inputs": [
           {
             "metaframe":"metaframe1",

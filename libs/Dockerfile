@@ -4,6 +4,7 @@
 FROM haxe:4.0.0-rc.2-alpine3.8 as builder-haxe
 RUN apk --no-cache add \
 	bash \
+	curl \
 	g++ \
 	git \
 	gcc \
@@ -12,6 +13,9 @@ RUN apk --no-cache add \
 	python-dev \
 	openssl-dev \
 	libffi-dev
+
+RUN curl -LSfs https://japaric.github.io/trust/install.sh | \
+  sh -s -- --git casey/just --target x86_64-unknown-linux-musl --to /bin
 
 RUN npm install -g npx webpack webpack-cli nodemon
 
@@ -42,9 +46,13 @@ ADD package-lock.json .
 
 RUN npm i
 
+
 ADD build-base.hxml .
 # If this changes, also change etc/makefiles/haxe.mk
 RUN haxelib newrepo && haxelib install --always build-base.hxml
+
+# Best to remove these so other scripts cannot possibly be confused
+RUN rm package.json && rm package-lock.json && rm build-base.hxml
 
 ENV CI true
 WORKDIR /workspace

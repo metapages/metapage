@@ -7,32 +7,36 @@ nav_order: 2
 
 # How do I create a metapage?
 
-Very easily.
+
 
 For example, the small two-piece metapage above can be created with these two steps:
 
 1) Include a the metapage script in your page:
 
 {% highlight html %}
-	<script src="https://pages.git.com{{site.baseurl}}{{site.data.urls.metapage_library_path}}"></script>
+	<script src="https://cdn.jsdelivr.net/npm/metapage@{{site.data.lib_versions.metapage}}/browser.js"></script>
 {% endhighlight %}
+
+
+
+
 
 2) Then create the metaframes, connect them together, and add the metaframes to the document (in your Javascript:
 
 {% highlight javascript %}
   //Create the metaframe object
-  var mp = new Metapage();
+  var metapage = new Metapage();
 
   //Create the metaframes
-  var iframe1 = mp.addMetaframe('{{site.baseurl}}/metaframes/example00_iframe1');
+  var iframe1 = metapage.addMetaframe('{{site.baseurl}}/metaframes/example00_iframe1');
   document.getElementById("left").appendChild(iframe1.iframe);
 
-  var iframe2 = mp.addMetaframe('{{site.baseurl}}/metaframes/example00_iframe2');
+  var iframe2 = metapage.addMetaframe('{{site.baseurl}}/metaframes/example00_iframe2');
   document.getElementById("right").appendChild(iframe2.iframe);
 
   //Connect the metaframes together
-  mp.pipe({from:{id:iframe1.id, pipe:'fooOut'}, to:{id:iframe2.id, pipe:'fooIn'}});
-  mp.pipe({from:{id:iframe2.id, pipe:'barOut'}, to:{id:iframe1.id, pipe:'barIn'}});
+  metapage.pipe({from:{id:iframe1.id, pipe:'fooOut'}, to:{id:iframe2.id, pipe:'fooIn'}});
+  metapage.pipe({from:{id:iframe2.id, pipe:'barOut'}, to:{id:iframe1.id, pipe:'barIn'}});
 
 {% endhighlight %}
 

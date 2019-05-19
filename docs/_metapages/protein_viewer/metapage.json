@@ -5,10 +5,10 @@
     "version": "0.1.0",
     "iframes": {
       "input-button": {
-        "url": "{{site.baseurl}}/metaframes/pdb-input-button/"
+        "url": "{{site.url}}/metaframes/pdb-input-button/"
       },
       "viewer1": {
-        "url": "{{site.baseurl}}/metaframes/molviewer-pv/",
+        "url": "{{site.url}}/metaframes/molviewer-pv/",
         "inputs": [
           {
             "metaframe": "input-button",
@@ -17,7 +17,7 @@
         ]
       },
       "pdb-to-uniprot": {
-        "url": "{{site.baseurl}}/metaframes/pdb-to-uniprot/",
+        "url": "{{site.url}}/metaframes/pdb-to-uniprot/",
         "inputs": [
           {
             "metaframe": "input-button",
@@ -26,7 +26,7 @@
         ]
       },
       "protvista": {
-        "url": "{{site.baseurl}}/metaframes/protvista/",
+        "url": "{{site.url}}/metaframes/protvista/",
         "inputs": [
           {
             "metaframe": "pdb-to-uniprot",

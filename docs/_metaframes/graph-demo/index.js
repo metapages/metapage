@@ -21,10 +21,3 @@ connection.onInput("graph_input", function(category) {
 		chart.datum(obj);
 	}
 });
-
-connection.ready.then(function() {
-	connection.sendDimensions();
-
-}, function(err) {
-	console.error('Error setting up the metaframe connection');
-});
