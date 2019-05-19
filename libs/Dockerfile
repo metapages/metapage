@@ -6,8 +6,9 @@ RUN apk --no-cache add \
 	bash \
 	curl \
 	g++ \
-	git \
 	gcc \
+	git \
+	jq \
 	make \
 	nodejs nodejs-npm \
 	python-dev \
