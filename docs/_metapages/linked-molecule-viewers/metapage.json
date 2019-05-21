@@ -11,7 +11,7 @@
         "version": 1,
         "docs": "http://flexboxgrid.com/",
         "layout": [
-          [ {"name":"input-button", "width":"col-xs-4", "style": {"maxHeight":"400px"}}, {"url":"https://metapages.org/metaframes/passthrough-arrow/?rotation=90", "width":"col-xs-2"}, {"name":"viewer1", "width":"col-xs-6"} ],
+          [ {"name":"input-button", "width":"col-xs-4", "style": {"maxHeight":"400px"}}, {"url":"{{site.url}}/metaframes/passthrough-arrow/?rotation=90", "width":"col-xs-2"}, {"name":"viewer1", "width":"col-xs-6"} ],
           [ {"name":"passthrough2", "width":"col-xs-6"}, {"name":"passthrough1", "width":"col-xs-6", "style": {"maxHeight":"100px"}} ],
           [ {"name":"viewer2", "width":"col-xs-6", "style": {"maxHeight":"400px"}} , {"name":"viewer3", "width":"col-xs-6"} ]
         ],
