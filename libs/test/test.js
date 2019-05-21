@@ -5,6 +5,11 @@ const versions = require('./versions');
 const debug = false;
 const isContainer = fs.existsSync('/.dockerenv');
 
+const getMetapageTestUrl = (version) => {
+  const host = isContainer ? 'http://jekyll:4000' : 'http://localhost:4000'; 
+  return `${host}/metapages/test/?MP_DEBUG&VERSION=${version}`;
+}
+
 async function runSingleMetapageTest(version) {
   const browser = await puppeteer.launch({
     args: [
@@ -35,8 +40,8 @@ async function runSingleMetapageTest(version) {
       console.log(request.failure().errorText, request.url);
     });
   }
-  const host = isContainer ? 'http://jekyll:4000' : 'http://localhost:4000'; 
-  const url = `${host}/metapages/test/?MP_DEBUG&VERSION=${version}`;
+
+  const url = getMetapageTestUrl(version);
 
   await page.goto(url);
   await page.waitForFunction('document.querySelector("#status").innerText.indexOf("METAPAGE TESTS PASS") > -1',
@@ -57,6 +62,9 @@ async function runSingleMetapageTest(version) {
 
   let allVersions = await versions.getMetapageVersions();
   allVersions.push('latest');
+  console.log(`Testing:`);
+  console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('jekyll', 'localhost')).join("\n  ")}`);
+
   var results = await allVersions.map(async (version) => {
     return await runSingleMetapageTest(version);
   });

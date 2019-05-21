@@ -8,7 +8,8 @@ services:
      - ./libs:/workspace
 
   test:
-    command: ["/bin/sh", "-c", "nodemon --watch /docs/js --watch test test/test.js"]
+    command: ["/bin/sh", "-c", "nodemon --legacy-watch -e js,md --watch /docs/js --watch test --watch /docs/_metapages/test --watch /docs/_metaframes/test test/test.js"]
+
     volumes:
       - ./docs:/docs
       - ./libs/etc:/workspace/etc

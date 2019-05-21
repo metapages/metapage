@@ -43,7 +43,13 @@ head.appendChild(script);
 
 const convertNpmToInternalVersion = (version) => {
     if (version == 'latest') {
-        return "{{site.data.lib_versions.all.last}}";
+        // This file gets updated when the version is bumped
+        // return "{{site.data.versions.last}}";
+        return Metapage.getLibraryVersionMatching(version);
+    // use the internal version matching code
+    } else if (window.compareVersions(version, '0.2') > 0) {
+        return Metapage.getLibraryVersionMatching(version);
+    // otherwise the above logic wasn't yet implemented, so we have to do it here (versioning lessons)
     } else if (window.compareVersions(version, '0.2') >= 0) {
         return '0.2';
     } else {
@@ -51,8 +57,10 @@ const convertNpmToInternalVersion = (version) => {
     }
 }
 
-window.onload = function() {
 
+
+window.onload = function() {
+    console.log('Metapage', convertNpmToInternalVersion(VERSION));
     //TODO generate this dynamically 
     const metaPageDefinition = {
         version: convertNpmToInternalVersion(VERSION),
@@ -71,19 +79,22 @@ window.onload = function() {
     // each will pass the next a data blob. At the end the
     // metapage will verify that all metaframes added their versions
     const VERSIONS_METAFRAME = [];
-{% if jekyll.environment != "production" %}
-    VERSIONS_METAFRAME.push('latest');
-{% endif %}
-{% for v in site.data.lib_versions.all %}
+
+
+{% for v in site.data.versions.versions %}
     VERSIONS_METAFRAME.push("{{v}}");
 {% endfor %}
+{% if jekyll.environment != "production" %}
+    // Test the current version inputs *and* outputs
+    VERSIONS_METAFRAME.unshift('latestFirst');
+    VERSIONS_METAFRAME.push('latest');
+{% endif %}
     console.log('VERSIONS_METAFRAME', VERSIONS_METAFRAME);
-
-    console.log('metaframe versions', VERSIONS_METAFRAME);
     
     VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
         // const url = `{{site.url}}/metaframes/test/?VERSION=${versionMetaframe}`;
-        const url = `/metaframes/test/?VERSION=${versionMetaframe}`;
+        const url = `/metaframes/test/?VERSION=${versionMetaframe.startsWith('latest') ? 'latest' : versionMetaframe}`;
+        versionMetaframe = versionMetaframe == 'latest' && index == 0 ? 'latestFirst' : versionMetaframe;
         metaframesBlob[versionMetaframe] = {"url": url};
         if (index > 0) {
             metaframesBlob[versionMetaframe].inputs = [
@@ -131,11 +142,13 @@ window.onload = function() {
         lastMetaframe.onOutputs((outputs) => {
             if (outputs['output']) {
                 hasFinalOutputs = true;
-                const finalVersions = outputs['output'].versions;
-                if (JSON.stringify(VERSIONS_METAFRAME) == JSON.stringify(finalVersions)) {
+                let finalVersions = outputs['output'].versions;
+                // Correct for needing 'latest' twice but not using the key 'latest' twice
+                const versionsTested = VERSIONS_METAFRAME.map(e => e.replace('latestFirst', 'latest'));
+                if (JSON.stringify(versionsTested) == JSON.stringify(finalVersions)) {
                     resolve(true);
                 } else {
-                    reject(`VERSIONS_METAFRAME(${JSON.stringify(VERSIONS_METAFRAME)}) != finalVersions('${finalVersions})'`);
+                    reject(`versionsTested(${JSON.stringify(versionsTested)}) != finalVersions('${finalVersions})'`);
                 }
             }
         });
@@ -151,13 +164,10 @@ window.onload = function() {
 
     // Start the train. Metaframes will add their version to the
     // array and pass it on
-    metapage.setInput({
-        latest: {
-            input: {
-                versions:[]
-            }
-        }
-    });
+    const inputs = {};
+    inputs[VERSIONS_METAFRAME[0]] = {input: {versions:[]}};
+
+    metapage.setInput(inputs);
 
     Promise.all(promises)
         .then(() => {

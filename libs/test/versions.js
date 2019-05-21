@@ -4,6 +4,9 @@ const path = require('path');
 const util = require('util');
 const exec = util.promisify(require('child_process').exec);
 
+/**
+ * Get all supported metapage/frame versions that we support (forever)
+ */
 const getMetapageVersions = async (includeCurrent) => {
     const { stdout, stderr } = await exec('npm show --json metapage versions');
     if (stderr) {

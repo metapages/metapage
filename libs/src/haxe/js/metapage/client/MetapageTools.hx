@@ -35,7 +35,9 @@ class MetapageTools
 
 	public static function getMatchingVersion(version :String) :MetaframeDefinitionVersion
 	{
-		if (compareVersions(version, '0.0.x') <= 0) {
+		if (version == 'latest') {
+			return return MetaframeDefinitionVersion.V0_2;
+		} else if (compareVersions(version, '0.0.x') <= 0) {
 			return MetaframeDefinitionVersion.V0_0_1;
 		} else if (compareVersions(version, '0.1.36') <= 0) {
 			return MetaframeDefinitionVersion.V0_1_0;

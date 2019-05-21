@@ -7,9 +7,9 @@ help:
 run +TARGET='jekyll builder-haxe test':
     docker-compose up --remove-orphans {{TARGET}}
 
-metapage-app:
-    just sites/metapage-app/serve
-
+# Builds the npm libraries. Requires 'just run builder-haxe'
+build:
+    docker-compose exec builder-haxe webpack
 
 # Idempotent version update where they are used
 versions-update versions-write-versions-to-jekyll:
