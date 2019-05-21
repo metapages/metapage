@@ -51,3 +51,4 @@ services:
       - bridge
     environment:
      - "JEKYLL_GITHUB_TOKEN=${JEKYLL_GITHUB_TOKEN}"
+     - "JEKYLL_ENV=development"

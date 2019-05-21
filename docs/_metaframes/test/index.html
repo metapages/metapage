@@ -35,7 +35,7 @@ head.appendChild(script);
 const runTest = async() => {
     if (VERSION == 'latest') {
         var mf = new Metaframe();
-    } else if (window.compareVersions(VERSION, '0.1.36') <= 0) {
+    } else if (window.compareVersions(VERSION, '0.1.35') <= 0) {
         // earlier versions have the annoying package name (since removed)
         var mf = new metaframe.Metaframe();
     } else {

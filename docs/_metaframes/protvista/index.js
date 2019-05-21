@@ -1,12 +1,6 @@
 /* Set up the metaframe channel */
 var metaframe = new Metaframe();
 
-metaframe.ready.then(function() {
-	metaframe.sendDimensions();
-}, function(err) {
-	metaframe.error('Error setting up the metaframe connection');
-});
-
 function on_uniprot_id(blob) {
     if (!blob) {
         return;
@@ -43,7 +37,6 @@ function loadUniprotId(uniprotId) {
     	// console.log('height', $("#main").height());
     	// console.log('outerHeight', $("#main").outerHeight());
     }, 1000);
-    metaframe.sendDimensions({width:600, height:800});
 }
 
 metaframe.onInput("uniprot_id", on_uniprot_id);

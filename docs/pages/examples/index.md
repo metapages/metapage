@@ -60,7 +60,14 @@ var metapages = {};
 		metapages[token] = true;
 		// Link to the metapage, metapage.json, metapage in debug mode
 		var element = document.createElement("li");
-		element.innerHTML = '<a href="' + e + '/">' + e.split('/').pop() + '</a>  <a href="{{site.baseurl}}/metapages/' + token + '/metapage.json">metapage.json</a> <a href="{{site.baseurl}}/metapages/' + token + '/?MP_DEBUG=1">debug</a>';
+		var metapageViewUrl = 
+{% if jekyll.environment == "production" %}
+			`https://app.metapages.org/#url={{site.url}}/metapages/${token}/`;
+{% else %}
+			`http://localhost:4010/#url={{site.url}}/metapages/${token}/`;
+{% endif %}
+
+		element.innerHTML = '<a href="' + metapageViewUrl + '">' + e.split('/').pop() + `</a>  <a href="{{site.baseurl}}/metapages/${token}/metapage.json">metapage.json</a> <a href="{{site.baseurl}}/metapages/${token}/?MP_DEBUG=1">debug</a>`;
 		document.getElementById("metapages").appendChild(element);
 	}
 });

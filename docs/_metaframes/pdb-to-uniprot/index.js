@@ -7,12 +7,6 @@ function setText(text) {
 
 setText("Loading...");
 
-metaframe.ready.then(function() {
-	metaframe.sendDimensions();
-}, function(err) {
-	metaframe.error('Error setting up the metaframe connection');
-});
-
 var pdbToUniprotMap = null;
 
 function maybeSendPdbId() {

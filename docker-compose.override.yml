@@ -2,12 +2,14 @@ version: '2.3'
 
 services:
   builder-haxe:
+    command: just watch
     volumes:
      - ./docs:/docs
      - ./libs:/workspace
 
   test:
-    command: ["/bin/sh", "-c", "nodemon --watch /docs/js test/test.js"]
+    command: ["/bin/sh", "-c", "nodemon --legacy-watch -e js,md --watch /docs/js --watch test --watch /docs/_metapages/test --watch /docs/_metaframes/test test/test.js"]
+
     volumes:
       - ./docs:/docs
       - ./libs/etc:/workspace/etc
@@ -15,4 +17,4 @@ services:
 
   jekyll:
     volumes:
-      - ./docs:/srv/jekyll:cached
+      - ./docs:/srv/jekyll

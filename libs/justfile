@@ -1,0 +1,48 @@
+# https://github.com/casey/just
+# just runs the dev server by default
+PROJECT_NAME = `basename $PWD`
+NODE_ENV = 'development'
+
+help:
+    just --list
+
+watch-docker:
+    cd .. && docker-compose run builder-haxe just watch
+
+build:
+    webpack
+
+watch:
+    nodemon --legacy-watch --watch src --ext hx --exec just build
+
+serve:
+    npm run dev
+
+_set-context: # Makes adjustments that depend on if the context is a docker container or the native host.
+	@if [ -f /.dockerenv ]; then \
+		just _set-context-container; \
+	else \
+		just _set-context-host; \
+	fi
+
+# dev This must be run OUTSIDE a container
+_set-context-host:
+	@if [ -f /.dockerenv ]; then \
+		echo "This must be run outside a docker container (on the host)"; \
+		exit 1; \
+	fi
+	@echo "Context: host"
+	mkdir -p ../../{{PROJECT_NAME}}_node_modules
+	rm -rf node_modules
+	ln -s ../../{{PROJECT_NAME}}_node_modules node_modules
+
+# container libraries are installed in the root so that mounting
+# in the project root does not hide the previously installed libs
+_set-context-container: ###dev This must be run INSIDE a container
+	@if [ ! -f /.dockerenv ]; then \
+		echo "This must be run inside a docker container"; \
+		exit 1; \
+	fi
+	@echo "Context: container"
+	rm -rf node_modules
+	ln -s /node_modules node_modules

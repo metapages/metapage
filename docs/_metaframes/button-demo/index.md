@@ -21,12 +21,6 @@ layout: vanilla
 /* Set up the metaframe channel */
 var metaframe = new Metaframe();
 
-metaframe.ready.then(function() {
-	metaframe.sendDimensions();
-}, function(err) {
-	console.error('Error setting up the metaframe connection');
-});
-
 /* Push random numbers to the next page every time the button is clicked */
 document.getElementById("button1")
 	.addEventListener('click', function() {
