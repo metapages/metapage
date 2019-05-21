@@ -16,7 +16,6 @@ An example metapage showing two metaframes, one generating randome data, the oth
 {% if jekyll.environment == "production" %}
   [https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/&header=0](https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/&header=0)
   <iframe src="https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/&header=0" style="width:600px;height:400px"></iframe>
-  production?
 {% else %}
   [http://localhost:4010/#url={{site.url}}/metapages/dynamic-plot/&header=0](http://localhost:4010/#url={{site.url}}/metapages/dynamic-plot/&header=0)
   <iframe src="http://localhost:4010/#url={{site.url}}/metapages/dynamic-plot/&header=0" style="width:600px;height:400px"></iframe>
