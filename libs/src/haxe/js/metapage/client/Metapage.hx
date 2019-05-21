@@ -31,49 +31,8 @@ class Metapage extends EventEmitter
 			case V0_0_1: return fromDefinitionV0_0_1(metaPageDef);
 			case V0_1_0: return fromDefinitionV0_1_0(metaPageDef, inputs);
 			case V0_2:   return fromDefinitionV0_2(metaPageDef, inputs);
-			case V0_3:   return fromDefinitionV0_3(metaPageDef, inputs);
 			default: throw 'Unknown metapage version: ${metaPageDef.version}';
 		}
-	}
-
-	public static function load(?metaPage :Dynamic, ?metaframeLoader :MetaframeId->IFrameElement->Void) :Promise<Metapage>
-	{
-		if (metaPage == null) {
-			metaPage = 'metapage.json';
-		}
-		return new js.Promise(function(resolve, reject) {
-				if (Lib.typeof(metaPage) == 'string') {
-					Browser.window.fetch(metaPage)
-						.then(function(response) {
-							resolve(response.json());
-						})
-						.catchError(function(err) {
-							reject(err);
-						});
-				} else {
-					resolve(metaPage);
-				}
-			})
-			.then(function(metapageDefinition:Dynamic) {
-				return from(metapageDefinition);
-			})
-			.then(function(metapage:Metapage) {
-				var metaframes = metapage.iframes();
-				for (metaframeId in metaframes.keys()) {
-					if (metaframeLoader != null) {
-						metaframeLoader(metaframeId, metaframes[metaframeId]);
-					} else {
-						// Try to find the element with the same id as the metaframe id
-						var element = Browser.window.document.getElementById(metaframeId);
-						if (element != null) {
-							element.appendChild(metaframes[metaframeId]);
-						} else {
-							Browser.window.console.error('Cannot add metaframe [${metaframeId}]: no element with id="${metaframeId}" and no loader callback given');
-						}
-					}
-				}
-				return metapage;
-			});
 	}
 
 	public static function getLibraryVersionMatching(version :String) :MetaframeDefinitionVersion
@@ -318,7 +277,7 @@ class Metapage extends EventEmitter
 	function isValidJsonRpcMessage(message :MinimumClientMessage)
 	{
 		if (message.jsonrpc != '2.0') {
-			log("message.jsonrpc != '2.0'");
+			error("message.jsonrpc != '2.0'");
 			return false;
 		}
 		var method :JsonRpcMethodsFromChild = cast message.method;
@@ -452,7 +411,7 @@ class Metapage extends EventEmitter
 								metaframeInputs[metaframeId] = inputs;
 								this.emit(MetapageEvents.Inputs, metaframeInputs);
 							}
-						case V0_2,V0_3:
+						case V0_2:
 							// New versions can safely set their inputs here, their
 							// own internal listeners have not yet been notified.
 							_iframes.get(metaframeId).setInputs(inputs);
@@ -522,26 +481,6 @@ class Metapage extends EventEmitter
 	}
 
 	static function fromDefinitionV0_2(metaPageDef :js.metapage.v0_2.MetapageDefinition, ?initialState :MetapageInstanceInputs)
-	{
-		var metapage = new Metapage(metaPageDef.options);
-		if (initialState == null) {
-			initialState = {};
-		}
-		if (metaPageDef.metaframes != null) {
-			for (iframeId in metaPageDef.metaframes.keys()) {
-				var iframeDef = metaPageDef.metaframes.get(iframeId);
-				var iframe = metapage.addMetaframe(iframeDef.url, iframeId);
-				if (iframeDef.inputs != null) {
-					for (input in iframeDef.inputs) {
-						metapage.addPipe(iframeId, input);
-					}
-				}
-			}
-		}
-		return metapage;
-	}
-
-	static function fromDefinitionV0_3(metaPageDef :js.metapage.v0_3.MetapageDefinition, ?initialState :MetapageInstanceInputs)
 	{
 		var metapage = new Metapage(metaPageDef.options);
 		if (initialState == null) {
@@ -675,12 +614,11 @@ class IFrameRpcClient extends EventEmitter
 		if (!_outputs.merge(maybeNewOutputs)) {
 			return;
 		}
-		if (_debug) {
-			for (outputPipeId in maybeNewOutputs.keys()) {
-				log('output [${outputPipeId}]');
-			}
-		}
 		this.emit(MetapageEvents.Outputs, maybeNewOutputs);
+
+		for (outputPipeId in maybeNewOutputs.keys()) {
+			log('output [${outputPipeId}]');
+		}
 		if (_metapage.isListeners(MetapageEvents.Outputs)) {
 			var outputsUpdate :MetapageInstanceInputs = {};
 			outputsUpdate[this.id] = _outputs;

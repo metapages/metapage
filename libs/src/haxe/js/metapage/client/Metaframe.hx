@@ -209,9 +209,7 @@ class Metaframe extends EventEmitter
 			return;
 		}
 		for (pipeId in inputs.keys()) {
-			if (debug) {
-				log('input [${pipeId}]');
-			}
+			log('input [${pipeId}]');
 			emit(MetaframeEvents.Input, pipeId, inputs[pipeId]);
 		}
 		emit(MetaframeEvents.Inputs, inputs);
@@ -307,6 +305,40 @@ class Metaframe extends EventEmitter
 			//Not an object, ignored
 		}
 	}
+
+	// function sendWindowDimensions()
+	// {
+	// 	sendDimensions();
+	// }
+
+	// function sendDimensions(?dimensions :{width :Float, height:Float})
+	// {
+	// 	var window = Browser.window;
+	// 	if (dimensions == null) {
+	// 		var height = window.document.documentElement.scrollHeight != null ? window.document.documentElement.scrollHeight : window.document.body.scrollHeight;
+	// 		dimensions = {
+	// 			width: null,
+	// 			height:height,
+	// 			"window.innerWidth": window.innerWidth,
+	// 			"window.innerHeight": window.innerHeight,
+	// 			"window.outerWidth": window.outerWidth,
+	// 			"window.outerHeight": window.outerHeight,
+	// 			"window.document.body.scrollHeight": window.document.body.scrollHeight,
+	// 			"window.document.body.scrollWidth": window.document.body.scrollWidth,
+	// 			"window.document.documentElement.scrollHeight": window.document.documentElement.scrollHeight,
+	// 			"window.document.documentElement.scrollWidth": window.document.documentElement.scrollWidth,
+	// 		};
+	// 	} else {
+	// 		if (js.Syntax.typeof(dimensions) != 'object') {
+	// 			throw {dimensions:dimensions, error:'sendDimensions(..) expecting {width:Float, height:Float}'};
+	// 		} else {
+	// 			if (!(Reflect.hasField(dimensions, 'width') && Reflect.hasField(dimensions, 'height'))) {
+	// 				throw {dimensions:dimensions, error:'sendDimensions(..) missing either width or height field, expecting: {width:Float, height:Float}'};
+	// 			}
+	// 		}
+	// 	}
+	// 	sendRpc(JsonRpcMethodsFromChild.Dimensions, dimensions);
+	// }
 
 	public static function isIframe() :Bool
 	{
