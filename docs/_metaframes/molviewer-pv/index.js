@@ -176,7 +176,6 @@ connection.ready
 
 
 		connection.log('READY');
-		connection.sendDimensions({width:width,height:height});
 	}, function(err) {
 		connection.error('molviewer: Error setting up the metaframe connection error=' + JSON.stringify(err));
 	})

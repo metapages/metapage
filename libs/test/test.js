@@ -1,15 +1,16 @@
-const puppeteer = require('puppeteer');
 const fs = require('fs');
+const puppeteer = require('puppeteer');
+const versions = require('./versions');
 
 const debug = false;
 const isContainer = fs.existsSync('/.dockerenv');
 
-const timeout = setTimeout(() => {
-  console.log('FAIL: tests timed out!');
-  process.exit(1);
-}, 15000);
+const getMetapageTestUrl = (version) => {
+  const host = isContainer ? 'http://jekyll:4000' : 'http://localhost:4000'; 
+  return `${host}/metapages/test/?MP_DEBUG&VERSION=${version}`;
+}
 
-(async () => {
+async function runSingleMetapageTest(version) {
   const browser = await puppeteer.launch({
     args: [
       // Required for running in the test container
@@ -39,18 +40,36 @@ const timeout = setTimeout(() => {
       console.log(request.failure().errorText, request.url);
     });
   }
-  const host = isContainer ? 'http://jekyll:4000' : 'http://localhost:4000'; 
-  const url = `${host}/metapages/test/?MP_DEBUG`;
+
+  const url = getMetapageTestUrl(version);
 
   await page.goto(url);
-  // await page.screenshot({path: 'example.png'});
   await page.waitForFunction('document.querySelector("#status").innerText.indexOf("METAPAGE TESTS PASS") > -1',
   {
     polling: 200,
     timeout: 10000
   });
 
-  clearTimeout(timeout);
   await browser.close();
-  console.log('SUCCESS Test(s) pass!');
+  console.log(`    SUCCESS version:${version}`); 
+}
+
+(async () => {
+  const timeout = setTimeout(() => {
+    console.log('FAIL: tests timed out!');
+    process.exit(1);
+  }, 15000);
+
+  let allVersions = await versions.getMetapageVersions();
+  allVersions.push('latest');
+  console.log(`Testing:`);
+  console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('jekyll', 'localhost')).join("\n  ")}`);
+
+  var results = await allVersions.map(async (version) => {
+    return await runSingleMetapageTest(version);
+  });
+
+  await Promise.all(results);
+  clearTimeout(timeout);
+  console.log(`SUCCESS Test(s) pass!`);
 })();

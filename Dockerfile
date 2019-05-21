@@ -5,6 +5,7 @@
 FROM alpine:3.8.4 as builder
 RUN apk --no-cache add \
     bash \
+    curl \
     docker \
     g++ \
     gcc \
@@ -17,6 +18,9 @@ RUN apk --no-cache add \
     python-dev \
     the_silver_searcher
 
+RUN curl -LSfs https://japaric.github.io/trust/install.sh | \
+  sh -s -- --git casey/just --target x86_64-unknown-linux-musl --to /bin
+  
 RUN pip install --upgrade pip==19.1
 RUN pip install docker-compose
 

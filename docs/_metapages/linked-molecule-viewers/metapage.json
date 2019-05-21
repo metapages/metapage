@@ -2,13 +2,35 @@
 ---
 
 {
-  "version": "0.1.0",
-  "iframes": {
+  "version": "0.2",
+  "meta": {
+    "plugins": ["http://127.0.0.1:4000/metaframes/plugin-graph/", "https://metapages.org/metaframes/graph-demo/"],
+    "name": "Linked molecule viewers",
+    "description": "Demonstrates interactive bioinformatics tools and selective replication and forwarding of data streams",
+    "layouts": {
+      "flexboxgrid" : {
+        "version": 1,
+        "docs": "http://flexboxgrid.com/",
+        "layout": [
+          [ {"name":"input-button", "width":"col-xs-4", "style": {"maxHeight":"400px"}}, {"url":"http://localhost:4000/metaframes/passthrough-arrow/?rotation=90", "width":"col-xs-2"}, {"name":"viewer1", "width":"col-xs-6"} ],
+          [ {"name":"passthrough2", "width":"col-xs-6"}, {"name":"passthrough1", "width":"col-xs-6", "style": {"maxHeight":"100px"}} ],
+          [ {"name":"viewer2", "width":"col-xs-6", "style": {"maxHeight":"400px"}} , {"name":"viewer3", "width":"col-xs-6"} ]
+        ],
+        "options": {
+          "arrows": true
+        }
+      }
+    }
+  },
+  "metaframes": {
     "input-button": {
-      "url": "{{site.baseurl}}/metaframes/pdb-input-button/"
+      "url": "{{site.url}}/metaframes/pdb-input-button/"
+    },
+    "input-button": {
+      "url": "{{site.url}}/metaframes/pdb-input-button/"
     },
     "viewer1": {
-      "url": "{{site.baseurl}}/metaframes/molviewer-pv/",
+      "url": "{{site.url}}/metaframes/molviewer-pv/",
       "inputs": [
         {
           "metaframe": "input-button",
@@ -17,7 +39,7 @@
       ]
     },
     "viewer2": {
-      "url": "{{site.baseurl}}/metaframes/molviewer-pv/",
+      "url": "{{site.url}}/metaframes/molviewer-pv/",
       "inputs": [
         {
           "metaframe": "input-button",
@@ -35,7 +57,7 @@
       ]
     },
     "viewer3": {
-      "url": "{{site.baseurl}}/metaframes/molviewer-pv/",
+      "url": "{{site.url}}/metaframes/molviewer-pv/",
       "inputs": [
         {
           "metaframe": "input-button",
@@ -53,7 +75,7 @@
       ]
     },
     "passthrough1": {
-      "url": "{{site.baseurl}}/metaframes/passthrough/",
+      "url": "{{site.url}}/metaframes/passthrough/",
       "inputs": [
         {
           "metaframe": "viewer1",
@@ -62,7 +84,7 @@
       ]
     },
     "passthrough2": {
-      "url": "{{site.baseurl}}/metaframes/passthrough/",
+      "url": "{{site.url}}/metaframes/passthrough/",
       "inputs": [
         {
           "metaframe": "viewer1",
