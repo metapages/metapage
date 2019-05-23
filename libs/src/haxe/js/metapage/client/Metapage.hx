@@ -178,7 +178,7 @@ class Metapage extends EventEmitter
 	}
 
 	public function setInputs(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic) {
-		setInputs(iframeId, inputPipeId, value);
+		setInput(iframeId, inputPipeId, value);
 	}
 
 	override public function dispose()
