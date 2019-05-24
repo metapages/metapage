@@ -12,6 +12,8 @@ Metaframes:
 Metapages:
 <ul id="metapages"></ul>
 
+Tools:
+<ul id="tools"></ul>
 
 <script>
 
@@ -28,6 +30,7 @@ function getFirstTokenAfter(s, target) {
 var metaframes = {};
 var metapages = {};
 
+// add the locally hosted metaframe links
 [
 	{% for metaframe in site.metaframes %}
 	  "{{site.baseurl}}{{ metaframe.id }}".replace('/index', ''),
@@ -46,6 +49,25 @@ var metapages = {};
 	}
 });
 
+
+// add the metaframes hosted elsewhere
+[
+	"https://metapages.github.io/metaframe-editor-json/",
+	"http://localhost:8080/ui/plots/metaframe-experiences/",
+].map((url) => {
+{% if jekyll.environment == "production" %}
+		return url;
+{% else %}
+		return `http://localhost:3000/${url}`;
+{% endif %}
+}).map((url => {
+	var element = document.createElement("li");
+	element.innerHTML = `<a href="${url}">${url}</a>  <a href="{{site.url}}/tools/metaframeview?url=${url}">inspect</a>`;
+	document.getElementById("metaframes").appendChild(element);
+}));
+
+
+// add the local metapages
 [
 	{% for metapage in site.metapages %}
 	  "{{site.baseurl}}{{ metapage.id }}".replace('/index', ''),
@@ -65,7 +87,7 @@ var metapages = {};
 {% if jekyll.environment == "production" %}
 			`https://app.metapages.org/#url={{site.url}}/metapages/${token}/`;
 {% else %}
-			`http://localhost:4010/#url={{site.url}}/metapages/${token}/`;
+			`{{site.data.urls.app-metapage-local}}/#url={{site.url}}/metapages/${token}/`;
 {% endif %}
 
 		if (token == 'test') {
@@ -77,5 +99,20 @@ var metapages = {};
 		document.getElementById("metapages").appendChild(element);
 	}
 });
+
+// add the tools hosted elsewhere
+[
+	"https://app.metapages.org/",
+].map((url) => {
+{% if jekyll.environment == "production" %}
+		return url;
+{% else %}
+		return `http://localhost:3000/${url}`;
+{% endif %}
+}).map((url => {
+	var element = document.createElement("li");
+	element.innerHTML = `<a href="${url}">${url}</a>`;
+	document.getElementById("tools").appendChild(element);
+}));
 
 </script>

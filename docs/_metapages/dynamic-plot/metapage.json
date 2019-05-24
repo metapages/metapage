@@ -15,7 +15,7 @@
   },
   "metaframes": {
     "random-data-generator": {
-      "url": "{{site.url}}/metaframes/random-data-generator/"
+      "url": "{{site.url}}/metaframes/random-data-generator/?frequency=500"
     },
     "graph-dynamic": {
       "url": "{{site.url}}/metaframes/graph-dynamic/",

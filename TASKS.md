@@ -1,5 +1,5 @@
 
-Developing:
+## Developing:
 
     make run
 
@@ -14,7 +14,7 @@ Updating jekyll gems:
     make jekyll-shell
     cd docs && bundle install
 
-Publishing:
+## Publishing:
 
     # release a new patch version
     make publish-new-version
