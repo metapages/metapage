@@ -33,6 +33,18 @@ layout: vanilla
   </tbody>
 </table>
 <script>
+
+var urlParams = new URLSearchParams(window.location.search);
+var frequency = urlParams.get('frequency');
+frequency = frequency || '200';
+try {
+  frequency = parseInt(frequency);
+} catch(err) {
+  console.log('frequency is in milliseconds');
+  console.log(err);
+  frequency = 200;
+}
+
 var metaframe = new Metaframe();
 metaframe.ready
     .then(() => {
@@ -45,7 +57,7 @@ metaframe.ready
             document.getElementById('y').innerText = `${y}`.substr(0, 10);
             document.getElementById('z').innerText = `${z}`.substr(0, 10);
             metaframe.setOutputs({x:x, y:y, z:z});
-        },200);
+        }, frequency);
     });
 </script>
 </div>

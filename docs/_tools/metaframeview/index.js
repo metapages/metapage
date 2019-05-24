@@ -20,6 +20,7 @@ if (urlParam != null) {
 			}
 			metaframeDataUrl.pathname = metaframeDataUrl.pathname + '/metaframe.json';
 		}
+
 		fetch(metaframeDataUrl.toString(), {method: 'get',mode: 'cors', redirect: 'follow', cache: 'no-cache'})
 			.then(function(response) {
 				if(response.ok) {

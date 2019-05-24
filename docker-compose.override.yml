@@ -4,8 +4,8 @@ services:
   builder-haxe:
     command: just watch
     volumes:
-     - ./docs:/docs
-     - ./libs:/workspace
+      - ./docs:/docs
+      - ./libs:/workspace
 
   test:
     command: ["/bin/sh", "-c", "nodemon --legacy-watch -e js,md --watch /docs/js --watch test --watch /docs/_metapages/test --watch /docs/_metaframes/test test/test.js"]
@@ -19,15 +19,13 @@ services:
     volumes:
       - ./docs:/srv/jekyll
 
-  # This is currently local to my personal setup, it's not ideal
-  # but I need a better way of managing many many individual github project websites.
-  # metapage-app:
-  #   build:
-  #     context: ../metapage-app/
-  #   command: ["just", "serve"]
-  #   volumes:
-  #     - ${PWD}/../metapage-app:/workspace
-  #   ports:
-  #     - "4010:${PORT_METAPAGE_APP:-4010}"
-  #   networks:
-  #     - bridge
+  # By prepending any external urls with http://localhost:3000
+  # e.g. http://localhost:3000/https://app.metapages.org/
+  # we can transparently proxy metapages so they are all http
+  # and cors won't break everything
+  proxy:
+    image: imjacobclark/cors-container
+    ports:
+      - "3000:3000"
+    networks:
+      - bridge

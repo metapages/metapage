@@ -2,9 +2,10 @@
 
 help:
     @just --list
+    @echo "{{HELP}}"
 
 # Run the stack, defaulting to all. Just target "jekyll" for a minimal server  metapage-app
-run +TARGET='jekyll builder-haxe test':
+run +TARGET='jekyll proxy builder-haxe test':
     docker-compose up --remove-orphans {{TARGET}}
 
 # Builds the npm libraries. Requires 'just run builder-haxe'
@@ -63,3 +64,8 @@ version-remove VERSION:
 _DEPRECATED_version-commit:
     git add -u ; git commit -m "v`just version`"
     git tag v`just version`
+
+HELP := '
+Reminders:
+  Developing app.metapages.org locally? Modify docs/_data/urls.yml
+'

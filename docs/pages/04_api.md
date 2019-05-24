@@ -517,3 +517,13 @@ metaframe.setOutputs(values :Object)
 `values`: object mapping output names to values.
 
 These values will be send to all downstream metaframe consumers.
+
+
+### Metaframe#dispose
+
+```ts
+metaframe.dispose()
+```
+
+Removes window message listener, event listeners, and nulls potentially large fields.
+
