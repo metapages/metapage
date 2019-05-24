@@ -4,21 +4,44 @@ help:
     @just --list
 
 # Run the stack, defaulting to all. Just target "jekyll" for a minimal server
-run +TARGET='jekyll builder-haxe test':
+run +TARGET='jekyll builder-haxe test metapage-app':
     docker-compose up --remove-orphans {{TARGET}}
 
 # Builds the npm libraries. Requires 'just run builder-haxe'
 build:
     docker-compose exec builder-haxe webpack
 
-# Idempotent version update where they are used
-versions-update versions-write-versions-to-jekyll:
+# https://docs.npmjs.com/cli/version.html
+# npm version, git tag, and push to release a new version and publish docs
+version-new-publish VERSION='patch' downtimeok='yes' dirtyok='yes':
+    @# Fail if uncomitted changes
+    if [ "{{dirtyok}}" != "yes" ]; then git diff-index --quiet HEAD --; fi
+    @# actually bump the libs version. BUT do not commit or tag, since we need to update some jekyll references before committing
+    @# this commmit will be picked up by the build process and the npm libraries published
+    cd libs && npm --no-git-tag-version version {{VERSION}}
+    if [ "{{downtimeok}}" == "yes" ]; then just version-update-local-files; fi
+    just version-commit
+    git push --follow-tags
+    @# i cannot remember why i need this step, it *is* important, fill in later why
+    rm -rf build
+    @echo "version `just version` pushed and queued for publishing (via cloudbuild.yml)"    
 
-# Write library versions to the place where jekyll can consume:
-# docs/_data/versions.yml
-versions-write-versions-to-jekyll:
-    #!/usr/bin/env node
-    var Versions = require(process.cwd() + '/libs/test/versions.js');
-    var fs = require('fs');
-    var p = Versions.getMetapageVersions(true);
-    p.then((versions) => { var out = 'versions: ' + JSON.stringify(versions); console.log('./docs/_data/versions.yml:\n' + out + '\n'); fs.writeFileSync('./docs/_data/versions.yml', out + '\n')});
+version-help:
+    @echo "New version release steps"
+    @echo "1. just publish-new-version"
+    @echo "2. Wait until libs are published"
+    @echo "3. `just versions-update`"
+
+
+# Idempotent version update where they are used
+version-update-local-files:
+    docker-compose run builder-haxe just _versions-write-versions-to-jekyll
+
+# Get current NPM version
+version:
+    cat libs/package.json | jq -r '.version'
+
+# Commit the current staged/unstaged commits with the current libs/package.json version
+version-commit:
+    git add -u ; git commit -m "v`just version`"
+    git tag v`just version`

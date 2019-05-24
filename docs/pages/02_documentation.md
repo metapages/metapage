@@ -14,7 +14,7 @@ For example, the small two-piece metapage above can be created with these two st
 1) Include a the metapage script in your page:
 
 {% highlight html %}
-	<script src="https://cdn.jsdelivr.net/npm/metapage@{{site.data.lib_versions.metapage}}/browser.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/metapage@{{site.data.versions.versions.last}}/browser.js"></script>
 {% endhighlight %}
 
 

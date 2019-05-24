@@ -1,6 +1,6 @@
 {
     "name": "metapage",
-    "version": "0.2.0",
+    "version": "0.2.2",
     "description": "Connect web pages together",
     "repository": "https://github.com/dionjwa/metapage",
     "homepage": "https://metapages.org/",
@@ -23,9 +23,7 @@
     ],
     "author": "Dion Amago Whitehead <dion@transition9.com>",
     "scripts": {
-        "postversion": "git push && git push --tags && rm -rf build",
-        "test": "node test/test.js",
-        "version": "make publish-update-jekyll-script-links && git add -u ."
+        "test": "node test/test.js"
     },
     "license": "Apache-2.0"
 }

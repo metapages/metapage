@@ -26,7 +26,7 @@ layout: vanilla
 var urlParams = new URLSearchParams(window.location.search);
 var VERSION = urlParams.get('VERSION');
 {% if jekyll.environment == "production" %}
-VERSION = VERSION == null ? '{{site.data.lib_versions.metapage}}' : VERSION;
+VERSION = VERSION == null ? '{{site.data.versions.versions.last}}' : VERSION;
 {% else %}
 VERSION = VERSION == null ? 'latest' : VERSION;
 {% endif %}
@@ -44,7 +44,7 @@ head.appendChild(script);
 const convertNpmToInternalVersion = (version) => {
     if (version == 'latest') {
         // This file gets updated when the version is bumped
-        // return "{{site.data.versions.last}}";
+        // return "{{site.data.versions.versions.last}}";
         return Metapage.getLibraryVersionMatching(version);
     // use the internal version matching code
     } else if (window.compareVersions(version, '0.2') > 0) {
