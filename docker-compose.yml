@@ -53,14 +53,3 @@ services:
      - "JEKYLL_GITHUB_TOKEN=${JEKYLL_GITHUB_TOKEN}"
      - "JEKYLL_ENV=development"
 
-
-  metapage-app:
-    build:
-      context: ../metapage-app/
-    command: ["just", "serve"]
-    volumes:
-      - ${PWD}/../metapage-app:/workspace
-    ports:
-      - "4010:${PORT_METAPAGE_APP:-4010}"
-    networks:
-      - bridge
