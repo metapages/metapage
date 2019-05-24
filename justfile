@@ -19,7 +19,7 @@ version-new-publish VERSION='patch' dirtyok='yes':
     @# actually bump the libs version. # disabled --no-git-tag-version version because the ordering screwed up the cloud tests
     cd libs && npm version {{VERSION}}
     @# this commmit will be picked up by the build process and the npm libraries published
-    git add -u ; git commit -m "v`just version`" && git tag v`just version` && git push --follow-tags
+    git add -u ; git commit -m "v`just version`" && git tag v`just version` && git push && git push origin v`just version`
     @# i cannot remember why i need this step, it *is* important, fill in later why
     @rm -rf libs/build
     @echo "version `just version` pushed and queued for publishing (via cloudbuild.yml)"
