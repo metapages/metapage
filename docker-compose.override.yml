@@ -21,13 +21,13 @@ services:
 
   # This is currently local to my personal setup, it's not ideal
   # but I need a better way of managing many many individual github project websites.
-  metapage-app:
-    build:
-      context: ../metapage-app/
-    command: ["just", "serve"]
-    volumes:
-      - ${PWD}/../metapage-app:/workspace
-    ports:
-      - "4010:${PORT_METAPAGE_APP:-4010}"
-    networks:
-      - bridge
+  # metapage-app:
+  #   build:
+  #     context: ../metapage-app/
+  #   command: ["just", "serve"]
+  #   volumes:
+  #     - ${PWD}/../metapage-app:/workspace
+  #   ports:
+  #     - "4010:${PORT_METAPAGE_APP:-4010}"
+  #   networks:
+  #     - bridge
