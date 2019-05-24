@@ -21,7 +21,6 @@ steps:
 #                   [libs/build/npm/meta*]
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:builder-haxe'
   id: 'compile'
-  # dir: 'docs/libs'
   env:
   - 'DOCKER_TAG=$COMMIT_SHA'
   - 'NPM_MODE=production'

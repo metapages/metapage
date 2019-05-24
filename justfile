@@ -45,3 +45,11 @@ version:
 version-commit:
     git add -u ; git commit -m "v`just version`"
     git tag v`just version`
+
+# Damn it happens 
+version-remove VERSION:
+    git push origin :v{{VERSION}} || :
+    git tag -d :v{{VERSION}} || :
+    npm deprecate metapage@{{VERSION}} "Deprecating via automated version-remove" || :
+    npm deprecate metaframe@{{VERSION}} "Deprecating via automated version-remove" || :
+    @echo "If this version should be ignored in tests, add to libs/test/versions.js versions = versions.filter((v) => {"
