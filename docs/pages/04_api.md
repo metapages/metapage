@@ -60,9 +60,28 @@ Defined by:
 }
 ```
 
+The `pipe` entries of "inputs" are objects describing the source metaframe, source metaframe output pipe name, and the target metaframe (the owning metaframe) input pipe name 
+```js
+{
+  "metaframe": "<sourceMetaframeId>",
+  "source": "<sourceMetaframePipeName>",
+  "target": "<thisMetaframePipeName>",
+}
+```
+
+`pipe.metaframe`: source metaframeId
+
+`pipe.source`: source metaframe output pipe name. Can be `*` or any glob, this will forward all output pipes matching the glob
+
+`pipe.target`: (optional) target metaframe input pipe name. If `target` is omitted, then the input pipe name will be the same as the output pipe name.
+
+<div class="language-mermaid">graph LR
+metaframeSource[pipeInput.metaframe] -- "pipeInput.source -> pipeInput.target" --> targetMetaframe
+</div>
+
 <!-- {: .fs-5 .ls-10 .text-mono .code-example } -->
 
-The `target` key of the `inputs` array element can be omitted if the value is the same as the `source` value.
+
 
 `version`: This library hasn't reached version `"1"` yet. Backwards compatibility is built into this library from it's first release, and will be automated as much as possible. This is required to maintain long-term compatibility: metaframes should be useful forever, if that is possible from the content. Users should only need to upgrade for bug fixes, performance improvements, or to access new features, and there should never be cognitive load (no worries) about versioning for library users. Mistakes happen, no process is perfect, but this tool assumes the burden of handling all changes to versions over time.
 
@@ -84,65 +103,21 @@ Ways to initialize a metapage:
 2. Create a metapage from a [MetapageDefinition](#metapagedefinition) JSON object. No metaframes are yet added to the page:
   ```ts
   const metapage = Metapage.from(def :MetapageDefinition, ?opts :Options): Metapage
+  // updating the definition
+  metapage.setDefinition(def :MetapageDefinition)
   ```
-3. Create an empty metapage via the constructor. Metaframes and pipes are added manually. This is mostly used for testing or debugging:
-  ```ts
-  const metapage = new Metapage(?opts :Options): Metapage
-  ```
+
 
 The optional ```opts``` argument defineds some extra options, mostly used for debugging:
 
 ```typescript
 interface Options {
   color?: String;  // Color of console.logs, since all iframes and the main page will output logs to the same console
-  id?   : String;  //Id, not required, but useful if you have multiple metapages in a single website.
+  id?   : String;  // Id, not required, but useful if you have multiple metapages in a single website.
 }
 ```
 
 If the URL has the parameter `MP_DEBUG` then debug logging is enabled: `https://domain.org/metapage1?MP_DEBUG`
-
-
-### Metapage#addMetaframe
-
-```ts
-metapage.addMetaframe(metaframeId :String, definition :String): MetaframeClient
-```
-
-`metaframeId`: unique (to the metapage) name or id
-
-`definition`: JSON defining the metaframe
-
-Add a new metaframe using the URL. Optionally provide a (locally unique to the metapage) id. If an id is not provided, one will be generated.
-
-### Metapage#addPipe
-
-```ts
-metapage.addPipe(targetMetaframe :String, pipeInput :PipeInput)
-```
-
-`targetMetaframe`: metaframeId of the target metaframe
-
-`pipeInput`: object describing the source metaframe, output pipe name, and input pipe name 
-```js
-{
-  "metaframe": "<sourceMetaframeId>",
-  "source": "<sourceMetaframePipeName>",
-  "target": "<thisMetaframePipeName>",
-}
-```
-
-`pipeInput.metaframe`: source metaframeId
-
-`pipeInput.source`: source metaframe output pipe name. Can be `*` or any glob, this will forward all output pipes matching the glob
-
-`pipeInput.target`: target metaframe input pipe name. If `target` is omitted, then the input pipe name will be the same as the output pipe name.
-
-
-Add a new metaframe input pipe, from the source metaframes output `source`, to the target metaframes `target` input.
-
-<div class="language-mermaid">graph LR
-metaframeSource[pipeInput.metaframe] -- "pipeInput.source -> pipeInput.target" --> targetMetaframe
-</div>
 
 
 ### Metapage#dispose
@@ -153,24 +128,24 @@ metapage.dispose()
 
 Removes all metaframes, window listeners, event listeners.
 
-### Metapage#get
+### Metapage#getMetaframe
 
 ```ts
-metapage.get(metaframeId :String): MetaframeClient
+metapage.getMetaframe(metaframeId :String): MetaframeClient
 ```
 
 Get the MetaframeClient for the given id.
 
-### Metapage#iframes
+### Metapage#getIframes
 
 ```ts
-metapage.iframes(): Map<String, IFrameElement>
+metapage.getIframes(): Map<String, IFrameElement>
 ```
 
 Returns a plain Object with metaframe ids mapped to the underlying metaframe [iframes](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe).
 
 
-### Metapage#metaframeIds
+### Metapage#getMetaframeIds
 
 ```ts
 metapage.metaframeIds(): Array<String>
@@ -179,27 +154,98 @@ metapage.metaframeIds(): Array<String>
 Returns an array of metaframe ids.
 
 
-### Metapage#metaframes
+### Metapage#getMetaframes()
 
 ```ts
-metapage.metaframes(): Map<String, MetaframeClient>
+metapage.getMetaframes(): Map<String, MetaframeClient>
 ```
 
 Returns a plain Object with metaframe ids mapped to MetaframeClient objects.
 
+
+### Metapage#getPluginIds
+
+```ts
+metapage.getPluginIds(): Array<String>
+```
+
+Returns an array of plugin ids.
+
+
+### Metapage#getPlugins()
+
+```ts
+metapage.getPlugins(): Map<String, MetaframeClient>
+```
+
+Returns a plain Object with metaframe ids mapped to MetaframeClient objects.
+
+### Metapage#getState()
+
+```ts
+metapage.getState(): State
+
+```
+
+Where `State` looks like:
+```json
+{
+  "metaframes": {
+    "inputs": {
+      "metaframeId1": {
+        "inputPipe1": true
+      }
+    }
+  }
+```
+
+It represents the entire state of the metapage.
+
+### Metapage#setState()
+
+```ts
+metapage.setState(state :State)
+
+```
+
+This will update the entire state of the application and set all the metaframe inputs.
+
+
+### Metapage#onState()
+
+```ts
+metapage.onState(function(state :State) { ... });
+
+```
+
+The callback is called on every state change.
+
+### Metapage#setDefinition()
+
+```ts
+metapage.setDefinition(def :Definition)
+
+```
+
+### Metapage#getDefinition()
+
+```ts
+var def :Definition = metapage.getDefinition();
+
+```
+
+
 ### Metapage#onInputs
 
 ```ts
-metapage.onInputs(function(inputs) {...}): function():
+metapage.getMetaframe(<metaframeId>).onInputs(function(inputs) {...}): function():
 ```
 
 Callback called on every input update event. Example `inputs` payload:
 
 ```js
 {
-  "metaframeId1": {
-    "inputPipeId1": "value"
-  }
+  "inputPipeId1": "value"
 }
 ```
 
@@ -208,7 +254,7 @@ An unbind function is returned.
 The same thing can be called via the event:
 
 ```ts
-metapage.on('inputs', function(inputs) {...}): function():
+metapage.getMetaframe(<metaframeId>).on('inputs', function(inputs) {...}): function():
 ```
 
 You can also listen on the metaframe clients directly:
@@ -221,58 +267,20 @@ metapage.get(metaframeId).on('inputs', function(inputs) {...}): function():
 ### Metapage#onOutputs
 
 ```ts
-metapage.onOutputs(function(outputs) {...}): function():
+metapage.get(metaframeId).onOutputs(function(outputs) {...}): function():
 ```
 
 Callback called on every output update event. Example `outputs` payload:
 
 ```js
 {
-  "metaframeId1": {
-    "outputPipeId1": "value"
-  }
+  "outputPipeId1": "value"
 }
 ```
 
 An unbind function is returned.
 
 The same thing can be called via the event:
-
-```ts
-metapage.on('outputs', function(outputs) {...}): function():
-```
-
-You can also listen on the metaframe clients directly:
-
-```ts
-metapage.get(metaframeId).on('outputs', function(outputs) {...}): function():
-```
-
-### Metapage#onOutputs
-
-```ts
-metapage.onOutputs(function(outputs) {...}): function():
-```
-
-Callback called on every output update event. Example `outputs` payload:
-
-```js
-{
-  "metaframeId1": {
-    "outputPipeId1": "value"
-  }
-}
-```
-
-An unbind function is returned.
-
-The same thing can be called via the event:
-
-```ts
-metapage.on('outputs', function(outputs) {...}): function():
-```
-
-You can also listen on the metaframe clients directly:
 
 ```ts
 metapage.get(metaframeId).on('outputs', function(outputs) {...}): function():
@@ -286,6 +294,7 @@ metapage.removeAll()
 ```
 
 Removes all metaframes, essentially resetting the metapage. It doesn't remove window listeners though, for proper disposal call `dispose()`.
+
 
 ### Metapage#setInput/setInputs
 
@@ -330,50 +339,21 @@ Metapage event allows you to add hooks to the data flow:
 /**
  * Example update:
  * {
- *   "metaframe1": {
- *     "input1": "foobar",
- *     "input2": 3
+ *   "metaframes": {
+ *     "inputs": {
+ *        "metaframe1": {
+ *          "input1": "foobar",
+ *          "input2": 3
+ *        }
+ *     }
  *   }
  * }
  */
-metapage.on('inputs', function(update) {
-
-});
+metapage.on('state', function(metapageState) { ...});
 ```
 
-Listens to changes in the `inputs` for metaframes. The listener is called on every discrete input update. 
+Listens to changes in the `state` for metaframes (and plugins). The listener is called on every discrete update of inputs and outputs.
 
-
-```ts
-/**
- * Example update:
- * {
- *   "metaframe1": {
- *     "output1": "foobar",
- *     "output2": 3
- *   }
- * }
- */
-metapage.on('outputs', function(update) {
-  
-});
-```
-
-Listens to changes in the `outputs` for metaframes. The listener is called on every discrete output update. 
-
-You can also just listen to a specific metaframe client:
-
-```ts
-/**
- * Example update:
- * {
-*    "output1": "foobar",
- * }
- */
-metapage.get(metaframeId).on('outputs', function(update) {
-  
-});
-```
 
 ```ts
 /**
@@ -470,34 +450,6 @@ metapage.get(metaframeId).on('outputs', function(outputs) {...}): function():
 ```
 
 
-### Metapage#onMetaframes(function(outputs) {...}): function():
-
-This will always be fired at least once for the existing set of metaframes.
-If the definition is updated, the metapage will internally recreate the new metaframes (and dispose of the previous), and create new metaframes.
-
-The return values is a dispose function.
-
-```ts
-
-metapage.onMetaframes(function(metaframes :Map<String, MetaframeClient>) {...})): function():
-
-```
-
-
-
-### Metapage#metaframes
-
-```ts
-metapage.metaframes(): Map<String, MetaframeClient>
-
-
-
-
-
-
-
-
-
 
 
 Metaframe
@@ -548,10 +500,10 @@ metaframe.ready.then(function(_) {
 });
 ```
 
-### Metaframe#name
+### Metaframe#id
 
 ```ts
-let s :String = metaframe.name;
+let s :String = metaframe.id;
 ```
 
 The id the metapage assigned to this metaframe. Defaults to the key in the metapage definition.
@@ -713,6 +665,12 @@ Plugins declare which inputs they are allows to receive in the `metaframe.json` 
 
 
 ##Plugin#API
+
+The `plugin` field on the `metapage` object will be present if the metaframe is initialized as a plugin by the owning metapage:
+
+```ts
+metaframe.plugin
+```
 
 
 `metapage/definition` and `metapage/state` pipes may be listened to as per usual, or you may call the plugin methods:
