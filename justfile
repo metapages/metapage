@@ -28,7 +28,6 @@ version-new-publish VERSION='patch' dirtyok='yes':
 
 _post-version-new-publish:
     just version-update-local-files
-    just version-commit
 
 version-help:
     @echo "New version release steps"

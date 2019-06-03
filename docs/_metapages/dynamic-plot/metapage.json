@@ -25,8 +25,5 @@
         }
       ]
     }
-  },
-  "plugins": [
-    "http://localhost:1234"
-  ]
+  }
 }

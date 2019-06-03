@@ -128,12 +128,13 @@ var plugins = {};
 {% if jekyll.environment == "production" %}
 		return url;
 {% else %}
-		return `http://localhost:3000/${url}`;
+		return `{{site.data.urls.app-metapage-local}}`;
 {% endif %}
 }).map((url => {
 	var element = document.createElement("li");
 	element.innerHTML = `<a href="${url}">${url}</a>`;
 	document.getElementById("tools").appendChild(element);
 }));
+
 
 </script>
