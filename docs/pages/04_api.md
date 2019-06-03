@@ -653,16 +653,17 @@ Removes window message listener, event listeners, and nulls potentially large fi
 # Metapage plugins
 
 Metapage plugins are metaframes that are not connected to the normal metaframes, instead they have hooks (via inputs) into:
- - metapage state changes (the child metaframe inputs)
+
+ - metapage state changes (the metaframe inputs + outputs)
  - the metapage definition
- - other custom information depending on the metapage display implementation
 
 Uses for the above include:
+
   - saving and restoring state changes
   - displaying representations of the definition (graph views, JSON editors)
   - others things currently outside my imagination
-:
 
+They are defined in the definition as unique URL to the plugin metaframe:
 
 ```json
 {
@@ -678,6 +679,8 @@ Uses for the above include:
 ```
 
 The order of the plugins is usually the order displayed in the app.metapage.org UI.
+
+The plugin URLs must be unique (even though they are defined in a list) and are not allowed to collide with the metaframe ids.
 
 ## Implenting a metapage plugin
 
@@ -708,32 +711,36 @@ Plugins declare which inputs they are allows to receive in the `metaframe.json` 
 }
 ```
 
-Just defining the inputs and outputs does not actually mean the plugin metaframe will automatically get the values. The values must be explicity requested, although the outputs will be automatically responded to.
 
 ##Plugin#API
 
+
+`metapage/definition` and `metapage/state` pipes may be listened to as per usual, or you may call the plugin methods:
+
 ```ts
-metaframe.plugin.someCall();
+metaframe.plugin.requestState(); // arrives via the next line
+var disposeFunction = metaframe.plugin.onState(function(metapageState) { ... });
+
+var metapageState = metaframe.plugin.getState();
+metaframe.plugin.setState(metapageState);
 ```
 
 
-##Plugin#outputs
+```ts
+var disposeFunction = metaframe.plugin.onDefinition(function(metapageDefinition) { ... });
+metaframe.plugin.setDefinition(metapageDefinition);
+```
+
+
+##Plugin#input pipes
+
+`metapage/definition`: this input will always have the most recent metapage definition. If the output is set, the metapage will update the definition.  No action is needed to get this data.
+
+`metapage/state`: this input gets the metapage state. If the output is set, the metapage will update the entire application state. The `metapage/state` is not sent automatically, it must be requested every time:
+
+
+##Plugin#output pipes
 
 `metapage/state`: The current metapage state will be replaced with this value.
 
 `metapage/definition`: The current metapage definition will be replaced with this value.
-
-##Plugin#inputs
-
-
-
-`metapage/state`: input listeners first get the complete state and subsequently only single changes of the metaframe input values. If the plugin output emits, this will replace the entire state. This model of emitting state changes is meant to support save/restore of any state.
-
-```ts
-metapage.onPluginInputs("metapage/state" function(inputs) {...}): function():
-```
-
-`metapage/definition`: input listeners the definition, and again on any changes. If the plugin output emits, this will replace the current definition. This model of emitting state changes is meant to support editing functionality.
-
-When the definition is changed this way, several subsequent events follow:
- - 
