@@ -1,4 +1,4 @@
-package js.metapage.v0_2;
+package js.metapage.v0_3;
 
 import haxe.remoting.JsonRpc;
 
@@ -10,7 +10,7 @@ abstract JsonRpcMethodsFromChild(String) to String {
   var SetupIframeServerResponseAck = "SetupIframeServerResponseAck";
 
   // Plugin API
-  var PluginRequest = "PluginRequest";
+  var PluginRequest = "PluginRequest"; // See further definitions: ApiPayloadPluginRequest*
 }
 
 @:enum
@@ -30,6 +30,8 @@ typedef SetupIframeServerResponseData = {
 	var state   : {inputs:MetaframeInputMap};
   // Allow newer metaframes to handle older metapage versions
 	var version : MetaLibsVersion;
+  //is this metaframe a plugin?
+  var plugin  : Bool;
 }
 
 typedef MinimumClientMessage = {>RequestDef,
@@ -41,8 +43,13 @@ typedef SetupIframeClientAckData = {>MinimumClientMessage,
   var version  :MetaLibsVersion;
 }
 
-typedef ApiPayloadPluginRequest = {>MinimumClientMessage,
-  var version  :MetaLibsVersion;
+// Plugin API definitions
+@:enum
+abstract ApiPayloadPluginRequestMethod(String) to String {
+  // request the state
+  var State = "metapage/state";
 }
 
-
+typedef ApiPayloadPluginRequest = {
+  var method : ApiPayloadPluginRequestMethod;
+}

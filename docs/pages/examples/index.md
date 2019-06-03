@@ -8,6 +8,8 @@ nav_order: 5
 Metaframes:
 <ul id="metaframes"></ul>
 
+Plugins:
+<ul id="plugins"></ul>
 
 Metapages:
 <ul id="metapages"></ul>
@@ -29,6 +31,7 @@ function getFirstTokenAfter(s, target) {
 
 var metaframes = {};
 var metapages = {};
+var plugins = {};
 
 // add the locally hosted metaframe links
 [
@@ -66,6 +69,24 @@ var metapages = {};
 	document.getElementById("metaframes").appendChild(element);
 }));
 
+// add the locally hosted plugins
+[
+	{% for metaframe in site.plugins %}
+	  "{{site.baseurl}}{{ metaframe.id }}".replace('/index', ''),
+	{% endfor %}
+].forEach(function(e) {
+	var token = getFirstTokenAfter(e, 'plugins');
+	var tokens = e.split('/');
+	var i = tokens.indexOf(token);
+	tokens = tokens.slice(0, i + 1);
+	e = "{{site.url}}" + tokens.join('/');
+	if (!plugins[token]) {
+		plugins[token] = true;
+		var element = document.createElement("li");
+		element.innerHTML = '<a href="' + e + '/">' + token + '</a>  <a href="{{site.url}}/tools/metaframeview?url=' + e + '/">inspect</a>';
+		document.getElementById("plugins").appendChild(element);
+	}
+});
 
 // add the local metapages
 [

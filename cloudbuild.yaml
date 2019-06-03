@@ -7,7 +7,7 @@ steps:
   - 'BUILDER_DOCKER_COMPOSE=docker-compose.yml'
   # "builder" is the docker image target used for all further operations
   # It is renamed to the branch name for later steps
-  - 'BUILDER_DOCKERFILE_TARGET=builder builder-haxe'
+  - 'BUILDER_DOCKERFILE_TARGET=builder builder-haxe jekyll'
   entrypoint: 'sh'
   args:
     - '-c'

@@ -1,21 +1,24 @@
 # https://github.com/casey/just
 # just runs the dev server by default
-PROJECT_NAME = `basename $PWD`
-export NODE_ENV = env_var_or_default('NODE_ENV', 'development')
+PROJECT_NAME := `basename $PWD`
+export NODE_ENV := env_var_or_default('NODE_ENV', 'development')
 
 help:
-    just --list
+    @just --list
 
 watch-docker:
     cd .. && docker-compose run builder-haxe just watch
 
-build:
+compile: _set-context
+    haxe build.hxml
+
+build: _set-context
     webpack
 
-watch:
-    nodemon --legacy-watch --watch src --ext hx --exec just build
+watch: _set-context
+    nodemon --legacy-watch --watch src --ext hx --exec 'just compile && just build'
 
-serve:
+serve: _set-context
     npm run dev
 
 # Write library versions to the place where jekyll can consume:
@@ -41,9 +44,14 @@ _set-context-host:
 		exit 1; \
 	fi
 	@echo "Context: host"
-	mkdir -p ../../{{PROJECT_NAME}}_node_modules
-	rm -rf node_modules
-	ln -s ../../{{PROJECT_NAME}}_node_modules node_modules
+
+	@mkdir -p ../../{{PROJECT_NAME}}_node_modules
+	@rm -rf node_modules
+	@ln -s ../../{{PROJECT_NAME}}_node_modules node_modules
+
+	@mkdir -p ../.haxelib
+	@rm -rf .haxelib
+	@ln -s ../.haxelib .haxelib
 
 # container libraries are installed in the root so that mounting
 # in the project root does not hide the previously installed libs
@@ -53,5 +61,7 @@ _set-context-container: ###dev This must be run INSIDE a container
 		exit 1; \
 	fi
 	@echo "Context: container"
-	rm -rf node_modules
-	ln -s /node_modules node_modules
+	@rm -rf node_modules
+	@ln -s /node_modules node_modules
+	@rm -rf .haxelib
+	@ln -s /.haxelib .haxelib

@@ -8,39 +8,44 @@ package js.metapage.client;
 
 @:expose("Metaframe")
 @:keep
+@:allow(js.metapage.client.MetaframePlugin)
 class Metaframe extends EventEmitter
 {
-	inline public static var version :MetaframeDefinitionVersion = MetaframeDefinitionVersion.V0_2;
+	public static var version :MetaLibsVersion = Constants.VERSION;
+
 	public static var INPUT = MetaframeEvents.Input;
 	public static var INPUTS = MetaframeEvents.Inputs;
 	public static var MESSAGE = MetaframeEvents.Message;
 
 	var _inputPipeValues :MetaframeInputMap = {};
 	var _outputPipeValues :MetaframeInputMap = {};
+	// obsoleted, use this.id
 	var _iframeId :MetaframeId;
 	var _parentId :MetapageId;
-	var _parentVersion :MetaframeDefinitionVersion;
+	var _parentVersion :MetaLibsVersion;
 	var _isIframe :Bool;
 
-	
 	public var debug :Bool = false;
 	public var ready(default, null) :Promise<Bool>;
 	public var color :String = '000';
-	
 
+	public var plugin :MetaframePlugin;
+	
 	/**
 	 * This is the (locally) unique id that the parent metapage
 	 * assigns to the metaframe. Defaults to the name given in
 	 * then metapage definition.
 	 */
+	// TODO obsoleted, use this.id
 	public var name(default, null) :String;
+	public var id(default, null) :String;
 
 	public function new()
 	{
 		super();
 		debug = MetapageTools.getUrlParamDEBUG();
 		_isIframe = isIframe();
-		this.name = MetapageTools.getUrlParamMF_ID();
+		// this.name = MetapageTools.getUrlParamMF_ID();
 
 		if (!_isIframe) {
 			//Don't add any of the machinery, it only works if we're iframes.
@@ -61,6 +66,7 @@ class Metaframe extends EventEmitter
 
 				if (_iframeId == null) {
 					_iframeId = params.iframeId;
+					this.id = params.iframeId;
 					_parentVersion = params.version;
 					this.color = MetapageTools.stringToRgb(_iframeId);
 					_parentId = params.parentId;
@@ -81,6 +87,12 @@ class Metaframe extends EventEmitter
 							emit(MetaframeEvents.Input, pipeId, _inputPipeValues[pipeId]);
 						}
 					}
+
+					// if this is a plugin, initialize the plugin object
+					if (params.plugin) {
+						this.plugin = new MetaframePlugin(this);
+					}
+					
 
 					//Resolve AFTER sending inputs. This way consumers can either:
 					//1) Just listen to inputs updates. The first will be when the metaframe is ready
@@ -209,7 +221,6 @@ class Metaframe extends EventEmitter
 			return;
 		}
 		for (pipeId in inputs.keys()) {
-			log('input [${pipeId}]');
 			emit(MetaframeEvents.Input, pipeId, inputs[pipeId]);
 		}
 		emit(MetaframeEvents.Inputs, inputs);
@@ -261,16 +272,18 @@ class Metaframe extends EventEmitter
 		return _outputPipeValues;
 	}
 
-	function sendRpc(method :String, params :Dynamic) :Void
+	function sendRpc(method :JsonRpcMethodsFromChild, params :Dynamic)
 	{
 		if (_isIframe) {
 			var message :MinimumClientMessage = {
 				jsonrpc: '2.0',
+				// id     : MetapageTools.generateNonce(),
 				method: method,
 				params: params,
 				iframeId: _iframeId,
 				parentId: _parentId
 			};
+			log(message);
 			Browser.window.parent.postMessage(message, "*");
 		} else {
 			error('Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe');
@@ -279,20 +292,22 @@ class Metaframe extends EventEmitter
 
 	function onWindowMessage(e :Dynamic)
 	{
-		if (untyped __js__('typeof e.data === "object"')) {
+		if (js.Syntax.typeof(e.data) == "object") {
 			var jsonrpc :MinimumClientMessage = e.data;
-			if (jsonrpc.jsonrpc == '2.0') {//Make sure this is a jsonrpc object
+			if (jsonrpc.jsonrpc == '2.0') { //Make sure this is a jsonrpc object
+				log(e);
 				var method :JsonRpcMethodsFromParent = cast jsonrpc.method;
 				if (!(method == JsonRpcMethodsFromParent.SetupIframeServerResponse || (
 					jsonrpc.parentId == _parentId &&
 					jsonrpc.iframeId == _iframeId))) {
-					error('Received message but jsonrpc.parentId=${jsonrpc.parentId} _parentId=$_parentId jsonrpc.iframeId=${jsonrpc.iframeId} _iframeId=$_iframeId');
+					error('window.message: received message but jsonrpc.parentId=${jsonrpc.parentId} _parentId=$_parentId jsonrpc.iframeId=${jsonrpc.iframeId} _iframeId=$_iframeId');
 					return;
 				}
 
 				switch(method) {
 					case SetupIframeServerResponse: //Handled elsewhere
 					case InputsUpdate: setInternalInputsAndNotify(jsonrpc.params.inputs);
+					default: if (debug) log('window.message: unknown JSON-RPC method: ${Json.stringify(jsonrpc)}');
 				}
 
 				emit(jsonrpc.method, jsonrpc.params);
@@ -300,45 +315,13 @@ class Metaframe extends EventEmitter
 
 			} else {
 				//Some other message, e.g. webpack dev server, ignored
+				if (debug) log('window.message: not JSON-RPC: ${Json.stringify(jsonrpc)}');
 			}
 		} else {
 			//Not an object, ignored
+			if (debug) log('window.message: not an object, ignored: ${Json.stringify(e)}');
 		}
 	}
-
-	// function sendWindowDimensions()
-	// {
-	// 	sendDimensions();
-	// }
-
-	// function sendDimensions(?dimensions :{width :Float, height:Float})
-	// {
-	// 	var window = Browser.window;
-	// 	if (dimensions == null) {
-	// 		var height = window.document.documentElement.scrollHeight != null ? window.document.documentElement.scrollHeight : window.document.body.scrollHeight;
-	// 		dimensions = {
-	// 			width: null,
-	// 			height:height,
-	// 			"window.innerWidth": window.innerWidth,
-	// 			"window.innerHeight": window.innerHeight,
-	// 			"window.outerWidth": window.outerWidth,
-	// 			"window.outerHeight": window.outerHeight,
-	// 			"window.document.body.scrollHeight": window.document.body.scrollHeight,
-	// 			"window.document.body.scrollWidth": window.document.body.scrollWidth,
-	// 			"window.document.documentElement.scrollHeight": window.document.documentElement.scrollHeight,
-	// 			"window.document.documentElement.scrollWidth": window.document.documentElement.scrollWidth,
-	// 		};
-	// 	} else {
-	// 		if (js.Syntax.typeof(dimensions) != 'object') {
-	// 			throw {dimensions:dimensions, error:'sendDimensions(..) expecting {width:Float, height:Float}'};
-	// 		} else {
-	// 			if (!(Reflect.hasField(dimensions, 'width') && Reflect.hasField(dimensions, 'height'))) {
-	// 				throw {dimensions:dimensions, error:'sendDimensions(..) missing either width or height field, expecting: {width:Float, height:Float}'};
-	// 			}
-	// 		}
-	// 	}
-	// 	sendRpc(JsonRpcMethodsFromChild.Dimensions, dimensions);
-	// }
 
 	public static function isIframe() :Bool
 	{
@@ -348,5 +331,61 @@ class Metaframe extends EventEmitter
 		} catch(ignored :Dynamic) {
 			return false;
 		}
+	}
+}
+
+class MetaframePlugin
+{
+	var _metaframe :Metaframe;
+
+	public function new(metaframe :Metaframe)
+	{
+		_metaframe = metaframe;
+	}
+
+	public function requestState()
+	{
+		var payload :ApiPayloadPluginRequest = {
+			method: ApiPayloadPluginRequestMethod.State,
+		}
+		_metaframe.sendRpc(JsonRpcMethodsFromChild.PluginRequest, payload);
+	}
+
+	public function onState(listener :Dynamic->Void) :Void->Void
+	{
+		var disposer = _metaframe.onInput(METAPAGE_KEY_STATE, listener);
+		if (this.getState() != null) {
+			listener(this.getState());
+		}
+		return disposer;
+	}
+
+	public function getState() :Dynamic
+	{
+		return _metaframe.getInput(METAPAGE_KEY_STATE);
+	}
+
+	public function setState(state :Dynamic)
+	{
+		_metaframe.setOutput(METAPAGE_KEY_STATE, state);
+	}
+
+	public function onDefinition(listener :Dynamic->Void) :Void->Void
+	{
+		var disposer = _metaframe.onInput(METAPAGE_KEY_DEFINITION, listener);
+		if (this.getDefinition() != null) {
+			listener(this.getDefinition());
+		}
+		return disposer;
+	}
+
+	public function setDefinition(definition :Dynamic)
+	{
+		_metaframe.setOutput(METAPAGE_KEY_DEFINITION, definition);
+	}
+
+	public function getDefinition() :Dynamic
+	{
+		return _metaframe.getInput(METAPAGE_KEY_DEFINITION);
 	}
 }

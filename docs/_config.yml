@@ -16,6 +16,8 @@ collections:
     output: true
   tools:
     output: true
+  plugins:
+    output: true
 
 webrick:
   headers:

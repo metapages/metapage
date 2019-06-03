@@ -42,7 +42,6 @@ function buildEditorWithInitialInputs(startInputs) {
 	var idOutputs = 'outputsId';
 	var idTarget = 'target';
 	var metapageDef = {
-		id: '_',
 		version: '0.2',
 		metaframes: {},
 	};
@@ -73,9 +72,9 @@ function buildEditorWithInitialInputs(startInputs) {
 	};
 
 	const metapage = Metapage.from(metapageDef);
-	const metaframe = metapage.get(idTarget);
-	const metaframeInputs = metapage.get(idInputs);
-	const metaframeOutputs = metapage.get(idOutputs);
+	const metaframe = metapage.getMetaframe(idTarget);
+	const metaframeInputs = metapage.getMetaframe(idInputs);
+	const metaframeOutputs = metapage.getMetaframe(idOutputs);
 
 	if (startInputs) {
 		const startState = {};
