@@ -34,7 +34,7 @@ version-help:
     @echo "New version release steps"
     @echo "1. just publish-new-version"
     @echo "2. Wait until libs are published"
-    @echo "3. `just versions-update`"
+    @echo "3. just _post-version-new-publish"
 
 # Idempotent version update where they are used
 version-update-local-files:
