@@ -1,9 +1,8 @@
 ---
 ---
 {
-  "version": "0.2",
+  "version": "0.3",
   "meta": {
-    "plugins": [],
     "layouts": {
       "flexboxgrid" : {
         "docs": "http://flexboxgrid.com/",
@@ -15,7 +14,7 @@
   },
   "metaframes": {
     "random-data-generator": {
-      "url": "{{site.url}}/metaframes/random-data-generator/?frequency=500"
+      "url": "{{site.url}}/metaframes/random-data-generator/?frequency=1000"
     },
     "graph-dynamic": {
       "url": "{{site.url}}/metaframes/graph-dynamic/",
@@ -26,5 +25,8 @@
         }
       ]
     }
-  }
+  },
+  "plugins": [
+    "http://localhost:1234"
+  ]
 }

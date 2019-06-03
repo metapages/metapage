@@ -2,7 +2,7 @@ package js.metapage.v0_1_0;
 
 typedef MetapageDefinition = {
 	var id :MetapageId;
-	@:optional var version :MetapageVersion;
+	@:optional var version :MetaLibsVersion;
 	var iframes :util.TypedDynamicAccess<MetaframeId, MetaframeInstance>;
 	@:optional var options :MetapageOptions;
 	@:optional var meta :MetapageMetadata;

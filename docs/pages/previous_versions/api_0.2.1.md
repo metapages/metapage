@@ -1,12 +1,21 @@
 ---
 layout: default-with-mermaid
-title: api_0.2.0
-permalink: /previous_versions/api_0.2.0/
+title: api_0.2.1
+permalink: /previous_versions/api_0.2.1/
 nav_exclude: true
 ---
 
-# API Reference v0.2.0
------
+
+
+# API Reference v0.2.1
+{: .no_toc }
+
+## Table of contents
+{: .no_toc .text-delta }
+
+
+1. TOC
+{:toc}
 
 
 MetapageDefinition<a name="metapagedefinition"></a>
@@ -64,11 +73,17 @@ Metapage
 A metapage manages piping metaframe outputs to metaframe inputs.
 
 Ways to initialize a metapage:
-1. Create a metapage from a [MetapageDefinition](#metapagedefinition) JSON object:
+1. Load a `metapage.json` dynamically and add the metaframes. If no `loadCallback` is given, metaframe iframes will automatically be added to the document element with the id that matches the metaframe id:
+  ```ts
+  Metapage.load(?metapage :<string|object>, ?loadCallback :func): Promise<Metapage>
+  ```
+  <br/>`metapage`: URL to metapage definition, defaults to "metapage.json", or the metapage JSON object
+  <br/>`loadCallback`: optional callback with two arguments `(metaframeId, IFrameElement)`
+2. Create a metapage from a [MetapageDefinition](#metapagedefinition) JSON object. No metaframes are yet added to the page:
   ```ts
   const metapage = Metapage.from(def :MetapageDefinition, ?opts :Options): Metapage
   ```
-2. Create an empty metapage via the constructor. Metaframes and pipes are added manually. This is mostly used for testing or debugging:
+3. Create an empty metapage via the constructor. Metaframes and pipes are added manually. This is mostly used for testing or debugging:
   ```ts
   const metapage = new Metapage(?opts :Options): Metapage
   ```
@@ -502,3 +517,13 @@ metaframe.setOutputs(values :Object)
 `values`: object mapping output names to values.
 
 These values will be send to all downstream metaframe consumers.
+
+
+### Metaframe#dispose
+
+```ts
+metaframe.dispose()
+```
+
+Removes window message listener, event listeners, and nulls potentially large fields.
+

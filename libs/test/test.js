@@ -2,12 +2,13 @@ const fs = require('fs');
 const puppeteer = require('puppeteer');
 const versions = require('./versions');
 
-const debug = false;
+const debugMetapage = false;
+const consoleToLogs = false;
 const isContainer = fs.existsSync('/.dockerenv');
 
 const getMetapageTestUrl = (version) => {
   const host = isContainer ? 'http://jekyll:4000' : 'http://localhost:4000'; 
-  return `${host}/metapages/test/?MP_DEBUG&VERSION=${version}`;
+  return `${host}/metapages/test/?VERSION=${version}${debugMetapage ? "&MP_DEBUG" : ""}`;
 }
 
 async function runSingleMetapageTest(version) {
@@ -20,12 +21,12 @@ async function runSingleMetapageTest(version) {
       '--disable-gpu'
     ],
     executablePath: isContainer ? '/usr/bin/chromium-browser' : undefined,
-    dumpio: debug
+    dumpio: consoleToLogs
   });
     
   const page = await browser.newPage();
 
-  if (debug) {
+  if (consoleToLogs) {
     page.on("pageerror", function(err) {  
       console.log("Page error: ", err); 
     });

@@ -7,7 +7,7 @@ nav_order: 4
 
 
 
-# API Reference
+# API Reference v0.3.0
 {: .no_toc }
 
 ## Table of contents
@@ -33,7 +33,6 @@ Defined by:
 
 ```json
 {
-    "version": "0.2",
     "metaframes": {
       "metaframe1": {
         "url": "{{site.url}}/metaframes/example00_iframe1/",
@@ -54,7 +53,10 @@ Defined by:
           }
         ]
       }
-    }
+    },
+    "plugins": [
+      "{{site.url}}/metaframes/example00_iframe2/"
+    ]
 }
 ```
 
@@ -103,12 +105,12 @@ If the URL has the parameter `MP_DEBUG` then debug logging is enabled: `https://
 ### Metapage#addMetaframe
 
 ```ts
-metapage.addMetaframe(url :String, ?iframeId :String): MetaframeClient
+metapage.addMetaframe(metaframeId :String, definition :String): MetaframeClient
 ```
 
-`url`: URL to a metaframe website
+`metaframeId`: unique (to the metapage) name or id
 
-`iframeId`: optional
+`definition`: JSON defining the metaframe
 
 Add a new metaframe using the URL. Optionally provide a (locally unique to the metapage) id. If an id is not provided, one will be generated.
 
@@ -246,6 +248,35 @@ You can also listen on the metaframe clients directly:
 metapage.get(metaframeId).on('outputs', function(outputs) {...}): function():
 ```
 
+### Metapage#onOutputs
+
+```ts
+metapage.onOutputs(function(outputs) {...}): function():
+```
+
+Callback called on every output update event. Example `outputs` payload:
+
+```js
+{
+  "metaframeId1": {
+    "outputPipeId1": "value"
+  }
+}
+```
+
+An unbind function is returned.
+
+The same thing can be called via the event:
+
+```ts
+metapage.on('outputs', function(outputs) {...}): function():
+```
+
+You can also listen on the metaframe clients directly:
+
+```ts
+metapage.get(metaframeId).on('outputs', function(outputs) {...}): function():
+```
 
 
 ### Metapage#removeAll
@@ -282,6 +313,14 @@ metapage.setInput(metaframeInputsObject :any)
   }
 }
 ```
+
+### Metapage#setDefinition
+
+Update the metapage definition.
+
+This will destroy the current metaframes and plugins, and recreate new ones based on the new definition.
+
+The 
 
 ### Metapage events
 
@@ -335,6 +374,35 @@ metapage.get(metaframeId).on('outputs', function(update) {
   
 });
 ```
+
+```ts
+/**
+ * Example definition event:
+ * {
+ *   "definition": { <MetapageDefinition> },
+ *   "metaframes": {
+ *     "metaframe1": { "url": "{{site.url}}/metaframes/example1/" },
+ *     "metaframe2": { "url": "{{site.url}}/metaframes/example2/" }
+ *   },
+ *   "plugins": [
+ *     { "plugin1": "https://plugin1.io" },
+ *     { "plugin2": "https://plugin2.io" }
+ *   ]
+ * }
+ */
+metapage.on('definition', function(definition) { ... });
+
+metapage.setDefinition(def :MetapageDefinition); // Fires above event
+metapage.getDefinition(def) :MetapageDefinition;
+```
+The definition can be updated, this will fire on every change and give the full definition.
+
+It also returns the metaframe and plugin sets, with the objects needed to e.g. add the iframe objects to the DOM.
+
+This is the main event you should listen to if your metapage gets updated.
+
+
+
 
 ### Metapage.MetaframeClient
 
@@ -401,11 +469,66 @@ The same thing can be called via the event:
 metapage.get(metaframeId).on('outputs', function(outputs) {...}): function():
 ```
 
+
+### Metapage#onMetaframes(function(outputs) {...}): function():
+
+This will always be fired at least once for the existing set of metaframes.
+If the definition is updated, the metapage will internally recreate the new metaframes (and dispose of the previous), and create new metaframes.
+
+The return values is a dispose function.
+
+```ts
+
+metapage.onMetaframes(function(metaframes :Map<String, MetaframeClient>) {...})): function():
+
+```
+
+
+
+### Metapage#metaframes
+
+```ts
+metapage.metaframes(): Map<String, MetaframeClient>
+
+
+
+
+
+
+
+
+
+
+
 Metaframe
 -----
 
 
 A metaframe is a website running the metaframe library that adds input+output data pipes to the page.
+
+Metaframes optionally have a `metaframe.json` definition at the URL path root, defining e.g. name, and the inputs and outputs. The definition is not *strictly* needed, however is is very helpful. Some metaframes, such as plugins, do require the `metaframe.json` to declare what inputs/outputs are allowed.
+
+You need to specify a version. All metaframe versions will be compatible with all metapage versions, however some new functionality will obviously not be available with using older versions.
+
+```json
+{
+	"version": "0.3",
+	"metadata": {
+		"title": "A button example",
+		"author": "Dion Whitehead"
+  },
+  "inputs": {
+		"input_name": {
+			"type": "json"
+		}
+	},
+	"outputs": {
+		"output_name": {
+			"type": "string"
+		}
+	}
+}
+```
 
 Initialize a metaframe:
 ```ts
@@ -527,3 +650,90 @@ metaframe.dispose()
 
 Removes window message listener, event listeners, and nulls potentially large fields.
 
+# Metapage plugins
+
+Metapage plugins are metaframes that are not connected to the normal metaframes, instead they have hooks (via inputs) into:
+ - metapage state changes (the child metaframe inputs)
+ - the metapage definition
+ - other custom information depending on the metapage display implementation
+
+Uses for the above include:
+  - saving and restoring state changes
+  - displaying representations of the definition (graph views, JSON editors)
+  - others things currently outside my imagination
+:
+
+
+```json
+{
+    "metaframes": {
+      ...
+    },
+    "plugins": [
+      "https://plugin1.io",
+      "https://plugin2.io?param1=value1"
+    ]
+      
+}
+```
+
+The order of the plugins is usually the order displayed in the app.metapage.org UI.
+
+## Implenting a metapage plugin
+
+Plugins declare which inputs they are allows to receive in the `metaframe.json` definition located at the base of the URL path. The outputs declare which values they will emit. All supported values are in this example plugin metaframe definition:
+
+```json
+{
+	"version": "0.3",
+	"metadata": {
+		"title": "My metapage plugin"
+	},
+	"inputs": {
+		"metapage/state": {
+			"type": "json"
+    },
+    "metapage/definition": {
+			"type": "json"
+		}
+  },
+  "outputs": {
+		"metapage/state": {
+			"type": "json"
+    },
+    "metapage/definition": {
+			"type": "json"
+		}
+	}
+}
+```
+
+Just defining the inputs and outputs does not actually mean the plugin metaframe will automatically get the values. The values must be explicity requested, although the outputs will be automatically responded to.
+
+##Plugin#API
+
+```ts
+metaframe.plugin.someCall();
+```
+
+
+##Plugin#outputs
+
+`metapage/state`: The current metapage state will be replaced with this value.
+
+`metapage/definition`: The current metapage definition will be replaced with this value.
+
+##Plugin#inputs
+
+
+
+`metapage/state`: input listeners first get the complete state and subsequently only single changes of the metaframe input values. If the plugin output emits, this will replace the entire state. This model of emitting state changes is meant to support save/restore of any state.
+
+```ts
+metapage.onPluginInputs("metapage/state" function(inputs) {...}): function():
+```
+
+`metapage/definition`: input listeners the definition, and again on any changes. If the plugin output emits, this will replace the current definition. This model of emitting state changes is meant to support editing functionality.
+
+When the definition is changed this way, several subsequent events follow:
+ - 

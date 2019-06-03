@@ -16,8 +16,10 @@ const getMetapageVersions = async (includeCurrent) => {
     let versions = JSON.parse(stdout);
     // damn I can't remove the old versions installed that definitely
     // will never be supported
+    // <0.1.36 removed because they are were unpolished prototypes
+    // <0.3 removed because there was a fatal (hidden) bug in the metapage lib, found when automated tests added
     versions = versions.filter((v) => {
-        return compareVersions("0.1.36", v) <= 0;
+        return compareVersions(v, "0.3.0") >= 0;
     });
 
     // Include the new version in package.json, because we're publishing

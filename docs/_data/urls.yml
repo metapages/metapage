@@ -4,6 +4,6 @@ promise_polyfill: "/js/promise.min.js"
 bulma: "css/bulma-0.7.1.css"
 minicss: "/js/mini-default.min.css"
 # When using the deployed app.metapage
-app-metapage-local: http://localhost:3000
+# app-metapage-local: http://localhost:3000
 # When using the local app.metapage
-# app-metapage-local: http://localhost:4010
+app-metapage-local: http://localhost:4010
