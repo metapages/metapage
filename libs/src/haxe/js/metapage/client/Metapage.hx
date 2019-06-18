@@ -915,6 +915,8 @@ class IFrameRpcClient extends EventEmitter
 	public var iframe (default, null):#if nodejs Dynamic #else IFrameElement #end;
 	public var id (default, null):MetaframeId;
 	public var version (default, null):MetaLibsVersion;
+	// Used for securing postMessage
+	public var url :String;
 	var _color :String;
 	var _consoleBackgroundColor :String;
 	var _ready :Promise<Bool>;
@@ -925,8 +927,6 @@ class IFrameRpcClient extends EventEmitter
 	var _loaded :Bool = false;
 	var _onLoaded : Array<Void->Void> = [];
 	var _parentId :MetapageId;
-	// Used for securing postMessage
-	var _url :String;
 	var _debug :Bool;
 	var _sendInputsAfterRegistration :Bool = false;
 	public var _definition :MetaframeDefinition;
@@ -948,20 +948,20 @@ class IFrameRpcClient extends EventEmitter
 			var location = js.Browser.location;
 			url = location.protocol + '//' + location.hostname + (location.port != null && location.port != '' ? ':' + location.port: '') + '/' + url;
 		}
-		_url = url;
+		this.url = url;
 
 		// Add the custom URL params
-		var urlBlob = new js.html.URL(url);
+		var urlBlob = new js.html.URL(this.url);
 		urlBlob.searchParams.set(URL_PARAM_METAFRAME_ID, iframeId);
 		if (debug) {
 			urlBlob.searchParams.set(URL_PARAM_DEBUG, '1');
 		}
-		url = urlBlob.href;
+		this.url = urlBlob.href;
 
 		this.id = iframeId;
 		this.iframe = Browser.document.createIFrameElement();
 		// this.iframe.scrolling = "no";
-		this.iframe.src = url;
+		this.iframe.src = this.url;
 		this._debug = debug || existsAnyUrlParam(['DEBUG_METAFRAMES', 'debug_metaframes', 'debug_' + this.id, 'DEBUG_' + this.id]);
 		_parentId = parentId;
 		_color = MetapageTools.stringToRgb(this.id);
@@ -1053,7 +1053,7 @@ class IFrameRpcClient extends EventEmitter
 
 	public function getDefinitionUrl() :String
 	{
-		var url = new URL(_url);
+		var url = new URL(this.url);
 		url.pathname = url.pathname + (url.pathname.endsWith('/') ? 'metaframe.json' : '/metaframe.json');
 		return url.href;
 	}
@@ -1292,7 +1292,6 @@ class IFrameRpcClient extends EventEmitter
 
 	function sendRpcInternal(method :String, params :Dynamic)
 	{
-		//TODO: typedef this
 		var messageJson :MinimumClientMessage = {
 			iframeId: id,
 			jsonrpc : '2.0',
@@ -1312,14 +1311,14 @@ class IFrameRpcClient extends EventEmitter
 	function sendOrBufferPostMessage(message :Dynamic)
 	{
 		if (this.iframe.contentWindow != null) {
-			this.iframe.contentWindow.postMessage(message, _url);
+			this.iframe.contentWindow.postMessage(message, this.url);
 		} else {
 			if (_bufferMessages == null) {
 				_bufferMessages = [message];
 				_bufferTimeout = Browser.window.setInterval(function() {
 					if (this.iframe.contentWindow != null) {
 						for (m in _bufferMessages) {
-							this.iframe.contentWindow.postMessage(m, _url);
+							this.iframe.contentWindow.postMessage(m, this.url);
 						}
 						Browser.window.clearInterval(_bufferTimeout);
 						_bufferTimeout = null;
