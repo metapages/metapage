@@ -1,13 +1,13 @@
 ---
 layout: default-with-mermaid
-title: API
-permalink: /api/
-nav_order: 4
+title: api_0.3.0
+permalink: /previous_versions/api_0.3.0/
+nav_exclude: true
 ---
 
 
 
-# API Reference v0.3.1
+# API Reference v0.3.0
 {: .no_toc }
 
 ## Table of contents
@@ -388,13 +388,6 @@ This is the main event you should listen to if your metapage gets updated.
 
 An internal object managing the data flow in and out of the actual metaframe iframe. You shouldn't need to access this object directly.
 This object is in the *metapage* page, managing the metaframe data flow.
-
-### Metapage.MetaframeClient#url
-
-```ts
-// The URL of the underlying iframe
-const url :string = metapage.getMetaframe(id).url;
-```
 
 ### Metapage.MetaframeClient#iframe
 
