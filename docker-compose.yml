@@ -42,6 +42,8 @@ services:
     image: gcr.io/t9-docker-images/metapage:jekyll
     build:
       context: ./docs
+      args:
+        JEKYLL_GITHUB_TOKEN: ${JEKYLL_GITHUB_TOKEN}
       cache_from:
         - gcr.io/t9-docker-images/metapage:jekyll
     command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml

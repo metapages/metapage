@@ -1,0 +1,12 @@
+{
+	"version": "0.3",
+	"metadata": {
+		"version": "1.0",
+		"title": "Diagram",
+		"author": "Dion Amago Whitehead",
+		"description": "Display mermaid.jd graphs and diagrams. Plugin: display the metapage definition using mermaid.js"
+	},
+	"inputs": {
+		"metapage/definition": {}
+	}
+}

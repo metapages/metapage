@@ -7,10 +7,9 @@
 
 -cp libs/src/haxe
 
--D webpack_nonamedchunks
-
-
--debug
-
 js.metapage.CompilationCheck
 -js libs/build/compile/compilation-check.js
+
+-D webpack_nonamedchunks
+
+-debug

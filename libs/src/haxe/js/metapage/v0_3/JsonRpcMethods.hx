@@ -16,6 +16,7 @@ abstract JsonRpcMethodsFromChild(String) to String {
 @:enum
 abstract JsonRpcMethodsFromParent(String) to String {
   var InputsUpdate              = "InputsUpdate";
+  var MessageAck                = "MessageAck";
   var SetupIframeServerResponse = "SetupIframeServerResponse";
 }
 
@@ -41,6 +42,10 @@ typedef MinimumClientMessage = {>RequestDef,
 
 typedef SetupIframeClientAckData = {>MinimumClientMessage,
   var version  :MetaLibsVersion;
+}
+
+typedef ClientMessageRecievedAck = {
+  var message  :MinimumClientMessage;
 }
 
 // Plugin API definitions

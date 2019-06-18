@@ -47,7 +47,6 @@ ADD package-lock.json .
 
 RUN npm i
 
-
 ADD build-base.hxml .
 # If this changes, also change etc/makefiles/haxe.mk
 RUN haxelib newrepo && haxelib install --always build-base.hxml

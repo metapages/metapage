@@ -2,8 +2,8 @@ const fs = require('fs');
 const puppeteer = require('puppeteer');
 const versions = require('./versions');
 
-const debugMetapage = false;
-const consoleToLogs = false;
+const debugMetapage = true;
+const consoleToLogs = true;
 const isContainer = fs.existsSync('/.dockerenv');
 
 const getMetapageTestUrl = (version) => {
@@ -12,6 +12,7 @@ const getMetapageTestUrl = (version) => {
 }
 
 async function runSingleMetapageTest(version) {
+  console.log(`\n\nRUNNING TEST: ${version}`);
   const browser = await puppeteer.launch({
     args: [
       // Required for running in the test container
@@ -43,34 +44,35 @@ async function runSingleMetapageTest(version) {
   }
 
   const url = getMetapageTestUrl(version);
+  console.log(`Metapage url: ${url}`);
 
   await page.goto(url);
   await page.waitForFunction('document.querySelector("#status").innerText.indexOf("METAPAGE TESTS PASS") > -1',
-  {
-    polling: 200,
-    timeout: 10000
-  });
+    {
+      polling: 200,
+      timeout: 15000
+    });
 
   await browser.close();
-  console.log(`    SUCCESS version:${version}`); 
+  console.log(`☘☘☘☘☘☘☘☘☘☘☘ SUCCESS version:${version} ☘☘☘☘☘☘☘☘☘☘☘ `); 
 }
 
 (async () => {
   const timeout = setTimeout(() => {
-    console.log('FAIL: tests timed out!');
+    console.log('☢☢☢☢☢☢☢☢☢☢ FAIL: tests timed out! ☢☢☢☢☢☢☢☢☢☢');
     process.exit(1);
   }, 15000);
 
   let allVersions = await versions.getMetapageVersions();
   allVersions.push('latest');
-  console.log(`Testing:`);
   console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('jekyll', 'localhost')).join("\n  ")}`);
 
-  var results = await allVersions.map(async (version) => {
-    return await runSingleMetapageTest(version);
-  });
+  // run tests sequentially, not concurrently
+  await (async () => {
+      for (let job of allVersions.map(v => () => runSingleMetapageTest(v)))
+          await job()
+  })();
 
-  await Promise.all(results);
   clearTimeout(timeout);
-  console.log(`SUCCESS Test(s) pass!`);
+  console.log(`🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀 SUCCESS Test(s) pass! 🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀`);
 })();

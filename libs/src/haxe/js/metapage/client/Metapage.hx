@@ -74,10 +74,6 @@ class Metapage extends EventEmitter
 	var _id :MetapageId;
 	var _definition :MetapageDefinition;
 	var _state :MetapageState = emptyState();
-
-	// Current input values
-	// var _inputsState :MetapageInstanceInputs = {};
-	// var _inputsPlugins :MetapageInstanceInputs = {};
 	
 	var _metaframes :JSMap<MetaframeId, IFrameRpcClient> = {};
 	var _plugins :JSMap<Url, IFrameRpcClient> = {};
@@ -92,7 +88,7 @@ class Metapage extends EventEmitter
 	{
 		super();
 		_id = opts != null && opts.id != null ? opts.id : MetapageTools.generateMetapageId();
-		debug = getUrlParamDEBUG();
+		debug = existsAnyUrlParam(['MP_DEBUG', 'DEBUG', 'debug']);
 		_consoleBackgroundColor = (opts != null && opts.color != null ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT);
 		Browser.window.addEventListener('message', onMessage);
 		log('Initialized');
@@ -593,7 +589,8 @@ class Metapage extends EventEmitter
 	function isValidJsonRpcMessage(message :MinimumClientMessage)
 	{
 		if (message.jsonrpc != '2.0') {
-			error("message.jsonrpc != '2.0'");
+			// do not even log messages that we do not recogize. We cannot control random scripts sending messages on
+			// the only communications channel
 			return false;
 		}
 		var method :JsonRpcMethodsFromChild = cast message.method;
@@ -684,13 +681,20 @@ class Metapage extends EventEmitter
 		if (js.Syntax.typeof(untyped e.data) == "object") {
 			var jsonrpc :MinimumClientMessage = untyped e.data;
 			if (!isValidJsonRpcMessage(jsonrpc)) {
-				log('invalid message ${Json.stringify(jsonrpc).substr(0, 200)}');
+				if (this.debug) {
+					log('invalid message ${Json.stringify(jsonrpc).substr(0, 200)}');
+				}
 				return;
 			}
 			// var origin :String = untyped e.origin;
 			// var source :IFrameElement = untyped e.source;
 			//Verify here
 			var method :JsonRpcMethodsFromChild = cast jsonrpc.method;
+
+#if jsondiff
+			var logDiff = null;
+#end
+
 			switch(method) {
 				/**
 				 * An iframe has created a connection object.
@@ -705,8 +709,8 @@ class Metapage extends EventEmitter
 				 * metaframes ignore further registration requests).
 				 */
 				case SetupIframeClientRequest:
-					for (iframeId in _metaframes.keys()) {
-						var iframeClient = _metaframes.get(iframeId);
+					for (metaframeId in _metaframes.keys()) {
+						var iframeClient = _metaframes.get(metaframeId);
 						iframeClient.register();
 					}
 
@@ -719,18 +723,24 @@ class Metapage extends EventEmitter
 				case SetupIframeServerResponseAck:
 					/* Send all inputs when a client has registered.*/
 					var params :SetupIframeClientAckData = jsonrpc.params;
-					var iframe = getMetaframeOrPlugin(jsonrpc.iframeId);
-					iframe.registered(params.version);
+					var metaframe = getMetaframeOrPlugin(jsonrpc.iframeId);
+					metaframe.registered(params.version);
 
 				case OutputsUpdate:
-					var iframeId :MetaframeId = jsonrpc.iframeId;
+					var metaframeId :MetaframeId = jsonrpc.iframeId;
 					var outputs :MetaframeInputMap = jsonrpc.params;
 
-					if (_metaframes.exists(iframeId)) {
-						var iframe = _metaframes.get(iframeId);
+#if jsondiff
+					logDiff = getDiffRelease('${metaframeId}: ${method}');
+#end
+
+					if (debug) log('outputs ${outputs} from ${metaframeId}');
+
+					if (_metaframes.exists(metaframeId)) {
+						var iframe = _metaframes.get(metaframeId);
 
 						// set the internal state, no event yet
-						setOutputStateOnly(iframeId, outputs);
+						setOutputStateOnly(metaframeId, outputs);
 						// iframe outputs, metaframe only event sent
 						iframe.setOutputs(outputs);
 						// now sent metapage event
@@ -739,7 +749,7 @@ class Metapage extends EventEmitter
 						// cached lookup of where those outputs are going
 						var modified = false;
 						for (outputKey in outputs.keys()) {
-							var targets = getInputsFromOutput(iframeId, outputKey);
+							var targets = getInputsFromOutput(metaframeId, outputKey);
 							if (targets.length > 0) {
 								for (outputSet in targets) {
 									var inputBlob :MetaframeInputMap = {};
@@ -756,18 +766,25 @@ class Metapage extends EventEmitter
 						if (modified) {
 							emit(MetapageEvents.State, _state);
 						}
-					} else if (_plugins.exists(iframeId)) {
+						if (debug) {
+							iframe.ack({jsonrpc:jsonrpc, state:_state});
+						}
+					} else if (_plugins.exists(metaframeId)) {
 						// the metapage state special pipes (definition and global state)
 						// are not persisted in the plugin state
-						if (outputs[METAPAGE_KEY_STATE] == null && outputs[METAPAGE_KEY_DEFINITION] == null) {
-							setOutputStateOnly(iframeId, outputs);
+						var outputPersistanceAllowed = outputs[METAPAGE_KEY_STATE] == null && outputs[METAPAGE_KEY_DEFINITION] == null;
+						if (outputPersistanceAllowed) {
+							setOutputStateOnly(metaframeId, outputs);
 						}
-						_plugins.get(iframeId).setOutputs(outputs);
-						if (outputs[METAPAGE_KEY_STATE] == null && outputs[METAPAGE_KEY_DEFINITION] == null) {
+						_plugins.get(metaframeId).setOutputs(outputs);
+						if (outputPersistanceAllowed) {
 							emit(MetapageEvents.State, _state);
 						}
+						if (debug) {
+							_plugins.get(metaframeId).ack({jsonrpc:jsonrpc, state:_state});
+						}
 					} else {
-						error('missing metaframe/plugin=$iframeId');
+						error('missing metaframe/plugin=$metaframeId');
 					}
 
 				case InputsUpdate:
@@ -777,6 +794,9 @@ class Metapage extends EventEmitter
 					// We store it in the local state, then send it back so 
 					// the metaframe is notified of its input state.
 					var metaframeId :MetaframeId = jsonrpc.iframeId;
+#if jsondiff
+					logDiff = getDiffRelease('${metaframeId}: ${method}');
+#end
 					var inputs :MetaframeInputMap = jsonrpc.params;
 					if (debug) log('inputs ${inputs} from ${metaframeId}');
 					if (_metaframes.exists(metaframeId)) {
@@ -807,16 +827,23 @@ class Metapage extends EventEmitter
 								_metaframes.get(metaframeId).setInputs(inputs);
 						}
 						emit(MetapageEvents.State, _state);
+						if (debug) {
+							_metaframes.get(metaframeId).ack({jsonrpc:jsonrpc, state:_state});
+						}
 						
 					} else if (_plugins.exists(metaframeId)) {
 						// the metapage state special pipes (definition and global state)
 						// are not persisted in the plugin state
-						if (inputs[METAPAGE_KEY_STATE] == null && inputs[METAPAGE_KEY_DEFINITION] == null) {
+						var inputPersistanceAllowed = inputs[METAPAGE_KEY_STATE] == null && inputs[METAPAGE_KEY_DEFINITION] == null;
+						if (inputPersistanceAllowed) {
 							setInputStateOnly(metaframeId, inputs);
 						}
 						_plugins.get(metaframeId).setInputs(inputs);
-						if (inputs[METAPAGE_KEY_STATE] == null && inputs[METAPAGE_KEY_DEFINITION] == null) {
+						if (inputPersistanceAllowed) {
 							emit(MetapageEvents.State, _state);
+						}
+						if (debug) {
+							_plugins.get(metaframeId).ack({jsonrpc:jsonrpc, state:_state});
 						}
 					} else {
 						Browser.window.console.error('InputsUpdate failed no metaframe or plugin id: "${metaframeId}""');
@@ -824,10 +851,23 @@ class Metapage extends EventEmitter
 					}
 				case PluginRequest:
 					var pluginId = jsonrpc.iframeId;
+#if jsondiff
+					logDiff = getDiffRelease('${pluginId}: ${method}');
+#end
 					if (_plugins[pluginId] != null && _plugins[pluginId].hasPermissionsState()) {
 						_plugins[pluginId].setInput(METAPAGE_KEY_STATE, _state);
+						if (debug) {
+							_plugins.get(pluginId).ack({jsonrpc:jsonrpc, state:_state});
+						}
+					}
+				default:
+					if (debug) {
+						log('Unknown RPC method: "${method}"');
 					}
 			}
+#if jsondiff
+			if (logDiff != null) logDiff();
+#end
 
 			emit(OtherEvents.Message, jsonrpc);
 		}
@@ -842,9 +882,33 @@ class Metapage extends EventEmitter
 			default: Json.stringify(o);
 		}
 		s = _id != null ? 'Metapage[$_id] $s' : s;
-		MetapageTools.log(s, color, backgroundColor);
+		MetapageTools.log(s, color, backgroundColor, pos);
+	}
+
+#if jsondiff
+	// get the state, and log the diff on the callback
+	function getDiffRelease(label :String) :Void->Void
+	{
+		var mp = this;
+		var state = Json.parse(Json.stringify(mp.getState()));
+		return function() {
+			var newState = mp.getState();
+			Browser.console.log(label + ': '+ JsonDiff.diffString(state, newState));
+		};
 	}
 }
+
+@:jsRequire("json-diff")
+extern class JsonDiff
+{
+    // @:selfCall
+    public static function diffString(v1 :Dynamic, v2 :Dynamic) :String;
+	
+}
+#else
+}
+#end
+
 
 class IFrameRpcClient extends EventEmitter
 {
@@ -898,7 +962,7 @@ class IFrameRpcClient extends EventEmitter
 		this.iframe = Browser.document.createIFrameElement();
 		// this.iframe.scrolling = "no";
 		this.iframe.src = url;
-		this._debug = debug;
+		this._debug = debug || existsAnyUrlParam(['DEBUG_METAFRAMES', 'debug_metaframes', 'debug_' + this.id, 'DEBUG_' + this.id]);
 		_parentId = parentId;
 		_color = MetapageTools.stringToRgb(this.id);
 		_consoleBackgroundColor = consoleBackgroundColor;
@@ -1196,6 +1260,18 @@ class IFrameRpcClient extends EventEmitter
 		}
 	}
 
+	public function ack(message :Dynamic)
+	{
+		log('⚒ ⚒ ⚒ calling ack');
+		if (this._debug) {
+			log('⚒ ⚒ ⚒ sending ack from client to frame');
+			var payload :ClientMessageRecievedAck = {message: message};
+			sendRpc(JsonRpcMethodsFromParent.MessageAck, payload);
+		} else {
+			log('⚒ ⚒ ⚒ NOT sending ack from client to frame since not debug mode');
+		}
+	}
+
 	public function log(o :Dynamic, ?pos:haxe.PosInfos)
 	{
 		if (!_debug) {
@@ -1211,7 +1287,7 @@ class IFrameRpcClient extends EventEmitter
 			case "number": o + "";
 			default: Json.stringify(o);
 		}
-		MetapageTools.log('Metapage[$_parentId] Metaframe[$id] $s', _color, _consoleBackgroundColor);
+		MetapageTools.log('Metapage[$_parentId] Metaframe[$id] $s', _color, _consoleBackgroundColor, pos);
 	}
 
 	function sendRpcInternal(method :String, params :Dynamic)

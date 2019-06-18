@@ -2,7 +2,12 @@
 layout: vanilla
 ---
 
+{% if jekyll.environment == "production" %}
 <script src="https://unpkg.com/mermaid@8.0.0/dist/mermaid.min.js"></script>
+{% else %}
+<script src="/js/mermaid.min.js"></script>
+{% endif %}
+
 <script>mermaid.initialize({startOnLoad:true});</script>
         
 

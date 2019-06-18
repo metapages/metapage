@@ -118,7 +118,7 @@ class Metaframe extends EventEmitter
 		if (!debug) {
 			return;
 		}
-		logInternal(o, color != null ? color : this.color, null);
+		logInternal(o, color != null ? color : this.color, pos);
 	}
 
 	public function warn(o :Dynamic, ?pos:haxe.PosInfos)
@@ -126,17 +126,17 @@ class Metaframe extends EventEmitter
 		if (!debug) {
 			return;
 		}
-		logInternal(o, "000", color);
+		logInternal(o, "000", color, pos);
 	}
 
-	// public function error(err :Dynamic, ?pos:haxe.PosInfos)
-	public function error(err :Dynamic)
+	public function error(err :Dynamic, ?pos:haxe.PosInfos)
+	// public function error(err :Dynamic)
 	{
 		logInternal(err, color, "f00");
 	}
 
-	// function logInternal(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
-	function logInternal(o :Dynamic, ?color :String, ?backgroundColor :String)
+	function logInternal(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
+	// function logInternal(o :Dynamic, ?color :String, ?backgroundColor :String)
 	{
 		var s :String = switch(js.Syntax.typeof(o)) {
 			case "string": cast o;
@@ -147,7 +147,7 @@ class Metaframe extends EventEmitter
 		color = color != null ? color + '' : color;
 
 		s = (_iframeId != null ? 'Metaframe[$_iframeId] ' : '')  + Std.string(s);
-		MetapageTools.log(s, color, backgroundColor);
+		MetapageTools.log(s, color, backgroundColor, pos);
 	}
 
 	override public function dispose()
@@ -292,10 +292,12 @@ class Metaframe extends EventEmitter
 
 	function onWindowMessage(e :Dynamic)
 	{
-		if (js.Syntax.typeof(e.data) == "object") {
+		if (debug) {
+			log('onWindowMessage: ${Json.stringify(e)}');
+		}
+		if (js.Syntax.strictEq(js.Syntax.typeof(e.data), 'object')) {
 			var jsonrpc :MinimumClientMessage = e.data;
 			if (jsonrpc.jsonrpc == '2.0') { //Make sure this is a jsonrpc object
-				log(e);
 				var method :JsonRpcMethodsFromParent = cast jsonrpc.method;
 				if (!(method == JsonRpcMethodsFromParent.SetupIframeServerResponse || (
 					jsonrpc.parentId == _parentId &&
@@ -307,6 +309,7 @@ class Metaframe extends EventEmitter
 				switch(method) {
 					case SetupIframeServerResponse: //Handled elsewhere
 					case InputsUpdate: setInternalInputsAndNotify(jsonrpc.params.inputs);
+					case MessageAck: if (debug) log('ACK: ${Json.stringify(jsonrpc)}');
 					default: if (debug) log('window.message: unknown JSON-RPC method: ${Json.stringify(jsonrpc)}');
 				}
 
