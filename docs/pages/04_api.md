@@ -609,7 +609,8 @@ metaframe.dispose()
 
 Removes window message listener, event listeners, and nulls potentially large fields.
 
-# Metapage plugins
+
+# Plugins
 
 Metapage plugins are metaframes that are not connected to the normal metaframes, instead they have hooks (via inputs) into:
 
@@ -671,7 +672,7 @@ Plugins declare which inputs they are allows to receive in the `metaframe.json` 
 ```
 
 
-##Plugin#API
+## Metaframe#plugin
 
 The `plugin` field on the `metapage` object will be present if the metaframe is initialized as a plugin by the owning metapage:
 
@@ -679,33 +680,36 @@ The `plugin` field on the `metapage` object will be present if the metaframe is 
 metaframe.plugin
 ```
 
-
 `metapage/definition` and `metapage/state` pipes may be listened to as per usual, or you may call the plugin methods:
 
+## Metaframe#plugin.requestState
+## Metaframe#plugin.onState
+
+Requests the current state from the metapage.
 ```ts
 metaframe.plugin.requestState(); // arrives via the next line
 var disposeFunction = metaframe.plugin.onState(function(metapageState) { ... });
 
-var metapageState = metaframe.plugin.getState();
+```
+
+## Metaframe#plugin.setState
+
+```ts
 metaframe.plugin.setState(metapageState);
 ```
 
-
+## Metaframe#plugin.onDefinition
+## Metaframe#plugin.setDefinition
+## Metaframe#plugin.getDefinition
 ```ts
 var disposeFunction = metaframe.plugin.onDefinition(function(metapageDefinition) { ... });
 metaframe.plugin.setDefinition(metapageDefinition);
+var definition = metaframe.plugin.getDefinition);
 ```
 
 
-##Plugin#input pipes
+## Metaframe#plugin pipes
 
 `metapage/definition`: this input will always have the most recent metapage definition. If the output is set, the metapage will update the definition.  No action is needed to get this data.
 
-`metapage/state`: this input gets the metapage state. If the output is set, the metapage will update the entire application state. The `metapage/state` is not sent automatically, it must be requested every time:
-
-
-##Plugin#output pipes
-
-`metapage/state`: The current metapage state will be replaced with this value.
-
-`metapage/definition`: The current metapage definition will be replaced with this value.
+`metapage/state`: this input has the metapage state. If the output is set, the metapage will update the entire application state. The `metapage/state` is not sent automatically, it must be requested every time:
