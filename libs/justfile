@@ -21,6 +21,9 @@ watch: _set-context
 serve: _set-context
     npm run dev
 
+shell:
+	cd .. && docker-compose run builder-haxe sh
+
 # Write library versions to the place where jekyll can consume:
 # docs/_data/versions.yml
 _versions-write-versions-to-jekyll:

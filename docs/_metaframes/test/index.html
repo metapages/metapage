@@ -6,7 +6,7 @@ layout: vanilla
     ALL versions of metaframes work with ALL versions of metapages.
  -->
 <head>
-    <script src="https://cdn.jsdelivr.net/npm/compare-versions@3.4.0/index.js"></script>
+    <script src="/js/compare-versions-3.4.0.js"></script>
 </head>
 <body style="background-color:yellow;">
     <div id='body'></div>
@@ -158,66 +158,69 @@ TESTS = [
         }
     ),
 
-    new Test('plugin: state get/modify/set',
-        // 1. we get a `metapage/state` 
-        // 2. modify our own input field in the state blob
-        // 3. send the state blob back. all metaframes/plugins get their inputs set
-        // 4. listen to modifications on our own inputs
-        // TODO what about checking if existing inputs are removed?
-        (mf) => { // metaframe instance
-            return new Promise((resolve, reject) => {
-                const inputKey = `PluginStateCheck-${DISPLAY_VERSION}`;
-                let disposers = [];
-                const checkState = (state) => {
-                    if (!state) {
-                        mf.plugin.requestState();
-                        return;
-                    }
+    // TODO: re-enable this test once we figure out when or how to run it without
+    // messing up concurrently running tests.
+    // new Test('plugin: state get/modify/set',
+    //     // 1. we get a `metapage/state` 
+    //     // 2. modify our own input field in the state blob
+    //     // 3. send the state blob back. all metaframes/plugins get their inputs set
+    //     // 4. listen to modifications on our own inputs
+    //     // TODO what about checking if existing inputs are removed?
+    //     (mf) => { // metaframe instance
+    //         return new Promise((resolve, reject) => {
+    //             const inputKey = `PluginStateCheck-${DISPLAY_VERSION}`;
+    //             let disposers = [];
+    //             const checkState = (state) => {
+    //                 if (!state) {
+    //                     mf.plugin.requestState();
+    //                     return;
+    //                 }
 
-                    // we are going to wait until all the non-plugin tests have finished
-                    // since if we mess with the metapage state, it's going to bork the
-                    // metaframe tests currently running in other parallel metaframes
-                    if (Object.keys(state.metaframes.inputs) < 2) { // this is *always* at least two
-                        mf.plugin.requestState();
-                        return;
-                    }
-                    const allMetaframeTestsPassed = Object.keys(state.metaframes.outputs).reduce((passing, metaframeId) => {
-                        return passing && state.metaframes.outputs[metaframeId].tests === 'pass';
-                    }, true);
+    //                 // we are going to wait until all the non-plugin tests have finished
+    //                 // since if we mess with the metapage state, it's going to bork the
+    //                 // metaframe tests currently running in other parallel metaframes
+    //                 // THIS IS ACTUALLY HAPPENING PLEASE STOP
+    //                 if (Object.keys(state.metaframes.inputs) < 2) { // this is *always* at least two
+    //                     mf.plugin.requestState();
+    //                     return;
+    //                 }
+    //                 const allMetaframeTestsPassed = Object.keys(state.metaframes.outputs).reduce((passing, metaframeId) => {
+    //                     return passing && state.metaframes.outputs[metaframeId].tests === 'pass';
+    //                 }, true);
 
-                    if (!allMetaframeTestsPassed) { // wait until the metaframe (not plugin) tests pass
-                        mf.plugin.requestState();
-                        return;
-                    }
+    //                 if (!allMetaframeTestsPassed) { // wait until the metaframe (not plugin) tests pass
+    //                     mf.plugin.requestState();
+    //                     return;
+    //                 }
 
-                    // modify the global state, specifically our own inputs
-                    // the metapage should update our inputs and send them 
-                    // down
-                    if (!state.plugins.inputs[mf.id] || !state.plugins.inputs[mf.id][inputKey]) {
-                        state.plugins.inputs[mf.id] = state.plugins.inputs[mf.id] ? state.plugins.inputs[mf.id] : {};
-                        state.plugins.inputs[mf.id][inputKey] = true;
-                        mf.plugin.setState(state);
-                        mf.plugin.requestState();
-                        return;
-                    }
-                };
+    //                 // modify the global state, specifically our own inputs
+    //                 // the metapage should update our inputs and send them 
+    //                 // down
+    //                 if (!state.plugins.inputs[mf.id] || !state.plugins.inputs[mf.id][inputKey]) {
+    //                     state.plugins.inputs[mf.id] = state.plugins.inputs[mf.id] ? state.plugins.inputs[mf.id] : {};
+    //                     state.plugins.inputs[mf.id][inputKey] = true;
+    //                     mf.plugin.setState(state);
+    //                     mf.plugin.requestState();
+    //                     return;
+    //                 }
+    //             };
 
-                // listen to global state changes
-                disposers.push(mf.plugin.onState(checkState));
+    //             // listen to global state changes
+    //             disposers.push(mf.plugin.onState(checkState));
 
-                // listen to our own inputs changing, from the global state changes above
-                disposers.push(mf.onInput(inputKey, (value) => {
-                    resolve(true);
-                    while (disposers.length > 0) {
-                        disposers.pop()();
-                    }
-                }));
+    //             // listen to our own inputs changing, from the global state changes above
+    //             disposers.push(mf.onInput(inputKey, (value) => {
+    //                 resolve(true);
+    //                 while (disposers.length > 0) {
+    //                     disposers.pop()();
+    //                 }
+    //             }));
 
-                // get the state, we'll keep calling this until we like what we see
-                mf.plugin.requestState();
-            });
-        }
-    ),
+    //             // get the state, we'll keep calling this until we like what we see
+    //             mf.plugin.requestState();
+    //         });
+    //     }
+    // ),
 ];
 
 
@@ -270,8 +273,6 @@ const runTests = async() => {
         }
 
         document.getElementById('body').innerText = `plugin v${DISPLAY_VERSION}`;
-    // } else {
-    //     console.log(`TEST-MF: ${VERSION} metaframe loaded`);
     }
 
     document.body.style.backgroundColor = mf._color || mf.color;
@@ -295,20 +296,21 @@ const runTests = async() => {
         }
     }
     
-    // Update from the initial inputs
-    onUpdate(mf.getInput('input'));
-
     // When I get the input array, add my version to the list
     // This will be passed around to all metaframe in the version list
     mf.onInput('input', function(value) {
         onUpdate(value);
     });
 
+    // Update from the initial inputs
+    onUpdate(mf.getInput('input'));
+
     Promise.all(promises)
         .then(() => {
             document.body.style.backgroundColor = "green";
             setStatus();
             // the metapage can listen for this change
+            console.log(`Metaframe[${DISPLAY_VERSION}]: sending 'tests': 'pass'`);
             mf.setOutput('tests', 'pass');
         })
         .catch((err) => {

@@ -6,3 +6,7 @@
 -cp src/haxe
 
 -D webpack_nonamedchunks
+
+# use this for getting a state diff on every state change
+# very slow but very good logging
+# -D jsondiff

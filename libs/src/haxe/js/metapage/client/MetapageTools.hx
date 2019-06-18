@@ -146,6 +146,13 @@ class MetapageTools
 		return new js.html.URLSearchParams(js.Browser.window.location.search).has(URL_PARAM_DEBUG);
 	}
 
+	public static function existsAnyUrlParam(k :Array<String>) :Bool
+	{
+		return k.exists(function(param :String) {
+			return new js.html.URLSearchParams(js.Browser.window.location.search).has(param);
+		});
+	}
+
 	public static function getUrlParamMF_ID() :String
 	{
 		return new js.html.URLSearchParams(js.Browser.window.location.search).get(URL_PARAM_METAFRAME_ID);

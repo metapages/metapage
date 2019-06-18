@@ -12,6 +12,15 @@ run +TARGET='jekyll proxy builder-haxe test':
 build:
     docker-compose exec builder-haxe webpack
 
+sh:
+    docker-compose run --workdir="/workspace" -v ${PWD}:/workspace builder-haxe sh
+
+ci-compile: _require-docker
+    cd libs && make compile
+
+ci-test: ci-compile
+    make ci-test
+
 # https://docs.npmjs.com/cli/version.html
 # npm version, git tag, and push to release a new version and publish docs
 version-new-publish VERSION='patch' dirtyok='yes':
@@ -56,6 +65,11 @@ version-remove VERSION:
     @echo "If this version should be ignored in tests, add to libs/test/versions.js versions = versions.filter((v) => {"
     @echo "package.json: adjust accordingly, you might have to manually decrement or change the version"
 
+_require-docker:
+    @if [ ! -f /.dockerenv ]; then \
+        echo "First run just sh" && exit 1 ; \
+    fi
+
 ########################################
 # DEPRECATED
 
@@ -66,5 +80,6 @@ _DEPRECATED_version-commit:
 
 HELP := '
 Reminders:
-  Developing app.metapages.org locally? Modify docs/_data/urls.yml
+    Developing app.metapages.org locally? Modify docs/_data/urls.yml
 '
+
