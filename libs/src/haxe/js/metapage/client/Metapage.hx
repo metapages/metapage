@@ -963,6 +963,7 @@ class IFrameRpcClient extends EventEmitter
 		// this.iframe.scrolling = "no";
 		this.iframe.src = url;
 		this._debug = debug || existsAnyUrlParam(['DEBUG_METAFRAMES', 'debug_metaframes', 'debug_' + this.id, 'DEBUG_' + this.id]);
+		this.iframe.frameBorder = "0";
 		_parentId = parentId;
 		_color = MetapageTools.stringToRgb(this.id);
 		_consoleBackgroundColor = consoleBackgroundColor;
