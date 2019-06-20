@@ -18,8 +18,9 @@ const getMetapageVersions = async (includeCurrent) => {
     // will never be supported
     // <0.1.36 removed because they are were unpolished prototypes
     // <0.3 removed because there was a fatal (hidden) bug in the metapage lib, found when automated tests added
+    // <0.3.3 removed because there was a subtle bug setting inputs.
     versions = versions.filter((v) => {
-        return compareVersions(v, "0.3.0") >= 0;
+        return compareVersions(v, "0.3.3") >= 0;
     });
 
     // Include the new version in package.json, because we're publishing
