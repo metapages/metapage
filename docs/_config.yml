@@ -37,3 +37,8 @@ plugins:
   - jekyll-remote-theme
 # search_enabled: false
 # remote_theme: null
+
+# Aux links for the upper right navigation
+aux_links:
+    "GitHub":
+      - "//github.com/metapages/metapage"

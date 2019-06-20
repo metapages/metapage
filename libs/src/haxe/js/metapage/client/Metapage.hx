@@ -217,16 +217,6 @@ class Metapage extends EventEmitter
 		return this;
 	}
 
-	// public function onInputs(f :Dynamic) :Void->Void
-	// {
-	// 	return this.on(MetapageEvents.Inputs, f);
-	// }
-
-	// public function onOutputs(f :Dynamic) :Void->Void
-	// {
-	// 	return this.on(MetapageEvents.Outputs, f);
-	// }
-
 	// do not expose, change definition instead
 	function addPipe(target :MetaframeId, input :PipeInput)
 	{
@@ -320,15 +310,6 @@ class Metapage extends EventEmitter
 		return all;
 	}
 
-	// public function iframes() :JSMap<MetaframeId, IFrameElement>
-	// {
-	// 	var all :JSMap<MetaframeId, IFrameElement> = {};
-	// 	for (key in _metaframes.keys()) {
-	// 		all.set(key, _metaframes.get(key).iframe);
-	// 	}
-	// 	return all;
-	// }
-
 	public function plugins() :JSMap<Url, IFrameRpcClient>
 	{
 		var all :JSMap<Url, IFrameRpcClient> = {};
@@ -347,11 +328,6 @@ class Metapage extends EventEmitter
 	{
 		return _pluginOrder.slice(0);
 	}
-
-	// public function get(id :MetaframeId) :IFrameRpcClient
-	// {
-	// 	return _metaframes.get(id);
-	// }
 
 	public function getMetaframe(id :MetaframeId) :IFrameRpcClient
 	{
@@ -419,65 +395,6 @@ class Metapage extends EventEmitter
 		// TODO is this really needed?
 		// iframeClient.bindPlugin();
 		return iframeClient;
-	}
-
-	/**
-	 * Sets inputs
-	 * First update internal state, so any events that check get the new value
-	 * Then update the metaframe clients
-	 * Fire events 
-	 * @param iframeId Can be an object of metaframes 
-	 * @param inputPipeId 
-	 * @param value 
-	 */
-	inline public function setInput(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
-	{
-		setInputStateOnly(iframeId, inputPipeId, value);
-		setMetaframeClientInputAndSentClientEvent(iframeId, inputPipeId, value);
-		// finally send the main events
-		this.emit(MetapageEvents.State, _state);
-		// this.emit(MetapageEvents.Inputs, _state);
-	}
-
-	function setMetaframeClientInputAndSentClientEvent(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
-	{
-		if (js.Syntax.typeof(iframeId) == 'object') {
-			if (inputPipeId != null || value != null) {
-				throw 'bad arguments, see API docs';
-			}
-			var inputs :Dynamic = iframeId;
-			for (id in Reflect.fields(inputs)) {
-				var metaframeId :MetaframeId = id;
-				var metaframeInputs = Reflect.field(inputs, metaframeId);
-				if (js.Syntax.typeof(metaframeInputs) != 'object') {
-					throw 'bad arguments, see API docs';
-				}
-				var iframeClient = _metaframes.get(metaframeId);
-				if (iframeClient != null) {
-					iframeClient.setInputs(metaframeInputs);
-				} else {
-					error('No iframe id=$metaframeId');
-				}
-			}
-		} else if (js.Syntax.typeof(iframeId) == 'string') {
-			var iframeClient = _metaframes.get(iframeId);
-			if (iframeClient == null) {
-				error('No iframe id=$iframeId');
-			}
-			if (js.Syntax.typeof(inputPipeId) == 'string') {
-				iframeClient.setInput(inputPipeId, value);
-			} else if (js.Syntax.typeof(inputPipeId) == 'object') {
-				iframeClient.setInputs(inputPipeId);
-			} else {
-				throw 'bad arguments, see API docs';
-			}
-		} else {
-			throw 'bad arguments, see API docs';
-		}
-	}
-
-	public function setInputs(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic) {
-		setInput(iframeId, inputPipeId, value);
 	}
 
 	override public function dispose()
@@ -609,61 +526,159 @@ class Metapage extends EventEmitter
 		}
 	}
 
-	// Set the global inputs cache
-	inline function setInputStateOnly(metaframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
+	/**
+	 * Sets inputs
+	 * First update internal state, so any events that check get the new value
+	 * Then update the metaframe clients
+	 * Fire events 
+	 * @param iframeId Can be an object of {metaframeId:{pipeId:value}} or the metaframe/plugin id 
+	 * @param inputPipeId If the above is a string id, then inputPipeId can be the pipe id or an object {pipeId:value}
+	 * @param value If the above is a pipe id, then the is the value.
+	 */
+	inline public function setInput(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
 	{
-		if (_metaframes.exists(metaframeId)) {
-			setInputOrOutputStateOnlyInternal(_state.metaframes.inputs, metaframeId, inputPipeId, value);
-		} else {
-			setInputOrOutputStateOnlyInternal(_state.plugins.inputs, metaframeId, inputPipeId, value);
-		}
+		setInputStateOnly(iframeId, inputPipeId, value);
+		setMetaframeClientInputAndSentClientEvent(iframeId, inputPipeId, value);
+		// finally send the main events
+		this.emit(MetapageEvents.State, _state);
+		// this.emit(MetapageEvents.Inputs, _state);
 	}
 
-	inline function setOutputStateOnly(metaframeId :Dynamic, ?outputPipeId :Dynamic, ?value :Dynamic)
+	// this is 
+	function setMetaframeClientInputAndSentClientEvent(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
 	{
-		if (_metaframes.exists(metaframeId)) {
-			setInputOrOutputStateOnlyInternal(_state.metaframes.outputs, metaframeId, outputPipeId, value);
-		} else {
-			setInputOrOutputStateOnlyInternal(_state.plugins.outputs, metaframeId, outputPipeId, value);
-		}
-	}
-
-	inline function setInputOrOutputStateOnlyInternal(inputOrOutputMaps : MetapageInstanceInputs, metaframeId :Dynamic, ?inputOrOuputPipeId :Dynamic, ?value :Dynamic)
-	{
-		if (js.Syntax.typeof(metaframeId) == 'object') {
-			if (inputOrOuputPipeId != null || value != null) {
-				throw 'bad arguments';
+		if (js.Syntax.typeof(iframeId) == 'object') {
+			if (inputPipeId != null || value != null) {
+				throw 'bad arguments, see API docs';
 			}
-			var inputsOrOutputs :Dynamic = metaframeId;
-			for (id in Reflect.fields(inputsOrOutputs)) {
-				// Ensure
-				var metaframeId :MetaframeId = cast id;
-				inputOrOutputMaps[metaframeId] = inputOrOutputMaps[metaframeId] != null ? inputOrOutputMaps[metaframeId] : cast {};
-				var metaframeInputsOrOutputs = Reflect.field(inputsOrOutputs, metaframeId);
-				if (js.Syntax.typeof(metaframeInputsOrOutputs) != 'object') {
+			var inputs :Dynamic = iframeId;
+			for (id in Reflect.fields(inputs)) {
+				var metaframeId :MetaframeId = id;
+				var metaframeInputs = Reflect.field(inputs, metaframeId);
+				if (js.Syntax.typeof(metaframeInputs) != 'object') {
 					throw 'bad arguments, see API docs';
 				}
-				for (inputOrOuputPipeId in Reflect.fields(metaframeInputsOrOutputs)) {
-					var metaframePipdId :MetaframePipeId = cast inputOrOuputPipeId;
-					inputOrOutputMaps[metaframeId][metaframePipdId] = Reflect.field(metaframeInputsOrOutputs, inputOrOuputPipeId);
+				var iframeClient = _metaframes.get(metaframeId);
+				if (iframeClient != null) {
+					iframeClient.setInputs(metaframeInputs);
+				} else {
+					error('No iframe id=$metaframeId');
 				}
 			}
-		} else if (js.Syntax.typeof(metaframeId) == 'string') {
-			// first create a {pipeId:value} dict for the metaframes inputs, if there isn't one
-			inputOrOutputMaps[metaframeId] = inputOrOutputMaps[metaframeId] != null ? inputOrOutputMaps[metaframeId] : cast {};
-			// inputOrOuputPipeId is either the inputOrOuputPipeId or an object {pipeId:value}
-			if (js.Syntax.typeof(inputOrOuputPipeId) == 'string') {
-				inputOrOutputMaps[metaframeId][inputOrOuputPipeId] = value;
-			} else if (js.Syntax.typeof(inputOrOuputPipeId) == 'object') {
-				var inputsOrOutputs :Dynamic = inputOrOuputPipeId;
-				for (pipeId in Reflect.fields(inputsOrOutputs)) {
-					inputOrOutputMaps[metaframeId][pipeId] = Reflect.field(inputsOrOutputs, pipeId);
-				}
+		} else if (js.Syntax.typeof(iframeId) == 'string') {
+			var iframeClient = _metaframes.get(iframeId);
+			if (iframeClient == null) {
+				error('No iframe id=$iframeId');
+			}
+			if (js.Syntax.typeof(inputPipeId) == 'string') {
+				iframeClient.setInput(inputPipeId, value);
+			} else if (js.Syntax.typeof(inputPipeId) == 'object') {
+				iframeClient.setInputs(inputPipeId);
 			} else {
-				throw 'bad arguments';
+				throw 'bad arguments, see API docs';
 			}
 		} else {
-			throw 'bad arguments';
+			throw 'bad arguments, see API docs';
+		}
+	}
+
+	public function setInputs(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic) {
+		setInput(iframeId, inputPipeId, value);
+	}
+
+	inline function setOutputStateOnly(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
+	{
+		_setStateOnly(false, iframeId, inputPipeId, value);
+	}
+
+	// Set the global inputs cache
+	inline function setInputStateOnly(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
+	{
+		_setStateOnly(true, iframeId, inputPipeId, value);
+	}
+
+	// need to set the boolean first because we don't know the metaframe/pluginId until we dig into
+	// the object. but it might not be an object. this flexibility might not be worth it, although
+	// the logic is reasonble to test
+	function _setStateOnly(isInputs :Bool, iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
+	{
+		if (js.Syntax.typeof(iframeId) == 'object') {
+			// it's an object of metaframeIds to pipeIds to values [metaframeId][pipeId]
+			// so the other fields should be undefined
+			if (inputPipeId != null || value != null) {
+				throw 'Second argument cannot be null';
+			}
+			var inputsMetaframesNew :MetapageInstanceInputs = iframeId;
+			for (metaframeId in inputsMetaframesNew.keys()) {
+				var metaframeValuesNew :MetaframeInputMap = inputsMetaframesNew[metaframeId];
+				if (js.Syntax.typeof(metaframeValuesNew) != 'object') {
+					throw 'Object values must be objects';
+				}
+
+				var isMetaframe = _metaframes.exists(metaframeId);
+				if (!isMetaframe && !_plugins.exists(metaframeId)) {
+					throw 'No metaframe or plugin: ${metaframeId}';
+				}
+				var inputOrOutputState = isMetaframe
+					? (isInputs ? _state.metaframes.inputs : _state.metaframes.outputs)
+					: (isInputs ? _state.plugins.inputs : _state.plugins.outputs);
+
+				// Ensure a map
+				inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null ? inputOrOutputState[metaframeId] : cast {};
+
+				for (metaframePipedId in metaframeValuesNew.keys()) {
+					// A key with a value of undefined means remove the key from the state object
+					if (js.Syntax.strictEq(metaframeValuesNew[metaframePipedId], js.Lib.undefined)) {
+						js.Syntax.delete(inputOrOutputState[metaframeId], metaframePipedId);
+					} else {
+						// otherwise set the new value
+						inputOrOutputState[metaframeId][metaframePipedId] = metaframeValuesNew[metaframePipedId];
+					}
+				}
+			}
+		} else if (js.Syntax.typeof(iframeId) == 'string') {
+			var metaframeId :MetaframeId  = iframeId;
+			var isMetaframe = _metaframes.exists(metaframeId);
+			if (!isMetaframe && !_plugins.exists(metaframeId)) {
+				throw 'No metaframe or plugin: ${metaframeId}';
+			}
+			var inputOrOutputState = isMetaframe
+				? (isInputs ? _state.metaframes.inputs : _state.metaframes.outputs)
+				: (isInputs ? _state.plugins.inputs : _state.plugins.outputs);
+
+			if (js.Syntax.typeof(inputPipeId) == 'string') {
+				// Ensure a map
+				inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null ? inputOrOutputState[metaframeId] : cast {};
+
+				var metaframePipeId :MetaframePipeId = inputPipeId;
+
+				// A key with a value of undefined means remove the key from the state object
+				if (js.Syntax.strictEq(value, js.Lib.undefined)) {
+					js.Syntax.delete(inputOrOutputState[metaframeId], metaframePipeId);
+				} else {
+					// otherwise set the new value
+					inputOrOutputState[metaframeId][metaframePipeId] = value;
+				}
+			} else if (js.Syntax.typeof(inputPipeId) == 'object') {
+				// Ensure a map
+				inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null ? inputOrOutputState[metaframeId] : cast {};
+
+				var metaframeValuesNew :MetaframeInputMap = inputPipeId;
+
+				for (metaframePipedId in metaframeValuesNew.keys()) {
+					// A key with a value of undefined means remove the key from the state object
+					if (js.Syntax.strictEq(metaframeValuesNew[metaframePipedId], js.Lib.undefined)) {
+						js.Syntax.delete(inputOrOutputState[metaframeId], metaframePipedId);
+					} else {
+						// otherwise set the new value
+						inputOrOutputState[metaframeId][metaframePipedId] = metaframeValuesNew[metaframePipedId];
+					}
+				}
+			} else {
+				throw 'Second argument must be a string or an object';
+			}			
+		} else {
+			throw 'First argument must be a string or an object';
 		}
 	}
 

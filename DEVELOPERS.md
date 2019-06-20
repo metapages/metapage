@@ -42,6 +42,12 @@ Then:
 2. Comprehensive metapage test of the latest version: http://localhost:4000/metapages/test/?VERSION=latest
 3. Repeat
 
+**Tips**:
+
+toggle the `debug` flag in `libs/webpack.config.js`
+toggle the `jsondiff` flag `libs/build-base.hxml`
+
+
 If required, run the CI tests locally:
 
     make ci-local-test-google-cloud-build
