@@ -27,7 +27,10 @@ services:
   # If you change PORT_PROXY you'll need set the same port change in app-metapage-local
   proxy:
     image: imjacobclark/cors-container
+    environment:
+     - "PORT=${PORT_PROXY:-3000}"
+     - "JEKYLL_ENV=development"
     ports:
-      - "3000:${PORT_PROXY:-3000}"
+      - "${PORT_PROXY:-3000}:${PORT_PROXY:-3000}"
     networks:
       - bridge

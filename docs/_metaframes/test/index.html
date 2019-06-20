@@ -289,7 +289,7 @@ const runTests = async() => {
         }
         if (typeof(value) === 'object') {
             value.versions = value.versions ? value.versions : [];
-            value.versions.push(VERSION);
+            value.versions.push(DISPLAY_VERSION);
             if (mf.getOutput('output') == null || JSON.stringify(mf.getOutput('output').versions) != JSON.stringify(value.versions)) {
                 mf.setOutput("output", value);
             }
@@ -310,7 +310,7 @@ const runTests = async() => {
             document.body.style.backgroundColor = "green";
             setStatus();
             // the metapage can listen for this change
-            console.log(`Metaframe[${DISPLAY_VERSION}]: sending 'tests': 'pass'`);
+            // console.log(`Metaframe[${DISPLAY_VERSION}]: sending 'tests': 'pass'`);
             mf.setOutput('tests', 'pass');
         })
         .catch((err) => {

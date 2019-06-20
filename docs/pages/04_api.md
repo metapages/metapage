@@ -33,32 +33,44 @@ Defined by:
 
 ```json
 {
-    "metaframes": {
-      "metaframe1": {
-        "url": "{{site.url}}/metaframes/example00_iframe1/",
-        "inputs": [
-          {
-            "metaframe": "metaframe2",
-            "source"   : "output1",
-            "target"   : "input1"
-          }
-        ]
-      },
-      "metaframe2": {
-        "url": "{{site.url}}/metaframes/example00_iframe2/",
-        "inputs": [
-          {
-            "metaframe": "metaframe1",
-            "source"   : "data-stream"
-          }
+  "version": "0.3",
+  "meta": {
+    "layouts": {
+      "flexboxgrid" : {
+        "docs": "http://flexboxgrid.com/",
+        "layout": [
+          [ {"name":"random-data-generator", "width":"col-xs-4", "style": {"maxHeight":"600px"}}, {"url":"{{site.url}}/metaframes/passthrough-arrow/?rotation=90", "width":"col-xs-1"}, {"name":"graph-dynamic", "width":"col-xs-7"}  ]
         ]
       }
+    }
+  },
+  "metaframes": {
+    "random-data-generator": {
+      "url": "{{site.url}}/metaframes/random-data-generator/?frequency=1000"
     },
-    "plugins": [
-      "{{site.url}}/metaframes/example00_iframe2/"
-    ]
+    "graph-dynamic": {
+      "url": "{{site.url}}/metaframes/graph-dynamic/",
+      "inputs": [
+        {
+          "metaframe": "random-data-generator",
+          "source": "y",
+          "target": "y"
+        }
+      ]
+    }
+  },
+  "plugins": [
+    "{{site.url}}/metaframes/mermaid.js/"
+  ]
 }
+
 ```
+
+{% if jekyll.environment == "production" %}
+  [Run above example](https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
+{% else %}
+  [Run above example]({{site.data.urls.app-metapage-local}}/#url={{site.url}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
+{% endif %}
 
 The `pipe` entries of "inputs" are objects describing the source metaframe, source metaframe output pipe name, and the target metaframe (the owning metaframe) input pipe name 
 ```js
@@ -333,6 +345,8 @@ The
 
 ### Metapage events
 
+#### Metapage#STATE
+
 Metapage event allows you to add hooks to the data flow:
 
 ```js
@@ -350,11 +364,13 @@ Metapage event allows you to add hooks to the data flow:
  * }
  */
 metapage.on('state', function(metapageState) { ...});
+metapage.on(Metapage.STATE, function(definition) { ... });
 ```
 
 Listens to changes in the `state` for metaframes (and plugins). The listener is called on every discrete update of inputs and outputs.
 
 
+#### Metapage#DEFINITION
 ```ts
 /**
  * Example definition event:
@@ -371,6 +387,7 @@ Listens to changes in the `state` for metaframes (and plugins). The listener is 
  * }
  */
 metapage.on('definition', function(definition) { ... });
+metapage.on(Metapage.DEFINITION, function(definition) { ... });
 
 metapage.setDefinition(def :MetapageDefinition); // Fires above event
 metapage.getDefinition(def) :MetapageDefinition;
@@ -381,6 +398,16 @@ It also returns the metaframe and plugin sets, with the objects needed to e.g. a
 
 This is the main event you should listen to if your metapage gets updated.
 
+#### Metapage#ERROR
+
+```ts
+metapage.on('error', function(definition) { ... });
+metapage.on(Metapage.ERROR, function(definition) { ... });
+
+metapage.setDefinition(def :MetapageDefinition); // Fires above event
+metapage.getDefinition(def) :MetapageDefinition;
+```
+The definition can be updated, this will fire on every change and give the full definition.
 
 
 

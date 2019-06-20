@@ -69,6 +69,8 @@ const VERSIONS_METAFRAME = [];
     VERSIONS_METAFRAME.push('latest');
 {% endif %}
 
+var PAGEURL = new URL(window.location.href);
+
 console.log(`VERSIONS_METAFRAME [${VERSIONS_METAFRAME.join(", ")}]`);
 
 ////////////////////////////////////////////////////////////////////////
@@ -92,7 +94,7 @@ const getStatusText = (err) => {
 };
 
 const setStatus = (err) => {
-    if (!err) {
+    if (!err && (PAGEURL.searchParams.has('debug') || PAGEURL.searchParams.has('DEBUG'))) {
         console.log(TESTS.map((test) => test.description + ':' + test.getText()).join(""));
     }
     document.getElementById('status').innerHTML = getStatusText(err);
@@ -179,7 +181,7 @@ TESTS = [
                         hasFinalOutputs = true;
                         let finalVersions = outputs['output'].versions;
                         // Correct for needing 'latest' twice but not using the key 'latest' twice
-                        const versionsTested = VERSIONS_METAFRAME.map(e => e.replace('latestFirst', 'latest'));
+                        const versionsTested = VERSIONS_METAFRAME;//.map(e => e.replace('latestFirst', 'latest'));
                         if (JSON.stringify(versionsTested) == JSON.stringify(finalVersions)) {
                             // don't allow calling resolve again
                             disposeListener();
@@ -197,26 +199,25 @@ TESTS = [
 
                 // Start the train. Metaframes will add their version to the
                 // array and pass it on
-                const inputs = {};
-                inputs[VERSIONS_METAFRAME[0]] = {input: {versions:[]}};
+                const inputs = {[VERSIONS_METAFRAME[0]] : {input: {versions:[]}} };
+                // metapage.once('state', () => {
+                //     console.log(`After setting initial inputs ${JSON.stringify(metapage.getState())}`);
+                // });
                 metapage.setInput(inputs);
             });
         }
     ),
 
     new Test('inputs chain saved in state',
+        // additional test for the above "outputs->inputs data flow"
         // verify that the data structure passed through the metaframe chain
         // is correctly captured in the metapage state
         (metapage) => { // metapage instance
             return new Promise((resolve, reject) => {
                 let disposeListener;
                 const onStateChange = (e) => {
-                    let inputs;
-                    if (metapage.getState) {
-                        inputs = metapage.getState().metaframes.inputs;
-                    } else { // < v0.3
-                        inputs = metapage._inputsState;
-                    }
+                    const inputs = metapage.getState().metaframes.inputs;
+                    const outputs = metapage.getState().metaframes.outputs;
 
                     let found = {};
                     var VERSIONS_EXPECTED = VERSIONS_METAFRAME.slice();
@@ -224,28 +225,37 @@ TESTS = [
                         VERSIONS_EXPECTED[0] = 'latest';
                         VERSIONS_EXPECTED.pop(); // the other 'latest'
                     }
+                    // console.log('VERSIONS_EXPECTED', VERSIONS_EXPECTED);
+                    // console.log('VERSIONS_METAFRAME', VERSIONS_METAFRAME);
                     // check all the inputs of all the metaframes, they should
                     // have a specific order of metaframe versions depending on
                     // where they are in the chain.
-                    for(var i = 0; i < VERSIONS_METAFRAME.length; i++) {
+                    let passed = VERSIONS_METAFRAME.map((version, i) => {
                         const metapageId = VERSIONS_METAFRAME[i];
 
-                        // This first case should have no entries in a versions field
-                        if (VERSIONS_METAFRAME[0] == 'latestFirst') {
-                            if (!inputs[metapageId] || !inputs[metapageId]['input'] || !inputs[metapageId].input.versions || inputs[metapageId].input.versions.length == 0) {
-                                found[metapageId] = true;
-                            }
-                        } else if (inputs[metapageId] && inputs[metapageId].input && inputs[metapageId].input.versions) {
-                            const expected = VERSIONS_EXPECTED.slice(0, i);
-                            const actual = inputs[metapageId].input.versions;
+                        const expectedInputVersions = JSON.stringify(VERSIONS_METAFRAME.slice(0, i));
+                        const expectedOutputVersions = JSON.stringify(VERSIONS_METAFRAME.slice(0, i + 1));
 
-                            if (JSON.stringify(expected) == JSON.stringify(actual)) {
-                                found[metapageId] = true;
-                            }
-                        }
-                    }
+                        // console.log(`TEST inputs chain saved in state for ${metapageId}`);
+                        // // console.log('expectedInputVersions', expectedInputVersions);
+                        // console.log('expectedOutputVersions', expectedOutputVersions);
+                        // console.log('outputs[metapageId]', JSON.stringify(outputs[metapageId] && outputs[metapageId].output ? outputs[metapageId].output.versions : null));
+                        // console.log('expectedInputVersions', expectedInputVersions);
+                        // console.log('inputs[metapageId]', JSON.stringify(inputs[metapageId] && inputs[metapageId].input ? inputs[metapageId].input.versions : null));
 
-                    if (Object.keys(found).length == VERSIONS_METAFRAME.length) {
+                        return (inputs[metapageId]
+                                && inputs[metapageId]['input']
+                                && inputs[metapageId].input.versions
+                                && JSON.stringify(inputs[metapageId].input.versions) == expectedInputVersions
+                                && outputs[metapageId]
+                                && outputs[metapageId].output
+                                && outputs[metapageId].output.versions
+                                && JSON.stringify(outputs[metapageId].output.versions) === expectedOutputVersions);
+                    });
+                    
+                    passed = passed.reduce((current, testPassed) => current && testPassed, true);
+
+                    if (passed) {
                         disposeListener();
                         resolve(true);
                         setStatus();
@@ -340,7 +350,6 @@ window.onload = function() {
         metaPageDefinition.metaframes = metaframesBlob;
     }
 
-    console.log(`about to build the metapage def VERSIONS_METAFRAME ${VERSIONS_METAFRAME}`);
     // create a metaframe for each version, plus the latest if we're developing
     // if developing, the latest goes at the beginning AND end, to test getting
     // and sending to the parent metapage
@@ -367,7 +376,7 @@ window.onload = function() {
     // the plugin metaframes themselve test plugin specific operations
     // only metaframe lib >= 0.3 supports plugins
     metaPageDefinition.plugins = VERSIONS_METAFRAME
-        .filter((v) => v.startsWith('latest' || window.compareVersions(v, '0.3') >= 0))
+        .filter((v) => v.startsWith('latest') || window.compareVersions(v, '0.3') >= 0)
         .map((versionMetaframe) => {
             let url = `/metaframes/test/?VERSION=${versionMetaframe}`;
             if (urlParams.has('MP_DEBUG') || urlParams.has('DEBUG') || urlParams.has('MF_DEBUG')) {
