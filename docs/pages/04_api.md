@@ -665,7 +665,7 @@ They are defined in the definition as unique URL to the plugin metaframe:
 }
 ```
 
-The order of the plugins is usually the order displayed in the app.metapage.org UI.
+The order of the plugins is usually the order displayed in the [app.metapages.org](https://app.metapages.org) UI.
 
 The plugin URLs must be unique (even though they are defined in a list) and are not allowed to collide with the metaframe ids.
 
