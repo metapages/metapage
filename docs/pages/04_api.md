@@ -1,13 +1,13 @@
 ---
 layout: default-with-mermaid
 title: API
-permalink: /api/0.3.2/
+permalink: /api/0.3.3/
 nav_order: 4
 ---
 
 
 
-# API Reference v0.3.2
+# API Reference v0.3.3
 {: .no_toc }
 
 ## Table of contents
