@@ -25,8 +25,7 @@ The JSON description consists of metaframes and the metaframe inputs.
 
 Example minimal metapage with two metaframes:
 <div class="language-mermaid">graph LR
-metaframe1 -- "output1 -> input1" --> metaframe2
-metaframe2 -- "data-stream"       --> metaframe1
+metaframe1["random-data-generator"] -- "y -> y" --> metaframe2["graph-dynamic"]
 </div>
 
 Defined by:
