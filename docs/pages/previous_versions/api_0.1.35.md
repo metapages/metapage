@@ -1,7 +1,7 @@
 ---
 layout: default-with-mermaid
 title: api_0.1.35
-permalink: /previous_versions/api_0.1.35/
+permalink: /api/0.1.35/
 nav_exclude: true
 ---
 

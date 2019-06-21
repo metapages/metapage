@@ -29,7 +29,7 @@ version-new-publish VERSION='patch' dirtyok='yes': _require-master-branch
     if [ "{{dirtyok}}" != "yes" ]; then git diff-index --quiet HEAD --; fi
 
     @# make a copy of the docs and update the current docs version
-    cp docs/pages/04_api.md docs/pages/previous_versions/api_`just version`.md
+    just _archive-current-docs
 
     @# actually bump the libs version. # disabled --no-git-tag-version version because the ordering screwed up the cloud tests
     cd libs && npm version {{VERSION}}
@@ -51,6 +51,12 @@ _require-master-branch:
 
 _set-api-docs-current-version:
     sed -i "s/API Reference v.*/API Reference v`just version`/g" docs/pages/04_api.md
+    sed -i "s#permalink.*#permalink: /api/`just version`/#g" docs/pages/04_api.md
+    sed -i "s#title: api_.*.*#title: api_`just version`/#g" docs/pages/04_api.md
+
+_archive-current-docs:
+    cp docs/pages/04_api.md docs/pages/previous_versions/api_`just version`.md
+    sed -i "s/nav_order:.*/nav_exclude: true/g" docs/pages/previous_versions/api_`just version`.md
 
 version-help:
     @echo "New version release steps"
@@ -67,7 +73,7 @@ version-update-local-files:
 
 # Get current NPM version
 version:
-    cat libs/package.json | jq -r '.version'
+    @cat libs/package.json | jq -r '.version'
 
 # Damn it happens. Untagging/deprecating, and some possible manual tweaks.
 version-remove VERSION:

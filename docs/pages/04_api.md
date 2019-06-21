@@ -1,7 +1,7 @@
 ---
 layout: default-with-mermaid
 title: API
-permalink: /api/
+permalink: /api/0.3.2/
 nav_order: 4
 ---
 
