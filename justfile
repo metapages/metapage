@@ -41,7 +41,7 @@ version-new-publish VERSION='patch' dirtyok='yes': _require-master-branch
     git add -u ; git commit -m "v`just version`" && git tag v`just version` && git push && git push origin v`just version`
 
     @echo "version `just version` pushed and queued for publishing (via cloudbuild.yml)"
-    @echo "IMPORTANT: run 'just _post-version-new-publish' because jekyll needs to know about the new version, and this cannot happen in an automated way because if forked the cloud tests"
+    @echo "IMPORTANT: run 'just _post-version-new-publish' because jekyll needs to know about the new version, and this cannot happen in an automated way because it breaks the cloud tests"
 
 _post-version-new-publish:
     just version-update-local-files
