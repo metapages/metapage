@@ -7,7 +7,7 @@ nav_order: 4
 
 
 
-# API Reference v0.3.1
+# API Reference v0.3.2
 {: .no_toc }
 
 ## Table of contents

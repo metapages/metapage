@@ -23,20 +23,34 @@ ci-test: ci-compile
 
 # https://docs.npmjs.com/cli/version.html
 # npm version, git tag, and push to release a new version and publish docs
-version-new-publish VERSION='patch' dirtyok='yes':
+# CURRENT_VERSION
+version-new-publish VERSION='patch' dirtyok='yes': _require-master-branch
     @# Fail if uncomitted changes
     if [ "{{dirtyok}}" != "yes" ]; then git diff-index --quiet HEAD --; fi
+
+    @# make a copy of the docs and update the current docs version
+    cp docs/pages/04_api.md docs/pages/previous_versions/api_`just version`.md
+
     @# actually bump the libs version. # disabled --no-git-tag-version version because the ordering screwed up the cloud tests
     cd libs && npm version {{VERSION}}
+
+    @# change the version in the API docs
+    just _set-api-docs-current-version
+
     @# this commmit will be picked up by the build process and the npm libraries published
     git add -u ; git commit -m "v`just version`" && git tag v`just version` && git push && git push origin v`just version`
-    @# i cannot remember why i need this step, it *is* important, fill in later why
-    @rm -rf libs/build
+
     @echo "version `just version` pushed and queued for publishing (via cloudbuild.yml)"
     @echo "IMPORTANT: run 'just _post-version-new-publish' because jekyll needs to know about the new version, and this cannot happen in an automated way because if forked the cloud tests"
 
 _post-version-new-publish:
     just version-update-local-files
+
+_require-master-branch:
+    if [ "`git rev-parse --symbolic-full-name --abbrev-ref HEAD`" != "master" ]; then exit 1; fi
+
+_set-api-docs-current-version:
+    sed -i "s/API Reference v.*/API Reference v`just version`/g" docs/pages/04_api.md
 
 version-help:
     @echo "New version release steps"
