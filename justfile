@@ -54,7 +54,7 @@ _set-api-docs-current-version:
     sed -i "s#permalink.*#permalink: /api/`just version`/#g" docs/pages/04_api.md
     sed -i "s#title: api_.*.*#title: api_`just version`/#g" docs/pages/04_api.md
 
-# Make sure that we're not compiling in any debug settings
+# Make sure that we're not compiling in any debug parameters
 _check-no-debug-flags-set:
     @if grep -q '^-D jsondiff' libs/build-base.hxml; then \
         echo "-D jsondiff found, please comment out"; exit 1; \
