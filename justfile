@@ -24,7 +24,7 @@ ci-test: ci-compile
 # https://docs.npmjs.com/cli/version.html
 # npm version, git tag, and push to release a new version and publish docs
 # CURRENT_VERSION
-version-new-publish VERSION='patch' dirtyok='yes': _require-master-branch
+version-new-publish VERSION='patch' dirtyok='yes': _require-master-branch _check-no-debug-flags-set
     @# Fail if uncomitted changes
     if [ "{{dirtyok}}" != "yes" ]; then git diff-index --quiet HEAD --; fi
 
@@ -53,6 +53,15 @@ _set-api-docs-current-version:
     sed -i "s/API Reference v.*/API Reference v`just version`/g" docs/pages/04_api.md
     sed -i "s#permalink.*#permalink: /api/`just version`/#g" docs/pages/04_api.md
     sed -i "s#title: api_.*.*#title: api_`just version`/#g" docs/pages/04_api.md
+
+# Make sure that we're not compiling in any debug settings
+_check-no-debug-flags-set:
+    @if grep -q '^-D jsondiff' libs/build-base.hxml; then \
+        echo "-D jsondiff found, please comment out"; exit 1; \
+    fi
+    @if grep -q 'debug: true' libs/webpack.config.js; then \
+        echo "webpack: 'debug: true' found, set to false"; exit 1; \
+    fi
 
 _archive-current-docs:
     cp docs/pages/04_api.md docs/pages/previous_versions/api_`just version`.md

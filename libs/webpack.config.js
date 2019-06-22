@@ -1,24 +1,25 @@
 const path = require('path');
+const configs = [];
 
-module.exports = [
-	createConfig('metapage', 'window', '/../docs/js/'),
-	createConfig('metapage', 'window', '/build/npm/'),
-	createConfig('metapage', 'commonjs2', '/build/npm/'),
+['metapage', 'metaframe'].forEach((libName) => {
+	['window', 'commonjs2'].forEach((platform) => {
+		if (platform === 'window') {
+			configs.push(createConfig(libName, platform, '/../docs/js/', true));		
+		}
+		configs.push(createConfig(libName, platform, '/build/npm/', false));
+		configs.push(createConfig(libName, platform, '/build/npm/', true));
+	});
+});
 
-	createConfig('metaframe', 'window', '/../docs/js/'),
-	createConfig('metaframe', 'window', '/build/npm/'),
-	createConfig('metaframe', 'commonjs2', '/build/npm/'),
-];
-
-function createConfig(source, target, folder) {
+function createConfig(source, target, folder, isDebug) {
 	return {
-		mode: 'production',
-		devtool: 'cheap-module-eval-source-map',
+		mode: isDebug ? 'development' : 'production',
+		devtool: isDebug ? 'cheap-module-eval-source-map' : undefined,
 		entry: './build-' + source + '.hxml',
 		output: {
 			// library: source,
 			libraryTarget: target,
-			filename: (target == 'window' ? 'browser.js' : 'index.js'),
+			filename: (target === 'window' ? 'browser' : 'index') + (isDebug ? '.js' : '.min.js'),
 			path: path.join(__dirname + folder + source),
 		},
 		module: {
@@ -29,10 +30,12 @@ function createConfig(source, target, folder) {
 					loader: 'haxe-loader',
 					options: {
 						// Webpack builds the production versions, so keep this false
-						debug: true,
+						debug: isDebug,
 					}
 				}
 			]
 		}
 	};
 }
+
+module.exports = configs;
