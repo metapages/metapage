@@ -967,7 +967,6 @@ class IFrameRpcClient extends EventEmitter
 
 		// Add the custom URL params
 		var urlBlob = new js.html.URL(this.url);
-		urlBlob.searchParams.set(URL_PARAM_METAFRAME_ID, iframeId);
 		if (debug) {
 			urlBlob.searchParams.set(URL_PARAM_DEBUG, '1');
 		}
