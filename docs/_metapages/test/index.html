@@ -38,6 +38,9 @@ VERSION = VERSION == null ? '{{site.data.versions.versions.last}}' : VERSION;
 {% else %}
 VERSION = VERSION == null ? 'latest' : VERSION;
 {% endif %}
+
+const debug = ['DEBUG', 'debug', 'MP_DEBUG', 'mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag));
+
 document.getElementById('version').innerText = `metapage v${VERSION}`;
 var head = document.getElementsByTagName('head').item(0);
 var script = document.createElement('script');
@@ -45,11 +48,13 @@ script.setAttribute('type', 'text/javascript');
 if (VERSION == 'latest') {
     script.setAttribute('src', `/js/metapage/browser.js`);
 } else {
-    script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metapage@${VERSION}/browser.js`);
+    let minSuffix = '';
+  if (!VERSION.startsWith('latest') && debug && window.compareVersions(VERSION, '0.3.4') >= 0) {
+      minSuffix = '.min';
+  }
+    script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metapage@${VERSION}/browser${minSuffix}.js`);
 }
 head.appendChild(script);
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // Get the metaframe/metapage library versions to test
