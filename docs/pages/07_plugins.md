@@ -7,15 +7,6 @@ has_children: false
 has_toc: false
 ---
 
-Plugins are metaframes (websites) that have inputs from the metapage where they are embedded.
+Plugins are slightly special metaframe sites.
 
-Features:
-
- - display a visual representation of the metapage
- - save and load the state (current inputs) of the metapage
- - editing the metapage
-  
-https://app.metapage.org heavily uses plugins, but they are an optional feature.
-
-Security: they also increase the surface area, so only run plugins that you trust. All plugins from metapage.org are open-source.
-
+See the [api docs](/api/#plugins)

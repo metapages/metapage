@@ -1,9 +1,5 @@
 ---
 layout: vanilla
-title: Tools
-permalink: /tools/resizer
-parent: Tools
-nav_order: 1
 ---
 
 <head>

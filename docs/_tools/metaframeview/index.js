@@ -42,7 +42,7 @@ function buildEditorWithInitialInputs(startInputs) {
 	var idOutputs = 'outputsId';
 	var idTarget = 'target';
 	var metapageDef = {
-		version: '0.2',
+		version: '0.3',
 		metaframes: {},
 	};
 

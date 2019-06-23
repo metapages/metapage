@@ -357,7 +357,7 @@ The
 
 ### Metapage events
 
-#### Metapage#STATE
+### Metapage#STATE
 
 Metapage event allows you to add hooks to the data flow:
 
@@ -382,7 +382,7 @@ metapage.on(Metapage.STATE, function(definition) { ... });
 Listens to changes in the `state` for metaframes (and plugins). The listener is called on every discrete update of inputs and outputs.
 
 
-#### Metapage#DEFINITION
+### Metapage#DEFINITION
 ```ts
 /**
  * Example definition event:
@@ -410,7 +410,7 @@ It also returns the metaframe and plugin sets, with the objects needed to e.g. a
 
 This is the main event you should listen to if your metapage gets updated.
 
-#### Metapage#ERROR
+### Metapage#ERROR
 
 ```ts
 metapage.on('error', function(definition) { ... });

@@ -11,7 +11,7 @@ layout: vanilla
 
 <body>
 
-<h1>Metaframe editor</h1>
+<h1>Metaframe viewer</h1>
 
 <div id="url" >
 </div>
