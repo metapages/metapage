@@ -42,3 +42,7 @@ plugins:
 aux_links:
     "GitHub":
       - "//github.com/metapages/metapage"
+    "npm":
+      - "//www.npmjs.com/package/metapage"
+    "Metapage Viewer":
+      - "//https://app.metapages.org/"
