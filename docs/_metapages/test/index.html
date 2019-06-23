@@ -393,9 +393,11 @@ window.onload = function() {
     console.log(JSON.stringify(metaPageDefinition, null, '  '));
 
     window.metapage = Metapage.from(metaPageDefinition);
-    // window.metapage = metapage;
+    // >= 0.3.5 
+    if (window.metapage.setDebugFromUrlParams) {
+        window.metapage.setDebugFromUrlParams();
+    }
     window.metaPageDefinition = metaPageDefinition;
-
 
     // This is just for debugging
     // metapage.addEventListener('inputs', (e) => {

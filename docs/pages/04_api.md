@@ -128,7 +128,15 @@ interface Options {
 }
 ```
 
-If the URL has the parameter `MP_DEBUG` then debug logging is enabled: `https://domain.org/metapage1?MP_DEBUG`
+### Metapage#setDebugFromUrlParams
+
+```ts
+metapage.setDebugFromUrlParams()
+```
+
+If the URL has one of the parameters `MP_DEBUG`, `mp_debug`, `DEBUG`, `debug`, then debug logging is enabled, e.g.: `https://domain.org/metapage1?debug`.
+
+The metapage and metaframes will output coloured console logs (the color is randomly but deterministically computed from the respective id).
 
 
 ### Metapage#dispose

@@ -88,10 +88,15 @@ class Metapage extends EventEmitter
 	{
 		super();
 		_id = opts != null && opts.id != null ? opts.id : MetapageTools.generateMetapageId();
-		debug = existsAnyUrlParam(['MP_DEBUG', 'DEBUG', 'debug']);
 		_consoleBackgroundColor = (opts != null && opts.color != null ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT);
 		Browser.window.addEventListener('message', onMessage);
 		log('Initialized');
+	}
+
+	public function setDebugFromUrlParams() :Metapage
+	{
+		debug = existsAnyUrlParam(['MP_DEBUG', 'DEBUG', 'debug', 'mp_debug']);
+		return this;
 	}
 
 	public function getState() :MetapageState
