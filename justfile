@@ -65,8 +65,9 @@ _check-no-debug-flags-set:
 
 _archive-current-docs:
     cp docs/pages/04_api.md docs/pages/previous_versions/api_`just version`.md
-    git add docs/pages/previous_versions/api_`just version`.md
     sed -i "s/nav_order:.*/nav_exclude: true/g" docs/pages/previous_versions/api_`just version`.md
+    sed -i "s#permalink:.*#permalink: /api/`just version`/#g" docs/pages/previous_versions/api_`just version`.md
+    git add docs/pages/previous_versions/api_`just version`.md
 
 version-help:
     @echo "New version release steps"
