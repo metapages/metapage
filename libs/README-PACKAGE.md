@@ -6,7 +6,7 @@ The [metaframe npm library](https://www.npmjs.com/package/metaframe) runs in the
 
 The [metapage npm library](https://www.npmjs.com/package/metapage) runs on the parent website, controlling the data streams between metaframes.
 
-All (non-deprecated) library version pairs are tested against every other before any changes are merged. We will make every effort to preserve backwards compatibility forever.
+[Tests](https://metapages.org/tests/): All (non-deprecated) library version pairs are tested against every other before any changes are merged. We will make every effort to preserve backwards compatibility forever.
 
 Documentation and examples: [https://metapages.org/](https://metapages.org/)
 
