@@ -4,6 +4,7 @@
     "description": "Connect web pages together",
     "repository": "https://github.com/dionjwa/metapage",
     "homepage": "https://metapages.org/",
+    "main": "index.js",
     "dependencies": {
         "compare-versions": "^3.4.0",
         "minimatch": "^3.0.4"
