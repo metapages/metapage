@@ -23,7 +23,7 @@ ci-test: ci-compile
 
 # https://docs.npmjs.com/cli/version.html
 # npm version, git tag, and push to release a new version and publish docs
-# CURRENT_VERSION
+# VERSION = major | minor | patch. New version publishing is two steps but then completely automated!
 version-new-publish VERSION='patch' dirtyok='yes': _require-master-branch _check-no-debug-flags-set
     @# Fail if uncomitted changes
     if [ "{{dirtyok}}" != "yes" ]; then git diff-index --quiet HEAD --; fi
