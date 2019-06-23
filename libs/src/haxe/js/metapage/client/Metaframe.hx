@@ -45,7 +45,6 @@ class Metaframe extends EventEmitter
 		super();
 		debug = MetapageTools.getUrlParamDEBUG();
 		_isIframe = isIframe();
-		// this.name = MetapageTools.getUrlParamMF_ID();
 
 		if (!_isIframe) {
 			//Don't add any of the machinery, it only works if we're iframes.

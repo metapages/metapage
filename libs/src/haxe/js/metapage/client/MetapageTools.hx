@@ -153,11 +153,6 @@ class MetapageTools
 		});
 	}
 
-	public static function getUrlParamMF_ID() :String
-	{
-		return new js.html.URLSearchParams(js.Browser.window.location.search).get(URL_PARAM_METAFRAME_ID);
-	}
-
 	public static function generateMetaframeId(?length :Int = 8) :MetaframeId
 	{
 		return new MetaframeId(generateId(length));
