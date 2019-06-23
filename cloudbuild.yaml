@@ -24,6 +24,7 @@ steps:
   env:
   - 'DOCKER_TAG=$COMMIT_SHA'
   - 'NPM_MODE=production'
+  - 'NODE_ENV=production'
   entrypoint: 'sh'
   args:
     - '-c'

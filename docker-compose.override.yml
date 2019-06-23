@@ -3,6 +3,8 @@ version: '2.3'
 services:
   builder-haxe:
     command: just watch
+    environment:
+     - "NODE_ENV=development"
     volumes:
       - ./docs:/docs
       - ./libs:/workspace

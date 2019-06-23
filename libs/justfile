@@ -1,7 +1,7 @@
 # https://github.com/casey/just
 # just runs the dev server by default
 PROJECT_NAME := `basename $PWD`
-export NODE_ENV := env_var_or_default('NODE_ENV', 'development')
+export NODE_ENV := env_var_or_default('NODE_ENV', 'production')
 
 help:
     @just --list
