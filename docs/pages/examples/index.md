@@ -56,7 +56,6 @@ var plugins = {};
 // add the metaframes hosted elsewhere
 [
 	"https://metapages.github.io/metaframe-editor-json/",
-	"http://localhost:8080/ui/plots/metaframe-experiences/",
 ].map((url) => {
 {% if jekyll.environment == "production" %}
 		return url;
