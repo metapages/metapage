@@ -1,13 +1,14 @@
 ---
 layout: default-with-mermaid
-title: API
-permalink: /api/0.3.3/
+title: api_0.3.0
+permalink: /api/0.3.0/
+version: 0.3.0
 nav_exclude: true
 ---
 
 
 
-# API Reference v0.3.3
+# API Reference v0.3.0
 {: .no_toc }
 
 ## Table of contents
@@ -25,51 +26,40 @@ The JSON description consists of metaframes and the metaframe inputs.
 
 Example minimal metapage with two metaframes:
 <div class="language-mermaid">graph LR
-metaframe1["random-data-generator"] -- "y -> y" --> metaframe2["graph-dynamic"]
+metaframe1 -- "output1 -> input1" --> metaframe2
+metaframe2 -- "data-stream"       --> metaframe1
 </div>
 
 Defined by:
 
 ```json
 {
-  "version": "0.3",
-  "meta": {
-    "layouts": {
-      "flexboxgrid" : {
-        "docs": "http://flexboxgrid.com/",
-        "layout": [
-          [ {"name":"random-data-generator", "width":"col-xs-4", "style": {"maxHeight":"600px"}}, {"url":"{{site.url}}/metaframes/passthrough-arrow/?rotation=90", "width":"col-xs-1"}, {"name":"graph-dynamic", "width":"col-xs-7"}  ]
+    "metaframes": {
+      "metaframe1": {
+        "url": "{{site.url}}/metaframes/example00_iframe1/",
+        "inputs": [
+          {
+            "metaframe": "metaframe2",
+            "source"   : "output1",
+            "target"   : "input1"
+          }
+        ]
+      },
+      "metaframe2": {
+        "url": "{{site.url}}/metaframes/example00_iframe2/",
+        "inputs": [
+          {
+            "metaframe": "metaframe1",
+            "source"   : "data-stream"
+          }
         ]
       }
-    }
-  },
-  "metaframes": {
-    "random-data-generator": {
-      "url": "{{site.url}}/metaframes/random-data-generator/?frequency=1000"
     },
-    "graph-dynamic": {
-      "url": "{{site.url}}/metaframes/graph-dynamic/",
-      "inputs": [
-        {
-          "metaframe": "random-data-generator",
-          "source": "y",
-          "target": "y"
-        }
-      ]
-    }
-  },
-  "plugins": [
-    "{{site.url}}/metaframes/mermaid.js/"
-  ]
+    "plugins": [
+      "{{site.url}}/metaframes/example00_iframe2/"
+    ]
 }
-
 ```
-
-{% if jekyll.environment == "production" %}
-  [Run above example](https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
-{% else %}
-  [Run above example]({{site.data.urls.app-metapage-local}}/#url={{site.url}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
-{% endif %}
 
 The `pipe` entries of "inputs" are objects describing the source metaframe, source metaframe output pipe name, and the target metaframe (the owning metaframe) input pipe name 
 ```js
@@ -344,8 +334,6 @@ The
 
 ### Metapage events
 
-#### Metapage#STATE
-
 Metapage event allows you to add hooks to the data flow:
 
 ```js
@@ -363,13 +351,11 @@ Metapage event allows you to add hooks to the data flow:
  * }
  */
 metapage.on('state', function(metapageState) { ...});
-metapage.on(Metapage.STATE, function(definition) { ... });
 ```
 
 Listens to changes in the `state` for metaframes (and plugins). The listener is called on every discrete update of inputs and outputs.
 
 
-#### Metapage#DEFINITION
 ```ts
 /**
  * Example definition event:
@@ -386,7 +372,6 @@ Listens to changes in the `state` for metaframes (and plugins). The listener is 
  * }
  */
 metapage.on('definition', function(definition) { ... });
-metapage.on(Metapage.DEFINITION, function(definition) { ... });
 
 metapage.setDefinition(def :MetapageDefinition); // Fires above event
 metapage.getDefinition(def) :MetapageDefinition;
@@ -397,16 +382,6 @@ It also returns the metaframe and plugin sets, with the objects needed to e.g. a
 
 This is the main event you should listen to if your metapage gets updated.
 
-#### Metapage#ERROR
-
-```ts
-metapage.on('error', function(definition) { ... });
-metapage.on(Metapage.ERROR, function(definition) { ... });
-
-metapage.setDefinition(def :MetapageDefinition); // Fires above event
-metapage.getDefinition(def) :MetapageDefinition;
-```
-The definition can be updated, this will fire on every change and give the full definition.
 
 
 
@@ -415,19 +390,10 @@ The definition can be updated, this will fire on every change and give the full 
 An internal object managing the data flow in and out of the actual metaframe iframe. You shouldn't need to access this object directly.
 This object is in the *metapage* page, managing the metaframe data flow.
 
-### Metapage.MetaframeClient#url
-
-```ts
-// The URL of the underlying iframe
-const url :string = metapage.getMetaframe(id).url;
-```
-
 ### Metapage.MetaframeClient#iframe
 
 The concrete metaframe [iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) HTML element.
 
-
-<a href="{{site.url}}/api_previous_versions/">Previous Versions</a>
 
 ### Metapage.MetaframeClient#dispose
 
@@ -635,8 +601,7 @@ metaframe.dispose()
 
 Removes window message listener, event listeners, and nulls potentially large fields.
 
-
-# Plugins
+# Metapage plugins
 
 Metapage plugins are metaframes that are not connected to the normal metaframes, instead they have hooks (via inputs) into:
 
@@ -698,7 +663,7 @@ Plugins declare which inputs they are allows to receive in the `metaframe.json` 
 ```
 
 
-## Metaframe#plugin
+##Plugin#API
 
 The `plugin` field on the `metapage` object will be present if the metaframe is initialized as a plugin by the owning metapage:
 
@@ -706,36 +671,33 @@ The `plugin` field on the `metapage` object will be present if the metaframe is 
 metaframe.plugin
 ```
 
+
 `metapage/definition` and `metapage/state` pipes may be listened to as per usual, or you may call the plugin methods:
 
-## Metaframe#plugin.requestState
-## Metaframe#plugin.onState
-
-Requests the current state from the metapage.
 ```ts
 metaframe.plugin.requestState(); // arrives via the next line
 var disposeFunction = metaframe.plugin.onState(function(metapageState) { ... });
 
-```
-
-## Metaframe#plugin.setState
-
-```ts
+var metapageState = metaframe.plugin.getState();
 metaframe.plugin.setState(metapageState);
 ```
 
-## Metaframe#plugin.onDefinition
-## Metaframe#plugin.setDefinition
-## Metaframe#plugin.getDefinition
+
 ```ts
 var disposeFunction = metaframe.plugin.onDefinition(function(metapageDefinition) { ... });
 metaframe.plugin.setDefinition(metapageDefinition);
-var definition = metaframe.plugin.getDefinition);
 ```
 
 
-## Metaframe#plugin pipes
+##Plugin#input pipes
 
 `metapage/definition`: this input will always have the most recent metapage definition. If the output is set, the metapage will update the definition.  No action is needed to get this data.
 
-`metapage/state`: this input has the metapage state. If the output is set, the metapage will update the entire application state. The `metapage/state` is not sent automatically, it must be requested every time:
+`metapage/state`: this input gets the metapage state. If the output is set, the metapage will update the entire application state. The `metapage/state` is not sent automatically, it must be requested every time:
+
+
+##Plugin#output pipes
+
+`metapage/state`: The current metapage state will be replaced with this value.
+
+`metapage/definition`: The current metapage definition will be replaced with this value.

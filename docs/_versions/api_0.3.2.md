@@ -1,13 +1,14 @@
 ---
 layout: default-with-mermaid
 title: API
-permalink: /api/0.3.4/
+permalink: /api/0.3.2/
+version: 0.3.2
 nav_exclude: true
 ---
 
 
 
-# API Reference v0.3.4
+# API Reference v0.3.2
 {: .no_toc }
 
 ## Table of contents
@@ -25,7 +26,8 @@ The JSON description consists of metaframes and the metaframe inputs.
 
 Example minimal metapage with two metaframes:
 <div class="language-mermaid">graph LR
-metaframe1["random-data-generator"] -- "y -> y" --> metaframe2["graph-dynamic"]
+metaframe1 -- "output1 -> input1" --> metaframe2
+metaframe2 -- "data-stream"       --> metaframe1
 </div>
 
 Defined by:
@@ -425,9 +427,6 @@ const url :string = metapage.getMetaframe(id).url;
 ### Metapage.MetaframeClient#iframe
 
 The concrete metaframe [iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) HTML element.
-
-
-<a href="{{site.url}}/api_previous_versions/">Previous Versions</a>
 
 ### Metapage.MetaframeClient#dispose
 

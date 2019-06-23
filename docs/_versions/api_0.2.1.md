@@ -2,6 +2,7 @@
 layout: default-with-mermaid
 title: api_0.2.1
 permalink: /api/0.2.1/
+version: 0.2.1
 nav_exclude: true
 ---
 
@@ -345,8 +346,6 @@ This object is in the *metapage* page, managing the metaframe data flow.
 
 The concrete metaframe [iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) HTML element.
 
-
-<a href="{{site.url}}/api_previous_versions/">Previous Versions</a>
 
 ### Metapage.MetaframeClient#dispose
 

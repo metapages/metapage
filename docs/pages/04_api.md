@@ -10,6 +10,11 @@ nav_order: 4
 # API Reference v0.4.2
 {: .no_toc }
 
+###### <a href="/versions">previous versions</a>
+{: .no_toc } 
+
+<br/>
+
 ## Table of contents
 {: .no_toc .text-delta }
 
@@ -433,9 +438,6 @@ const url :string = metapage.getMetaframe(id).url;
 ### Metapage.MetaframeClient#iframe
 
 The concrete metaframe [iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) HTML element.
-
-
-<a href="{{site.url}}/api_previous_versions/">Previous Versions</a>
 
 ### Metapage.MetaframeClient#dispose
 

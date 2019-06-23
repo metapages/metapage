@@ -18,6 +18,8 @@ collections:
     output: true
   plugins:
     output: true
+  versions:
+    output: true
 
 webrick:
   headers:
@@ -45,4 +47,4 @@ aux_links:
     "npm":
       - "//www.npmjs.com/package/metapage"
     "Metapage Viewer":
-      - "//https://app.metapages.org/"
+      - "//app.metapages.org/"

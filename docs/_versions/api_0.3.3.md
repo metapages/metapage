@@ -1,13 +1,14 @@
 ---
 layout: default-with-mermaid
 title: API
-permalink: /api/0.4.1/
+permalink: /api/0.3.3/
+version: 0.3.3
 nav_exclude: true
 ---
 
 
 
-# API Reference v0.4.1
+# API Reference v0.3.3
 {: .no_toc }
 
 ## Table of contents
@@ -128,15 +129,7 @@ interface Options {
 }
 ```
 
-### Metapage#setDebugFromUrlParams
-
-```ts
-metapage.setDebugFromUrlParams()
-```
-
-If the URL has one of the parameters `MP_DEBUG`, `mp_debug`, `DEBUG`, `debug`, then debug logging is enabled, e.g.: `https://domain.org/metapage1?debug`.
-
-The metapage and metaframes will output coloured console logs (the color is randomly but deterministically computed from the respective id).
+If the URL has the parameter `MP_DEBUG` then debug logging is enabled: `https://domain.org/metapage1?MP_DEBUG`
 
 
 ### Metapage#dispose
@@ -433,9 +426,6 @@ const url :string = metapage.getMetaframe(id).url;
 ### Metapage.MetaframeClient#iframe
 
 The concrete metaframe [iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) HTML element.
-
-
-<a href="{{site.url}}/api_previous_versions/">Previous Versions</a>
 
 ### Metapage.MetaframeClient#dispose
 

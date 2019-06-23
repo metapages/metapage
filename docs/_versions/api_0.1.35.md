@@ -2,6 +2,7 @@
 layout: default-with-mermaid
 title: api_0.1.35
 permalink: /api/0.1.35/
+version: 0.1.35
 nav_exclude: true
 ---
 
@@ -225,6 +226,4 @@ An internal object managing the data flow in and out of the actual metaframe ifr
 
 The concrete metaframe [iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) HTML element.
 
-
-<a href="{{site.url}}/api_previous_versions/">Previous Versions</a>
 

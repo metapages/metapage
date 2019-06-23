@@ -64,10 +64,10 @@ _check-no-debug-flags-set:
     fi
 
 _archive-current-docs:
-    cp docs/pages/04_api.md docs/pages/previous_versions/api_`just version`.md
-    sed -i "s/nav_order:.*/nav_exclude: true/g" docs/pages/previous_versions/api_`just version`.md
-    sed -i "s#permalink:.*#permalink: /api/`just version`/#g" docs/pages/previous_versions/api_`just version`.md
-    git add docs/pages/previous_versions/api_`just version`.md
+    cp docs/pages/04_api.md docs/_versions/api_`just version`.md
+    sed -i "s/nav_order:.*/nav_exclude: true/g" docs/_versions/api_`just version`.md
+    sed -i "s#permalink:.*#permalink: /api/`just version`/\nversion: `just version`#g" docs/_versions/api_`just version`.md
+    git add docs/_versions/api_`just version`.md
 
 version-help:
     @echo "New version release steps"

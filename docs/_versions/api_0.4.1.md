@@ -1,13 +1,14 @@
 ---
 layout: default-with-mermaid
 title: API
-permalink: /api/0.3.5/
+permalink: /api/0.4.1/
+version: 0.4.1
 nav_exclude: true
 ---
 
 
 
-# API Reference v0.3.5
+# API Reference v0.4.1
 {: .no_toc }
 
 ## Table of contents
@@ -433,9 +434,6 @@ const url :string = metapage.getMetaframe(id).url;
 ### Metapage.MetaframeClient#iframe
 
 The concrete metaframe [iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) HTML element.
-
-
-<a href="{{site.url}}/api_previous_versions/">Previous Versions</a>
 
 ### Metapage.MetaframeClient#dispose
 
