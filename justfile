@@ -111,5 +111,7 @@ _DEPRECATED_version-commit:
 HELP := '
 Reminders:
     Developing app.metapages.org locally? Modify docs/_data/urls.yml
+    Have you run:
+    just _post-version-new-publish
 '
 
