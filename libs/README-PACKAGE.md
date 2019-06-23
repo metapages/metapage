@@ -1,7 +1,16 @@
-# Metapages
+# [Metapages](https://metapages.org/)
 
-## What is a *metapage*?
+A *metapage* is a set of connected webpages (*metaframes*).
 
-A **metapage** is a webpage that consists of a network of other embedded webpages.
+The [metaframe npm library](https://www.npmjs.com/package/metaframe) runs in the metaframed website (as an iframe), sending and recieving data on named pipes.
 
-For documentation and examples: [https://metapages.org/](https://metapages.org/)
+The [metapage npm library](https://www.npmjs.com/package/metapage) runs on the parent website, controlling the data streams between metaframes.
+
+All (non-deprecated) library version pairs are tested against every other before any changes are merged. We will make every effort to preserve backwards compatibility forever.
+
+Documentation and examples: [https://metapages.org/](https://metapages.org/)
+
+Simple example (two connected metaframes):
+
+[https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/](https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/)
+  <iframe src="https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/&header=0" frameBorder="0" style="width:600px;height:400px"></iframe>

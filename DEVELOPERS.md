@@ -39,7 +39,7 @@ Then:
       1. `docs/js`: for local development
       2. `lib/build/npm`: for building the npm+browser libraries
    2. The jekyll server reloads any changed docs files
-2. Comprehensive metapage test of the latest version: http://localhost:4000/metapages/test/?VERSION=latest
+2. Comprehensive metapage test of the latest version: http://localhost:4000/tests/
 3. Repeat
 
 **Tips**:
