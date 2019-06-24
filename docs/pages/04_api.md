@@ -37,37 +37,41 @@ Defined by:
 
 ```json
 {
-  "version": "0.3",
-  "meta": {
-    "layouts": {
-      "flexboxgrid" : {
-        "docs": "http://flexboxgrid.com/",
-        "layout": [
-          [ {"name":"random-data-generator", "width":"col-xs-4", "style": {"maxHeight":"600px"}}, {"url":"{{site.url}}/metaframes/passthrough-arrow/?rotation=90", "width":"col-xs-1"}, {"name":"graph-dynamic", "width":"col-xs-7"}  ]
-        ]
-      }
-    }
-  },
-  "metaframes": {
-    "random-data-generator": {
-      "url": "{{site.url}}/metaframes/random-data-generator/?frequency=1000"
-    },
-    "graph-dynamic": {
-      "url": "{{site.url}}/metaframes/graph-dynamic/",
-      "inputs": [
-        {
-          "metaframe": "random-data-generator",
-          "source": "y",
-          "target": "y"
-        }
-      ]
-    }
-  },
-  "plugins": [
-    "{{site.url}}/metaframes/mermaid.js/"
-  ]
+	"version": "0.3",
+	"meta": {
+		"layouts": {
+		"flexboxgrid" : {
+			"docs": "http://flexboxgrid.com/",
+			"layout": [
+			[ {"name":"random-data-generator", "width":"col-xs-4", "style": {"maxHeight":"600px"}}, {"url":"{{site.url}}/metaframes/passthrough-arrow/?rotation=90", "width":"col-xs-1"}, {"name":"graph-dynamic", "width":"col-xs-7"}  ]
+			]
+		}
+		}
+	},
+	"metaframes": {
+		"random-data-generator": {
+		"url": "{{site.url}}/metaframes/random-data-generator/?frequency=1000"
+		},
+		"graph-dynamic": {
+		"url": "{{site.url}}/metaframes/graph-dynamic/",
+		"inputs": [
+			{
+			"metaframe": "random-data-generator",
+			"source": "y"
+			}
+		]
+		}
+	},
+	"plugins": [
+		"{{site.url}}/metaframes/mermaid.js/?TITLE=0",
+    "{{site.url}}/metaframes/passthrough/",
+{% if jekyll.environment == "production" %}
+		"https://metapages.github.io/metaframe-editor-json/"
+{% else %}
+		"{{site.data.urls.metaframe-editor-json-local}}"
+{% endif %}
+	]
 }
-
 ```
 
 {% if jekyll.environment == "production" %}
@@ -75,6 +79,14 @@ Defined by:
 {% else %}
   [Run above example]({{site.data.urls.app-metapage-local}}/#url={{site.url}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
 {% endif %}
+
+To run the same example as the button above:
+
+1. copy the JSON definition above
+2. paste into the example text box at [https://app.metapages.org/)]({% if jekyll.environment == "production" %}https://app.metapages.org/{% else %}({{site.data.urls.app-metapage-local}}/){% endif %}).
+
+
+
 
 The `pipe` entries of "inputs" are objects describing the source metaframe, source metaframe output pipe name, and the target metaframe (the owning metaframe) input pipe name 
 ```js

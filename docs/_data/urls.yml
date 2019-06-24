@@ -7,3 +7,10 @@ minicss: "/js/mini-default.min.css"
 # app-metapage-local: http://localhost:3001/https://app.metapages.org/
 # When using the local app.metapage
 app-metapage-local: http://localhost:4010/
+
+# When using the deployed https://metapages.github.io/metaframe-editor-json/
+# metaframe-editor-json-local: http://localhost:3001/https://metapages.github.io/metaframe-editor-json/
+# When using the local app.metapage
+metaframe-editor-json-local: http://localhost:1234/
+
+
