@@ -14,11 +14,11 @@ An example metapage showing two metaframes, one generating randome data, the oth
 
 
 {% if jekyll.environment == "production" %}
-  [https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/&header=0](https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/&header=0)
-  <iframe src="https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/&header=0" style="width:600px;height:400px"></iframe>
+  [https://app.metapages.org/?header=0#url={{site.url}}/metapages/dynamic-plot/](https://app.metapages.org/?header=0#url={{site.url}}/metapages/dynamic-plot/)
+  <iframe src="https://app.metapages.org/?header=0#url={{site.url}}/metapages/dynamic-plot/" style="width:600px;height:400px"></iframe>
 {% else %}
-  [{{site.data.urls.app-metapage-local}}#url={{site.url}}/metapages/dynamic-plot/&header=0]({{site.data.urls.app-metapage-local}}#url={{site.url}}/metapages/dynamic-plot/&header=0)
-  <iframe src="{{site.data.urls.app-metapage-local}}#url={{site.url}}/metapages/dynamic-plot/&header=0" style="width:600px;height:400px"></iframe>
+  [{{site.data.urls.app-metapage-local}}#url={{site.url}}/metapages/dynamic-plot/&header=0]({{site.data.urls.app-metapage-local}}/?header=0#url={{site.url}}/metapages/dynamic-plot/)
+  <iframe src="{{site.data.urls.app-metapage-local}}?header=0#url={{site.url}}/metapages/dynamic-plot/" style="width:600px;height:400px"></iframe>
 {% endif %}
 
 The two pages above are completely separate websites, and have no idea about the other. One simply passes data to the other, controlled by the metapage code running in the parent page.
