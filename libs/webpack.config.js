@@ -1,4 +1,5 @@
 const path = require('path');
+const webpack = require('webpack');
 const configs = [];
 
 ['metapage', 'metaframe'].forEach((libName) => {
@@ -34,7 +35,15 @@ function createConfig(source, target, folder, isDebug) {
 					}
 				}
 			]
-		}
+		},
+		plugins: [
+			new webpack.DefinePlugin({
+				'process.env': {
+					NODE_ENV: isDebug ? JSON.stringify('development') : JSON.stringify('production'),
+					APP_ENV: JSON.stringify('browser')
+				}
+			}),
+		  ]
 	};
 }
 

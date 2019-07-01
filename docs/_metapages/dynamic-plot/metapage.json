@@ -29,7 +29,7 @@
 	"plugins": [
 		"{{site.url}}/metaframes/mermaid.js/?TITLE=0",
 		"{{site.url}}/metaframes/passthrough/",
-    {% if jekyll.environment == "production" %}
+{% if jekyll.environment == "production" %}
 		"https://metapages.github.io/metaframe-editor-json/"
 {% else %}
 		"{{site.data.urls.metaframe-editor-json-local}}"

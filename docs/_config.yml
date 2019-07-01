@@ -6,7 +6,7 @@ source: ./
 title: Metapages
 # description: A short description of your site's purpose
 baseurl: ""
-repository: dionjwa/metapage
+repository: metapages/metapage
 
 include: ['pages']
 collections:
