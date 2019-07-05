@@ -179,8 +179,7 @@ class MetapageTools
 		return s.toString();
 	}
 
-	inline public static function log(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
-	// inline public static function log(o :Dynamic, ?color :String, ?backgroundColor :String)
+	inline public static function log(o :Dynamic, ?color :String, ?backgroundColor :String, pos:haxe.PosInfos)
 	{
 		color = color != null ? color : "000";
 		if (color != null && color.trim() == '') {

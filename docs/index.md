@@ -17,7 +17,7 @@ An example metapage showing two metaframes, one generating randome data, the oth
   [https://app.metapages.org/?header=0#url={{site.url}}/metapages/dynamic-plot/](https://app.metapages.org/?header=0#url={{site.url}}/metapages/dynamic-plot/)
   <iframe src="https://app.metapages.org/?header=0#url={{site.url}}/metapages/dynamic-plot/" style="width:600px;height:400px"></iframe>
 {% else %}
-  [{{site.data.urls.app-metapage-local}}#url={{site.url}}/metapages/dynamic-plot/&header=0]({{site.data.urls.app-metapage-local}}/?header=0#url={{site.url}}/metapages/dynamic-plot/)
+  [{{site.data.urls.app-metapage-local}}?header=0#url={{site.url}}/metapages/dynamic-plot/]({{site.data.urls.app-metapage-local}}?header=0#url={{site.url}}/metapages/dynamic-plot/)
   <iframe src="{{site.data.urls.app-metapage-local}}?header=0#url={{site.url}}/metapages/dynamic-plot/" style="width:600px;height:400px"></iframe>
 {% endif %}
 

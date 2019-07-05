@@ -87,6 +87,7 @@ class Metapage extends EventEmitter
 	public function new(?opts :MetapageOptions)
 	{
 		super();
+		trace('DEBUG STUFF IS WORKING???Q');
 		_id = opts != null && opts.id != null ? opts.id : MetapageTools.generateMetapageId();
 		_consoleBackgroundColor = (opts != null && opts.color != null ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT);
 		Browser.window.addEventListener('message', onMessage);
@@ -150,6 +151,17 @@ class Metapage extends EventEmitter
 				if (newDefinition.plugins != null && newDefinition.plugins.has(metaframeId)) {
 					emitErrorMessage('Plugin with url=${metaframeId} matches metaframe. Metaframe ids and plugin urls are not allowed to collide');
 					throw 'Plugin with url=${metaframeId} matches metaframe. Metaframe ids and plugin urls are not allowed to collide';
+				}
+
+				var metaframeDefinition = newDefinition.metaframes[metaframeId];
+				if (js.Syntax.typeof(metaframeDefinition) != 'object') {
+					emitErrorMessage('Metaframe "${metaframeId}" is not an object');
+					throw 'Metaframe "${metaframeId}" is not an object';
+				}
+
+				if (metaframeDefinition.url == null) {
+					emitErrorMessage('Metaframe "${metaframeId}" missing field: url');
+					throw 'Metaframe "${metaframeId}" missing field: url';
 				}
 			}
 		}
@@ -294,11 +306,7 @@ class Metapage extends EventEmitter
 
 	public function metaframes() :JSMap<MetaframeId, IFrameRpcClient>
 	{
-		var all :JSMap<MetaframeId, IFrameRpcClient> = {};
-		for (key in _metaframes.keys()) {
-			all.set(key, _metaframes.get(key));
-		}
-		return all;
+		return getMetaframes();
 	}
 
 	public function metaframeIds() :Array<MetaframeId>
@@ -311,6 +319,15 @@ class Metapage extends EventEmitter
 		var all :Array<MetaframeId> = [];
 		for (key in _metaframes.keys()) {
 			all.push(key);
+		}
+		return all;
+	}
+
+	public function getMetaframes() :JSMap<MetaframeId, IFrameRpcClient>
+	{
+		var all :JSMap<MetaframeId, IFrameRpcClient> = {};
+		for (key in _metaframes.keys()) {
+			all.set(key, _metaframes.get(key));
 		}
 		return all;
 	}
@@ -356,10 +373,12 @@ class Metapage extends EventEmitter
 		}
 
 		if (metaframeId != null && _metaframes.exists(metaframeId)) {
+			emitErrorMessage('Existing metaframe for id=${metaframeId}');
 			throw 'Existing metaframe for id=${metaframeId}';
 		}
 
 		if (definition.url == null) {
+			emitErrorMessage('Metaframe definition missing url id=${metaframeId}');
 			throw 'Metaframe definition missing url id=${metaframeId}';
 		}
 
@@ -394,11 +413,6 @@ class Metapage extends EventEmitter
 
 		_plugins[url] = iframeClient;
 
-		// set the initial plugin inputs
-		// iframeClient.setInputs(_state.plugins.inputs[url]);
-
-		// TODO is this really needed?
-		// iframeClient.bindPlugin();
 		return iframeClient;
 	}
 
@@ -796,7 +810,14 @@ class Metapage extends EventEmitter
 						if (outputPersistanceAllowed) {
 							setOutputStateOnly(metaframeId, outputs);
 						}
+						// it might not seem meaningful to set the plugin outputs, since plugin outputs
+						// do not flow into other plugin inputs. However, the outputs are specifically
+						// listened to, for the purposes of e.g. setting the definition or state
 						_plugins.get(metaframeId).setOutputs(outputs);
+
+						// TODO: question
+						// I'm not sure if plugin outputs should trigger a state event, since it's not
+						// metaframe state.
 						if (outputPersistanceAllowed) {
 							emit(MetapageEvents.State, _state);
 						}
@@ -1005,12 +1026,12 @@ class IFrameRpcClient extends EventEmitter
 	}
 
 	/**
-	 * Pluging can get and set the metapage definition and state.
+	 * Plugins can get and set the metapage definition and state.
 	 * The inputs/outputs of the plugin MUST define those inputs
 	 * otherwise the 
 	 * @return Promise<Bool>
 	 */
-	public function bindPlugin()
+	function bindPlugin()
 	{
 		//   1) check for metapage/definition inputs and outputs
 		//		- if found, wire up listeners and responses and send current definition
@@ -1023,6 +1044,7 @@ class IFrameRpcClient extends EventEmitter
 				// send the metapage/definition immediately
 				// on getting a metapage/definition value, set that
 				// value on the metapage itself. 
+				trace('${id} hasPermissionsDefinition()  ${hasPermissionsDefinition()}');
 				if (hasPermissionsDefinition()) {
 					var disposer = _metapage.addEventListener(MetapageEvents.Definition, function(definition) {
 						this.setInput(METAPAGE_KEY_DEFINITION, definition.definition);
@@ -1037,6 +1059,7 @@ class IFrameRpcClient extends EventEmitter
 
 					if (metaframeDef.outputs != null) {
 						var disposer = this.onOutput(METAPAGE_KEY_DEFINITION, function(definition) {
+							trace('_metapage.setDefinition, definition=${definition}');
 							_metapage.setDefinition(definition);
 						});
 						_disposables.push(disposer);
@@ -1300,7 +1323,7 @@ class IFrameRpcClient extends EventEmitter
 		logInternal(o, pos);
 	}
 
-	function logInternal(o :Dynamic, ?pos:haxe.PosInfos)
+	function logInternal(o :Dynamic, pos:haxe.PosInfos)
 	{
 		var s :String = switch(js.Syntax.typeof(o)) {
 			case "string": cast o;
