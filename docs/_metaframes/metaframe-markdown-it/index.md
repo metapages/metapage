@@ -35,8 +35,6 @@ const getContentFromURLParam = async (key) => {
 
 const run = async () => {
     const urlParamValue = await getContentFromURLParam();
-    console.log('urlParamValue', urlParamValue);
-    console.log('gotMetaframeInput', gotMetaframeInput);
     if (urlParamValue && !gotMetaframeInput) {
         setMarkdown(urlParamValue);
     }
@@ -44,7 +42,6 @@ const run = async () => {
 
 const metaframe = new Metaframe();
 metaframe.onInputs((inputs) => {
-    console.log('inputs', inputs);
     var oneKey = Object.keys(inputs)[0];
     if (!oneKey) {
         return;
@@ -52,6 +49,10 @@ metaframe.onInputs((inputs) => {
     let data = inputs[oneKey];
     if (data) {
         gotMetaframeInput = true;
+        if (oneKey.endsWith('json')) {
+            data = '```\n' + data + '\n```';
+        }
+        // we do some checking on the pipes
         setMarkdown(data);
     }
 });

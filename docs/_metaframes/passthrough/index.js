@@ -30,7 +30,7 @@ function rename(prev, next) {
 	valueBlob.v = 1;
 	mf.setInput(next, valueBlob);
 	//This causes downstream cleanup
-	mf.deleteInput(prev);
+	mf.setInput(prev, undefined);
 }
 
 //Creates javascript object with methods
@@ -173,7 +173,7 @@ function createRow(name, previousDiv) {
 		nameDiv.removeEventListener("input", inputListenerName);
 		nameDiv.onkeydown = null;
 		valueDiv.removeEventListener("input", inputListenerValue);
-		mf.deleteInputs(name);
+		mf.setInput(name, undefined);
 	}
 
 	if (deleteButton) {

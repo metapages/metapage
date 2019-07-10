@@ -87,7 +87,6 @@ class Metapage extends EventEmitter
 	public function new(?opts :MetapageOptions)
 	{
 		super();
-		trace('DEBUG STUFF IS WORKING???Q');
 		_id = opts != null && opts.id != null ? opts.id : MetapageTools.generateMetapageId();
 		_consoleBackgroundColor = (opts != null && opts.color != null ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT);
 		Browser.window.addEventListener('message', onMessage);
