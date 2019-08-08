@@ -34,9 +34,17 @@ const getContentFromURLParam = async (key) => {
 }
 
 const run = async () => {
-    const urlParamValue = await getContentFromURLParam();
-    if (urlParamValue && !gotMetaframeInput) {
-        setMarkdown(urlParamValue);
+    if (!gotMetaframeInput) {
+        let url = new URL(window.location.href);
+        if (url.searchParams.get('md')) {
+            const urlDecoded = decodeURIComponent(url.searchParams.get('md'));
+            setMarkdown(urlDecoded);
+        } else {
+            const urlParamValueUrl = await getContentFromURLParam('url');
+            if (urlParamValueUrl) {
+                setMarkdown(urlParamValueUrl);
+            }
+        }
     }
 }
 
