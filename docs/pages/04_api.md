@@ -465,7 +465,9 @@ Removes all event listeners and clears internal objects.
 metapage.get(metaframeId).onInputs(function(inputs) {...}): function():
 ```
 
-Callback called on every input update event. Example `inputs` payload:
+Callback called on every input update event. Only the *new* inputs are in the payload, not all inputs.
+
+Example `inputs` payload:
 
 ```js
 {
@@ -600,7 +602,7 @@ Do not modify the returned object! For efficiency purposes this is *not* a copy.
 metaframe.onInputs(function(inputs) {...}): function():
 ```
 
-Callback called on every input update event. Example `inputs` payload:
+Callback called on every input update event. The payload is only the *new* inputs, not all current inputs. Example `inputs` payload:
 
 ```js
 {
