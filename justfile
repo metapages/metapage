@@ -4,6 +4,10 @@ help:
     @just --list
     @echo "{{HELP}}"
 
+# List further ci tasks
+ci: 
+    ci --list
+
 # Run the stack, defaulting to all. Just target "jekyll" for a minimal server  metapage-app
 run +TARGET='jekyll proxy builder-haxe test':
     docker-compose up --remove-orphans {{TARGET}}
@@ -15,11 +19,11 @@ build:
 sh:
     docker-compose run --workdir="/workspace" -v ${PWD}:/workspace builder-haxe sh
 
-ci-compile: _require-docker
-    cd libs && make compile
+# ci-compile: _require-docker
+#     cd libs && make compile
 
-ci-test: ci-compile
-    make ci-test
+# ci-test: ci-compile
+#     make ci-test
 
 # https://docs.npmjs.com/cli/version.html
 # npm version, git tag, and push to release a new version and publish docs
