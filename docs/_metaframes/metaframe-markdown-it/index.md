@@ -3,6 +3,7 @@ layout: vanilla
 ---
 
 <head>
+<base target="_parent">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 <script src="https://cdn.jsdelivr.net/npm/markdown-it@9.0.0/dist/markdown-it.min.js" ></script>
 <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
