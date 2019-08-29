@@ -1,4 +1,4 @@
-#!/usr/bin/env just --working-directory . --justfile
+#!/usr/bin/env just --justfile
 
 
 ##################################################################
