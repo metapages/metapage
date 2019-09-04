@@ -6,24 +6,24 @@ networks:
 
 services:
 
-  builder:
-    image: gcr.io/t9-docker-images/metapage:builder
+  shell:
+    image: gcr.io/t9-docker-images/metapage:shell
     build:
       context: .
-      target: builder
+      target: shell
       cache_from:
-        - gcr.io/t9-docker-images/metapage:builder
+        - gcr.io/t9-docker-images/metapage:shell
     networks:
       - bridge
 
-  builder-haxe:
-    image: gcr.io/t9-docker-images/metapage:builder-haxe
+  shell-haxe:
+    image: gcr.io/t9-docker-images/metapage:shell-haxe
     build:
       context: ./libs
-      target: builder-haxe
+      target: shell-haxe
       cache_from:
-        - gcr.io/t9-docker-images/metapage:builder
-        - gcr.io/t9-docker-images/metapage:builder-haxe
+        - gcr.io/t9-docker-images/metapage:shell
+        - gcr.io/t9-docker-images/metapage:shell-haxe
 
   test:
     depends_on:
@@ -33,8 +33,9 @@ services:
       context: ./libs
       target: test
       cache_from:
-        - gcr.io/t9-docker-images/metapage:builder
-        - gcr.io/t9-docker-images/metapage:builder-haxe
+        - gcr.io/t9-docker-images/metapage:shell
+        - gcr.io/t9-docker-images/metapage:shell-haxe
+    command: ["/bin/sh", "-c", "node test/test.js"]
     networks:
       - bridge
 

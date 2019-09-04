@@ -1,7 +1,7 @@
 version: '2.3'
 
 services:
-  builder-haxe:
+  shell-haxe:
     command: just watch
     environment:
      - "NODE_ENV=development"

@@ -8,7 +8,7 @@ npm-debug.log
 .bundle
 .idea
 .aws
-.env
+.env*
 gitcache
 _site
 .sass-cache

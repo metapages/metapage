@@ -1,10 +1,12 @@
-# This is the builder image for compiling haxe -> javascript libraries
+# This is the shell image for compiling haxe -> javascript libraries
 # and for running functional tests (requires puppeteer/chromium)
 
-FROM haxe:4.0.0-rc.2-alpine3.8 as builder-haxe
-RUN apk --no-cache add \
+FROM haxe:4.0.0-rc.3-alpine3.10 as shell-haxe
+
+RUN apk update && apk upgrade && apk --no-cache add \
 	bash \
 	curl \
+	chromium \
 	g++ \
 	gcc \
 	git \
@@ -15,20 +17,13 @@ RUN apk --no-cache add \
 	openssl-dev \
 	libffi-dev
 
-RUN curl -LSfs https://japaric.github.io/trust/install.sh | \
-  sh -s -- --git casey/just --target x86_64-unknown-linux-musl --to /bin
+# justfile
+RUN mkdir -p /usr/local/bin && curl -LSfs https://japaric.github.io/trust/install.sh | \
+  sh -s -- --git casey/just --target x86_64-unknown-linux-musl --to /usr/local/bin
+ENV PATH $PATH:/usr/local/bin:.
 
+# build tools
 RUN npm install -g npx webpack webpack-cli nodemon
-
-RUN apk update && apk upgrade && \
-    echo @edge http://nl.alpinelinux.org/alpine/edge/community >> /etc/apk/repositories && \
-    echo @edge http://nl.alpinelinux.org/alpine/edge/main >> /etc/apk/repositories && \
-    apk add --no-cache \
-      chromium@edge \
-      nss@edge \
-      freetype@edge \
-      harfbuzz@edge \
-      ttf-freefont@edge
 
 # Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
@@ -58,12 +53,10 @@ ENV CI true
 WORKDIR /workspace
 
 # There is no building/compiling here, it happens in the
-# builder containers, via cloudbuild.yaml
+# shell containers, via cloudbuild.yaml
 
-
-FROM builder-haxe as test
+FROM shell-haxe as test
 # For running tests. The container cannot mount in files at runtime (Google Cloud Build) so add everything now
 ADD ./etc ./etc
 ADD ./Makefile ./Makefile
 ADD ./test ./test
-CMD make test

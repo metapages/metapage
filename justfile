@@ -9,15 +9,21 @@ ci:
     ci --list
 
 # Run the stack, defaulting to all. Just target "jekyll" for a minimal server  metapage-app
-run +TARGET='jekyll proxy builder-haxe test':
+run +TARGET='jekyll proxy shell-haxe test':
     docker-compose up --remove-orphans {{TARGET}}
 
-# Builds the npm libraries. Requires 'just run builder-haxe'
+# Builds the npm libraries. Requires 'just run shell-haxe'
 build:
-    docker-compose exec builder-haxe webpack
+    docker-compose run shell-haxe just build
 
-sh:
-    docker-compose run --workdir="/workspace" -v ${PWD}:/workspace builder-haxe sh
+test:
+    ci test
+
+shell:
+    docker-compose run --rm --workdir="/workspace" -v ${PWD}:/workspace shell bash
+
+shell-haxe:
+    docker-compose run --rm --workdir="/workspace" -v ${PWD}:/workspace shell-haxe sh
 
 # ci-compile: _require-docker
 #     cd libs && make compile
@@ -81,7 +87,7 @@ version-help:
 
 # Idempotent version update where they are used
 version-update-local-files:
-    docker-compose run builder-haxe just _versions-write-versions-to-jekyll
+    docker-compose run shell-haxe just _versions-write-versions-to-jekyll
     git add -u ; git commit -m "DOCS: Updating current library to version: `just version`" && git push
     @# i cannot remember why i need this step, it *is* important, fill in later why
     @rm -rf libs/build
