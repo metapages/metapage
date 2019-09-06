@@ -1,13 +1,13 @@
 steps:
 
-# Build custom builder images [builder builder-haxe]
+# Build custom shell images [shell shell-haxe]
 - name: 'docker/compose:1.22.0'
-  id: 'builder'
+  id: 'shell'
   env:
   - 'BUILDER_DOCKER_COMPOSE=docker-compose.yml'
-  # "builder" is the docker image target used for all further operations
+  # "shell" is the docker image target used for all further operations
   # It is renamed to the branch name for later steps
-  - 'BUILDER_DOCKERFILE_TARGET=builder builder-haxe'
+  - 'BUILDER_DOCKERFILE_TARGET=shell shell-haxe'
   entrypoint: 'sh'
   args:
     - '-c'
@@ -19,17 +19,17 @@ steps:
 # From [libs] builds: 
 #                   [docs/js/meta*]
 #                   [libs/build/npm/meta*]
-- name: 'gcr.io/t9-docker-images/$REPO_NAME:builder-haxe'
+- name: 'gcr.io/t9-docker-images/$REPO_NAME:shell-haxe'
   id: 'compile'
   env:
   - 'DOCKER_TAG=$COMMIT_SHA'
   - 'NPM_MODE=production'
   - 'NODE_ENV=production'
-  entrypoint: 'sh'
+  entrypoint: 'bash'
   args:
     - '-c'
     - |
-      just ci-compile
+      cd libs && just build
 
 # Build images [jekyll] with [docs/js/meta*] above
 # Cannot build jekyll that does not mount until libs are built
@@ -37,6 +37,7 @@ steps:
   id: 'jekyll-build'
   env:
   - 'BUILDER_DOCKER_COMPOSE=docker-compose.yml'
+  secretEnv: ['JEKYLL_GITHUB_TOKEN']
   entrypoint: 'sh'
   args:
     - '-c'
@@ -46,7 +47,7 @@ steps:
       docker-compose -f $$BUILDER_DOCKER_COMPOSE push jekyll
 
 # Tests [docs/js/meta*]
-- name: 'gcr.io/t9-docker-images/$REPO_NAME:builder'
+- name: 'gcr.io/t9-docker-images/$REPO_NAME:shell'
   id: 'test'
   secretEnv: ['JEKYLL_GITHUB_TOKEN']
   env:
@@ -56,15 +57,14 @@ steps:
   - 'PROJECT_NAME=$REPO_NAME'
   - 'BRANCH_NAME=$BRANCH_NAME'
   - 'NPM_MODE=production'
-  entrypoint: 'sh'
   args:
-    - '-c'
-    - |
-      # Now run the functional tests
-      JEKYLL_GITHUB_TOKEN=$$JEKYLL_GITHUB_TOKEN make ci-test
+  - 'bash'
+  - '-c'
+  - |
+    ci test
 
 # Uploads npm package from [libs/build/npm/meta*]
-- name: 'gcr.io/t9-docker-images/$REPO_NAME:builder-haxe'
+- name: 'gcr.io/t9-docker-images/$REPO_NAME:shell-haxe'
   id: 'npm'
   dir: 'libs'
   secretEnv: ['NPM_TOKEN']
@@ -72,8 +72,8 @@ steps:
   - 'DOCKER_TAG=$COMMIT_SHA'
   - 'PROJECT_NAME=$REPO_NAME'
   - 'BRANCH_NAME=$BRANCH_NAME'
-  entrypoint: 'bash'
   args:
+  - 'bash'
   - '-c'
   - |
     # Only package and deploy if this is the master branch AND the package version is something new

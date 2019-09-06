@@ -1,19 +1,17 @@
-#!/usr/bin/env just --working-directory . --justfile
-
+#!/usr/local/bin/just --justfile 
+# !/usr/bin/env just --justfile 
+# !/usr/local/bin/just --justfile 
+# The above works on alpine, but not the one below
+# !/usr/bin/env just --working-directory . --justfile 
+# source: https://github.com/dionjwa/justfiles
+# just docs: https://github.com/casey/just
 
 ##################################################################
 # These variables are for you to modify as needed.
-# `just` doesn't support modules or importing, so if local settings
-# aren't in the .env file (which while useful isnt' good enough here)
-# then you have to modify these.
-
 # Push only the builder image(s)
-# COMPOSE_PUSH_BUILDER      := ""
-COMPOSE_PUSH_BUILDER        := "builder builder-haxe jekyll"
-COMPOSE_CI_FILE             := "docker-compose.yml"
-export DOCKER_REGISTRY      := env_var_or_default("DOCKER_REGISTRY", "gcr.io/t9-docker-images")
-
-
+COMPOSE_PUSH_SHELL          := env_var_or_default("COMPOSE_PUSH_SHELL", "shell")
+COMPOSE_CI_FILE             := env_var_or_default("COMPOSE_CI_FILE", "docker-compose.yml")
+export DOCKER_REGISTRY      := env_var_or_default("DOCKER_REGISTRY", "docker.io")
 
 ##################################################################
 # Continuous integration tools
@@ -22,6 +20,7 @@ export DOCKER_REGISTRY      := env_var_or_default("DOCKER_REGISTRY", "gcr.io/t9-
 # Assumes all build/test/push tests can be peformed via docker-compose
 #
 # Assumptions:
+#  - docker-compose is the main orchestrator/executor entrypoint
 #  - the project name is the parent folder name
 #  - there is a single container in a docker-compose stack that will run/coordinate all required tests
 #  - the final docker image is named <project name>.<git sha>
@@ -35,47 +34,82 @@ export DOCKER_REGISTRY      := env_var_or_default("DOCKER_REGISTRY", "gcr.io/t9-
 #  - organized docker build caching. this is not free when using multi-stage docker builds
 #  - a single makefile to perform all build/test/push steps.
 #  - works on any CI/CD pipeline as only docker-compose is required
+# 
+# Example docker-compose.yml:
+# version: '2.3'
 
-# These commands should 1:1 map to e.g. google cloud build
-# Keep it simple, just use docker-compose for everything
+# services:
 
-export CWD := "{{invocation_directory()}}"
-PROJECT_NAME              := `basename {{CWD}}`
+#   pre-shell:
+#     image: ${DOCKER_REPOSITORY:myname/myrepo}:pre-shell
+#     build:
+#       context: .
+#       target: pre-shell
+#       cache_from:
+#         - ${DOCKER_REPOSITORY:-myname/myrepo}:pre-shell
+
+#   shell:
+#     image: ${DOCKER_REPOSITORY:-myname/myrepo}:shell
+#     depends_on:
+#       - pre-shell
+#     environment:
+#       # custom docker registry
+#       - DOCKER_REGISTRY=gcr.io/some-thing-on-google-cloud
+#     build:
+#       context: .
+#       target: shell
+#       cache_from:
+#         - ${DOCKER_REPOSITORY:-myname/myrepo}:pre-shell
+#         - ${DOCKER_REPOSITORY:-myname/myrepo}:shell
+#
+# Example Dockerfile:
+
+################################################
+# FROM golang:1.11-alpine3.8 as pre-shell
+# RUN echo foo > /tmp/foo
+################################################
+# Final image for ci ops
+################################################
+# alpine 3.8
+# FROM google/cloud-sdk:232.0.0-alpine as shell
+# COPY --from=pre-shell /tmp/foo /tmp/foo
+
+
+PROJECT_NAME                    := `basename ${PWD}`
 
 # If the default values are modified, also change {{COMPOSE_CI_FILE}}
-export DOCKER_REPOSITORY  := DOCKER_REGISTRY + "/" + PROJECT_NAME
+export DOCKER_REPOSITORY        := DOCKER_REGISTRY + "/" + PROJECT_NAME
 
 # Then just compute the git tag
 # https://stackoverflow.com/questions/21017300/git-command-to-get-head-sha1-with-dirty-suffix-if-workspace-is-not-clean
-export DOCKER_TAG         := `git describe --match=NeVeRmAtCh --always --abbrev=40 --dirty`
+export DOCKER_TAG                := env_var_or_default("DOCKER_TAG", "`git describe --match=NeVeRmAtCh --always --abbrev=40 --dirty || echo unknown`")
 
 # Prepend env vars to compose commands
-COMPOSE_CI_ENV            := ""
+export COMPOSE_CI_ENV            := env_var_or_default("COMPOSE_CI_ENV", "")
 
 # remove me if the env vars above are passed in correctly DOCKER_REPOSITORY=${DOCKER_REPOSITORY} DOCKER_TAG=${DOCKER_TAG}
-COMPOSE_CI                := COMPOSE_CI_ENV + " docker-compose -f " + COMPOSE_CI_FILE
+COMPOSE_CI                       := COMPOSE_CI_ENV + " docker-compose -f " + COMPOSE_CI_FILE
 
 # Run before beginning tests. Allows user override.
-COMPOSE_TEST_PREPARE      := 'echo "Running tests"'
+export COMPOSE_TEST_PREPARE      := env_var_or_default("COMPOSE_TEST_PREPARE", 'echo "Running tests"')
 
 # Run before the main build step. Allows user override.
-COMPOSE_BUILD_PREPARE     := 'echo "Building tests"'
-
+export COMPOSE_BUILD_PREPARE     := env_var_or_default("COMPOSE_BUILD_PREPARE", 'echo "Building tests"')
 
 # Push only the final artifact(s)
-COMPOSE_PUSH_ARTIFACT     := ""
+export COMPOSE_PUSH_ARTIFACT     := env_var_or_default("COMPOSE_PUSH_ARTIFACT", "")
 
 @help:
-    just --list
+	just --list --justfile ci
 
-#ci CI: pull images for caching
-ci-pull:
+# pull images for caching
+pull:
 	{{COMPOSE_CI}} pull --ignore-pull-failures
 
-#ci CI: build the final docker image
-ci-build: ci-pull ci-build-no-pull
+# build the final docker image
+build: pull build-no-pull
 
-ci-build-no-pull:
+build-no-pull:
 	{{COMPOSE_BUILD_PREPARE}}
 	{{COMPOSE_CI}} build
 
@@ -83,45 +117,30 @@ ci-build-no-pull:
 # For each, run a separate compose test check
 # #TODO: docker-compose does not always correctly report the exit code from failed compose runs ;\
 # {{COMPOSE_CI}} ps | grep '_${COMPOSE_TEST_SERVICE}_1 .*Exit 0' >/dev/null 2>&1 ;\
-#ci CI: test in docker-compose. Run `make ci-test-no-build` to skip the build step.
-ci-test: ci-build ci-test-no-build
+# test in docker-compose. Run `make ci-test-no-build` to skip the build step.
+test: build test-no-build
 
-@ci-test-no-build:
+test-no-build:
+	#!/usr/bin/env bash
 	{{COMPOSE_TEST_PREPARE}}
 	# Cycle through all test services one at a time
 	grep "^  test[a-zA-Z0-9_.-]*:" {{COMPOSE_CI_FILE}} | while read -r line ; do \
-		export COMPOSE_TEST_SERVICE=$$(cut -d':' -f1 <<<"${line}") ; \
+		export COMPOSE_TEST_SERVICE=$(cut -d':' -f1 <<<"${line}") ; \
 		{{COMPOSE_CI}} up --abort-on-container-exit --remove-orphans --exit-code-from ${COMPOSE_TEST_SERVICE} ${COMPOSE_TEST_SERVICE} ; \
 	done
 
-#guard-env-DOCKER_REGISTRY guard-env-COMPOSE_PUSH_BUILDER ##
-#ci CI: push the intermediate builder images for faster future builds. Defaults to all images
-ci-push-builder:
-	{{COMPOSE_CI}} push {{COMPOSE_PUSH_BUILDER}}
-
-# guard-env-DOCKER_REGISTRY guard-env-COMPOSE_PUSH_ARTIFACT
-# ci CI: push the final docker image(s)
-ci-push-artifact:
+# push the final docker image(s)
+push-artifact:
 	{{COMPOSE_CI}} push {{COMPOSE_PUSH_ARTIFACT}}
 
-#guard-env-DOCKER_REGISTRY
-#ci CI: push all docker images
-ci-push: 
+#  push all docker images
+push: 
 	{{COMPOSE_CI}} push
 
-# guard-env-DOCKER_REGISTRY ##
-# ci CI: bring all services down
-ci-down:
-	{{COMPOSE_CI}} down --remove-orphans --volumes
-
-#guard-env-DOCKER_REGISTRY
-#ci CI: bring all services down
-ci-up:
-	{{COMPOSE_CI}} up
-
 BRANCH_NAME := "not-master"
-#ci CI: run GCE cloud build locally
-ci-local-test-google-cloud-build: ci-down
+# run GCE cloud build locally
+cloud-build-local:
+	@docker-compose down
 	cloud-build-local --dryrun=false --substitutions REPO_NAME={{PROJECT_NAME}},COMMIT_SHA={{DOCKER_TAG}},BRANCH_NAME={{BRANCH_NAME}} .
 
 ##################################################################
@@ -131,33 +150,48 @@ ci-local-test-google-cloud-build: ci-down
 # These tools allow running a bash shell with all tools installed
 # for compiling, running, and testing your project.
 # Assumptions:
-#  - there is a "builder" docker image that can build all artifacts and tests
-#  - the "builder" image is built from a docker-compose file: image layer caching
+#  - there is a "shell" docker image that can build all artifacts and tests
+#  - the "shell" image is built from a docker-compose file: image layer caching
 #    doesn't always work between docker-compose and docker, due to https://github.com/docker/compose/issues/883
 #    so we must build everything via docker-compose (this seems not much of a burden)
 #
 # Recommendations:
-#  - the "builder" image is part of a multi-stage Dockerfile, named "builder"
+#  - the "shell" image is part of a multi-stage Dockerfile, named "shell"
 
-# The builder image is simply the final docker image name but with the tag: builder
+# The shell image is simply the final docker image name but with the tag: shell
 # Typically this should not be changed.
-BUILDER_DOCKER_IMAGE      := "{{DOCKER_REGISTRY}}/{{PROJECT_NAME}}:builder"
-
-BUILDER_SHELL_PARAMS      := "-e HIST_FILE=/root/.bash_history -v ${HOME}/.bash_history:/root/.bash_history"
-BUILDER_SHELL_PWD_MOUNT   := "/workspace"
-BUILDER_SHELL_WORKING_DIR := "/workspace"
-BUILDER_SHELL_SHELL       := "/bin/bash"
+SHELL_DOCKER_IMAGE      := DOCKER_REPOSITORY + ":shell"
+# SHELL_PARAMS            := "-e HIST_FILE=/root/.bash_history -v " + env_var("HOME") + "/.bash_history:/root/.bash_history"
+SHELL_PARAMS            := ""
 
 # Mount docker first
-#ci BUILD: create a shell inside a docker container will ALL required build tools, and local project mounted. Not host installs required.
-ci-shell: ci-pull ci-build ci-shell-no-build
+# build the working shell images, and push the image(s)
+shell-build: build shell-push
 
-# ci-shell but without the build step
-@ci-shell-no-build:
-	docker run --rm -ti \
-		-v ${PWD}:{{BUILDER_SHELL_PWD_MOUNT}}:cached \
-		-w {{BUILDER_SHELL_WORKING_DIR}} \
-		-v /var/run/docker.sock:/var/run/docker.sock \
-		{{BUILDER_SHELL_PARAMS}} \
-		-e "PS1=\[\033[01;34m\]docker-{{PROJECT_NAME}} [\W]\[\033[00m\]$$ " \
-		{{BUILDER_DOCKER_IMAGE}} {{BUILDER_SHELL_SHELL}}
+@_shell-exit-if-no-image:
+	if [ -z `docker images -q {{SHELL_DOCKER_IMAGE}}` ]; then \
+		echo "run: shell-build" ; \
+		exit 1; \
+	fi
+
+# enter the shell inside a docker container will ALL required build tools, and local project mounted. Not host installs required.
+shell: _shell-exit-if-no-image
+	@if [ -f /.dockerenv ]; then \
+		echo "I'm inside the matrix :0"; \
+	else \
+		docker run --rm -ti \
+			-v {{env_var("HOME")}}/.ssh:/root/.ssh \
+			-v {{invocation_directory()}}:/workspace \
+			-v /var/run/docker.sock:/var/run/docker.sock \
+			{{SHELL_PARAMS}} \
+			-e "PS1=\[\033[01;34m\]docker-{{PROJECT_NAME}} [\W]\[\033[00m\]$ " \
+			{{SHELL_DOCKER_IMAGE}} /bin/bash ; \
+	fi
+	
+# push all (+intermediate) shell images for faster future builds. Defaults to all images
+shell-push:
+	{{COMPOSE_CI}} push {{COMPOSE_PUSH_SHELL}}
+
+# util: append a line to a file, often used to create .env files without clobbering
+append-line line file:
+    grep -q -F '{{line}}' {{file}} || echo '{{line}}' >> {{file}}
