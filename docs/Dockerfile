@@ -1,4 +1,6 @@
 # Jekyll container serving the static website with metapage/frame libraries
+# Make sure we're using the correct version hosted by github
+# https://pages.github.com/versions/
 FROM jekyll/jekyll:3.8.5 as jekyll
 
 # For health checks
@@ -10,8 +12,6 @@ ADD ./Gemfile.lock Gemfile.lock
 
 # `bundle update` updates Gemfile.lock with the latest allowed versions 
 RUN bundle install
-
-# FROM builder-jekyll as 
 
 ADD . /workspace
 RUN chown -R jekyll:jekyll /workspace

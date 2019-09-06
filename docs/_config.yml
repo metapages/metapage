@@ -27,19 +27,12 @@ webrick:
 
 # Build settings
 markdown: kramdown
-# How to change themes: https://jekyllrb.com/docs/themes/
-# theme: jekyll-theme-minimal
 
 # https://pmarsceill.github.io/just-the-docs//docs/configuration/
-remote_theme: pmarsceill/just-the-docs
+remote_theme: pmarsceill/just-the-docs@v0.2.6
 # Enable or disable the site search
 # This doesn't work yet
 search_enabled: false
-
-# theme: just-the-docs
-
-# search_enabled: false
-# remote_theme: null
 
 # Aux links for the upper right navigation
 aux_links:

@@ -47,7 +47,7 @@ services:
         JEKYLL_GITHUB_TOKEN: ${JEKYLL_GITHUB_TOKEN}
       cache_from:
         - gcr.io/t9-docker-images/metapage:jekyll
-    command: jekyll serve --watch --force_polling --config _config.dev.yml
+    command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
     ports:
       - "4000:${PORT_METAPAGE:-4000}"
     networks:
