@@ -49,6 +49,7 @@ steps:
 # Tests [docs/js/meta*]
 - name: 'gcr.io/t9-docker-images/$REPO_NAME:shell'
   id: 'test'
+  secretEnv: ['JEKYLL_GITHUB_TOKEN']
   env:
   - 'DOCKER_REGISTRY=gcr.io/t9-docker-images'
   - 'BUILDER_DOCKER_COMPOSE=docker-compose.yml'
