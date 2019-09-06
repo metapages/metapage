@@ -30,13 +30,12 @@ markdown: kramdown
 # How to change themes: https://jekyllrb.com/docs/themes/
 # theme: jekyll-theme-minimal
 
-remote_theme: pmarsceill/just-the-docs
 # https://pmarsceill.github.io/just-the-docs//docs/configuration/
+remote_theme: pmarsceill/just-the-docs
 # Enable or disable the site search
 # This doesn't work yet
 # theme: just-the-docs
-plugins:
-  - jekyll-remote-theme
+
 # search_enabled: false
 # remote_theme: null
 

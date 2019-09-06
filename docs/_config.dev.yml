@@ -32,6 +32,8 @@ webrick:
 # Build settings
 markdown: kramdown
 # How to change themes: https://jekyllrb.com/docs/themes/
+plugins:
+  - jekyll-remote-theme
 theme: just-the-docs
 
 # search_enabled: false
