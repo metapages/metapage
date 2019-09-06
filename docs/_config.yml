@@ -34,6 +34,8 @@ markdown: kramdown
 remote_theme: pmarsceill/just-the-docs
 # Enable or disable the site search
 # This doesn't work yet
+search_enabled: false
+
 # theme: just-the-docs
 
 # search_enabled: false
