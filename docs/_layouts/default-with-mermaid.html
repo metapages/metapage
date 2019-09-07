@@ -1,12 +1,11 @@
----
-layout: table_wrappers
----
 
 <!DOCTYPE html>
 
 <html lang="{{ site.lang | default: "en-US" }}">
 {% include head.html %}
-<script src="/js/mermaid.min.js"></script>
+
+<script src="https://unpkg.com/mermaid@8.2.6/dist/mermaid.min.js"></script>
+
 <body>
 
   <div class="page-wrap">
@@ -97,16 +96,15 @@ layout: table_wrappers
 
 <script>
   var config = {
-      themeCSS: ".label { text-transform: none; }",
-      flowchart     : {
-          htmlLabels : false,
-          useMaxWidth: false
-      },
-      startOnLoad   : false,
-      // theme: 'forest',
+      startOnLoad:true,
+      theme: 'default',
+      flowchart:{
+              useMaxWidth:false,
+              htmlLabels:true
+          }
   };
   mermaid.initialize(config);
-  window.mermaid.init(undefined, document.querySelectorAll('.language-mermaid'));
+  window.mermaid.init(undefined, document.querySelectorAll('.mermaid'));
   </script>
 
 </html>

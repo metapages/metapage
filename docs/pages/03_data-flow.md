@@ -1,12 +1,9 @@
 ---
-layout: default
+layout: default-with-mermaid
 title: Data Flow
 permalink: /data-flow/
 nav_order: 3
----
-<script src="/js/mermaid.min.js"></script>
-<script>mermaid.initialize({startOnLoad:true});</script>
-        
+---        
 
 # Metapage Data flow
 
@@ -49,6 +46,7 @@ sequenceDiagram
     Note right of F: send update events
 
 </div>
+
 
 ***
 
