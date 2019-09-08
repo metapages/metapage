@@ -1,2 +1,7 @@
 #Controls logic for changing asset urls
 environment: development
+
+jekyll_tidy:
+  # exclude: ["index.html"]
+  # ignore_env: development
+  compress_html: false  # or false

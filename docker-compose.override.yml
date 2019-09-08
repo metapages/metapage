@@ -19,6 +19,7 @@ services:
       - ./libs/test:/workspace/test
 
   jekyll:
+    command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
     volumes:
       - ./docs:/workspace
 

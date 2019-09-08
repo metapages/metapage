@@ -11,4 +11,5 @@ gem "rouge"
 gem "jekyll-watch"
 gem "jekyll-remote-theme"
 gem "github-pages", group: :jekyll_plugins
-gem "just-the-docs"
+
+gem "jekyll-tidy", "~> 0.2.2"
