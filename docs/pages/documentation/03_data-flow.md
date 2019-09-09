@@ -1,7 +1,7 @@
 ---
-layout: default-with-mermaid
-title: Data Flow
-permalink: /data-flow/
+layout   : default-with-mermaid
+title    : Data Flow
+parent   : Documentation
 nav_order: 3
 ---        
 

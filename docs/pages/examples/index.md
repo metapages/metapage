@@ -5,7 +5,7 @@ permalink: /examples/
 nav_order: 5
 ---
 
-## Metapages
+## Example Metapages
 
 |:--------------------|:-----------------------|:------------------------|
 {%- for metapage in site.metapages -%}
@@ -27,7 +27,7 @@ nav_order: 5
 {% endfor %}
 
 
-## Metaframes
+## Example Metaframes
 
 |:--------------------|:-----------------------|:------------------------|
 {%- for metaframe in site.metaframes -%}
@@ -40,29 +40,32 @@ nav_order: 5
 | [{{ token }}]({{ index }}) | [Inspect]({{ inspect }})  | [JSON Definition]({{ urlJson }}) |
 	{%- endif -%}
 {% endfor %}
+{%- assign externalMetaframes = "https://metapages.github.io/metaframe-editor-json/" | split: "," -%}
+{%- for metaframeUrl in externalMetaframes -%}
+	{%- if jekyll.environment != "production" -%}
+		{%- assign metaframeUrl = "https://metapages.github.io/metaframe-editor-json/" | prepend: "http://localhost:3000/" -%}
+	{%- endif -%}
+	{%- assign urlJson = metaframeUrl | append: "metaframe.json" -%}
+	{%- assign inspect = site.url | append: "/tools/metaframeview?url=" | append: metaframeUrl %}
+| [{{ metaframeUrl }}]({{ metaframeUrl }}) | [Inspect]({{ inspect }})  | [JSON Definition]({{ urlJson }}) |
+{% endfor %}
+
+## Tools
 
 
-<!-- | [{{ metaframe.url }}]({{ metaframe.url }}) | test1  | test2 | -->
-<!-- {%- if metaframe.url contains 'metaframe.json' -%}
-		{%- assign index = metaframe.url | remove: "metaframe.json" -%}
-		{%- assign tokens = metaframe.url | remove: "/metaframe.json" | split: "/" -%}
-		{%- assign token = tokens.last -%}
-		{%- assign inspect = site.url | append: "/tools/metaframeview?url=" | append: index %}
-| [{{ token }}]({{ index }}) | [Test/Play]({{ inspect }})  | [metaframe.json]({{ metaframe.url }}) |
-	{%- endif -%} -->
+{% if jekyll.environment == "production" -%}
+	{%- assign appUrl = "https://app.metapages.org/" -%}
+{%- else -%}
+	{%- assign appUrl = site.data.urls.app-metapage-local -%}
+{%- endif %}
+
+|                          |Description             |
+|:-------------------------|:-----------------------|
+| [{{appUrl}}]({{appUrl}}) | Run any metapage (JSON) as a standalone application. Used to run the metapage examples above. Follow link for more details. |
 
 
+## Plugins
 
+[Plugin examples](https://github.com/metapages/metapage/issues/36) are coming soon.
 
-Metapages:
-<ul id="metapages"></ul>
-
-Metaframes:
-<ul id="metaframes"></ul>
-
-Plugins:
-<ul id="plugins"></ul>
-
-Tools:
-<ul id="tools"></ul>
 
