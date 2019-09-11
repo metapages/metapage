@@ -1,11 +1,9 @@
 ---
 layout: default-with-mermaid
 title: API
-permalink: /api/0.4.3/
+permalink: /api/
 nav_order: 4
 ---
-
-
 
 # API Reference v0.4.3
 {: .no_toc }
@@ -18,10 +16,8 @@ nav_order: 4
 ## Table of contents
 {: .no_toc .text-delta }
 
-
 1. TOC
 {:toc}
-
 
 MetapageDefinition<a name="metapagedefinition"></a>
 -----

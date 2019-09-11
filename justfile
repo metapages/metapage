@@ -61,7 +61,6 @@ _require-master-branch:
 
 _set-api-docs-current-version:
     sed -i "s/API Reference v.*/API Reference v`just version`/g" docs/pages/04_api.md
-    sed -i "s#permalink.*#permalink: /api/`just version`/#g" docs/pages/04_api.md
     sed -i "s#title: api_.*.*#title: api_`just version`/#g" docs/pages/04_api.md
 
 # Make sure that we're not compiling in any debug parameters
