@@ -7,6 +7,6 @@ has_children: false
 has_toc: false
 ---
 
-[Privacy Policy](privacy.html)
+[Privacy Policy](/privacy.html)
 
-[Terms of Service](tos.html)
+[Terms of Service](/tos.html)
