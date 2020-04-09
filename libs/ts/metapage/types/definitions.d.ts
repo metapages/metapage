@@ -1,0 +1,1 @@
+// typedef JSMap<K:String,V>=util.TypedDynamicAccess<K,V>;

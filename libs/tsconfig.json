@@ -1,0 +1,13 @@
+{
+    "compilerOptions": {
+      "target": "es6",
+      "module": "system",
+      "noEmit": true,
+      "removeComments": true,
+      "declaration": true,
+      "typeRoots": ["node_modules/@types", "ts/metapage/types", "ts/metapage", "ts/metapage/v0_3", "ts/metapage/v0_2"],
+      "include": [
+        "ts"
+      ]
+    }
+  }

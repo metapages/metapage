@@ -7,7 +7,19 @@ services:
      - "NODE_ENV=development"
     volumes:
       - ./docs:/docs
-      - ./libs:/workspace
+      - ./libs/build:/workspace/build
+      - ./libs/etc:/workspace/etc
+      - ./libs/src:/workspace/src
+      - ./libs/test:/workspace/test
+      - ./libs/.haxelib:/workspace/.haxelib
+      - ./libs/build-base.hxml:/workspace/build-base.hxml
+      - ./libs/build-metaframe.hxml:/workspace/build-metaframe.hxml
+      - ./libs/build-metapage.hxml:/workspace/build-metapage.hxml
+      - ./libs/build.hxml:/workspace/build.hxml
+      - ./libs/haxelib.json:/workspace/haxelib.json
+      - ./libs/justfile:/workspace/justfile
+      - ./libs/package.json:/workspace/package.json
+      - ./libs/package-lock.json:/workspace/package-lock.json
       # For simulating ci
       - /var/run/docker.sock:/var/run/docker.sock
 
