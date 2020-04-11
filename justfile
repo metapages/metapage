@@ -123,5 +123,9 @@ Reminders:
     Developing app.metapages.org locally? Modify docs/_data/urls.yml
     Have you run:
     just _post-version-new-publish
+
+    Last task and commands:
+    - converting to typescript and use parcel to package
+    - commands: `just libs/watch` and fix the errors!
 '
 

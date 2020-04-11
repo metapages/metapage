@@ -1,5 +1,7 @@
 import {EventEmitter} from './EventEmitter';
 import {VERSION} from '../Constants';
+import {Versions} from '../MetaLibsVersion';
+import {MetaframeInputMap, MetaframeId, MetapageId} from '@definitions/all';
 enum MetaframeEvents {
 	Input = "input",
 	Inputs = "inputs",
@@ -23,16 +25,15 @@ export class Metaframe extends EventEmitter
 	_inputPipeValues :MetaframeInputMap = {};
 	_outputPipeValues :MetaframeInputMap = {};
 	// obsoleted, use this.id
-	var _iframeId :MetaframeId;
-	var _parentId :MetapageId;
-	var _parentVersion :MetaLibsVersion;
-	var _isIframe :Bool;
+	_iframeId :MetaframeId;
+	_parentId :MetapageId;
+	_parentVersion :Versions;
+	_isIframe :boolean;
 
-	public var debug :Bool = false;
-	public var ready(default, null) :Promise<Bool>;
-	public var color :String = '000';
-
-	public var plugin :MetaframePlugin;
+	debug :boolean = false;
+	ready :Promise<boolean>;
+	color :string;
+	plugin :MetaframePlugin;
 	
 	/**
 	 * This is the (locally) unique id that the parent metapage
@@ -40,31 +41,31 @@ export class Metaframe extends EventEmitter
 	 * then metapage definition.
 	 */
 	// TODO obsoleted, use this.id
-	public var name(default, null) :String;
-	public var id(default, null) :String;
+	// name:string;
+	id :string;
 
-	public function new()
+	constructor()
 	{
 		super();
-		debug = MetapageTools.getUrlParamDEBUG();
-		_isIframe = isIframe();
+		this.debug = MetapageTools.getUrlParamDEBUG();
+		this._isIframe = isIframe();
 
-		if (!_isIframe) {
+		if (!this._isIframe) {
 			//Don't add any of the machinery, it only works if we're iframes.
 			//This will never return
-			ready = new Promise(function(resolve, reject) {});
-			log('Not an iframe, metaframe code disabled');
+			this.ready = new Promise((resolve, _) => {resolve(false)});
+			this.log('Not an iframe, metaframe code disabled');
 			return;
 		}
 
-		var window = Browser.window;
+		this.onWindowMessage = this.onWindowMessage.bind(this);
 
-		window.addEventListener('message', onWindowMessage);
+		window.addEventListener('message', this.onWindowMessage);
 
 		//Get ready, request the parent to register to establish messaging pipes
 		ready = new Promise(function(resolve, reject) {
 			// First listen to the parent metapage response
-			once(JsonRpcMethodsFromParent.SetupIframeServerResponse, function(params :SetupIframeServerResponseData) {
+			this.once(JsonRpcMethodsFromParent.SetupIframeServerResponse, function(params :SetupIframeServerResponseData) {
 
 				if (_iframeId == null) {
 					_iframeId = params.iframeId;

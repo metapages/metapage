@@ -7,3 +7,5 @@ export enum Versions {
   }
 
 export const AllVersions = Object.keys(Versions);
+
+export const CurrentVersion = Versions.V0_3;

@@ -6,6 +6,10 @@
       "removeComments": true,
       "declaration": true,
       "typeRoots": ["node_modules/@types", "ts/metapage/types", "ts/metapage", "ts/metapage/v0_3", "ts/metapage/v0_2"],
+      "baseUrl": "ts",
+      "paths": {
+        "@definitions/*": ["metapage/v0_3/*"]
+      },
       "include": [
         "ts"
       ]

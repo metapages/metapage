@@ -6,18 +6,12 @@ export NODE_ENV := env_var_or_default('NODE_ENV', 'production')
 help:
     @just --list
 
-watch-docker:
-    cd .. && docker-compose run builder-haxe just watch
-
 # Build the production distribution
 build:
-    node_modules/parcel-bundler/bin/cli.js ts/metapage/client/Metaframe.ts
-
-compile:
-    haxe build.hxml
+    node_modules/parcel-bundler/bin/cli.js build ts/metapage/client/Metaframe.ts
 
 watch:
-    nodemon --legacy-watch --watch src --ext hx --exec 'just compile && just build'
+    watchexec --watch ts -- node_modules/parcel-bundler/bin/cli.js ts/metapage/client/Metaframe.ts
 
 serve:
     npm run dev
