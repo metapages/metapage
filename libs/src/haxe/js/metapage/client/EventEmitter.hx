@@ -1,6 +1,6 @@
 package js.metapage.client;
 
-typedef Function=Dynamic;
+typedef Function=any;
 
 class EventEmitter
 {
@@ -47,9 +47,9 @@ class EventEmitter
 		}
 	}
 
-	public function emit(event :String, ?val1 :Dynamic, ?val2 :Dynamic, ?val3 :Dynamic, ?val4 :Dynamic) :Void
+	public function emit(event :String, ?val1 :any, ?val2 :any, ?val3 :any, ?val4 :any) :Void
 	{
-		var args :Array<Dynamic> = untyped __js__('[].slice.call(arguments, 1)');
+		var args :Array<any> = untyped __js__('[].slice.call(arguments, 1)');
 
 		if (_events.exists(event)) {
 			var listeners :Array<Function> = _events.get(event).slice(0);

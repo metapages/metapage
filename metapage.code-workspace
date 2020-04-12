@@ -5,6 +5,21 @@
 		}
 	],
 	"settings": {
-		"markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": false
+		"markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": false,
+		"search.exclude": {
+			"**/.cache": true,
+			"**/build": true,
+			"**/dist": true
+		},
+		"files.exclude": {
+			"**/.cache": true,
+			"**/build": true,
+			"**/dist": true,
+			"**/node_modules": true
+		},
+		"files.watcherExclude": {
+			"**/.cache/**": true,
+			"**/build/**": true
+		}
 	}
 }

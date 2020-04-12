@@ -1,6 +1,6 @@
 package js.metapage.client;
 
-@:enum abstract MetapageEvents<T:haxe.Constraints.Function>(Dynamic) to Dynamic {
+@:enum abstract MetapageEvents<T:haxe.Constraints.Function>(any) to any {
   // Don't modify the underlying inputs object
   var Inputs : MetapageEvents<MetapageInstanceInputs->Void> = "inputs";
   // Don't modify the underlying inputs object
@@ -10,7 +10,7 @@ package js.metapage.client;
   // Whenever the definition changes
   var Definition : MetapageEvents<MetapageEventDefinition->Void> = "definition";
   // Errors in definitions, getting required resources, misc
-  var Error : MetapageEvents<Dynamic->Void> = "error";
+  var Error : MetapageEvents<any->Void> = "error";
 }
 
 typedef MetapageStatePartial = {
@@ -41,7 +41,7 @@ class Metapage extends EventEmitter
 	// TODO: move to separate js import
 	static var minimatch :String->String->Bool = js.Lib.require('minimatch');
 
-	public static function from(metaPageDef :Dynamic, ?inputs :Dynamic) :Metapage
+	public static function from(metaPageDef :any, ?inputs :any) :Metapage
 	{
 		if (metaPageDef == null) {
 			throw 'Metapage definition cannot be null';
@@ -49,7 +49,7 @@ class Metapage extends EventEmitter
 		if (js.Syntax.typeof(metaPageDef) == 'string') {
 			try {
 				metaPageDef = Json.parse(metaPageDef);
-			} catch(err :Dynamic) {
+			} catch(err :any) {
 				throw 'Cannot parse into JSON:\n${metaPageDef}';
 			}
 		}
@@ -104,7 +104,7 @@ class Metapage extends EventEmitter
 		return _state;
 	}
 
-	public function onState(listener :Dynamic->Void) :Void->Void
+	public function onState(listener :any->Void) :Void->Void
 	{
 		var disposer = this.addEventListener(MetapageEvents.State, listener);
 		listener(_state);
@@ -140,7 +140,7 @@ class Metapage extends EventEmitter
 		return _definition;
 	}
 
-	public function setDefinition(def :Dynamic, ?state :MetapageState) :Metapage
+	public function setDefinition(def :any, ?state :MetapageState) :Metapage
 	{
 		// Some validation
 		// can metaframes and plugins share IDs? No.
@@ -434,7 +434,7 @@ class Metapage extends EventEmitter
 		_inputMap = null;
 	}
 
-	public function log(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
+	public function log(o :any, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
 	{
 		if (!debug) {
 			return;
@@ -442,7 +442,7 @@ class Metapage extends EventEmitter
 		logInternal(o, color, backgroundColor, pos);
 	}
 
-	public function error(err :Dynamic, ?pos :haxe.PosInfos)
+	public function error(err :any, ?pos :haxe.PosInfos)
 	{
 		logInternal(err, "f00", _consoleBackgroundColor, pos);
 		emitErrorMessage('${err}');
@@ -553,7 +553,7 @@ class Metapage extends EventEmitter
 	 * @param inputPipeId If the above is a string id, then inputPipeId can be the pipe id or an object {pipeId:value}
 	 * @param value If the above is a pipe id, then the is the value.
 	 */
-	inline public function setInput(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
+	inline public function setInput(iframeId :any, ?inputPipeId :any, ?value :any)
 	{
 		setInputStateOnly(iframeId, inputPipeId, value);
 		setMetaframeClientInputAndSentClientEvent(iframeId, inputPipeId, value);
@@ -563,13 +563,13 @@ class Metapage extends EventEmitter
 	}
 
 	// this is 
-	function setMetaframeClientInputAndSentClientEvent(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
+	function setMetaframeClientInputAndSentClientEvent(iframeId :any, ?inputPipeId :any, ?value :any)
 	{
 		if (js.Syntax.typeof(iframeId) == 'object') {
 			if (inputPipeId != null || value != null) {
 				throw 'bad arguments, see API docs';
 			}
-			var inputs :Dynamic = iframeId;
+			var inputs :any = iframeId;
 			for (id in Reflect.fields(inputs)) {
 				var metaframeId :MetaframeId = id;
 				var metaframeInputs = Reflect.field(inputs, metaframeId);
@@ -600,17 +600,17 @@ class Metapage extends EventEmitter
 		}
 	}
 
-	public function setInputs(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic) {
+	public function setInputs(iframeId :any, ?inputPipeId :any, ?value :any) {
 		setInput(iframeId, inputPipeId, value);
 	}
 
-	inline function setOutputStateOnly(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
+	inline function setOutputStateOnly(iframeId :any, ?inputPipeId :any, ?value :any)
 	{
 		_setStateOnly(false, iframeId, inputPipeId, value);
 	}
 
 	// Set the global inputs cache
-	inline function setInputStateOnly(iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
+	inline function setInputStateOnly(iframeId :any, ?inputPipeId :any, ?value :any)
 	{
 		_setStateOnly(true, iframeId, inputPipeId, value);
 	}
@@ -618,7 +618,7 @@ class Metapage extends EventEmitter
 	// need to set the boolean first because we don't know the metaframe/pluginId until we dig into
 	// the object. but it might not be an object. this flexibility might not be worth it, although
 	// the logic is reasonble to test
-	function _setStateOnly(isInputs :Bool, iframeId :Dynamic, ?inputPipeId :Dynamic, ?value :Dynamic)
+	function _setStateOnly(isInputs :Bool, iframeId :any, ?inputPipeId :any, ?value :any)
 	{
 		if (js.Syntax.typeof(iframeId) == 'object') {
 			// it's an object of metaframeIds to pipeIds to values [metaframeId][pipeId]
@@ -913,7 +913,7 @@ class Metapage extends EventEmitter
 		}
 	}
 	
-	function logInternal(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
+	function logInternal(o :any, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
 	{
 		backgroundColor = backgroundColor != null ? backgroundColor : _consoleBackgroundColor;
 		var s :String = switch(js.Syntax.typeof(o)) {
@@ -942,7 +942,7 @@ class Metapage extends EventEmitter
 extern class JsonDiff
 {
     // @:selfCall
-    public static function diffString(v1 :Dynamic, v2 :Dynamic) :String;
+    public static function diffString(v1 :any, v2 :any) :String;
 	
 }
 #else
@@ -952,7 +952,7 @@ extern class JsonDiff
 
 class IFrameRpcClient extends EventEmitter
 {
-	public var iframe (default, null):#if nodejs Dynamic #else IFrameElement #end;
+	public var iframe (default, null):#if nodejs any #else IFrameElement #end;
 	public var id (default, null):MetaframeId;
 	public var version (default, null):MetaLibsVersion;
 	// Used for securing postMessage
@@ -1117,7 +1117,7 @@ class IFrameRpcClient extends EventEmitter
 			});
 	}
 
-	public function setInput(name :MetaframePipeId, inputBlob :Dynamic)
+	public function setInput(name :MetaframePipeId, inputBlob :any)
 	{
 		assert(name != null);
 		var inputs :MetaframeInputMap = {};
@@ -1163,7 +1163,7 @@ class IFrameRpcClient extends EventEmitter
 		return this;
 	}
 
-	public function setOutput(pipeId :MetaframePipeId, updateBlob :Dynamic)
+	public function setOutput(pipeId :MetaframePipeId, updateBlob :any)
 	{
 		assert(pipeId != null);
 		var outputs :MetaframeInputMap = {};
@@ -1194,7 +1194,7 @@ class IFrameRpcClient extends EventEmitter
 		return this.on(MetapageEvents.Inputs, f);
 	}
 
-	public function onInput(pipeName :MetaframePipeId, f :Dynamic->Void) :Void->Void
+	public function onInput(pipeName :MetaframePipeId, f :any->Void) :Void->Void
 	{
 		var fWrap = function(inputs :MetaframeInputMap) {
 			if (inputs.exists(pipeName)) {
@@ -1209,7 +1209,7 @@ class IFrameRpcClient extends EventEmitter
 		return this.on(MetapageEvents.Outputs, f);
 	}
 
-	public function onOutput(pipeName :MetaframePipeId, f :Dynamic->Void) :Void->Void
+	public function onOutput(pipeName :MetaframePipeId, f :any->Void) :Void->Void
 	{
 		var fWrap = function(outputs :MetaframeInputMap) {
 			if (outputs.exists(pipeName)) {
@@ -1290,7 +1290,7 @@ class IFrameRpcClient extends EventEmitter
 		sendRpc(JsonRpcMethodsFromParent.InputsUpdate, {inputs :inputs, parentId: _parentId});
 	}
 
-	public function sendRpc(method :String, params :Dynamic)
+	public function sendRpc(method :String, params :any)
 	{
 		if (this.iframe.parentNode != null && _loaded) {
 			sendRpcInternal(method, params);
@@ -1302,7 +1302,7 @@ class IFrameRpcClient extends EventEmitter
 		}
 	}
 
-	public function ack(message :Dynamic)
+	public function ack(message :any)
 	{
 		log('⚒ ⚒ ⚒ calling ack');
 		if (this._debug) {
@@ -1314,7 +1314,7 @@ class IFrameRpcClient extends EventEmitter
 		}
 	}
 
-	public function log(o :Dynamic, ?pos:haxe.PosInfos)
+	public function log(o :any, ?pos:haxe.PosInfos)
 	{
 		if (!_debug) {
 			return;
@@ -1322,7 +1322,7 @@ class IFrameRpcClient extends EventEmitter
 		logInternal(o, pos);
 	}
 
-	function logInternal(o :Dynamic, pos:haxe.PosInfos)
+	function logInternal(o :any, pos:haxe.PosInfos)
 	{
 		var s :String = switch(js.Syntax.typeof(o)) {
 			case "string": cast o;
@@ -1332,7 +1332,7 @@ class IFrameRpcClient extends EventEmitter
 		MetapageTools.log('Metapage[$_parentId] Metaframe[$id] $s', _color, _consoleBackgroundColor, pos);
 	}
 
-	function sendRpcInternal(method :String, params :Dynamic)
+	function sendRpcInternal(method :String, params :any)
 	{
 		var messageJson :MinimumClientMessage = {
 			iframeId: id,
@@ -1348,9 +1348,9 @@ class IFrameRpcClient extends EventEmitter
 		}
 	}
 
-	var _bufferMessages :Array<Dynamic>;
+	var _bufferMessages :Array<any>;
 	var _bufferTimeout :Int;
-	function sendOrBufferPostMessage(message :Dynamic)
+	function sendOrBufferPostMessage(message :any)
 	{
 		if (this.iframe.contentWindow != null) {
 			this.iframe.contentWindow.postMessage(message, this.url);

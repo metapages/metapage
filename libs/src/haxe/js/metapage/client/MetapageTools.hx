@@ -6,7 +6,7 @@ class MetapageTools
 {
 	static var minimatch :String->String->Bool = js.Lib.require('minimatch');
 
-	public static function convertToCurrentDefinition(def :Dynamic) :MetapageDefinition
+	public static function convertToCurrentDefinition(def :any) :MetapageDefinition
 	{
 		if (def == null) {
 			throw 'Metapage definition cannot be null';
@@ -14,7 +14,7 @@ class MetapageTools
 		if (js.Syntax.typeof(def) == 'string') {
 			try {
 				def = Json.parse(def);
-			} catch(err :Dynamic) {
+			} catch(err :any) {
 				throw 'Cannot parse into JSON:\n${def}';
 			}
 		}
@@ -179,7 +179,7 @@ class MetapageTools
 		return s.toString();
 	}
 
-	inline public static function log(o :Dynamic, ?color :String, ?backgroundColor :String, pos:haxe.PosInfos)
+	inline public static function log(o :any, ?color :String, ?backgroundColor :String, pos:haxe.PosInfos)
 	{
 		color = color != null ? color : "000";
 		if (color != null && color.trim() == '') {

@@ -1,3 +1,3 @@
 import js.metapage.MetaLibsVersion;
-import util.TypedDynamicAccess;
+import util.TypedanyAccess;
 import hxassert.Assert.*;

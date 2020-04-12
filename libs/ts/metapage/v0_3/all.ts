@@ -1,19 +1,27 @@
 import {Versions} from '../MetaLibsVersion';
-import {MetaframePipeDefinition, MetaframeInstance, MetaframePipeId, MetapageId, MetapageMetadata, MetaframeMetadata} from '../v0_2/all';
-
+import {MetaframePipeDefinition, MetaframeInstance, MetaframePipeId, MetaframeInputMap, MetapageId, MetapageMetadata, MetaframeMetadata} from '../v0_2/all';
+import { MetapageDefinition as V0_2MetapageDefinition } from 'v0_2/all';
+export {Versions, CurrentVersion, AllVersions} from '../MetaLibsVersion';
 
 export type Url=string;
 
-export interface MetapageDefinition {
+export interface MetapageOptions {
 	id ?:MetapageId;
-	version :Versions; // Best to require this even if annoying to users.
-	metaframes :{ [key: string]: MetaframeInstance; } ;
+	color ?:string;
+}
+
+export interface MetapageDefinition extends V0_2MetapageDefinition {
 	// The plugin URLs point to the path containing a MetaframeInstance JSON
 	// It's an array because it needs to be sorted, but currently don't allow duplicate plugin URLs
 	plugins ?:Url[];
-	meta ?:MetapageMetadata;
 }
 
+
+
+// export MetapageInstanceInputs = { [key: string]: MetaframeInputMap; };//<MetaframeId, MetaframeInputMap>;
+
+
+export { MetapageInstanceInputs } from 'v0_2/all';
 export { ReactGridLayoutData } from 'v0_2/all';
 export { MetapageVersionLayoutGrid } from 'v0_2/all';
 export { MetapageMetadataLayout } from 'v0_2/all';

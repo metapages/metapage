@@ -11,5 +11,5 @@ import js.metapage.v0_2.MetaframeInputMap;
 
 import js.metapage.v0_3.JsonRpcMethods;
 
-import util.TypedDynamicAccess;
+import util.TypedanyAccess;
 import hxassert.Assert.*;

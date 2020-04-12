@@ -1,397 +1,392 @@
-import {EventEmitter} from './EventEmitter';
-import {VERSION} from '../Constants';
-import {Versions} from '../MetaLibsVersion';
-import {MetaframeInputMap, MetaframeId, MetapageId} from '@definitions/all';
+import {EventEmitter} from "./EventEmitter";
+import {VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION} from "../Constants";
+import {Versions} from "../MetaLibsVersion";
+import {MetaframeInputMap, MetaframePipeId, MetaframeId, MetapageId} from "@definitions/all";
+import {
+  ApiPayloadPluginRequest,
+  ApiPayloadPluginRequestMethod,
+  JsonRpcMethodsFromParent,
+  JsonRpcMethodsFromChild,
+  SetupIframeServerResponseData,
+  MinimumClientMessage
+} from "@definitions/JsonRpcMethods";
+import {getUrlParamDEBUG, stringToRgb, log as MetapageToolsLog} from "./MetapageTools";
+
 enum MetaframeEvents {
-	Input = "input",
-	Inputs = "inputs",
-	Message = "message",
-  }
-
-// @:enum abstract MetaframeEvents<T:haxe.Constraints.Function>(Dynamic) to Dynamic {
-//   var Input : MetaframeEvents<PipeUpdateClient->Void> = "input";
-//   var Inputs : MetaframeEvents<MetaframeInputMap->Void> = "inputs";
-//   var Message : MetaframeEvents<String->Void> = "message";
-// }
-
-export class Metaframe extends EventEmitter
-{
-	static const version = VERSION;
-
-	static const INPUT = MetaframeEvents.Input;
-	static const INPUTS = MetaframeEvents.Inputs;
-	static const MESSAGE = MetaframeEvents.Message;
-
-	_inputPipeValues :MetaframeInputMap = {};
-	_outputPipeValues :MetaframeInputMap = {};
-	// obsoleted, use this.id
-	_iframeId :MetaframeId;
-	_parentId :MetapageId;
-	_parentVersion :Versions;
-	_isIframe :boolean;
-
-	debug :boolean = false;
-	ready :Promise<boolean>;
-	color :string;
-	plugin :MetaframePlugin;
-	
-	/**
-	 * This is the (locally) unique id that the parent metapage
-	 * assigns to the metaframe. Defaults to the name given in
-	 * then metapage definition.
-	 */
-	// TODO obsoleted, use this.id
-	// name:string;
-	id :string;
-
-	constructor()
-	{
-		super();
-		this.debug = MetapageTools.getUrlParamDEBUG();
-		this._isIframe = isIframe();
-
-		if (!this._isIframe) {
-			//Don't add any of the machinery, it only works if we're iframes.
-			//This will never return
-			this.ready = new Promise((resolve, _) => {resolve(false)});
-			this.log('Not an iframe, metaframe code disabled');
-			return;
-		}
-
-		this.onWindowMessage = this.onWindowMessage.bind(this);
-
-		window.addEventListener('message', this.onWindowMessage);
-
-		//Get ready, request the parent to register to establish messaging pipes
-		ready = new Promise(function(resolve, reject) {
-			// First listen to the parent metapage response
-			this.once(JsonRpcMethodsFromParent.SetupIframeServerResponse, function(params :SetupIframeServerResponseData) {
-
-				if (_iframeId == null) {
-					_iframeId = params.iframeId;
-					this.id = params.iframeId;
-					_parentVersion = params.version;
-					this.color = MetapageTools.stringToRgb(_iframeId);
-					_parentId = params.parentId;
-					log('metapage[${_parentId}](v${_parentVersion != null ? _parentVersion : "unknown"}) registered');
-
-					_inputPipeValues = params.state != null && params.state.inputs != null
-						? params.state.inputs
-						: _inputPipeValues;
-
-					//Tell the parent we have registered.
-					sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {version:version});
-
-					//Send notifications of initial inputs (if non-null)
-					//so you don't have to listen to the ready event if you don't want to
-					if (_inputPipeValues != null && _inputPipeValues.keys().length > 0) {
-						emit(MetaframeEvents.Inputs, _inputPipeValues);
-						for (pipeId in _inputPipeValues.keys()) {
-							emit(MetaframeEvents.Input, pipeId, _inputPipeValues[pipeId]);
-						}
-					}
-
-					// if this is a plugin, initialize the plugin object
-					if (params.plugin) {
-						this.plugin = new MetaframePlugin(this);
-					}
-					
-
-					//Resolve AFTER sending inputs. This way consumers can either:
-					//1) Just listen to inputs updates. The first will be when the metaframe is ready
-					//2) Listen to the ready event, get the inputs if desired, and listen to subsequent
-					//   inputs updates. You may not wish to respond to the first updates but you might
-					//   want to know when the metaframe is ready
-					//*** Does this distinction make sense?
-					resolve(true);
-
-					// window.addEventListener('resize', sendWindowDimensions);
-					// sendWindowDimensions();
-				} else {
-					log('Got JsonRpcMethods.SetupIframeServerResponse but already resolved');
-				}
-			});
-			// Now that we're listening, request to the parent to register us
-			sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {version:version});
-		});
-	}
-
-	public function log(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
-	{
-		if (!debug) {
-			return;
-		}
-		logInternal(o, color != null ? color : this.color, pos);
-	}
-
-	public function warn(o :Dynamic, ?pos:haxe.PosInfos)
-	{
-		if (!debug) {
-			return;
-		}
-		logInternal(o, "000", color, pos);
-	}
-
-	public function error(err :Dynamic, ?pos:haxe.PosInfos)
-	// public function error(err :Dynamic)
-	{
-		logInternal(err, color, "f00");
-	}
-
-	function logInternal(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
-	// function logInternal(o :Dynamic, ?color :String, ?backgroundColor :String)
-	{
-		var s :String = switch(js.Syntax.typeof(o)) {
-			case "string": cast o;
-			case "number": o + "";
-			default: Json.stringify(o);
-		}
-
-		color = color != null ? color + '' : color;
-
-		s = (_iframeId != null ? 'Metaframe[$_iframeId] ' : '')  + Std.string(s);
-		MetapageTools.log(s, color, backgroundColor, pos);
-	}
-
-	override public function dispose()
-	{
-		super.dispose();
-		js.Browser.window.removeEventListener('message', onWindowMessage);
-		_inputPipeValues = null;
-		_outputPipeValues = null;
-	}
-
-	override public function addEventListener(event :String, listener :Dynamic) :Void->Void
-	{
-		var disposer = super.addEventListener(event, listener);
-
-		//If it is an input or output, set the current input/output values when
-		//attaching a listener on the next tick to ensure that the listener
-		//will always get a value if it exists
-		if (event == MetaframeEvents.Inputs) {
-			Browser.window.setTimeout(function() {
-				if (_inputPipeValues != null) {
-					listener(_inputPipeValues);
-				}
-			}, 0);
-		}
-
-		return disposer;
-	}
-
-	public function onInput(pipeId :MetaframePipeId, listener :Dynamic->Void) :Void->Void
-	{
-		return addEventListener(MetaframeEvents.Input, function(pipe :MetaframePipeId, value :Dynamic) {
-			if (pipeId == pipe) {
-				listener(value);
-			}
-		});
-	}
-
-	public function onInputs(listener :MetaframeInputMap->Void) :Void->Void
-	{
-		return addEventListener(MetaframeEvents.Inputs, listener);
-	}
-
-	/**
-	 * This is a particular use case: metapage inputs are saved outside
-	 * the iframe, so when this iframe is restarted in the same metapage
-	 * it will start with this value. So in a way, it can be used for
-	 * state storage, by the metaframe itself.
-	 */
-	public function setInput(pipeId :MetaframePipeId, blob :Dynamic)
-	{
-		var inputs :MetaframeInputMap = {};
-		inputs[pipeId] = blob;
-		setInputs(inputs);
-	}
-
-	/**
-	 * This does NOT directly update internal inputs. It tells
-	 * the metapage parent, which then updates back. So if there
-	 * is no metapage parent, this will do nothing.
-	 * 
-	 * @param inputs 
-	 */
-	public function setInputs(inputs :MetaframeInputMap)
-	{
-		sendRpc(JsonRpcMethodsFromChild.InputsUpdate, inputs);
-	}
-
-	function setInternalInputsAndNotify(inputs :MetaframeInputMap)
-	{		
-		if (!_inputPipeValues.merge(inputs)) {
-			return;
-		}
-		for (pipeId in inputs.keys()) {
-			emit(MetaframeEvents.Input, pipeId, inputs[pipeId]);
-		}
-		emit(MetaframeEvents.Inputs, inputs);
-	}
-
-	public function getInput (pipeId :MetaframePipeId) :Dynamic
-	{
-		require(pipeId != null);
-		return _inputPipeValues.get(pipeId);
-	}
-
-	public function getInputs() :MetaframeInputMap
-	{
-		return _inputPipeValues;
-	}
-
-	public function getOutput(pipeId :MetaframePipeId) :Dynamic
-	{
-		require(pipeId != null);
-		return _outputPipeValues.get(pipeId);
-	}
-
-	/**
-	 * What does setting this to null mean?
-	 * @param pipeId     :MetaframePipeId [description]
-	 * @param updateBlob :Dynamic        [description]
-	 */
-	public function setOutput(pipeId :MetaframePipeId, updateBlob :Dynamic) :Void
-	{
-		require(pipeId != null);
-		require(updateBlob != null);
-
-		var outputs :MetaframeInputMap = {};
-		outputs[pipeId] = updateBlob;
-
-		setOutputs(outputs);
-	}
-
-	public function setOutputs(outputs :MetaframeInputMap) :Void
-	{
-		if (!_outputPipeValues.merge(outputs)) {
-			return;
-		}
-		sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
-	}
-
-	public function getOutputs() :MetaframeInputMap
-	{
-		return _outputPipeValues;
-	}
-
-	function sendRpc(method :JsonRpcMethodsFromChild, params :Dynamic)
-	{
-		if (_isIframe) {
-			var message :MinimumClientMessage = {
-				jsonrpc: '2.0',
-				// id     : MetapageTools.generateNonce(),
-				method: method,
-				params: params,
-				iframeId: _iframeId,
-				parentId: _parentId
-			};
-			log(message);
-			Browser.window.parent.postMessage(message, "*");
-		} else {
-			error('Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe');
-		}
-	}
-
-	function onWindowMessage(e :Dynamic)
-	{
-		if (debug) {
-			log('onWindowMessage: ${Json.stringify(e)}');
-		}
-		if (js.Syntax.strictEq(js.Syntax.typeof(e.data), 'object')) {
-			var jsonrpc :MinimumClientMessage = e.data;
-			if (jsonrpc.jsonrpc == '2.0') { //Make sure this is a jsonrpc object
-				var method :JsonRpcMethodsFromParent = cast jsonrpc.method;
-				if (!(method == JsonRpcMethodsFromParent.SetupIframeServerResponse || (
-					jsonrpc.parentId == _parentId &&
-					jsonrpc.iframeId == _iframeId))) {
-					error('window.message: received message but jsonrpc.parentId=${jsonrpc.parentId} _parentId=$_parentId jsonrpc.iframeId=${jsonrpc.iframeId} _iframeId=$_iframeId');
-					return;
-				}
-
-				switch(method) {
-					case SetupIframeServerResponse: //Handled elsewhere
-					case InputsUpdate: setInternalInputsAndNotify(jsonrpc.params.inputs);
-					case MessageAck: if (debug) log('ACK: ${Json.stringify(jsonrpc)}');
-					default: if (debug) log('window.message: unknown JSON-RPC method: ${Json.stringify(jsonrpc)}');
-				}
-
-				emit(jsonrpc.method, jsonrpc.params);
-				emit(MetaframeEvents.Message, jsonrpc);
-
-			} else {
-				//Some other message, e.g. webpack dev server, ignored
-				if (debug) log('window.message: not JSON-RPC: ${Json.stringify(jsonrpc)}');
-			}
-		} else {
-			//Not an object, ignored
-			if (debug) log('window.message: not an object, ignored: ${Json.stringify(e)}');
-		}
-	}
-
-	static function isIframe() :Bool
-	{
-		//http://stackoverflow.com/questions/326069/how-to-identify-if-a-webpage-is-being-loaded-inside-an-iframe-or-directly-into-t
-		try {
-			return js.Syntax.strictNeq(Browser.window, Browser.window.top);
-		} catch(ignored :Dynamic) {
-			return false;
-		}
-	}
+  Input = "input",
+  Inputs = "inputs",
+  Message = "message"
 }
 
-class MetaframePlugin
-{
-	var _metaframe :Metaframe;
+export class Metaframe extends EventEmitter {
+  public static isIframe(): boolean {
+    //http://stackoverflow.com/questions/326069/how-to-identify-if-a-webpage-is-being-loaded-inside-an-iframe-or-directly-into-t
+    try {
+      return window !== window.top;
+    } catch (ignored) {
+      return false;
+    }
+  }
 
-	public function new(metaframe :Metaframe)
-	{
-		_metaframe = metaframe;
-	}
+  public static readonly version = VERSION;
 
-	public function requestState()
-	{
-		var payload :ApiPayloadPluginRequest = {
-			method: ApiPayloadPluginRequestMethod.State,
-		}
-		_metaframe.sendRpc(JsonRpcMethodsFromChild.PluginRequest, payload);
-	}
+  public static readonly INPUT = MetaframeEvents.Input;
+  public static readonly INPUTS = MetaframeEvents.Inputs;
+  public static readonly MESSAGE = MetaframeEvents.Message;
 
-	public function onState(listener :Dynamic->Void) :Void->Void
-	{
-		var disposer = _metaframe.onInput(METAPAGE_KEY_STATE, listener);
-		if (this.getState() != null) {
-			listener(this.getState());
-		}
-		return disposer;
-	}
+  _inputPipeValues: MetaframeInputMap = {};
+  _outputPipeValues: MetaframeInputMap = {};
+  // obsoleted, use this.id
+  _iframeId: MetaframeId;
+  _parentId: MetapageId;
+  _parentVersion: Versions;
+  _isIframe: boolean;
 
-	public function getState() :Dynamic
-	{
-		return _metaframe.getInput(METAPAGE_KEY_STATE);
-	}
+  debug: boolean = false;
+  ready: Promise<boolean>;
+  color: string;
+  plugin: MetaframePlugin;
 
-	public function setState(state :Dynamic)
-	{
-		_metaframe.setOutput(METAPAGE_KEY_STATE, state);
-	}
+  /**
+   * This is the (locally) unique id that the parent metapage
+   * assigns to the metaframe. Defaults to the name given in
+   * then metapage definition.
+   */
+  // TODO obsoleted, use this.id
+  // name:string;
+  id: string;
 
-	public function onDefinition(listener :Dynamic->Void) :Void->Void
-	{
-		var disposer = _metaframe.onInput(METAPAGE_KEY_DEFINITION, listener);
-		if (this.getDefinition() != null) {
-			listener(this.getDefinition());
-		}
-		return disposer;
-	}
+  constructor() {
+    super();
+    this.debug = getUrlParamDEBUG();
+    this._isIframe = Metaframe.isIframe();
 
-	public function setDefinition(definition :Dynamic)
-	{
-		_metaframe.setOutput(METAPAGE_KEY_DEFINITION, definition);
-	}
+    if (!this._isIframe) {
+      //Don't add any of the machinery, it only works if we're iframes.
+      //This will never return
+      this.ready = new Promise((resolve, _) => {
+        resolve(false);
+      });
+      this.log("Not an iframe, metaframe code disabled");
+      return;
+    }
 
-	public function getDefinition() :Dynamic
-	{
-		return _metaframe.getInput(METAPAGE_KEY_DEFINITION);
-	}
+    this.onWindowMessage = this.onWindowMessage.bind(this);
+
+    window.addEventListener("message", this.onWindowMessage);
+
+    //Get ready, request the parent to register to establish messaging pipes
+    this.ready = new Promise(function (resolve, reject) {
+      // First listen to the parent metapage response
+      this.once(JsonRpcMethodsFromParent.SetupIframeServerResponse, function (params : SetupIframeServerResponseData) {
+        if (this._iframeId == null) {
+          this._iframeId = params.iframeId;
+          this.id = params.iframeId;
+          this._parentVersion = params.version;
+          this.color = stringToRgb(this._iframeId);
+          this._parentId = params.parentId;
+          this.log(
+            `metapage[${this._parentId}](v${this._parentVersion
+            ? this._parentVersion
+            : "unknown"}) registered`);
+
+          this._inputPipeValues = params.state != null && params.state.inputs != null
+            ? params.state.inputs
+            : this._inputPipeValues;
+
+          //Tell the parent we have registered.
+          this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {version: this.version});
+
+          //Send notifications of initial inputs (if non-null)
+          //so you don't have to listen to the ready event if you don't want to
+          if (this._inputPipeValues && this._inputPipeValues.keys().length > 0) {
+            this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
+            Object.keys(this._inputPipeValues).forEach(pipeId => this.emit(MetaframeEvents.Input, pipeId, this._inputPipeValues[pipeId]));
+          }
+
+          // if this is a plugin, initialize the plugin object
+          if (params.plugin) {
+            this.plugin = new MetaframePlugin(this);
+          }
+
+          //Resolve AFTER sending inputs. This way consumers can either:
+          //1) Just listen to inputs updates. The first will be when the metaframe is ready
+          //2) Listen to the ready event, get the inputs if desired, and listen to subsequent
+          //   inputs updates. You may not wish to respond to the first updates but you might
+          //   want to know when the metaframe is ready
+          //*** Does this distinction make sense?
+          resolve(true);
+
+          // window.addEventListener('resize', sendWindowDimensions);
+          // sendWindowDimensions();
+        } else {
+          this.log("Got JsonRpcMethods.SetupIframeServerResponse but already resolved");
+        }
+      });
+      // Now that we're listening, request to the parent to register us
+      sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {version: version});
+    });
+  }
+
+  public log(o : any, color? : string, backgroundColor? : string) {
+    if (!this.debug) {
+      return;
+    }
+    this.logInternal(
+      o, color != null
+      ? color
+      : this.color);
+  }
+
+  public warn(o : any) {
+    if (!this.debug) {
+      return;
+    }
+    this.logInternal(o, "000", this.color);
+  }
+
+  public error(err : any) {
+    this.logInternal(err, this.color, "f00");
+  }
+
+  logInternal(o : any, color? : string, backgroundColor? : string) {
+    let s: string;
+    if (typeof o === "string") {
+      s = o as string;
+    } else if (typeof o === "number") {
+      s = o + "";
+    } else {
+      s = JSON.stringify(o);
+    }
+
+    color = color != null
+      ? color + ""
+      : color;
+
+    s = (
+      this._iframeId != null
+      ? "Metaframe[$_iframeId] "
+      : "") + `${s}`;
+    MetapageToolsLog(s, color, backgroundColor);
+  }
+
+  public dispose() {
+    super.dispose();
+    window.removeEventListener("message", this.onWindowMessage);
+    this._inputPipeValues = null;
+    this._outputPipeValues = null;
+  }
+
+  public addEventListener(event : MetaframeEvents, listener : any): () => void {
+    const disposer = super.addEventListener(event, listener);
+
+    //If it is an input or output, set the current input/output values when
+    //attaching a listener on the next tick to ensure that the listener
+    //will always get a value if it exists
+    if (event === MetaframeEvents.Inputs) {
+      window.setTimeout(() => {
+        if (this._inputPipeValues != null) {
+          listener(this._inputPipeValues);
+        }
+      }, 0);
+    }
+
+    return disposer;
+  }
+
+  public onInput(pipeId : MetaframePipeId, listener : any): () => void {
+    return this.addEventListener(MetaframeEvents.Input, (pipe : MetaframePipeId, value : any) => {
+      if (pipeId === pipe) {
+        listener(value);
+      }
+    });
+  }
+
+  public onInputs(listener : (m : MetaframeInputMap) => void): () => void {
+    return this.addEventListener(MetaframeEvents.Inputs, listener);
+  }
+
+  /**
+   * This is a particular use case: metapage inputs are saved outside
+   * the iframe, so when this iframe is restarted in the same metapage
+   * it will start with this value. So in a way, it can be used for
+   * state storage, by the metaframe itself.
+   */
+  public setInput(pipeId : MetaframePipeId, blob : any) {
+    var inputs: MetaframeInputMap = {};
+    inputs[pipeId] = blob;
+    this.setInputs(inputs);
+  }
+
+  /**
+   * This does NOT directly update internal inputs. It tells
+   * the metapage parent, which then updates back. So if there
+   * is no metapage parent, this will do nothing.
+   *
+   * @param inputs
+   */
+  public setInputs(inputs : MetaframeInputMap) {
+    this.sendRpc(JsonRpcMethodsFromChild.InputsUpdate, inputs);
+  }
+
+  setInternalInputsAndNotify(inputs : MetaframeInputMap) {
+    if (!this._inputPipeValues.merge(inputs)) {
+      return;
+    }
+    Object.keys(inputs).forEach(pipeId => this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId]));
+    this.emit(MetaframeEvents.Inputs, inputs);
+  }
+
+  public getInput(pipeId : MetaframePipeId): any {
+    console.assert(pipeId != null);
+    return this._inputPipeValues.get(pipeId);
+  }
+
+  public getInputs(): MetaframeInputMap {
+    return this._inputPipeValues;
+  }
+
+  public getOutput(pipeId : MetaframePipeId): any {
+    console.assert(pipeId != null);
+    return this._outputPipeValues.get(pipeId);
+  }
+
+  /**
+   * What does setting this to null mean?
+   * @param pipeId     :MetaframePipeId [description]
+   * @param updateBlob :any        [description]
+   */
+  public setOutput(pipeId : MetaframePipeId, updateBlob : any): void {
+    console.assert(pipeId != null);
+    console.assert(updateBlob != null);
+
+    var outputs: MetaframeInputMap = {};
+    outputs[pipeId] = updateBlob;
+
+    this.setOutputs(outputs);
+  }
+
+  public setOutputs(outputs : MetaframeInputMap): void {
+    if (!this._outputPipeValues.merge(outputs)) {
+      return;
+    }
+    this.sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
+  }
+
+  public getOutputs(): MetaframeInputMap {
+    return this._outputPipeValues;
+  }
+
+  sendRpc(method : JsonRpcMethodsFromChild, params : any) {
+    if (this._isIframe) {
+      const message: MinimumClientMessage<any> = {
+        jsonrpc: "2.0",
+        id: null,
+        // id     : MetapageTools.generateNonce(),
+        method: method,
+        params: params,
+        iframeId: this._iframeId,
+        parentId: this._parentId
+      };
+      this.log(message);
+      window.parent.postMessage(message, "*");
+    } else {
+      this.error("Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe");
+    }
+  }
+
+  onWindowMessage(e : any) {
+    if (this.debug) {
+      this.log("onWindowMessage: ${Json.stringify(e)}");
+    }
+    if (typeof e.data === "object") {
+      let jsonrpc: MinimumClientMessage<any> = e.data;
+      if (jsonrpc.jsonrpc === "2.0") {
+        //Make sure this is a jsonrpc object
+        var method = jsonrpc.method as JsonRpcMethodsFromParent;
+        if (!(method == JsonRpcMethodsFromParent.SetupIframeServerResponse || (jsonrpc.parentId == this._parentId && jsonrpc.iframeId == this._iframeId))) {
+          this.error(`window.message: received message but jsonrpc.parentId=${jsonrpc.parentId} _parentId=${this._parentId} jsonrpc.iframeId=${jsonrpc.iframeId} _iframeId=${this._iframeId}`);
+          return;
+        }
+
+        switch (method) {
+          case JsonRpcMethodsFromParent.SetupIframeServerResponse:
+            break; //Handled elsewhere
+          case JsonRpcMethodsFromParent.InputsUpdate:
+            this.setInternalInputsAndNotify(jsonrpc.params.inputs);
+            break;
+          case JsonRpcMethodsFromParent.MessageAck:
+            if (this.debug) 
+              this.log("ACK: ${Json.stringify(jsonrpc)}");
+            break;
+          default:
+            if (debug) 
+              this.log("window.message: unknown JSON-RPC method: ${Json.stringify(jsonrpc)}");
+            break;
+        }
+
+        this.emit(jsonrpc.method, jsonrpc.params);
+        this.emit(MetaframeEvents.Message, jsonrpc);
+      } else {
+        //Some other message, e.g. webpack dev server, ignored
+        if (this.debug) 
+          this.log("window.message: not JSON-RPC: ${Json.stringify(jsonrpc)}");
+        }
+      } else {
+      //Not an object, ignored
+      if (this.debug) 
+        this.log("window.message: not an object, ignored: ${Json.stringify(e)}");
+      }
+    }
+}
+
+/**
+ * A special kind of metaframe that can get and set the metapage definition
+ * and metapage state (so quite powerful).
+ */
+export class MetaframePlugin {
+  _metaframe: Metaframe;
+
+  constructor(metaframe : Metaframe) {
+    this._metaframe = metaframe;
+  }
+
+  requestState() {
+    var payload: ApiPayloadPluginRequest = {
+      method: ApiPayloadPluginRequestMethod.State
+    };
+    this._metaframe.sendRpc(JsonRpcMethodsFromChild.PluginRequest, payload);
+  }
+
+  onState(listener : (_ : any) => void): () => void {
+    const disposer = this._metaframe.onInput(METAPAGE_KEY_STATE, listener);
+    if (this.getState() != null) {
+      listener(this.getState());
+    }
+    return disposer;
+  }
+
+  getState(): any {
+    return this._metaframe.getInput(METAPAGE_KEY_STATE);
+  }
+
+  setState(state : any) {
+    this._metaframe.setOutput(METAPAGE_KEY_STATE, state);
+  }
+
+  onDefinition(listener : (a : any) => void): () => void {
+    var disposer = this._metaframe.onInput(METAPAGE_KEY_DEFINITION, listener);
+    if (this.getDefinition() != null) {
+      listener(this.getDefinition());
+    }
+    return disposer;
+  }
+
+  setDefinition(definition : any) {
+    this._metaframe.setOutput(METAPAGE_KEY_DEFINITION, definition);
+  }
+
+  getDefinition(): any {
+    return this._metaframe.getInput(METAPAGE_KEY_DEFINITION);
+  }
 }

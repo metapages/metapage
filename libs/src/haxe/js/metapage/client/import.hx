@@ -1,5 +1,5 @@
 import haxe.Json;
-import haxe.DynamicAccess;
+import haxe.anyAccess;
 import haxe.remoting.JsonRpc;
 
 import hxassert.Assert.*;
@@ -27,7 +27,7 @@ import js.metapage.v0_3.MetapageDefinition;
 import js.metapage.v0_3.Url;
 import js.metapage.v0_3.MetapageEventDefinition;
 
-import util.TypedDynamicAccess;
+import util.TypedanyAccess;
 import js.metapage.client.MetapageTools.*;
 
 using Lambda;

@@ -1,6 +1,6 @@
 package js.metapage.client;
 
-@:enum abstract MetaframeEvents<T:haxe.Constraints.Function>(Dynamic) to Dynamic {
+@:enum abstract MetaframeEvents<T:haxe.Constraints.Function>(any) to any {
   var Input : MetaframeEvents<PipeUpdateClient->Void> = "input";
   var Inputs : MetaframeEvents<MetaframeInputMap->Void> = "inputs";
   var Message : MetaframeEvents<String->Void> = "message";
@@ -112,7 +112,7 @@ class Metaframe extends EventEmitter
 		});
 	}
 
-	public function log(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
+	public function log(o :any, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
 	{
 		if (!debug) {
 			return;
@@ -120,7 +120,7 @@ class Metaframe extends EventEmitter
 		logInternal(o, color != null ? color : this.color, pos);
 	}
 
-	public function warn(o :Dynamic, ?pos:haxe.PosInfos)
+	public function warn(o :any, ?pos:haxe.PosInfos)
 	{
 		if (!debug) {
 			return;
@@ -128,14 +128,14 @@ class Metaframe extends EventEmitter
 		logInternal(o, "000", color, pos);
 	}
 
-	public function error(err :Dynamic, ?pos:haxe.PosInfos)
-	// public function error(err :Dynamic)
+	public function error(err :any, ?pos:haxe.PosInfos)
+	// public function error(err :any)
 	{
 		logInternal(err, color, "f00");
 	}
 
-	function logInternal(o :Dynamic, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
-	// function logInternal(o :Dynamic, ?color :String, ?backgroundColor :String)
+	function logInternal(o :any, ?color :String, ?backgroundColor :String, ?pos:haxe.PosInfos)
+	// function logInternal(o :any, ?color :String, ?backgroundColor :String)
 	{
 		var s :String = switch(js.Syntax.typeof(o)) {
 			case "string": cast o;
@@ -157,7 +157,7 @@ class Metaframe extends EventEmitter
 		_outputPipeValues = null;
 	}
 
-	override public function addEventListener(event :String, listener :Dynamic) :Void->Void
+	override public function addEventListener(event :String, listener :any) :Void->Void
 	{
 		var disposer = super.addEventListener(event, listener);
 
@@ -175,9 +175,9 @@ class Metaframe extends EventEmitter
 		return disposer;
 	}
 
-	public function onInput(pipeId :MetaframePipeId, listener :Dynamic->Void) :Void->Void
+	public function onInput(pipeId :MetaframePipeId, listener :any->Void) :Void->Void
 	{
-		return addEventListener(MetaframeEvents.Input, function(pipe :MetaframePipeId, value :Dynamic) {
+		return addEventListener(MetaframeEvents.Input, function(pipe :MetaframePipeId, value :any) {
 			if (pipeId == pipe) {
 				listener(value);
 			}
@@ -195,7 +195,7 @@ class Metaframe extends EventEmitter
 	 * it will start with this value. So in a way, it can be used for
 	 * state storage, by the metaframe itself.
 	 */
-	public function setInput(pipeId :MetaframePipeId, blob :Dynamic)
+	public function setInput(pipeId :MetaframePipeId, blob :any)
 	{
 		var inputs :MetaframeInputMap = {};
 		inputs[pipeId] = blob;
@@ -225,7 +225,7 @@ class Metaframe extends EventEmitter
 		emit(MetaframeEvents.Inputs, inputs);
 	}
 
-	public function getInput (pipeId :MetaframePipeId) :Dynamic
+	public function getInput (pipeId :MetaframePipeId) :any
 	{
 		require(pipeId != null);
 		return _inputPipeValues.get(pipeId);
@@ -236,7 +236,7 @@ class Metaframe extends EventEmitter
 		return _inputPipeValues;
 	}
 
-	public function getOutput(pipeId :MetaframePipeId) :Dynamic
+	public function getOutput(pipeId :MetaframePipeId) :any
 	{
 		require(pipeId != null);
 		return _outputPipeValues.get(pipeId);
@@ -245,9 +245,9 @@ class Metaframe extends EventEmitter
 	/**
 	 * What does setting this to null mean?
 	 * @param pipeId     :MetaframePipeId [description]
-	 * @param updateBlob :Dynamic        [description]
+	 * @param updateBlob :any        [description]
 	 */
-	public function setOutput(pipeId :MetaframePipeId, updateBlob :Dynamic) :Void
+	public function setOutput(pipeId :MetaframePipeId, updateBlob :any) :Void
 	{
 		require(pipeId != null);
 		require(updateBlob != null);
@@ -271,7 +271,7 @@ class Metaframe extends EventEmitter
 		return _outputPipeValues;
 	}
 
-	function sendRpc(method :JsonRpcMethodsFromChild, params :Dynamic)
+	function sendRpc(method :JsonRpcMethodsFromChild, params :any)
 	{
 		if (_isIframe) {
 			var message :MinimumClientMessage = {
@@ -289,7 +289,7 @@ class Metaframe extends EventEmitter
 		}
 	}
 
-	function onWindowMessage(e :Dynamic)
+	function onWindowMessage(e :any)
 	{
 		if (debug) {
 			log('onWindowMessage: ${Json.stringify(e)}');
@@ -330,7 +330,7 @@ class Metaframe extends EventEmitter
 		//http://stackoverflow.com/questions/326069/how-to-identify-if-a-webpage-is-being-loaded-inside-an-iframe-or-directly-into-t
 		try {
 			return js.Syntax.strictNeq(Browser.window, Browser.window.top);
-		} catch(ignored :Dynamic) {
+		} catch(ignored :any) {
 			return false;
 		}
 	}
@@ -353,7 +353,7 @@ class MetaframePlugin
 		_metaframe.sendRpc(JsonRpcMethodsFromChild.PluginRequest, payload);
 	}
 
-	public function onState(listener :Dynamic->Void) :Void->Void
+	public function onState(listener :any->Void) :Void->Void
 	{
 		var disposer = _metaframe.onInput(METAPAGE_KEY_STATE, listener);
 		if (this.getState() != null) {
@@ -362,17 +362,17 @@ class MetaframePlugin
 		return disposer;
 	}
 
-	public function getState() :Dynamic
+	public function getState() :any
 	{
 		return _metaframe.getInput(METAPAGE_KEY_STATE);
 	}
 
-	public function setState(state :Dynamic)
+	public function setState(state :any)
 	{
 		_metaframe.setOutput(METAPAGE_KEY_STATE, state);
 	}
 
-	public function onDefinition(listener :Dynamic->Void) :Void->Void
+	public function onDefinition(listener :any->Void) :Void->Void
 	{
 		var disposer = _metaframe.onInput(METAPAGE_KEY_DEFINITION, listener);
 		if (this.getDefinition() != null) {
@@ -381,12 +381,12 @@ class MetaframePlugin
 		return disposer;
 	}
 
-	public function setDefinition(definition :Dynamic)
+	public function setDefinition(definition :any)
 	{
 		_metaframe.setOutput(METAPAGE_KEY_DEFINITION, definition);
 	}
 
-	public function getDefinition() :Dynamic
+	public function getDefinition() :any
 	{
 		return _metaframe.getInput(METAPAGE_KEY_DEFINITION);
 	}
