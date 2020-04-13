@@ -1,7 +1,8 @@
 import {EventEmitter} from "./EventEmitter";
+import * as minimatch from 'minimatch';
 import {VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION } from "../Constants";
 import {Versions} from "../MetaLibsVersion";
-import { PipeInput, MetapageOptions, MetaframeInputMap, MetaframePipeId, MetaframeId, MetapageId, MetapageInstanceInputs, MetapageDefinition} from "@definitions/all";
+import { MetaframeInstance, PipeInput, MetapageOptions, MetaframeInputMap, MetaframePipeId, MetaframeId, MetapageId, MetapageInstanceInputs, MetapageDefinition} from "@definitions/all";
 import {
   ApiPayloadPluginRequest,
   ApiPayloadPluginRequestMethod,
@@ -9,6 +10,8 @@ import {
   JsonRpcMethodsFromChild,
   SetupIframeServerResponseData,
   MinimumClientMessage,
+  SetupIframeClientAckData,
+  OtherEvents,
 } from "@definitions/JsonRpcMethods";
 import {getUrlParamDEBUG, stringToRgb, log as MetapageToolsLog, getMatchingVersion, generateMetapageId, existsAnyUrlParam, convertToCurrentDefinition} from "./MetapageTools";
 
@@ -98,6 +101,38 @@ export class Metapage extends EventEmitter
 
 	debug :boolean = false;
 	_consoleBackgroundColor :string;
+
+	// for caching input lookups
+	// _cachedInputLookupMap :JSMap<MetaframeId, JSMap<MetaframePipeId, Array<{metaframe :MetaframeId, pipe :MetaframePipeId}>>> = {};
+	_cachedInputLookupMap :{ [key: string]: { [key: string]: {metaframe:MetaframeId, pipe:MetaframePipeId}[]; }; } = {};
+	// _inputMap :JSMap<MetaframeId, Array<PipeInput>> = {};
+	_inputMap :{ [key: string]:PipeInput[]} = {};
+	// Example:
+	// 	{
+	//     "version": "0.1.0",
+	//     "metaframes": {
+	//       "metaframe1": {
+	//         "url": "{{site.baseurl}}/metaframes/example00_iframe1/",
+	//         "inputs": [
+	//           {
+	//             "metaframe":"metaframe2",
+	//             "source": "barOut",
+	//             "target": "barIn",
+	//           }
+	//         ]
+	//       },
+	//       "metaframe2": {
+	//         "url": "{{site.baseurl}}/metaframes/example00_iframe2/",
+	//         "inputs": [
+	//           {
+	//             "metaframe":"metaframe1",
+	//             "source": "fooOut",
+	//             "target": "fooIn",
+	//           }
+	//         ]
+	//       }
+	//     }
+	// }
 
 	constructor(opts ?:MetapageOptions)
 	{
@@ -194,7 +229,7 @@ export class Metapage extends EventEmitter
 			// Doesn't exist? Destroy it
 			if (!this._definition.metaframes || !this._definition.metaframes[metaframeId]) {
 				// this removes the metaframe, pipes, inputs, caches
-				removeMetaframe(metaframeId);
+				this.removeMetaframe(metaframeId);
 			}
 		});
 
@@ -202,7 +237,7 @@ export class Metapage extends EventEmitter
 		Object.keys(this._plugins).forEach(url => {
 			// Doesn't exist? Destroy it
 			if (!this._definition.plugins.includes(url)) {
-				removePlugin(url);
+				this.removePlugin(url);
 			}
 		});
 
@@ -256,28 +291,28 @@ export class Metapage extends EventEmitter
 	addPipe(target :MetaframeId, input :PipeInput)
 	{
 		// Do all the cache checking
-		if (!this._inputMap.exists(target)) {
-			this._inputMap.set(target, []);
+		if (!this._inputMap[target]) {
+			this._inputMap[target] = [];
 		}
-		this._inputMap.get(target).push(input);
+		this._inputMap[target].push(input);
 	}
 
 	// do not expose, change definition instead
-	function removeMetaframe(metaframeId :MetaframeId) :void
+	removeMetaframe(metaframeId :MetaframeId)
 	{
-		if (!this._metaframes.exists(metaframeId)) {
+		if (!this._metaframes[metaframeId]) {
 			return;
 		}
 
 		this._metaframes[metaframeId].dispose();
-		this._metaframes.remove(metaframeId);
-		this._state.metaframes.inputs.remove(metaframeId);
-		this._state.metaframes.outputs.remove(metaframeId);
+		delete this._metaframes[metaframeId];
+		delete this._state.metaframes.inputs[metaframeId];
+		delete this._state.metaframes.outputs[metaframeId];
 
-		this._inputMap.remove(metaframeId);
-		for (otherMetaframeId in this._inputMap.keys()) {
-			var inputPipes = this._inputMap[otherMetaframeId];
-			var index = 0;
+		delete this._inputMap[metaframeId];
+		Object.keys(this._inputMap).forEach(otherMetaframeId => {
+			const inputPipes = this._inputMap[otherMetaframeId];
+			let index = 0;
 			while (index <= inputPipes.length) {
 				if (inputPipes[index].metaframe == metaframeId) {
 					inputPipes.splice(index, 1);
@@ -285,7 +320,7 @@ export class Metapage extends EventEmitter
 					index++;
 				}
 			}
-		}
+		});
 
 		// This will regenerate, simpler than surgery
 		this._cachedInputLookupMap = {};
@@ -293,28 +328,24 @@ export class Metapage extends EventEmitter
 
 	// do not expose, change definition instead
 	// to add/remove
-	function removePlugin(url :Url) :void
+	removePlugin(url :Url) :void
 	{
-		if (!this._plugins.exists(url)) {
+		if (!this._plugins[url]) {
 			return;
 		}
 
 		this._plugins[url].dispose();
-		this._plugins.remove(url);
-		this._state.plugins.inputs.remove(url);
-		this._state.plugins.outputs.remove(url);
+		delete this._plugins[url];
+		delete this._state.plugins.inputs[url];
+		delete this._state.plugins.outputs[url];
 	}
 
 	// do not expose, change definition instead
 	// to add/remove
-	function removeAll() :void
+	removeAll() :void
 	{
-		for(id in this._metaframes.keys()) {
-			this._metaframes.get(id).dispose();
-		}
-		for(id in this._plugins.keys()) {
-			this._plugins.get(id).dispose();
-		}
+		Object.keys(this._metaframes).forEach(id => this._metaframes[id].dispose());
+		Object.keys(this._plugins).forEach(id => this._plugins[id].dispose());
 		this._metaframes = {};
 		this._plugins = {};
 		this._state = emptyState();
@@ -322,46 +353,35 @@ export class Metapage extends EventEmitter
 		this._cachedInputLookupMap = {};
 	}
 
-	public metaframes() :JSMap<MetaframeId, IFrameRpcClient>
+	public metaframes()
 	{
-		return getMetaframes();
+		return this.getMetaframes();
 	}
 
-	public metaframeIds() :Array<MetaframeId>
+	public metaframeIds() :MetaframeId[]
 	{
-		return getMetaframeIds();
+		return this.getMetaframeIds();
 	}
 
-	public getMetaframeIds() :Array<MetaframeId>
+	public getMetaframeIds() :MetaframeId[]
 	{
-		var all :Array<MetaframeId> = [];
-		for (key in this._metaframes.keys()) {
-			all.push(key);
-		}
-		return all;
+		return Object.keys(this._metaframes);
 	}
 
-	public getMetaframes() :JSMap<MetaframeId, IFrameRpcClient>
+	
+	public getMetaframes() :{ [key: string]: IFrameRpcClient; }//<MetaframeId,IFrameRpcClient>
 	{
-		var all :JSMap<MetaframeId, IFrameRpcClient> = {};
-		for (key in this._metaframes.keys()) {
-			all.set(key, this._metaframes.get(key));
-		}
-		return all;
+		return Object.assign({}, this._metaframes);
 	}
 
-	public plugins() :JSMap<Url, IFrameRpcClient>
+	public plugins() :{ [key: string]: IFrameRpcClient; } //<Url,IFrameRpcClient> 
 	{
-		var all :JSMap<Url, IFrameRpcClient> = {};
-		for (key in this._plugins.keys()) {
-			all.set(key, this._metaframes.get(key));
-		}
-		return all;
+		return Object.assign({}, this._plugins);
 	}
 
 	public pluginIds() :Array<Url>
 	{
-		return getPluginIds();
+		return this.getPluginIds();
 	}
 
 	public getPluginIds() :Array<Url>
@@ -371,44 +391,42 @@ export class Metapage extends EventEmitter
 
 	public getMetaframe(id :MetaframeId) :IFrameRpcClient
 	{
-		return this._metaframes.get(id);
+		return this._metaframes[id];
 	}
 
 	public getPlugin(url :string) :IFrameRpcClient
 	{
-		return this._plugins.get(url);
+		return this._plugins[url];
 	}
 
 	// do not expose, change definition instead
-	function addMetaframe(metaframeId: MetaframeId, definition: MetaframeInstance) :IFrameRpcClient
+	addMetaframe(metaframeId: MetaframeId, definition: MetaframeInstance) :IFrameRpcClient
 	{
-		if (metaframeId == null) {
+		if (!metaframeId) {
 			throw 'addMetaframe missing metaframeId';
 		}
 
-		if (definition == null) {
+		if (!definition) {
 			throw 'addMetaframe missing definition';
 		}
 
-		if (metaframeId != null && this._metaframes.exists(metaframeId)) {
-			this.emitErrorMessage('Existing metaframe for id=${metaframeId}');
-			throw 'Existing metaframe for id=${metaframeId}';
+		if (this._metaframes[metaframeId]) {
+			this.emitErrorMessage(`Existing metaframe for id=${metaframeId}`);
+			throw `Existing metaframe for id=${metaframeId}`;
 		}
 
-		if (definition.url == null) {
-			this.emitErrorMessage('Metaframe definition missing url id=${metaframeId}');
-			throw 'Metaframe definition missing url id=${metaframeId}';
+		if (!definition.url) {
+			this.emitErrorMessage(`Metaframe definition missing url id=${metaframeId}`);
+			throw `Metaframe definition missing url id=${metaframeId}`;
 		}
 
-		var iframeClient = new IFrameRpcClient(definition.url, metaframeId, this._id, this._consoleBackgroundColor, debug)
+		var iframeClient = new IFrameRpcClient(definition.url, metaframeId, this._id, this._consoleBackgroundColor, this.debug)
 			.setMetapage(this);
-		this._metaframes.set(metaframeId, iframeClient);
+		this._metaframes[metaframeId] = iframeClient;
 
 		// add the pipes
 		if (definition.inputs != null) {
-			for (input in definition.inputs) {
-				this.addPipe(metaframeId, input);
-			}
+			definition.inputs.forEach(input => this.addPipe(metaframeId, input));
 		}
 
 		// set the initial inputs
@@ -418,13 +436,13 @@ export class Metapage extends EventEmitter
 	}
 
 	// do not expose, change definition instead
-	function addPlugin(url :Url) :IFrameRpcClient
+	addPlugin(url :Url) :IFrameRpcClient
 	{
-		if (url == null) {
+		if (!url) {
 			throw 'Plugin missing url';
 		}
 
-		var iframeClient = new IFrameRpcClient(url, url, this._id, this._consoleBackgroundColor, debug)
+		var iframeClient = new IFrameRpcClient(url, url, this._id, this._consoleBackgroundColor, this.debug)
 			.setInputs(this._state.plugins.inputs[url])
 			.setMetapage(this)
 			.setPlugin();
@@ -434,16 +452,13 @@ export class Metapage extends EventEmitter
 		return iframeClient;
 	}
 
-	override public dispose()
+	public dispose()
 	{
 		super.dispose();
-		Browser.window.removeEventListener('message', onMessage);
-		for (iframeId in this._metaframes.keys()) {
-			this._metaframes.get(iframeId).dispose();
-		}
-		for (iframeId in this._plugins.keys()) {
-			this._plugins.get(iframeId).dispose();
-		}
+		window.removeEventListener('message', this.onMessage);
+		Object.keys(this._metaframes).forEach(metaframeId => this._metaframes[metaframeId].dispose());
+		Object.keys(this._plugins).forEach(pluginId => this._plugins[pluginId].dispose());
+
 		this._id = null;
 		this._metaframes = null;
 		this._plugins = null;
@@ -453,18 +468,18 @@ export class Metapage extends EventEmitter
 		this._inputMap = null;
 	}
 
-	public log(o :any, ?color :string, ?backgroundColor :string, ?pos:haxe.PosInfos)
+	public this.log(o :any, color ?:string, backgroundColor ?:string)
 	{
-		if (!debug) {
+		if (!this.debug) {
 			return;
 		}
-		logInternal(o, color, backgroundColor, pos);
+		this.logInternal(o, color, backgroundColor);
 	}
 
-	public error(err :any, ?pos :haxe.PosInfos)
+	public error(err :any)
 	{
-		logInternal(err, "f00", this._consoleBackgroundColor, pos);
-		this.emitErrorMessage('${err}');
+		this.logInternal(err, "f00", this._consoleBackgroundColor);
+		this.emitErrorMessage(`${err}`);
 	}
 
 	public emitErrorMessage(err :string)
@@ -473,51 +488,23 @@ export class Metapage extends EventEmitter
 	}
 
 	// This call is cached
-	var this._cachedInputLookupMap :JSMap<MetaframeId, JSMap<MetaframePipeId, Array<{metaframe :MetaframeId, pipe :MetaframePipeId}>>> = {};
-	var this._inputMap :JSMap<MetaframeId, Array<PipeInput>> = {};
-	// Example:
-	// 	{
-	//     "version": "0.1.0",
-	//     "metaframes": {
-	//       "metaframe1": {
-	//         "url": "{{site.baseurl}}/metaframes/example00_iframe1/",
-	//         "inputs": [
-	//           {
-	//             "metaframe":"metaframe2",
-	//             "source": "barOut",
-	//             "target": "barIn",
-	//           }
-	//         ]
-	//       },
-	//       "metaframe2": {
-	//         "url": "{{site.baseurl}}/metaframes/example00_iframe2/",
-	//         "inputs": [
-	//           {
-	//             "metaframe":"metaframe1",
-	//             "source": "fooOut",
-	//             "target": "fooIn",
-	//           }
-	//         ]
-	//       }
-	//     }
-	// }
 	
-	function getInputsFromOutput(source :MetaframeId, outputPipeId :MetaframePipeId) :Array<{metaframe :MetaframeId, pipe :MetaframePipeId}>
+	getInputsFromOutput(source :MetaframeId, outputPipeId :MetaframePipeId) :{metaframe :MetaframeId, pipe :MetaframePipeId}[]
 	{
 		// Do all the cache checking
-		if (!this._cachedInputLookupMap.exists(source)) {
-			this._cachedInputLookupMap.set(source, {});
+		if (!this._cachedInputLookupMap[source]) {
+			this._cachedInputLookupMap[source] = {};
 		}
 
-		if (!this._cachedInputLookupMap.get(source).exists(outputPipeId)) {
-			var targets :Array<{metaframe :MetaframeId, pipe :MetaframePipeId}> = [];
-			this._cachedInputLookupMap.get(source).set(outputPipeId, targets);
+		if (!this._cachedInputLookupMap[source][outputPipeId]) {
+			var targets :{metaframe :MetaframeId, pipe :MetaframePipeId}[] = [];
+			this._cachedInputLookupMap[source][outputPipeId] = targets;
 			// Go through the data structure, getting all the matching inputs that match this output
-			for (metaframeId in this._inputMap.keys()) {
-				if (metaframeId == source) { // No self pipes, does not make sense
+			Object.keys(this._inputMap).forEach(metaframeId => {
+				if (metaframeId === source) { // No self pipes, does not make sense
 					continue;
 				}
-				for (inputPipe in this._inputMap.get(metaframeId)) {
+				this._inputMap[metaframeId].forEach(inputPipe => {
 					// At least the source metaframe matches, now check pipes
 					if (inputPipe.metaframe == source) {
 						//Check the kind of source string
@@ -527,36 +514,36 @@ export class Metapage extends EventEmitter
 							// since it might be * or absent meaning that the input
 							// field name is the same as the incoming
 							var targetName = inputPipe.target;
-							if (inputPipe.target == null || inputPipe.target.startsWith('*') || inputPipe.target == '') {
+							if (!inputPipe.target || inputPipe.target.startsWith('*') || inputPipe.target === '') {
 								targetName = outputPipeId;
 							}
 							targets.push({metaframe:metaframeId, pipe:targetName});
 						}
 					}
-				}
-			}
+				})
+			});
 		}
 
-		return this._cachedInputLookupMap.get(source).get(outputPipeId);
+		return this._cachedInputLookupMap[source][outputPipeId];
 	}
 
-	function isValidJSONRpcMessage(message :MinimumClientMessage)
+	isValidJSONRpcMessage(message :MinimumClientMessage<any>)
 	{
-		if (message.jsonrpc != '2.0') {
+		if (message.jsonrpc !== '2.0') {
 			// do not even log messages that we do not recogize. We cannot control random scripts sending messages on
 			// the only communications channel
 			return false;
 		}
-		var method :JsonRpcMethodsFromChild = cast message.method;
+		const method = message.method as JsonRpcMethodsFromChild;
 		switch(method) {
-			case SetupIframeClientRequest:
+			case JsonRpcMethodsFromChild.SetupIframeClientRequest:
 				//No validation possible here
 				return true;
 			default:
 				// TODO: check origin+source
 				var iframeId :MetaframeId = message.iframeId;
-				if (!(message.parentId == this._id && (this._metaframes.exists(iframeId) || this._plugins.exists(iframeId)))) {
-					error('message.parentId=${message.parentId} this._id=${_id} message.iframeId=${iframeId} this._metaframes.exists(message.iframeId)=${_metaframes.exists(iframeId)} this._plugins.exists(message.iframeId)=${_plugins.exists(iframeId)} message=${JSON.stringify(message).substr(0, 200)}');
+				if (!(message.parentId === this._id && (this._metaframes[iframeId] || this._plugins[iframeId]))) {
+					this.error(`message.parentId=${message.parentId} this._id=${this._id} message.iframeId=${iframeId} this._metaframes.exists(message.iframeId)=${this._metaframes[iframeId] !== undefined} this._plugins.exists(message.iframeId)=${this._plugins[iframeId] !== undefined} message=${JSON.stringify(message).substr(0, 200)}`);
 					return false;
 				}
 				return true;
@@ -572,44 +559,45 @@ export class Metapage extends EventEmitter
 	 * @param inputPipeId If the above is a string id, then inputPipeId can be the pipe id or an object {pipeId:value}
 	 * @param value If the above is a pipe id, then the is the value.
 	 */
-	inline public setInput(iframeId :any, ?inputPipeId :any, ?value :any)
+	public setInput(iframeId :any, inputPipeId ?:any, value ?:any)
 	{
-		setInputStateOnly(iframeId, inputPipeId, value);
-		setMetaframeClientInputAndSentClientEvent(iframeId, inputPipeId, value);
+		this.setInputStateOnly(iframeId, inputPipeId, value);
+		this.setMetaframeClientInputAndSentClientEvent(iframeId, inputPipeId, value);
 		// finally send the main events
 		this.emit(MetapageEvents.State, this._state);
 		// this.emit(MetapageEvents.Inputs, this._state);
 	}
 
 	// this is 
-	function setMetaframeClientInputAndSentClientEvent(iframeId :any, ?inputPipeId :any, ?value :any)
+	setMetaframeClientInputAndSentClientEvent(iframeId :any, inputPipeId ?:any, value ?:any)
 	{
-		if (typeof(iframeId) == 'object') {
-			if (inputPipeId != null || value != null) {
+		if (typeof(iframeId) === 'object') {
+			if (inputPipeId || value) {
 				throw 'bad arguments, see API docs';
 			}
-			var inputs :any = iframeId;
-			for (id in Reflect.fields(inputs)) {
+			const inputs :any = iframeId;
+			Object.keys(inputs).forEach(id => {
+			// for (id in Reflect.fields(inputs)) {
 				var metaframeId :MetaframeId = id;
-				var metaframeInputs = Reflect.field(inputs, metaframeId);
-				if (typeof(metaframeInputs) != 'object') {
+				var metaframeInputs = inputs[metaframeId];
+				if (typeof(metaframeInputs) !== 'object') {
 					throw 'bad arguments, see API docs';
 				}
-				var iframeClient = this._metaframes.get(metaframeId);
+				var iframeClient = this._metaframes[metaframeId];
 				if (iframeClient != null) {
 					iframeClient.setInputs(metaframeInputs);
 				} else {
-					error('No iframe id=$metaframeId');
+					this.error('No iframe id=$metaframeId');
 				}
-			}
-		} else if (typeof(iframeId) == 'string') {
-			var iframeClient = this._metaframes.get(iframeId);
+			});
+		} else if (typeof(iframeId) === 'string') {
+			const iframeClient = this._metaframes[iframeId];
 			if (iframeClient == null) {
-				error('No iframe id=$iframeId');
+				this.error(`No iframe id=${iframeId}`);
 			}
-			if (typeof(inputPipeId) == 'string') {
+			if (typeof(inputPipeId) === 'string') {
 				iframeClient.setInput(inputPipeId, value);
-			} else if (typeof(inputPipeId) == 'object') {
+			} else if (typeof(inputPipeId) === 'object') {
 				iframeClient.setInputs(inputPipeId);
 			} else {
 				throw 'bad arguments, see API docs';
@@ -619,17 +607,17 @@ export class Metapage extends EventEmitter
 		}
 	}
 
-	public setInputs(iframeId :any, ?inputPipeId :any, ?value :any) {
-		setInput(iframeId, inputPipeId, value);
+	public setInputs(iframeId :any, inputPipeId ?:any, value ?:any) {
+		this.setInput(iframeId, inputPipeId, value);
 	}
 
-	inline function setOutputStateOnly(iframeId :any, ?inputPipeId :any, ?value :any)
+	setOutputStateOnly(iframeId :any, inputPipeId ?:any, value ?:any)
 	{
 		this._setStateOnly(false, iframeId, inputPipeId, value);
 	}
 
 	// Set the global inputs cache
-	inline function setInputStateOnly(iframeId :any, ?inputPipeId :any, ?value :any)
+	setInputStateOnly(iframeId :any, inputPipeId ?:any, value ?:any)
 	{
 		this._setStateOnly(true, iframeId, inputPipeId, value);
 	}
@@ -637,80 +625,81 @@ export class Metapage extends EventEmitter
 	// need to set the boolean first because we don't know the metaframe/pluginId until we dig into
 	// the object. but it might not be an object. this flexibility might not be worth it, although
 	// the logic is reasonble to test
-	function this._setStateOnly(isInputs :boolean, iframeId :any, ?inputPipeId :any, ?value :any)
+	_setStateOnly(isInputs :boolean, iframeId :any, inputPipeId ?:any, value ?:any)
 	{
-		if (typeof(iframeId) == 'object') {
+		if (typeof(iframeId) === 'object') {
 			// it's an object of metaframeIds to pipeIds to values [metaframeId][pipeId]
 			// so the other fields should be undefined
-			if (inputPipeId != null || value != null) {
-				throw 'Second argument cannot be null';
+			if (inputPipeId || value) {
+				throw 'If first argument is an object, subsequent args should be undefined';
 			}
-			var inputsMetaframesNew :MetapageInstanceInputs = iframeId;
-			for (metaframeId in inputsMetaframesNew.keys()) {
+			const inputsMetaframesNew :MetapageInstanceInputs = iframeId;
+			Object.keys(inputsMetaframesNew).forEach(metaframeId => {
+			// for (metaframeId in inputsMetaframesNew.keys()) {
 				var metaframeValuesNew :MetaframeInputMap = inputsMetaframesNew[metaframeId];
-				if (typeof(metaframeValuesNew) != 'object') {
+				if (typeof(metaframeValuesNew) !== 'object') {
 					throw 'Object values must be objects';
 				}
 
-				var isMetaframe = this._metaframes.exists(metaframeId);
-				if (!isMetaframe && !this._plugins.exists(metaframeId)) {
+				const isMetaframe = this._metaframes.hasOwnProperty(metaframeId);
+				if (!isMetaframe && !this._plugins.hasOwnProperty(metaframeId)) {
 					throw 'No metaframe or plugin: ${metaframeId}';
 				}
-				var inputOrOutputState = isMetaframe
+				const inputOrOutputState = isMetaframe
 					? (isInputs ? this._state.metaframes.inputs : this._state.metaframes.outputs)
 					: (isInputs ? this._state.plugins.inputs : this._state.plugins.outputs);
 
 				// Ensure a map
-				inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null ? inputOrOutputState[metaframeId] : cast {};
+				inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null ? inputOrOutputState[metaframeId] : {} as MetaframeInstance;
 
-				for (metaframePipedId in metaframeValuesNew.keys()) {
+				Object.keys(metaframeValuesNew).forEach(metaframePipedId => {
 					// A key with a value of undefined means remove the key from the state object
-					if (js.Syntax.strictEq(metaframeValuesNew[metaframePipedId], js.Lib.undefined)) {
-						js.Syntax.delete(inputOrOutputState[metaframeId], metaframePipedId);
+					if (metaframeValuesNew[metaframePipedId] === undefined) {
+						delete inputOrOutputState[metaframeId][metaframePipedId];
 					} else {
 						// otherwise set the new value
 						inputOrOutputState[metaframeId][metaframePipedId] = metaframeValuesNew[metaframePipedId];
 					}
-				}
+				});
+			});
+		} else if (typeof(iframeId) === 'string') {
+			const metaframeId :MetaframeId  = iframeId;
+			const isMetaframe = this._metaframes.hasOwnProperty(metaframeId);
+			if (!isMetaframe && !this._plugins.hasOwnProperty(metaframeId)) {
+				throw `No metaframe or plugin: ${metaframeId}`;
 			}
-		} else if (typeof(iframeId) == 'string') {
-			var metaframeId :MetaframeId  = iframeId;
-			var isMetaframe = this._metaframes.exists(metaframeId);
-			if (!isMetaframe && !this._plugins.exists(metaframeId)) {
-				throw 'No metaframe or plugin: ${metaframeId}';
-			}
-			var inputOrOutputState = isMetaframe
+			const inputOrOutputState = isMetaframe
 				? (isInputs ? this._state.metaframes.inputs : this._state.metaframes.outputs)
 				: (isInputs ? this._state.plugins.inputs : this._state.plugins.outputs);
 
-			if (typeof(inputPipeId) == 'string') {
+			if (typeof(inputPipeId) === 'string') {
 				// Ensure a map
-				inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null ? inputOrOutputState[metaframeId] : cast {};
+				inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null ? inputOrOutputState[metaframeId] : {} as MetaframeInstance;
 
-				var metaframePipeId :MetaframePipeId = inputPipeId;
+				const metaframePipeId :MetaframePipeId = inputPipeId;
 
 				// A key with a value of undefined means remove the key from the state object
-				if (js.Syntax.strictEq(value, js.Lib.undefined)) {
-					js.Syntax.delete(inputOrOutputState[metaframeId], metaframePipeId);
+				if (value === undefined) {
+					delete inputOrOutputState[metaframeId][metaframePipeId];
 				} else {
 					// otherwise set the new value
 					inputOrOutputState[metaframeId][metaframePipeId] = value;
 				}
-			} else if (typeof(inputPipeId) == 'object') {
+			} else if (typeof(inputPipeId) === 'object') {
 				// Ensure a map
-				inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null ? inputOrOutputState[metaframeId] : cast {};
+				inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null ? inputOrOutputState[metaframeId] : {} as MetaframeInstance;
 
-				var metaframeValuesNew :MetaframeInputMap = inputPipeId;
+				const metaframeValuesNew :MetaframeInputMap = inputPipeId;
 
-				for (metaframePipedId in metaframeValuesNew.keys()) {
+				Object.keys(metaframeValuesNew).forEach(metaframePipedId => {
 					// A key with a value of undefined means remove the key from the state object
-					if (js.Syntax.strictEq(metaframeValuesNew[metaframePipedId], js.Lib.undefined)) {
-						js.Syntax.delete(inputOrOutputState[metaframeId], metaframePipedId);
+					if (metaframeValuesNew[metaframePipedId] === undefined) {
+						delete inputOrOutputState[metaframeId][metaframePipedId];
 					} else {
 						// otherwise set the new value
 						inputOrOutputState[metaframeId][metaframePipedId] = metaframeValuesNew[metaframePipedId];
 					}
-				}
+				});
 			} else {
 				throw 'Second argument must be a string or an object';
 			}			
@@ -719,29 +708,30 @@ export class Metapage extends EventEmitter
 		}
 	}
 
-	inline function getMetaframeOrPlugin(key :string) :IFrameRpcClient
+	getMetaframeOrPlugin(key :string) :IFrameRpcClient
 	{
+		// TODO: this is not good, it will lead to subtle bugs, fix it
 		var val = this._metaframes[key];
-		if (val == null) {
+		if (!val) {
 			val = this._plugins[key];
 		}
 		return val;
 	}
 
-	function onMessage(e :Event)
+	onMessage(e :any)
 	{
-		if (typeof(untyped e.data) == "object") {
-			var jsonrpc :MinimumClientMessage = untyped e.data;
-			if (!isValidJSONRpcMessage(jsonrpc)) {
+		if (typeof(e.data) === "object") {
+			const jsonrpc = e.data as MinimumClientMessage<any>;
+			if (!this.isValidJSONRpcMessage(jsonrpc)) {
 				if (this.debug) {
-					log('invalid message ${JSON.stringify(jsonrpc).substr(0, 200)}');
+					this.log(`invalid message ${JSON.stringify(jsonrpc).substr(0, 200)}`);
 				}
 				return;
 			}
 			// var origin :string = untyped e.origin;
 			// var source :IFrameElement = untyped e.source;
 			//Verify here
-			var method :JsonRpcMethodsFromChild = cast jsonrpc.method;
+			var method = jsonrpc.method as JsonRpcMethodsFromChild;
 
 			switch(method) {
 				/**
@@ -756,35 +746,37 @@ export class Metapage extends EventEmitter
 				 * The response is idempotent (already registerd
 				 * metaframes ignore further registration requests).
 				 */
-				case SetupIframeClientRequest:
-					for (metaframeId in this._metaframes.keys()) {
-						var iframeClient = this._metaframes.get(metaframeId);
+				case JsonRpcMethodsFromChild.SetupIframeClientRequest:
+					Object.keys(this._metaframes).forEach(metaframeId => {
+						const iframeClient = this._metaframes[metaframeId];
 						iframeClient.register();
-					}
+					});
 
-					for (url in this._plugins.keys()) {
-						var iframeClient = this._plugins.get(url);
+					Object.keys(this._plugins).forEach(url => {
+						const iframeClient = this._plugins[url];
 						iframeClient.register();
-					}
+					});
+					break;
 
 				/* A client iframe responded */
-				case SetupIframeServerResponseAck:
+				case JsonRpcMethodsFromChild.SetupIframeServerResponseAck:
 					/* Send all inputs when a client has registered.*/
-					var params :SetupIframeClientAckData = jsonrpc.params;
-					var metaframe = getMetaframeOrPlugin(jsonrpc.iframeId);
-					metaframe.registered(params.version);
+					var params = jsonrpc.params as SetupIframeClientAckData<any>;
+					var metaframe = this.getMetaframeOrPlugin(jsonrpc.iframeId);
+					metaframe.register(params.version);
+					break;
 
-				case OutputsUpdate:
+				case JsonRpcMethodsFromChild.OutputsUpdate:
 					var metaframeId :MetaframeId = jsonrpc.iframeId;
 					var outputs :MetaframeInputMap = jsonrpc.params;
 
-					if (debug) log('outputs ${outputs} from ${metaframeId}');
+					if (this.debug) this.log(`outputs ${outputs} from ${metaframeId}`);
 
-					if (this._metaframes.exists(metaframeId)) {
-						var iframe = this._metaframes.get(metaframeId);
+					if (this._metaframes[metaframeId]) {
+						var iframe = this._metaframes[metaframeId];
 
 						// set the internal state, no event yet
-						setOutputStateOnly(metaframeId, outputs);
+						this.setOutputStateOnly(metaframeId, outputs);
 						// iframe outputs, metaframe only event sent
 						iframe.setOutputs(outputs);
 						// now sent metapage event
@@ -792,38 +784,39 @@ export class Metapage extends EventEmitter
 						
 						// cached lookup of where those outputs are going
 						var modified = false;
-						for (outputKey in outputs.keys()) {
-							var targets = getInputsFromOutput(metaframeId, outputKey);
+						Object.keys(outputs).forEach(outputKey => {
+							const targets = this.getInputsFromOutput(metaframeId, outputKey);
 							if (targets.length > 0) {
-								for (outputSet in targets) {
+								Object.keys(targets).forEach(id => {
+									const outputSet = targets[id];
 									var inputBlob :MetaframeInputMap = {};
-									inputBlob.set(outputSet.pipe, outputs.get(outputKey));
+									inputBlob[outputSet.pipe] = outputs[outputKey];
 									// update the metapage state first (no events)
-									setInputStateOnly(outputSet.metaframe, outputSet.pipe, outputs.get(outputKey));
+									this.setInputStateOnly(outputSet.metaframe, outputSet.pipe, outputs[outputKey]);
 									// setting the individual inputs sends an event
-									this._metaframes.get(outputSet.metaframe).setInputs(inputBlob);
+									this._metaframes[outputSet.metaframe].setInputs(inputBlob);
 									modified = true;
-								}
+								});
 							}
-						}
+						});
 						// only send a state event if downstream inputs were modified
 						if (modified) {
 							this.emit(MetapageEvents.State, this._state);
 						}
-						if (debug) {
-							iframe.ack({jsonrpc:jsonrpc, state:_state});
+						if (this.debug) {
+							iframe.ack({jsonrpc:jsonrpc, state:this._state});
 						}
-					} else if (this._plugins.exists(metaframeId)) {
+					} else if (this._plugins[metaframeId]) {
 						// the metapage state special pipes (definition and global state)
 						// are not persisted in the plugin state
-						var outputPersistanceAllowed = outputs[METAPAGE_KEY_STATE] == null && outputs[METAPAGE_KEY_DEFINITION] == null;
+						const outputPersistanceAllowed = !outputs[METAPAGE_KEY_STATE] && !outputs[METAPAGE_KEY_DEFINITION];
 						if (outputPersistanceAllowed) {
-							setOutputStateOnly(metaframeId, outputs);
+							this.setOutputStateOnly(metaframeId, outputs);
 						}
 						// it might not seem meaningful to set the plugin outputs, since plugin outputs
 						// do not flow into other plugin inputs. However, the outputs are specifically
 						// listened to, for the purposes of e.g. setting the definition or state
-						this._plugins.get(metaframeId).setOutputs(outputs);
+						this._plugins[metaframeId].setOutputs(outputs);
 
 						// TODO: question
 						// I'm not sure if plugin outputs should trigger a state event, since it's not
@@ -831,134 +824,140 @@ export class Metapage extends EventEmitter
 						if (outputPersistanceAllowed) {
 							this.emit(MetapageEvents.State, this._state);
 						}
-						if (debug) {
-							this._plugins.get(metaframeId).ack({jsonrpc:jsonrpc, state:_state});
+						if (this.debug) {
+							this._plugins[metaframeId].ack({jsonrpc:jsonrpc, state:this._state});
 						}
 					} else {
-						error('missing metaframe/plugin=$metaframeId');
+						this.error(`missing metaframe/plugin=$metaframeId`);
 					}
 
-				case InputsUpdate:
+				case JsonRpcMethodsFromChild.InputsUpdate:
 					// logInternal("metapage InputsUpdate " + JSON.stringify(jsonrpc, null, "  "));
 					// This is triggered by the metaframe itself, meaning the metaframe
 					// decided to save this state info.
 					// We store it in the local state, then send it back so 
 					// the metaframe is notified of its input state.
 					var metaframeId :MetaframeId = jsonrpc.iframeId;
-#if jsondiff
-					logDiff = getDiffRelease('${metaframeId}: ${method}');
-#end
+// #if jsondiff
+// 					logDiff = getDiffRelease('${metaframeId}: ${method}');
+// #end
 					var inputs :MetaframeInputMap = jsonrpc.params;
-					if (debug) log('inputs ${inputs} from ${metaframeId}');
-					if (this._metaframes.exists(metaframeId)) {
+					if (this.debug) this.log(`inputs ${inputs} from ${metaframeId}`);
+					if (this._metaframes[metaframeId]) {
 
 						// Set the internal inputs state first so that anything that
 						// responds to events will get the updated state if requested
 						// Currently on for setting metaframe inputs that haven't loaded yet
-						// logInternal('metaframe ${metaframeId} setInputStateOnly ');
-						setInputStateOnly(metaframeId, inputs);
+						// logInternal('metaframe ${metaframeId} _metaframes[metaframeId] ');
+						this.setInputStateOnly(metaframeId, inputs);
 
-						switch(this._metaframes.get(metaframeId).version) {
+						switch(this._metaframes[metaframeId].version) {
 							// These old versions create a circular loop of inputs updating
 							// if you just set the inputs here. Those internal metaframes
 							// already have notified their own listeners, so just emit
 							// events but do not process the inputs further
 							// Emitting the events causes the internal state to get updated.
-							case V0_0_1,V0_1_0:
-								this._metaframes.get(metaframeId).emit(MetapageEvents.Inputs, inputs);
+							case Versions.V0_0_1:
+							case Versions.V0_1_0:
+								this._metaframes[metaframeId].emit(MetapageEvents.Inputs, inputs);
 								if (this.isListeners(MetapageEvents.Inputs)) {
 									var metaframeInputs :MetapageInstanceInputs = {};
 									metaframeInputs[metaframeId] = inputs;
 									this.emit(MetapageEvents.Inputs, metaframeInputs);
 								}
+								break;
 							default:
 								// New versions can safely set their inputs here, their
 								// own internal listeners have not yet been notified.
 								// logInternal('metaframe ${metaframeId} setInputs ' + JSON.stringify(inputs, null, "  "));
-								this._metaframes.get(metaframeId).setInputs(inputs);
+								this._metaframes[metaframeId].setInputs(inputs);
+								break;
 						}
 						this.emit(MetapageEvents.State, this._state);
-						if (debug) {
-							this._metaframes.get(metaframeId).ack({jsonrpc:jsonrpc, state:_state});
+						if (this.debug) {
+							this._metaframes[metaframeId].ack({jsonrpc:jsonrpc, state:this._state});
 						}
 						
-					} else if (this._plugins.exists(metaframeId)) {
+					} else if (this._plugins[metaframeId]) {
 						// the metapage state special pipes (definition and global state)
 						// are not persisted in the plugin state
-						var inputPersistanceAllowed = inputs[METAPAGE_KEY_STATE] == null && inputs[METAPAGE_KEY_DEFINITION] == null;
+						const inputPersistanceAllowed = !inputs[METAPAGE_KEY_STATE] && !inputs[METAPAGE_KEY_DEFINITION];
 						if (inputPersistanceAllowed) {
-							setInputStateOnly(metaframeId, inputs);
+							this.setInputStateOnly(metaframeId, inputs);
 						}
-						this._plugins.get(metaframeId).setInputs(inputs);
+						this._plugins[metaframeId].setInputs(inputs);
 						if (inputPersistanceAllowed) {
 							this.emit(MetapageEvents.State, this._state);
 						}
-						if (debug) {
-							this._plugins.get(metaframeId).ack({jsonrpc:jsonrpc, state:_state});
+						if (this.debug) {
+							this._plugins[metaframeId].ack({jsonrpc:jsonrpc, state:this._state});
 						}
 					} else {
-						Browser.window.console.error('InputsUpdate failed no metaframe or plugin id: "${metaframeId}""');
-						error('InputsUpdate failed no metaframe or plugin id: "${metaframeId}""');
+						console.error(`InputsUpdate failed no metaframe or plugin id: "${metaframeId}"`);
+						this.error(`InputsUpdate failed no metaframe or plugin id: "${metaframeId}"`);
 					}
-				case PluginRequest:
+				case JsonRpcMethodsFromChild.PluginRequest:
 					var pluginId = jsonrpc.iframeId;
-#if jsondiff
-					logDiff = getDiffRelease('${pluginId}: ${method}');
-#end
+// #if jsondiff
+// 					logDiff = getDiffRelease('${pluginId}: ${method}');
+// #end
 					if (this._plugins[pluginId] != null && this._plugins[pluginId].hasPermissionsState()) {
 						this._plugins[pluginId].setInput(METAPAGE_KEY_STATE, this._state);
-						if (debug) {
-							this._plugins.get(pluginId).ack({jsonrpc:jsonrpc, state:_state});
+						if (this.debug) {
+							this._plugins[pluginId].ack({jsonrpc:jsonrpc, state:this._state});
 						}
 					}
 				default:
-					if (debug) {
-						log('Unknown RPC method: "${method}"');
+					if (this.debug) {
+						this.log(`Unknown RPC method: "${method}"`);
 					}
 			}
-#if jsondiff
-			if (logDiff != null) logDiff();
-#end
+// #if jsondiff
+// 			if (logDiff != null) logDiff();
+// #end
 
 			this.emit(OtherEvents.Message, jsonrpc);
 		}
 	}
 	
-	function logInternal(o :any, ?color :string, ?backgroundColor :string, ?pos:haxe.PosInfos)
+	logInternal(o :any, color ?:string, backgroundColor ?:string)
 	{
 		backgroundColor = backgroundColor != null ? backgroundColor : this._consoleBackgroundColor;
-		var s :string = switch(typeof(o)) {
-			case "string": cast o;
-			case "number": o + "";
-			default: JSON.stringify(o);
+		let s :string;
+		if (typeof(o) === 'string') {
+			s = o as string;
+		} else if (typeof(o) === 'number') {
+			s = o + "";
+		} else {
+			s = JSON.stringify(o);
 		}
-		s = this._id != null ? 'Metapage[$_id] $s' : s;
-		MetapageTools.log(s, color, backgroundColor, pos);
+		s = this._id != null ? `Metapage[${this._id}] ${s}` : s;
+		MetapageToolsLog(s, color, backgroundColor);
 	}
 
-#if jsondiff
-	// get the state, and log the diff on the callback
-	function getDiffRelease(label :string) :void=>void
-	{
-		var mp = this;
-		var state = JSON.parse(JSON.stringify(mp.getState()));
-		return function() {
-			var newState = mp.getState();
-			Browser.console.log(label + ': '+ JSONDiff.diffstring(state, newState));
-		};
-	}
-}
+// #if jsondiff
+// 	// get the state, and log the diff on the callback
+// 	function getDiffRelease(label :string) :void=>void
+// 	{
+// 		var mp = this;
+// 		var state = JSON.parse(JSON.stringify(mp.getState()));
+// 		return function() {
+// 			var newState = mp.getState();
+// 			Browser.console.log(label + ': '+ JSONDiff.diffstring(state, newState));
+// 		};
+// 	}
+// }
 
-@:jsRequire("json-diff")
-extern class JSONDiff
-{
-    // @:selfCall
-    public static function diffstring(v1 :any, v2 :any) :string;
+// @:jsRequire("json-diff")
+// extern class JSONDiff
+// {
+//     // @:selfCall
+//     public static function diffstring(v1 :any, v2 :any) :string;
 	
+// }
+// #else
 }
-#else
-}
-#end
+// #end
 
 
 class IFrameRpcClient extends EventEmitter
@@ -1003,7 +1002,7 @@ class IFrameRpcClient extends EventEmitter
 
 		// Add the custom URL params
 		var urlBlob = new js.html.URL(this.url);
-		if (debug) {
+		if (this.debug) {
 			urlBlob.searchParams.set(URL_PARAM_DEBUG, '1');
 		}
 		this.url = urlBlob.href;
@@ -1118,7 +1117,7 @@ class IFrameRpcClient extends EventEmitter
 		}
 		var url = this.getDefinitionUrl();
 
-		return Browser.window.fetch(url)
+		return window.fetch(url)
 			.then(function(response) {
 				return response.json();
 			})
@@ -1142,7 +1141,7 @@ class IFrameRpcClient extends EventEmitter
 	var this._cachedEventInputsUpdate = {iframeId:null,inputs:null};
 	public setInputs(maybeNewInputs :MetaframeInputMap) :IFrameRpcClient
 	{
-		// log({m:'IFrameRpcClient', inputs:maybeNewInputs});
+		// this.log({m:'IFrameRpcClient', inputs:maybeNewInputs});
 		if (!this.inputs.merge(maybeNewInputs)) {
 			return this;
 		}
@@ -1246,7 +1245,7 @@ class IFrameRpcClient extends EventEmitter
 		this.iframe = null;
 		this._bufferMessages = null;
 		if (this._bufferTimeout != null) {
-			Browser.window.clearInterval(this._bufferTimeout);
+			window.clearInterval(this._bufferTimeout);
 			this._bufferTimeout = null;
 		}
 		this._metapage = null;
@@ -1293,7 +1292,7 @@ class IFrameRpcClient extends EventEmitter
 		if (this._sendInputsAfterRegistration) {
 			sendInputs(this.inputs);
 		}
-		// log('registered version=${this.version}');
+		// this.log('registered version=${this.version}');
 	}
 
 	function sendInputs(inputs :MetaframeInputMap)
@@ -1325,7 +1324,7 @@ class IFrameRpcClient extends EventEmitter
 		}
 	}
 
-	public log(o :any, ?pos:haxe.PosInfos)
+	public this.log(o :any, ?pos:haxe.PosInfos)
 	{
 		if (!this._debug) {
 			return;
@@ -1368,12 +1367,12 @@ class IFrameRpcClient extends EventEmitter
 		} else {
 			if (this._bufferMessages == null) {
 				this._bufferMessages = [message];
-				this._bufferTimeout = Browser.window.setInterval(function() {
+				this._bufferTimeout = window.setInterval(function() {
 					if (this.iframe.contentWindow != null) {
 						for (m in this._bufferMessages) {
 							this.iframe.contentWindow.postMessage(m, this.url);
 						}
-						Browser.window.clearInterval(this._bufferTimeout);
+						window.clearInterval(this._bufferTimeout);
 						this._bufferTimeout = null;
 						this._bufferMessages = null;
 					}
