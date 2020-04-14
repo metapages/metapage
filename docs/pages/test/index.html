@@ -52,7 +52,7 @@ var head = document.getElementsByTagName('head').item(0);
 var script = document.createElement('script');
 script.setAttribute('type', 'text/javascript');
 if (VERSION == 'latest') {
-    script.setAttribute('src', `/js/metapage/browser.js`);
+    script.setAttribute('src', `/js/Metapage.js`);
 } else {
     let minSuffix = '';
   if (!VERSION.startsWith('latest') && debug && window.compareVersions(VERSION, '0.3.4') >= 0) {

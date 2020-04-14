@@ -58,8 +58,8 @@ ADD justfile ./justfile
 
 
 
-# FROM shell-haxe as test
-# # For running tests. The container cannot mount in files at runtime (Google Cloud Build) so add everything now
-# ADD ./etc ./etc
-# ADD ./Makefile ./Makefile
-# ADD ./test ./test
+FROM shell-haxe as test
+# For running tests. The container cannot mount in files at runtime (Google Cloud Build) so add everything now
+ADD ./etc ./etc
+ADD ./Makefile ./Makefile
+ADD ./test ./test
