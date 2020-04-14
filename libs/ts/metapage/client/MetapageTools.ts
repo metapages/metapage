@@ -170,6 +170,6 @@ export const hashCode = (str : string): number => { // java string#hashCode
 };
 
 export const intToRGB = (i : number): string => {
-  var c = (i & 0x00ffffff).tostring(16).toUpperCase();
+  var c = (i & 0x00ffffff).toString(16).toUpperCase();
   return "00000".substring(0, 6 - c.length) + c;
 };

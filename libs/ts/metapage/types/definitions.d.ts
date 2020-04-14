@@ -1,1 +1,2 @@
-// typedef JSMap<K:string,V>=util.TypedanyAccess<K,V>;
+declare module 'minimatch';
+declare module 'compare-versions';

@@ -1,22 +1,19 @@
 {
     "name": "metapage",
-    "version": "0.4.3",
+    "version": "0.5.0",
     "description": "Connect web pages together",
     "repository": "https://github.com/dionjwa/metapage",
     "homepage": "https://metapages.org/",
     "main": "index.js",
     "dependencies": {
-        "compare-versions": "^3.4.0",
+        "compare-versions": "^3.6.0",
         "minimatch": "^3.0.4",
         "typescript": "^3.7.3"
     },
     "devDependencies": {
-        "haxe-loader": "^0.9.0",
         "json-diff": "^0.5.4",
         "parcel-bundler": "^1.12.4",
-        "puppeteer": "^1.11.0",
-        "webpack": "^4.29.0",
-        "webpack-cli": "^3.3.5"
+        "puppeteer": "^1.11.0"
     },
     "keywords": [
         "iframe",

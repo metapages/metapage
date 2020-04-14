@@ -76,7 +76,7 @@ export class Metaframe extends EventEmitter {
     window.addEventListener("message", this.onWindowMessage);
 
     //Get ready, request the parent to register to establish messaging pipes
-    this.ready = new Promise(function (resolve, reject) {
+    this.ready = new Promise(function (resolve, _) {
       // First listen to the parent metapage response
       this.once(JsonRpcMethodsFromParent.SetupIframeServerResponse, function (params : SetupIframeServerResponseData) {
         if (this._iframeId == null) {
@@ -124,7 +124,7 @@ export class Metaframe extends EventEmitter {
         }
       });
       // Now that we're listening, request to the parent to register us
-      sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {version: version});
+      this.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {version: this.version});
     });
   }
 
@@ -320,7 +320,7 @@ export class Metaframe extends EventEmitter {
               this.log("ACK: ${Json.stringify(jsonrpc)}");
             break;
           default:
-            if (debug) 
+            if (this.debug) 
               this.log("window.message: unknown JSON-RPC method: ${Json.stringify(jsonrpc)}");
             break;
         }

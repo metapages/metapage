@@ -116,4 +116,4 @@ export enum MetapageVersionLayoutType {
   gridlayout = "gridlayout"
 }
 
-export interface MetapageInstanceInputs { [key: string]: MetaframeInstance; } ;
+export interface MetapageInstanceInputs { [key: string]: MetaframeInputMap; } ;
