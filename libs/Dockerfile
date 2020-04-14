@@ -34,25 +34,13 @@ RUN npm install -g nodemon
 # Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
 ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
 
-# Install the 3rd party dependencies into the root
-# because we cannot use the dependencies if they are
-# mounted into the same root folder as the codebase.
-# So they are installed into a place easy to remember
-# to mount from.
-# The mounting happens in cloudbuild.yaml
-# and is simply symlinking /node_modules and /.haxelib to /workspace
-# This is done with `make set-context-container`
-WORKDIR /workspace
+WORKDIR /workspace/libs
 ADD package.json ./
 ADD package-lock.json ./
 RUN npm i
 
-ADD build-base.hxml ./
-# If this changes, also change etc/makefiles/haxe.mk
-RUN haxelib newrepo && haxelib install --always build-base.hxml
-
-
-ADD src ./src
+ADD ts ./ts
+ADD tsconfig.json ./tsconfig.json
 ADD justfile ./justfile
 
 # Best to remove these so other scripts cannot possibly be confused

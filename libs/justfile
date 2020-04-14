@@ -3,23 +3,36 @@
 
 parcel          := "node_modules/parcel-bundler/bin/cli.js"
 
+# When developing, watch+build the libs in the following dir
+# as e.g. docs/js/Metapage.js. This is served by jekyll and 
+# runs the tests. Will move this docs dependency soon.
+dev_out_dir     := "../docs/js"
+
 help:
     @just --list
 
-# Build the production distribution
-build: build-npm-metaframe build-npm-metapage
+# TODO: remove the jekyll dependency, and just create a static page to serve
+# Run tests, expects jekyll running to serve the page
+test:
+	node test/test.js
 
-# Build npm package in build/metaframe
-build-npm-metaframe:
-    {{parcel}} build ts/metapage/client/Metaframe.ts --out-dir build/metaframe
+# Build the production distributions in build/metaframe and build/metapage
+build: _cleandev
+	{{parcel}} build ts/metapage/client/Metaframe.ts --out-dir build/metaframe
+	{{parcel}} build ts/metapage/client/Metapage.ts --out-dir build/metapage
 
-# Build npm package in build/metapage
-build-npm-metapage:
-    {{parcel}} build ts/metapage/client/Metapage.ts --out-dir build/metapage
+	@# copy production builds to the (dev+docs+test) dir
+	cp -r build/metaframe/* {{dev_out_dir}}/
+	cp -r build/metapage/* {{dev_out_dir}}/
 
 # watch for file changes, building on change.
-watch:
-    {{parcel}} watch ts/metapage/client/Metaframe.ts ts/metapage/client/Metapage.ts
+watch: _cleandev
+    {{parcel}} watch ts/metapage/client/Metaframe.ts ts/metapage/client/Metapage.ts --out-dir {{dev_out_dir}}
+
+@_cleandev:
+	mkdir -p {{dev_out_dir}}
+	rm -rf {{dev_out_dir}}/Metapage*
+	rm -rf {{dev_out_dir}}/Metaframe*
 
 # Write library versions to the place where jekyll can consume:
 # docs/_data/versions.yml

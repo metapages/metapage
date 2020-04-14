@@ -1,0 +1,1 @@
+ - remove dependency of `libs/` on `docs/` by moving the test in `docs/pages/test` into `libs/`. but the templating will need to be redone, and that requires research. see `libs/just test`.

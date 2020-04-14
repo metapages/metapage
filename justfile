@@ -9,8 +9,8 @@ ci:
     ci --list
 
 # Run the stack, defaulting to all. Just target "jekyll" for a minimal server  metapage-app
-run +TARGET='jekyll proxy shell-haxe test':
-    docker-compose up --remove-orphans {{TARGET}}
+up +services='':
+    docker-compose up --remove-orphans {{services}}
 
 # Builds the npm libraries. Requires 'just run shell-haxe'
 build:
