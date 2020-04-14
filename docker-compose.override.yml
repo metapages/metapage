@@ -9,9 +9,8 @@ services:
       - ./docs:/docs
       - ./libs/build:/workspace/build
       - ./libs/etc:/workspace/etc
-      - ./libs/src:/workspace/src
+      - ./libs/ts:/workspace/ts
       - ./libs/test:/workspace/test
-      - ./libs/.haxelib:/workspace/.haxelib
       - ./libs/build-base.hxml:/workspace/build-base.hxml
       - ./libs/build-metaframe.hxml:/workspace/build-metaframe.hxml
       - ./libs/build-metapage.hxml:/workspace/build-metapage.hxml

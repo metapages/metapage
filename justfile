@@ -126,6 +126,5 @@ Reminders:
 
     Last task and commands:
     - converting to typescript and use parcel to package
-    - commands: just libs/watch, then fix the errors!
+    - commands: just up, make sure all docker-compose paths are correct, then get tests working.
 '
-
