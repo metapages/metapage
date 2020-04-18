@@ -14,8 +14,8 @@ cli:
         just _mkcert; \
     fi
 
-
 clean:
+    just libs/clean
     rm -rf apps/https/conf.d/certs/*
 
 # Run the stack, defaulting to all. Just target "jekyll" for a minimal server  metapage-app

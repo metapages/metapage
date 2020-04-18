@@ -2,13 +2,16 @@
 help:
     @just --list
 
+# watch all files and rebuild the tests and run them, on every change
 watch:
-    watchexec --exts js,json,html --ignore node_modules --ignore page/index.html just test
+    watchexec --exts js,json,html --ignore node_modules --ignore page/index.html --restart -- just test
 
+# run the tests, every metapage lib using every metaframe lib
 test:
     node test.js
 
 export NODE_PATH := `pwd`+ "/../node_modules"
+# generates the test index.html from a template, processing all the valid npm lib versions
 generate:
     #!/usr/bin/env node
     const path = require('path'); const lib = require(path.join(process.cwd(), './lib'));

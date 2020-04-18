@@ -18,6 +18,7 @@
     Each metaframe sends 
  -->
 
+
 <head>
     <script src="/js/compare-versions-3.4.0.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flexboxgrid/6.3.1/flexboxgrid.min.css" type="text/css">
@@ -381,7 +382,7 @@ window.onload = function() {
     // and sending to the parent metapage
     VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
         versionMetaframe = versionMetaframe == 'latest' && index == 0 ? 'latestFirst' : versionMetaframe;
-        let url = `/metaframes/test/?VERSION=${versionMetaframe}`;
+        let url = `/metaframe/?VERSION=${versionMetaframe}`;
         if (urlParams.has('MP_DEBUG') || urlParams.has('DEBUG') || urlParams.has('MF_DEBUG')) {
             url += '&MP_DEBUG';
         }

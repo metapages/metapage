@@ -6,7 +6,7 @@ parcel          := "node_modules/parcel-bundler/bin/cli.js"
 # When developing, watch+build the libs in the following dir
 # as e.g. docs/js/Metapage.js. This is served by jekyll and 
 # runs the tests. Will move this docs dependency soon.
-dev_out_dir     := "../docs/js"
+dev_out_dir     := "test/page/js/"
 
 help:
     @just --list
@@ -21,28 +21,33 @@ generate:
 	console.log('sfsf')
 
 # Build the production distributions in build/metaframe and build/metapage
-build: _cleandev
+build: clean
 	{{parcel}} build ts/metapage/client/Metaframe.ts --out-dir build/metaframe
 	{{parcel}} build ts/metapage/client/Metapage.ts --out-dir build/metapage
 
 	@# copy production builds to the (dev+docs+test) dir
 	cp -r build/metaframe/* {{dev_out_dir}}/
 	cp -r build/metapage/* {{dev_out_dir}}/
+	cp -r build/metapage/Metapage* test/page/js/
+	cp -r build/metapage/Metaframe* test/page/js/
+
 
 # watch for file changes, building on change.
-watch: _cleandev
-    {{parcel}} watch ts/metapage/client/Metaframe.ts ts/metapage/client/Metapage.ts --out-dir {{dev_out_dir}}
+watch out="{{dev_out_dir}}": clean
+    {{parcel}} watch ts/metapage/client/Metaframe.ts ts/metapage/client/Metapage.ts --out-dir {{out}}
 
-@_cleandev:
+@clean:
 	mkdir -p {{dev_out_dir}}
 	rm -rf {{dev_out_dir}}/Metapage*
 	rm -rf {{dev_out_dir}}/Metaframe*
+	rm -rf test/page/js/Metapage*
+	rm -rf test/page/js/Metaframe*
 
 # Write library versions to the place where jekyll can consume:
 # docs/_data/versions.yml
 _versions-write-versions-to-jekyll:
 	#!/usr/bin/env node
-	var Versions = require(process.cwd() + '/test/versions.js');
+	var lib = require(process.cwd() + '/test/lib.js');
 	var fs = require('fs');
-	var p = Versions.getMetapageVersions(true);
+	var p = lib.getMetapageVersions(true);
 	p.then((versions) => { var out = 'versions: ' + JSON.stringify(versions); console.log('./docs/_data/versions.yml:\n' + out + '\n'); fs.writeFileSync('/docs/_data/versions.yml', out + '\n')});

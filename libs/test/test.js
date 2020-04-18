@@ -9,10 +9,6 @@ const timePerTest = 5000;
 let server;
 let serverPort = 3000;
 
-const getMetapageTestUrl = (version) => {
-  const host = isContainer ? 'http://docs:4000' : 'http://localhost:4000'; 
-  return `${host}/tests/?VERSION=${version}${debugMetapage ? "&MP_DEBUG" : ""}`;
-}
 
 async function runSingleMetapageTest(version, timeout) {
   console.log(`\n\nRUNNING TEST: ${version} timeout:${timeout / 1000}s`);
@@ -82,21 +78,27 @@ const createServer = async () => {
   }
 }
 
+const getMetapageTestUrl = (version) => {
+  return `http://localhost:${serverPort}/tests/?VERSION=${version}${debugMetapage ? "&MP_DEBUG" : ""}`;
+}
+
 (async () => {
   
   await createServer();
+  await lib.generate();
 
   let allVersions = await lib.getMetapageVersions();
-  // allVersions.push('latest');
+  allVersions.push('latest');
+  console.log('allVersions', allVersions);
 
-  // const maxTimeAllTests = timePerTest * allVersions.length ** 2;
-  // console.log(`Timeout: ${maxTimeAllTests / 1000}s`);
-  // const timeout = setTimeout(() => {
-  //   console.log('☢☢☢☢☢☢☢☢☢☢   FAIL: tests timed out!   ☢☢☢☢☢☢☢☢☢☢');
-  //   process.exit(1);
-  // }, maxTimeAllTests);
+  const maxTimeAllTests = timePerTest * allVersions.length ** 2;
+  console.log(`Timeout: ${maxTimeAllTests / 1000}s`);
+  const timeout = setTimeout(() => {
+    console.log('☢☢☢☢☢☢☢☢☢☢   FAIL: tests timed out!   ☢☢☢☢☢☢☢☢☢☢');
+    process.exit(1);
+  }, maxTimeAllTests);
 
-  // console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('docs', 'localhost')).join("\n  ")}`);
+  console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('docs', 'localhost')).join("\n  ")}`);
 
   // // run tests sequentially, not concurrently
   // await (async () => {
