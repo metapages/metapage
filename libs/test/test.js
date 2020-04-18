@@ -1,6 +1,6 @@
 const fs = require('fs');
 const puppeteer = require('puppeteer');
-const versions = require('./versions');
+const lib = require('./lib');
 
 const debugMetapage = false;
 const consoleToLogs = false;
@@ -86,7 +86,7 @@ const createServer = async () => {
   
   await createServer();
 
-  // let allVersions = await versions.getMetapageVersions();
+  let allVersions = await lib.getMetapageVersions();
   // allVersions.push('latest');
 
   // const maxTimeAllTests = timePerTest * allVersions.length ** 2;

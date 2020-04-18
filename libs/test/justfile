@@ -2,6 +2,12 @@
 help:
     @just --list
 
+watch:
+    watchexec --exts js,json,html --ignore node_modules --ignore page/index.html just test
+
+test:
+    node test.js
+
 export NODE_PATH := `pwd`+ "/../node_modules"
 generate:
     #!/usr/bin/env node
