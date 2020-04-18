@@ -8,7 +8,7 @@ const isContainer = fs.existsSync('/.dockerenv');
 const timePerTest = 5000
 
 const getMetapageTestUrl = (version) => {
-  const host = isContainer ? 'http://jekyll:4000' : 'http://localhost:4000'; 
+  const host = isContainer ? 'http://docs:4000' : 'http://localhost:4000'; 
   return `${host}/tests/?VERSION=${version}${debugMetapage ? "&MP_DEBUG" : ""}`;
 }
 
@@ -71,7 +71,7 @@ async function runSingleMetapageTest(version, timeout) {
     process.exit(1);
   }, maxTimeAllTests);
 
-  console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('jekyll', 'localhost')).join("\n  ")}`);
+  console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('docs', 'localhost')).join("\n  ")}`);
 
   // run tests sequentially, not concurrently
   await (async () => {

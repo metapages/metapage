@@ -1,0 +1,18 @@
+windows:
+  - name: sample-three-panes
+  - root: ~
+    pre: cwd=$(pwd)
+    layout: main-vertical
+    panes:
+      - name: 'docker-compose'
+        commands:
+        - just down
+        - just build
+        - just up
+        # - lzd
+      - name: 'git'
+        commands:
+        - git status
+      - name: 'test'
+        commands:
+        - ls

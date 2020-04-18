@@ -4,17 +4,41 @@ help:
     @just --list
     @echo "{{HELP}}"
 
+# create the single iterm window with all the views https://github.com/TomAnthony/itermocil
+cli:
+    itermocil --here --layout .iTermocil.yml
+
+# Run the stack, defaulting to all. Just target "jekyll" for a minimal server  metapage-app
+up +args='--remove-orphans -d':
+    docker-compose up {{args}}
+
+# Bring the stack down
+down +args='':
+    docker-compose down {{args}}
+
+build +args='':
+    docker-compose build {{args}}
+
+
+
+
+
+
+
+
+
+#old stuff
+
+
 # List further ci tasks
 ci: 
     ci --list
 
-# Run the stack, defaulting to all. Just target "jekyll" for a minimal server  metapage-app
-up +services='':
-    docker-compose up --remove-orphans {{services}}
+
 
 # Builds the npm libraries. Requires 'just run shell-haxe'
-build:
-    docker-compose run shell-haxe just build
+# build:
+#     docker-compose run shell-haxe just build
 
 test:
     ci test

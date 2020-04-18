@@ -27,7 +27,7 @@ services:
 
   test:
     depends_on:
-      jekyll:
+      docs:
         condition: service_healthy
     build:
       context: ./libs
@@ -39,14 +39,14 @@ services:
     networks:
       - bridge
 
-  jekyll:
-    image: gcr.io/t9-docker-images/metapage:jekyll
+  docs:
+    image: gcr.io/t9-docker-images/metapage:docs
     build:
       context: ./docs
       args:
         JEKYLL_GITHUB_TOKEN: ${JEKYLL_GITHUB_TOKEN}
       cache_from:
-        - gcr.io/t9-docker-images/metapage:jekyll
+        - gcr.io/t9-docker-images/metapage:docs
     command: jekyll serve --watch --force_polling --config _config.yml
     ports:
       - "4000:${PORT_METAPAGE:-4000}"

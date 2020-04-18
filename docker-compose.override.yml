@@ -29,22 +29,8 @@ services:
       - ./libs/etc:/workspace/etc
       - ./libs/test:/workspace/test
 
-  jekyll:
+  docs:
     command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
     volumes:
       - ./docs:/workspace
 
-  # By prepending any external urls with http://localhost:3000
-  # e.g. http://localhost:3000/https://app.metapages.org/
-  # we can transparently proxy metapages so they are all http
-  # and cors won't break everything
-  # If you change PORT_PROXY you'll need set the same port change in app-metapage-local
-  proxy:
-    image: imjacobclark/cors-container
-    environment:
-     - "PORT=${PORT_PROXY:-3000}"
-     - "JEKYLL_ENV=development"
-    ports:
-      - "${PORT_PROXY:-3000}:${PORT_PROXY:-3000}"
-    networks:
-      - bridge
