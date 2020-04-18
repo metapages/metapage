@@ -6,4 +6,4 @@ tmp/
 site
 dist
 build
-# test/page/index.html
+test/page/index.html
