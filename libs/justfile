@@ -14,7 +14,11 @@ help:
 # TODO: remove the jekyll dependency, and just create a static page to serve
 # Run tests, expects jekyll running to serve the page
 test:
-	node test/test.js
+	# node test/test.js
+
+generate:
+	#!/usr/bin/env node
+	console.log('sfsf')
 
 # Build the production distributions in build/metaframe and build/metapage
 build: _cleandev

@@ -1,5 +1,13 @@
 #Controls logic for changing asset urls
 environment: development
+# port: 4000
+# host: metapages.local
+# baseurl: metapages.local
+host: metapages.local
+port: 4000
+url: https://metapages.local
+
+
 
 jekyll_tidy:
   # exclude: ["index.html"]

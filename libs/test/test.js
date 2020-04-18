@@ -5,7 +5,9 @@ const versions = require('./versions');
 const debugMetapage = false;
 const consoleToLogs = false;
 const isContainer = fs.existsSync('/.dockerenv');
-const timePerTest = 5000
+const timePerTest = 5000;
+let server;
+let serverPort = 3000;
 
 const getMetapageTestUrl = (version) => {
   const host = isContainer ? 'http://docs:4000' : 'http://localhost:4000'; 
@@ -58,27 +60,50 @@ async function runSingleMetapageTest(version, timeout) {
   console.log(`☘☘☘☘☘☘☘☘☘☘☘   SUCCESS version:${version}   ☘☘☘☘☘☘☘☘☘☘☘ `); 
 }
 
+// serve the pages to the puppeteer browser
+const createServer = async () => {
+  if (server) {
+    await server.close();
+  }
+  server = require('fastify')({ logger: true })
+  const path = require('path')
+
+  server.register(require('fastify-static'), {
+    root: path.join(__dirname, 'page'),
+    prefix: '/', // optional: default '/'
+  })
+
+  try {
+    await server.listen(serverPort)
+    server.log.info(`server listening on ${server.server.address().port}`)
+  } catch (err) {
+    server.log.error(err)
+    process.exit(1)
+  }
+}
+
 (async () => {
   
+  await createServer();
 
-  let allVersions = await versions.getMetapageVersions();
-  allVersions.push('latest');
+  // let allVersions = await versions.getMetapageVersions();
+  // allVersions.push('latest');
 
-  const maxTimeAllTests = timePerTest * allVersions.length ** 2;
-  console.log(`Timeout: ${maxTimeAllTests / 1000}s`);
-  const timeout = setTimeout(() => {
-    console.log('☢☢☢☢☢☢☢☢☢☢   FAIL: tests timed out!   ☢☢☢☢☢☢☢☢☢☢');
-    process.exit(1);
-  }, maxTimeAllTests);
+  // const maxTimeAllTests = timePerTest * allVersions.length ** 2;
+  // console.log(`Timeout: ${maxTimeAllTests / 1000}s`);
+  // const timeout = setTimeout(() => {
+  //   console.log('☢☢☢☢☢☢☢☢☢☢   FAIL: tests timed out!   ☢☢☢☢☢☢☢☢☢☢');
+  //   process.exit(1);
+  // }, maxTimeAllTests);
 
-  console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('docs', 'localhost')).join("\n  ")}`);
+  // console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('docs', 'localhost')).join("\n  ")}`);
 
-  // run tests sequentially, not concurrently
-  await (async () => {
-      for (let job of allVersions.map(v => () => runSingleMetapageTest(v, timePerTest * allVersions.length)))
-          await job()
-  })();
+  // // run tests sequentially, not concurrently
+  // await (async () => {
+  //     for (let job of allVersions.map(v => () => runSingleMetapageTest(v, timePerTest * allVersions.length)))
+  //         await job()
+  // })();
 
-  clearTimeout(timeout);
-  console.log(`🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀   SUCCESS Test(s) pass!   🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀`);
+  // clearTimeout(timeout);
+  // console.log(`🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀   SUCCESS Test(s) pass!   🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀`);
 })();

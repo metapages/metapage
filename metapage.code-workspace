@@ -7,6 +7,7 @@
 	"settings": {
 		"markdown-preview-enhanced.automaticallyShowPreviewOfMarkdownBeingEdited": false,
 		"search.exclude": {
+			"**/_site": true,
 			"**/.cache": true,
 			"**/build": true,
 			"**/dist": true
@@ -16,11 +17,13 @@
 			"**/build": true,
 			"**/dist": true,
 			"**/node_modules": true,
+			"docs/_site": true,
 			"libs/.cache": true
 		},
 		"files.watcherExclude": {
 			"**/.cache/**": true,
-			"**/build/**": true
+			"**/build/**": true,
+			"docs/_site/**": true
 		}
 	}
 }

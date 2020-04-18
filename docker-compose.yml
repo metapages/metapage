@@ -50,7 +50,7 @@ services:
       - default
     environment:
      - "JEKYLL_GITHUB_TOKEN=${JEKYLL_GITHUB_TOKEN}"
-     - "JEKYLL_ENV=development"
+    #  - "JEKYLL_ENV=development"
 
 
 networks:

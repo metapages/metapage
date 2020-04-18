@@ -2,7 +2,9 @@ const compareVersions = require('compare-versions');
 const fs = require('fs');
 const path = require('path');
 const util = require('util');
+const doT = require('dot');
 const exec = util.promisify(require('child_process').exec);
+doT.templateSettings.strip = false
 
 /**
  * Get all supported metapage/frame versions that we support (forever)
@@ -34,4 +36,17 @@ const getMetapageVersions = async (includeCurrent) => {
     return versions;
 }
 
-module.exports = { getMetapageVersions };
+const generate = async () => {
+    // input
+    const allVersions = await getMetapageVersions();
+    var data = { environment: "production", versions:allVersions };
+    // console.log('data', data);
+
+    const template = fs.readFileSync('./page/index.template.html');//"Hey, look over there! It's {{=it.thatThingOverThere}}!"
+    const tempFunc = doT.template(template);
+    var html = tempFunc(data);
+
+    fs.writeFileSync('./page/index.html', html);
+}
+
+module.exports = { getMetapageVersions, generate };

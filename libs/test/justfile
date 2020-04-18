@@ -1,0 +1,11 @@
+
+help:
+    @just --list
+
+export NODE_PATH := `pwd`+ "/../node_modules"
+generate:
+    #!/usr/bin/env node
+    const path = require('path'); const lib = require(path.join(process.cwd(), './lib'));
+    (async () => {
+        await lib.generate();
+    })()
