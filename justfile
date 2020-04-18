@@ -8,8 +8,18 @@ help:
 cli:
     itermocil --here --layout .iTermocil.yml
 
+# Idempotent. The local compose stack requires some host setup. If any of this fails, see the underlying commands
+@init:
+    if [ ! -f apps/https/conf.d/certs/cert-key.pem ]; then \
+        just _mkcert; \
+    fi
+
+
+clean:
+    rm -rf apps/https/conf.d/certs/*
+
 # Run the stack, defaulting to all. Just target "jekyll" for a minimal server  metapage-app
-up +args='--remove-orphans -d':
+up +args='--remove-orphans -d': init
     docker-compose up {{args}}
 
 # Bring the stack down
@@ -20,40 +30,15 @@ build +args='':
     docker-compose build {{args}}
 
 
+# DEV: generate TLS certs for HTTPS over localhost https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
+_mkcert: clean
+    mkdir -p apps/https/conf.d/certs/
+    cd apps/https/conf.d/certs/ && mkcert -cert-file cert.pem -key-file cert-key.pem metapages.local localhost
+    @echo "Don't forget to add '127.0.0.1 metapages.local' to /etc/hosts"
 
 
 
 
-
-
-
-#old stuff
-
-
-# List further ci tasks
-ci: 
-    ci --list
-
-
-
-# Builds the npm libraries. Requires 'just run shell-haxe'
-# build:
-#     docker-compose run shell-haxe just build
-
-test:
-    ci test
-
-shell:
-    docker-compose run --rm --workdir="/workspace" -v ${PWD}:/workspace shell bash
-
-shell-haxe:
-    docker-compose run --rm --workdir="/workspace" -v ${PWD}:/workspace shell-haxe sh
-
-# ci-compile: _require-docker
-#     cd libs && make compile
-
-# ci-test: ci-compile
-#     make ci-test
 
 # https://docs.npmjs.com/cli/version.html
 # npm version, git tag, and push to release a new version and publish docs

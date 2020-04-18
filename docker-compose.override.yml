@@ -1,6 +1,25 @@
 version: '2.3'
 
 services:
+
+  https:
+    image: openresty/openresty:1.15.8.3-1-buster-fat-nosse42
+    depends_on:
+      docs:
+        condition: service_healthy
+    volumes:
+      - ./apps/https/conf.d:/etc/nginx/conf.d
+    networks:
+      - default
+    ports:
+      - "${PORT_INGRESS:-443}:443"
+
+  docs:
+    command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
+    volumes:
+      - ./docs:/workspace
+
+  
   shell-haxe:
     command: just watch
     environment:
@@ -29,8 +48,5 @@ services:
       - ./libs/etc:/workspace/etc
       - ./libs/test:/workspace/test
 
-  docs:
-    command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
-    volumes:
-      - ./docs:/workspace
+  
 

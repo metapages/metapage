@@ -13,8 +13,10 @@ gitcache
 _site
 .sass-cache
 libs/build
-docs/js/meta*
 build/
+
+# The generated lib files
+docs/js/Meta*
 
 # Normally .npmrc files are tracked, but we're only using ours
 # to store the token for CI
@@ -22,3 +24,6 @@ build/
 
 # Markdeep, in case we are viewing this locally without internet
 **/markdeep.min.js
+
+# Local https certs
+apps/https/conf.d/certs

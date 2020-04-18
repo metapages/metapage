@@ -1,9 +1,5 @@
 version: '2.3'
 
-networks:
-  bridge:
-    driver: bridge
-
 services:
 
   shell:
@@ -14,7 +10,7 @@ services:
       cache_from:
         - gcr.io/t9-docker-images/metapage:shell
     networks:
-      - bridge
+      - default
 
   shell-haxe:
     image: gcr.io/t9-docker-images/metapage:shell-haxe
@@ -37,7 +33,7 @@ services:
         - gcr.io/t9-docker-images/metapage:shell-haxe
     command: ["/bin/sh", "-c", "node test/test.js"]
     networks:
-      - bridge
+      - default
 
   docs:
     image: gcr.io/t9-docker-images/metapage:docs
@@ -48,11 +44,15 @@ services:
       cache_from:
         - gcr.io/t9-docker-images/metapage:docs
     command: jekyll serve --watch --force_polling --config _config.yml
-    ports:
-      - "4000:${PORT_METAPAGE:-4000}"
+    # ports:
+    #   - "4000:${PORT_METAPAGE:-4000}"
     networks:
-      - bridge
+      - default
     environment:
      - "JEKYLL_GITHUB_TOKEN=${JEKYLL_GITHUB_TOKEN}"
      - "JEKYLL_ENV=development"
 
+
+networks:
+  default:
+    driver: bridge
