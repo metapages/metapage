@@ -47,7 +47,7 @@ generate:
 # watch for file changes, building on change.
 @watch out=dev_out_dir: clean
 	echo "✅ watching and building for test/page/js/ only"
-	watchexec --watch ts -- just _build_for_test_dev
+	watchexec --watch ts -- 'tsc && just _build_for_test_dev'
 
 clean:
 	rm -rf build

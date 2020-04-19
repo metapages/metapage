@@ -2,14 +2,15 @@
     "compilerOptions": {
       "lib": ["dom", "ES2017"],
       "target": "es6",
-      "module": "ES2020",
+      "module": "es2015",
+      "moduleResolution": "node",
       "noEmit": true,
       "removeComments": true,
       "declaration": true,
       "typeRoots": ["node_modules/@types", "ts/metapage/types"],
       "baseUrl": "ts",
       "paths": {
-        // "@definitions/*": ["metapage/v0_3/*"]
+        "@v0_2/*": ["v0_2/*"],
       }
     }
   }

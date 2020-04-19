@@ -1,4 +1,4 @@
-import {EventEmitter} from "./EventEmitter";
+import {EventEmitter, ListenerFn} from "eventemitter3";
 import {VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION} from "../Constants";
 import {Versions} from "../MetaLibsVersion";
 import {MetaframeInputMap, MetaframePipeId, MetaframeId, MetapageId} from "../v0_3/all";
@@ -27,66 +27,7 @@ export const isIframe = () :boolean => {
   }
 }
 
-/**
- * A special kind of metaframe that can get and set the metapage definition
- * and metapage state (so quite powerful).
- */
-export class MetaframePlugin {
-  _metaframe: Metaframe;
-
-  constructor(metaframe : Metaframe) {
-    this._metaframe = metaframe;
-    this.requestState = this.requestState.bind(this);
-    this.onState = this.onState.bind(this);
-    this.getState = this.getState.bind(this);
-    this.setState = this.setState.bind(this);
-    this.onDefinition = this.onDefinition.bind(this);
-    this.getDefinition = this.getDefinition.bind(this);
-    this.setDefinition = this.setDefinition.bind(this);
-  }
-
-  requestState() {
-    var payload: ApiPayloadPluginRequest = {
-      method: ApiPayloadPluginRequestMethod.State
-    };
-    this._metaframe.sendRpc(JsonRpcMethodsFromChild.PluginRequest, payload);
-  }
-
-  onState(listener : (_ : any) => void): () => void {
-    const disposer = this._metaframe.onInput(METAPAGE_KEY_STATE, listener);
-    if (this.getState() != null) {
-      listener(this.getState());
-    }
-    return disposer;
-  }
-
-  getState(): any {
-    return this._metaframe.getInput(METAPAGE_KEY_STATE);
-  }
-
-  setState(state : any) {
-    this._metaframe.setOutput(METAPAGE_KEY_STATE, state);
-  }
-
-  onDefinition(listener : (a : any) => void): () => void {
-    var disposer = this._metaframe.onInput(METAPAGE_KEY_DEFINITION, listener);
-    if (this.getDefinition() != null) {
-      listener(this.getDefinition());
-    }
-    return disposer;
-  }
-
-  setDefinition(definition : any) {
-    this._metaframe.setOutput(METAPAGE_KEY_DEFINITION, definition);
-  }
-
-  getDefinition(): any {
-    return this._metaframe.getInput(METAPAGE_KEY_DEFINITION);
-  }
-}
-
-
-export class Metaframe extends EventEmitter {
+export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFromChild> {
 
   public static readonly version = VERSION;
 
@@ -121,7 +62,7 @@ export class Metaframe extends EventEmitter {
     this.debug = getUrlParamDEBUG();
     this._isIframe = isIframe();
 
-    this.addEventListener = this.addEventListener.bind(this);
+    this.addListener = this.addListener.bind(this);
     this.dispose = this.dispose.bind(this);
     this.error = this.error.bind(this);
     this.getInput = this.getInput.bind(this);
@@ -209,6 +150,14 @@ export class Metaframe extends EventEmitter {
     });
   }
 
+  addListenerReturnDisposer(event : MetaframeEvents | JsonRpcMethodsFromChild, listener : ListenerFn<any[]>): () => void {
+    super.addListener(event, listener);
+    const disposer = () => {
+      super.removeListener(event, listener);
+    }
+    return disposer;
+  }
+
   public log(o : any, color? : string, backgroundColor? : string) {
     if (!this.debug) {
       return;
@@ -252,14 +201,14 @@ export class Metaframe extends EventEmitter {
   }
 
   public dispose() {
-    super.dispose();
+    super.removeAllListeners();
     window.removeEventListener("message", this.onWindowMessage);
     this._inputPipeValues = null;
     this._outputPipeValues = null;
   }
 
-  public addEventListener(event : MetaframeEvents, listener : any): () => void {
-    const disposer = super.addEventListener(event, listener);
+  public addListener(event : MetaframeEvents | JsonRpcMethodsFromChild, listener : ListenerFn<any[]>) {
+    super.addListener(event, listener);
 
     //If it is an input or output, set the current input/output values when
     //attaching a listener on the next tick to ensure that the listener
@@ -271,12 +220,11 @@ export class Metaframe extends EventEmitter {
         }
       }, 0);
     }
-
-    return disposer;
+    return this;
   }
 
   public onInput(pipeId : MetaframePipeId, listener : any): () => void {
-    return this.addEventListener(MetaframeEvents.Input, (pipe : MetaframePipeId, value : any) => {
+    return this.addListenerReturnDisposer(MetaframeEvents.Input, (pipe : MetaframePipeId, value : any) => {
       if (pipeId === pipe) {
         listener(value);
       }
@@ -284,7 +232,7 @@ export class Metaframe extends EventEmitter {
   }
 
   public onInputs(listener : (m : MetaframeInputMap) => void): () => void {
-    return this.addEventListener(MetaframeEvents.Inputs, listener);
+    return this.addListenerReturnDisposer(MetaframeEvents.Inputs, listener);
   }
 
   /**
@@ -403,8 +351,67 @@ export class Metaframe extends EventEmitter {
             break;
         }
 
-        this.emit(jsonrpc.method, jsonrpc.params);
+        // this.emit(jsonrpc.method, jsonrpc.params);
         this.emit(MetaframeEvents.Message, jsonrpc);
+      }
     }
+  }
 }
 
+/**
+ * A special kind of metaframe that can get and set the metapage definition
+ * and metapage state (so quite powerful).
+ */
+export class MetaframePlugin {
+  _metaframe: Metaframe;
+
+  constructor(metaframe : Metaframe) {
+    this._metaframe = metaframe;
+    this.requestState = this.requestState.bind(this);
+    this.onState = this.onState.bind(this);
+    this.getState = this.getState.bind(this);
+    this.setState = this.setState.bind(this);
+    this.onDefinition = this.onDefinition.bind(this);
+    this.getDefinition = this.getDefinition.bind(this);
+    this.setDefinition = this.setDefinition.bind(this);
+  }
+
+  requestState() {
+    var payload: ApiPayloadPluginRequest = {
+      method: ApiPayloadPluginRequestMethod.State
+    };
+    this._metaframe.sendRpc(JsonRpcMethodsFromChild.PluginRequest, payload);
+  }
+
+  onState(listener : (_ : any) => void): () => void {
+    const disposer = this._metaframe.onInput(METAPAGE_KEY_STATE, listener);
+    if (this.getState() != null) {
+      listener(this.getState());
+    }
+    return disposer;
+  }
+
+  getState(): any {
+    return this._metaframe.getInput(METAPAGE_KEY_STATE);
+  }
+
+  setState(state : any) {
+    this._metaframe.setOutput(METAPAGE_KEY_STATE, state);
+  }
+
+  onDefinition(listener : (a : any) => void): () => void {
+    var disposer = this._metaframe.onInput(METAPAGE_KEY_DEFINITION, listener);
+    if (this.getDefinition() != null) {
+      listener(this.getDefinition());
+    }
+    return disposer;
+  }
+
+  setDefinition(definition : any) {
+    this._metaframe.setOutput(METAPAGE_KEY_DEFINITION, definition);
+  }
+
+  getDefinition(): any {
+    return this._metaframe.getInput(METAPAGE_KEY_DEFINITION);
+  }
+}

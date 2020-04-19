@@ -1,10 +1,10 @@
-import compareVersions from "compare-versions";
+import { compare } from "compare-versions";
 import {URL_PARAM_DEBUG} from "../Constants";
 import {Versions, AllVersions, CurrentVersion} from "../MetaLibsVersion";
 import {MetaframeInputMap, MetaframeId, MetapageId, MetapageDefinition} from "../v0_3/all";
 
-import {MetapageDefinition as V0_2MetapageDefinition} from "v0_2/all";
-import {MetapageDefinition as V0_3MetapageDefinition} from "v0_3/all";
+import {MetapageDefinition as V0_2MetapageDefinition} from "../v0_2/all";
+import {MetapageDefinition as V0_3MetapageDefinition} from "../v0_3/all";
 
 // metapages can convert any past version to the current version.
 export const convertToCurrentDefinition = (def : any): MetapageDefinition => {
@@ -76,13 +76,13 @@ export const merge = (current : MetaframeInputMap, newInputs : MetaframeInputMap
 export const getMatchingVersion = (version : string): Versions => {
   if (version == "latest") {
     return CurrentVersion;
-  } else if (compareVersions(version, "0.0.x") <= 0) {
+  } else if (compare(version, "0.0.x", '<')) {
     return Versions.V0_0_1;
-  } else if (compareVersions(version, "0.1.36") >= 0 && compareVersions(version, Versions.V0_2) < 0) {
+  } else if (compare(version, "0.1.36", '>=') && compare(version, Versions.V0_2, '<')) {
     return Versions.V0_1_0;
-  } else if (compareVersions(version, "0.2") >= 0 && compareVersions(version, Versions.V0_3) < 0) {
+  } else if (compare(version, "0.2", '>=') && compare(version, Versions.V0_3, '<')) {
     return Versions.V0_2;
-  } else if (compareVersions(version, "0.3") >= 0) {
+  } else if (compare(version, "0.3", '>=')) {
     return Versions.V0_3;
   } else {
     // Return something, assume latest

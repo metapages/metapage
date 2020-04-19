@@ -192,8 +192,11 @@ TESTS = [
                         setStatus();
                     }
                 };
-                disposeListener = metapage.addEventListener('state', onStateChange);
+                metapage.addListener(Metapage.STATE, onStateChange);
+                disposeListener = () => metapage.removeListener(Metapage.STATE, onStateChange);
                 console.log('disposeListener', disposeListener);
+                console.log('metapage.getState()', metapage.getState());
+                console.log('onStateChange')
                 onStateChange(metapage.getState());
             });
         }
@@ -293,7 +296,8 @@ TESTS = [
                     }
                 };
 
-                disposeListener = metapage.addEventListener('state', onStateChange);
+                metapage.addListener(Metapage.STATE, onStateChange);
+                disposeListener = () => metapage.removeListener(Metapage.STATE, onStateChange);
                 onStateChange(metapage.getState());
             });
         }
@@ -337,7 +341,8 @@ TESTS = [
                     }
                 };
                 // initial value send immediately
-                disposeListener = metapage.onState(onStateChange);
+                metapage.addListener(Metapage.STATE, onStateChange);
+                disposeListener = () => metapage.removeListener(Metapage.STATE, onStateChange);
                 onStateChange(metapage.getState())
             });
         }
@@ -431,6 +436,7 @@ window.onload = function() {
     if (!Metapage) {
         Metapage = window.metapage && window.metapage.Metapage;
     }
+    window.Metapage = Metapage;
 
 
     window.metapageInstance = Metapage.from(metaPageDefinition);
@@ -443,7 +449,7 @@ window.onload = function() {
     window.metaPageDefinition = metaPageDefinition;
 
     // This is just for debugging
-    // metapage.addEventListener('inputs', (e) => {
+    // metapage.addListener(Metapage.INPUTS, (e) => {
     //     const metaframeId = Object.keys(e)[0];
     //     console.log(`METAPAGE inputs event [${metaframeId}][${Object.keys(e[metaframeId]).join(", ")}]`, e);
     //     console.log('METAPAGE inputs total', metapage._inputsState);

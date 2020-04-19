@@ -1,5 +1,6 @@
-import {EventEmitter} from "./EventEmitter";
-import * as match from "minimatch";
+// import { EventEmitter } from "./EventEmitter";
+import {EventEmitter, ListenerFn } from 'eventemitter3';
+import minimatch from "minimatch";
 import {URL_PARAM_DEBUG, VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION} from "../Constants";
 import {Versions} from "../MetaLibsVersion";
 import {
@@ -88,7 +89,7 @@ export const getLibraryVersionMatching = (version : string): Versions => {
 
 const CONSOLE_BACKGROUND_COLOR_DEFAULT = "bcbcbc";
 
-export class Metapage extends EventEmitter {
+export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromParent | OtherEvents> {
   // The current version is always the latest
   public static readonly version = VERSION;
 
@@ -199,7 +200,7 @@ export class Metapage extends EventEmitter {
     this.metaframeIds = this.metaframeIds.bind(this);
     this.metaframes = this.metaframes.bind(this);
     this.onMessage = this.onMessage.bind(this);
-    this.onState = this.onState.bind(this);
+    // this.onState = this.onState.bind(this);
     this.pluginIds = this.pluginIds.bind(this);
     this.plugins = this.plugins.bind(this);
     this.removeAll = this.removeAll.bind(this);
@@ -219,6 +220,14 @@ export class Metapage extends EventEmitter {
     this.log("Initialized");
   }
 
+  addListenerReturnDisposer(event : MetapageEvents | OtherEvents, listener : ListenerFn<any[]>): () => void {
+    super.addListener(event, listener);
+    const disposer = () => {
+      super.removeListener(event, listener);
+    }
+    return disposer;
+  }
+
   public setDebugFromUrlParams(): Metapage {
     this.debug = existsAnyUrlParam(["MP_DEBUG", "DEBUG", "debug", "mp_debug"]);
     return this;
@@ -228,11 +237,11 @@ export class Metapage extends EventEmitter {
     return this._state;
   }
 
-  public onState(listener : Listener): () => void {
-    var disposer = this.addEventListener(MetapageEvents.State, listener);
-    listener(this._state);
-    return disposer;
-  }
+  // public onState(listener : Listener): () => void {
+  //   var disposer = this.addListener(MetapageEvents.State, listener);
+  //   listener(this._state);
+  //   return disposer;
+  // }
 
   public setState(newState : MetapageState) {
     this._state = newState;
@@ -499,7 +508,8 @@ export class Metapage extends EventEmitter {
   }
 
   public dispose() {
-    super.dispose();
+    super.removeAllListeners();
+    // super.dispose();
     window.removeEventListener("message", this.onMessage);
     if (this._metaframes) {
       Object.keys(this._metaframes).forEach(metaframeId => this._metaframes[metaframeId].dispose());
@@ -561,8 +571,8 @@ export class Metapage extends EventEmitter {
           if (inputPipe.metaframe == source) {
             //Check the kind of source string
             // it could be a basic string, or a glob?
-            console.log('attempting to match with:', match);
-            if (match(outputPipeId, inputPipe.source)) {
+            console.log('attempting to match with:', minimatch);
+            if (minimatch(outputPipeId, inputPipe.source)) {
               // A match, now figure out the actual input pipe name
               // since it might be * or absent meaning that the input
               // field name is the same as the incoming
@@ -774,7 +784,7 @@ export class Metapage extends EventEmitter {
   }
 
   onMessage(e : any) {
-    if (typeof e.data === "object") {
+    if (typeof(e.data) === "object") {
       const jsonrpc = e.data as MinimumClientMessage<any>;
       if (!this.isValidJSONRpcMessage(jsonrpc)) {
         // if (this.debug) {
@@ -915,7 +925,7 @@ export class Metapage extends EventEmitter {
               case Versions.V0_0_1:
               case Versions.V0_1_0:
                 this._metaframes[metaframeId].emit(MetapageEvents.Inputs, inputs);
-                if (this.isListeners(MetapageEvents.Inputs)) {
+                if (this.listenerCount(MetapageEvents.Inputs) > 0) {
                   var metaframeInputs: MetapageInstanceInputs = {};
                   metaframeInputs[metaframeId] = inputs;
                   this.emit(MetapageEvents.Inputs, metaframeInputs);
@@ -1016,7 +1026,7 @@ export class Metapage extends EventEmitter {
 }
 // #end
 
-class IFrameRpcClient extends EventEmitter {
+class IFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEvents> {
   iframe: HTMLIFrameElement;
   id: MetaframeId;
   version: Versions;
@@ -1104,6 +1114,14 @@ class IFrameRpcClient extends EventEmitter {
     this.setPlugin = this.setPlugin.bind(this);
   }
 
+  addListenerReturnDisposer(event : JsonRpcMethodsFromParent | MetapageEvents, listener : ListenerFn<any[]>): () => void {
+    super.addListener(event, listener);
+    const disposer = () => {
+      super.removeListener(event, listener);
+    }
+    return disposer;
+  }
+
   public setPlugin(): IFrameRpcClient {
     if (this._loaded) {
       throw "Cannot setPlugin after IFrameRpcClient already loaded";
@@ -1138,7 +1156,7 @@ class IFrameRpcClient extends EventEmitter {
       // value on the metapage itself.
       // trace('${id} hasPermissionsDefinition()  ${hasPermissionsDefinition()}');
       if (this.hasPermissionsDefinition()) {
-        var disposer = this._metapage.addEventListener(MetapageEvents.Definition, definition => {
+        var disposer = this._metapage.addListenerReturnDisposer(MetapageEvents.Definition, definition => {
           this.setInput(METAPAGE_KEY_DEFINITION, definition.definition);
         });
         this._disposables.push(disposer);
@@ -1234,7 +1252,7 @@ class IFrameRpcClient extends EventEmitter {
 
     // Notify
     this.emit(MetapageEvents.Inputs, this.inputs);
-    if (this._metapage.isListeners(MetapageEvents.Inputs)) {
+    if (this._metapage.listenerCount(MetapageEvents.Inputs) >= 0) {
       var inputUpdate: MetapageInstanceInputs = {};
       inputUpdate[this.id] = maybeNewInputs;
       this._metapage.emit(MetapageEvents.Inputs, inputUpdate);
@@ -1267,7 +1285,7 @@ class IFrameRpcClient extends EventEmitter {
     // for (outputPipeId in maybeNewOutputs.keys()) {
     // 	log('output [${outputPipeId}]');
     // }
-    if (this._metapage.isListeners(MetapageEvents.Outputs)) {
+    if (this._metapage.listenerCount(MetapageEvents.Outputs) > 0) {
       var outputsUpdate: MetapageInstanceInputs = {};
       outputsUpdate[this.id] = this.outputs;
       this._metapage.emit(MetapageEvents.Outputs, outputsUpdate);
@@ -1275,7 +1293,7 @@ class IFrameRpcClient extends EventEmitter {
   }
 
   public onInputs(f : (m : MetaframeInputMap) => void): () => void {
-    return this.on(MetapageEvents.Inputs, f);
+    return this.addListenerReturnDisposer(MetapageEvents.Inputs, f);
   }
 
   public onInput(pipeName : MetaframePipeId, f : (_ : any) => void): () => void {
@@ -1284,11 +1302,11 @@ class IFrameRpcClient extends EventEmitter {
         f(inputs[pipeName]);
       }
     };
-    return this.on(MetapageEvents.Inputs, fWrap);
+    return this.addListenerReturnDisposer(MetapageEvents.Inputs, fWrap);
   }
 
   public onOutputs(f : (m : MetaframeInputMap) => void): () => void {
-    return this.on(MetapageEvents.Outputs, f);
+    return this.addListenerReturnDisposer(MetapageEvents.Outputs, f);
   }
 
   public onOutput(pipeName : MetaframePipeId, f : (_ : any) => void): () => void {
@@ -1297,11 +1315,11 @@ class IFrameRpcClient extends EventEmitter {
         f(outputs[pipeName]);
       }
     };
-    return this.on(MetapageEvents.Outputs, fWrap);
+    return this.addListenerReturnDisposer(MetapageEvents.Outputs, fWrap);
   }
 
   public dispose() {
-    super.dispose();
+    super.removeAllListeners();
     while (this._disposables != null && this._disposables.length > 0) {
       this._disposables.pop()();
     }
