@@ -604,7 +604,7 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
         // TODO: check origin+source
         var iframeId: MetaframeId = message.iframeId;
         if (!(message.parentId === this._id && (this._metaframes[iframeId] || this._plugins[iframeId]))) {
-          // this.error(`message.parentId=${message.parentId} this._id=${this._id} message.iframeId=${iframeId} this._metaframes.exists(message.iframeId)=${this._metaframes[iframeId] !== undefined} this._plugins.exists(message.iframeId)=${this._plugins[iframeId] !== undefined} message=${JSON.stringify(message).substr(0, 200)}`);
+          // this.error(`message.parentId=${message.parentId} this._id=${this._id} message.iframeId=${iframeId} this._metaframes.hasOwnProperty(message.iframeId)=${this._metaframes[iframeId] !== undefined} this._plugins.hasOwnProperty(message.iframeId)=${this._plugins[iframeId] !== undefined} message=${JSON.stringify(message).substr(0, 200)}`);
           return false;
         }
         return true;
@@ -1153,7 +1153,8 @@ class IFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEv
       // send the metapage/definition immediately
       // on getting a metapage/definition value, set that
       // value on the metapage itself.
-      // trace('${id} hasPermissionsDefinition()  ${hasPermissionsDefinition()}');
+      // console.log(`bindPlugin id=${this.id} hasPermissionsDefinition()  ${this.hasPermissionsDefinition()}`);
+
       if (this.hasPermissionsDefinition()) {
         var disposer = this._metapage.addListenerReturnDisposer(MetapageEvents.Definition, definition => {
           this.setInput(METAPAGE_KEY_DEFINITION, definition.definition);
@@ -1185,6 +1186,7 @@ class IFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEv
         }
       }
     } catch (err) {
+      console.error(err);
       this._metapage.emit(MetapageEvents.Error, `Failed to get plugin definition from "${this.getDefinitionUrl()}", error=${err}`);
     }
   }
@@ -1220,7 +1222,7 @@ class IFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEv
   public setInput(name : MetaframePipeId, inputBlob : any) {
     console.assert(name != null);
     var inputs: MetaframeInputMap = {};
-    inputs.set(name, inputBlob);
+    inputs[name] = inputBlob;
     this.setInputs(inputs);
   }
 
@@ -1251,7 +1253,7 @@ class IFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEv
 
     // Notify
     this.emit(MetapageEvents.Inputs, this.inputs);
-    if (this._metapage.listenerCount(MetapageEvents.Inputs) >= 0) {
+    if (this._metapage.listenerCount(MetapageEvents.Inputs) > 0) {
       var inputUpdate: MetapageInstanceInputs = {};
       inputUpdate[this.id] = maybeNewInputs;
       this._metapage.emit(MetapageEvents.Inputs, inputUpdate);
@@ -1267,7 +1269,7 @@ class IFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEv
   public setOutput(pipeId : MetaframePipeId, updateBlob : any) {
     console.assert(pipeId != null);
     var outputs: MetaframeInputMap = {};
-    outputs.set(pipeId, updateBlob);
+    outputs[pipeId] = updateBlob;
     this.setOutputs(outputs);
   }
 
@@ -1297,7 +1299,7 @@ class IFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEv
 
   public onInput(pipeName : MetaframePipeId, f : (_ : any) => void): () => void {
     var fWrap = function (inputs : MetaframeInputMap) {
-      if (inputs.exists(pipeName)) {
+      if (inputs.hasOwnProperty(pipeName)) {
         f(inputs[pipeName]);
       }
     };
@@ -1310,7 +1312,7 @@ class IFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEv
 
   public onOutput(pipeName : MetaframePipeId, f : (_ : any) => void): () => void {
     var fWrap = function (outputs : MetaframeInputMap) {
-      if (outputs.exists(pipeName)) {
+      if (outputs.hasOwnProperty(pipeName)) {
         f(outputs[pipeName]);
       }
     };
@@ -1451,10 +1453,10 @@ class IFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEv
   _bufferMessages: any[];
   _bufferTimeout: number;
   sendOrBufferPostMessage(message : any) {
-    if (!this.iframe || !this.iframe.contentWindow) {
-      console.log('no this.iframe.contentWindow, not sending message');
-    }
-    if (this.iframe.contentWindow != null) {
+    // if (!this.iframe || !this.iframe.contentWindow) {
+    //   console.log('no this.iframe.contentWindow, not sending message');
+    // }
+    if (this.iframe && this.iframe.contentWindow) {
       this.iframe.contentWindow.postMessage(message, this.url);
     } else {
       if (this._bufferMessages == null) {
