@@ -110,7 +110,7 @@ const getStatusText = (err) => {
     if (err) {
         document.body.style.backgroundColor = "red";
         text += 'TESTS FAIL:<br/>' + err;
-        console.log(`Tests err:${err}`);
+        console.log(`Tests err:${err}`, err);
     } else if (TESTS.reduce((isPassing, test) => {
         return isPassing && test.success;
     }, true)) {
@@ -156,6 +156,8 @@ class Test {
         return '<br/>' + this.getText();
     }
 }
+
+
 
 TESTS = [
     new Test('metaframe internal sent inputs saved in state',
@@ -343,10 +345,20 @@ TESTS = [
 
 // version stabilized
 const convertNpmToInternalVersion = (version) => {
-    if (Metapage.getLibraryVersionMatching) {
+    let getLibraryVersionMatching = window.getLibraryVersionMatching;
+    if (!getLibraryVersionMatching) {
+        getLibraryVersionMatching = window.Metapage && window.Metapage.getLibraryVersionMatching;
+    }
+    if (!getLibraryVersionMatching) {
+        getLibraryVersionMatching = window.metapage && window.metapage.getLibraryVersionMatching;
+    }
+    if (!getLibraryVersionMatching) {
+        getLibraryVersionMatching = window.metapage && window.metapage.Metapage && window.metapage.Metapage.getLibraryVersionMatching;
+    }
+    if (getLibraryVersionMatching) {
         // use the internal version matching code
         // This file gets updated when the version is bumped
-        return Metapage.getLibraryVersionMatching(version);
+        return getLibraryVersionMatching(version);
     // otherwise the above logic wasn't yet implemented, so we have to do it here (versioning lessons)
     } else if (window.compareVersions(version, '0.2') >= 0) {
         return '0.2';
@@ -414,10 +426,18 @@ window.onload = function() {
 
     console.log(JSON.stringify(metaPageDefinition, null, '  '));
 
-    window.metapage = Metapage.from(metaPageDefinition);
+    let Metapage = window.Metapage;
+    if (!Metapage) {
+        Metapage = window.metapage && window.metapage.Metapage;
+    }
+
+
+    window.metapageInstance = Metapage.from(metaPageDefinition);
+    metapageInstance = Metapage.from(metaPageDefinition);
+    window.metapageInstance = metapageInstance;
     // >= 0.3.5 
-    if (window.metapage.setDebugFromUrlParams) {
-        window.metapage.setDebugFromUrlParams();
+    if (metapageInstance.setDebugFromUrlParams) {
+        metapageInstance.setDebugFromUrlParams();
     }
     window.metaPageDefinition = metaPageDefinition;
 
@@ -428,10 +448,10 @@ window.onload = function() {
     //     console.log('METAPAGE inputs total', metapage._inputsState);
     // });
 
-    const promises = TESTS.map((test) => test.run(metapage));
+    const promises = TESTS.map((test) => test.run(metapageInstance));
 
     // add the metaframe and plugin iframes to the page
-    var metaframeIds = metapage.metaframeIds();
+    var metaframeIds = metapageInstance.metaframeIds();
     var pluginsIds = metaPageDefinition.plugins.concat([]);
     // Add the metaframe (and plugin) iframes to the page
     metaframeIds.forEach((metaframeId) => {
@@ -447,11 +467,11 @@ window.onload = function() {
         row.appendChild(col1);
         row.appendChild(col2);
 
-        col1.appendChild(metapage.getMetaframe(metaframeId).iframe);
+        col1.appendChild(metapageInstance.getMetaframe(metaframeId).iframe);
 
         if (pluginsIds.length > 0) {
             const pluginId = pluginsIds.shift();
-            col2.appendChild(metapage.getPlugin(pluginId).iframe);
+            col2.appendChild(metapageInstance.getPlugin(pluginId).iframe);
         }
 
         document.getElementById("body").appendChild(row);

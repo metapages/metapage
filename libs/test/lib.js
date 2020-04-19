@@ -51,7 +51,7 @@ const generate = async () => {
 
 // serve the pages to the puppeteer browser
 const createServer = async (port) => {
-    const server = require('fastify')({ logger: false })
+    const server = require('fastify')({ logger: true })
     const path = require('path')
   
     server.register(require('fastify-static'), {

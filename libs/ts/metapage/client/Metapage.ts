@@ -29,7 +29,8 @@ import {
   getMatchingVersion,
   generateMetapageId,
   existsAnyUrlParam,
-  convertToCurrentDefinition
+  convertToCurrentDefinition,
+  merge,
 } from "./MetapageTools";
 import {JsonRpcRequest} from "../jsonrpc2";
 
@@ -178,7 +179,42 @@ export class Metapage extends EventEmitter {
       ? opts.color
       : CONSOLE_BACKGROUND_COLOR_DEFAULT;
 
+    this._setStateOnly
+    this.addPipe = this.addPipe.bind(this);
+    this.dispose = this.dispose.bind(this);
+    this.getDefinition = this.getDefinition.bind(this);
+    this.addMetaframe = this.addMetaframe.bind(this);
+    this.addPlugin = this.addPlugin.bind(this);
+    this.getInputsFromOutput = this.getInputsFromOutput.bind(this);
+    this.getMetaframe = this.getMetaframe.bind(this);
+    this.getMetaframeIds = this.getMetaframeIds.bind(this);
+    this.getMetaframeOrPlugin = this.getMetaframeOrPlugin.bind(this);
+    this.getMetaframes = this.getMetaframes.bind(this);
+    this.getPlugin = this.getPlugin.bind(this);
+    this.getPluginIds = this.getPluginIds.bind(this);
+    this.getState = this.getState.bind(this);
+    this.getStateMetaframes = this.getStateMetaframes.bind(this);
+    this.isValidJSONRpcMessage = this.isValidJSONRpcMessage.bind(this);
+    this.log = this.log.bind(this);
+    this.logInternal = this.logInternal.bind(this);
+    this.metaframeIds = this.metaframeIds.bind(this);
+    this.metaframes = this.metaframes.bind(this);
     this.onMessage = this.onMessage.bind(this);
+    this.onState = this.onState.bind(this);
+    this.pluginIds = this.pluginIds.bind(this);
+    this.plugins = this.plugins.bind(this);
+    this.removeAll = this.removeAll.bind(this);
+    this.removeMetaframe = this.removeMetaframe.bind(this);
+    this.removePlugin = this.removePlugin.bind(this);
+    this.setDebugFromUrlParams = this.setDebugFromUrlParams.bind(this);
+    this.setDefinition = this.setDefinition.bind(this);
+    this.setInput = this.setInput.bind(this);
+    this.setInputs = this.setInputs.bind(this);
+    this.setInputStateOnly = this.setInputStateOnly.bind(this);
+    this.setMetaframeClientInputAndSentClientEvent = this.setMetaframeClientInputAndSentClientEvent.bind(this);
+    this.setOutputStateOnly = this.setOutputStateOnly.bind(this);
+    this.setState = this.setState.bind(this);
+
     window.addEventListener("message", this.onMessage);
 
     this.log("Initialized");
@@ -213,10 +249,6 @@ export class Metapage extends EventEmitter {
   }
 
   public getStateMetaframes(): MetapageStatePartial {
-    return this._state.metaframes;
-  }
-
-  public getStatePlugins(): MetapageStatePartial {
     return this._state.metaframes;
   }
 
@@ -453,6 +485,12 @@ export class Metapage extends EventEmitter {
 
     return iframeClient;
   }
+
+  getMetaframe
+  getPlugin
+  addMetaframe
+  addPlugin
+  dispose
 
   // do not expose, change definition instead
   addPlugin(url : Url): IFrameRpcClient {
@@ -738,6 +776,7 @@ export class Metapage extends EventEmitter {
   }
 
   onMessage(e : any) {
+    console.log('onMessage', e);
     if (typeof e.data === "object") {
       const jsonrpc = e.data as MinimumClientMessage<any>;
       if (!this.isValidJSONRpcMessage(jsonrpc)) {
@@ -1039,6 +1078,33 @@ class IFrameRpcClient extends EventEmitter {
     this._parentId = parentId;
     this._color = stringToRgb(this.id);
     this._consoleBackgroundColor = consoleBackgroundColor;
+
+    this.ack = this.ack.bind(this);
+    this.bindPlugin = this.bindPlugin.bind(this);
+    this.dispose = this.dispose.bind(this);
+    this.getDefinition = this.getDefinition.bind(this);
+    this.getDefinitionUrl = this.getDefinitionUrl.bind(this);
+    this.setPlugin = this.setPlugin.bind(this);
+    this.hasPermissionsDefinition = this.hasPermissionsDefinition.bind(this);
+    this.hasPermissionsState = this.hasPermissionsState.bind(this);
+    this.log = this.log.bind(this);
+    this.logInternal = this.logInternal.bind(this);
+    this.onInput = this.onInput.bind(this);
+    this.onInputs = this.onInputs.bind(this);
+    this.onOutput = this.onOutput.bind(this);
+    this.onOutputs = this.onOutputs.bind(this);
+    this.register = this.register.bind(this);
+    this.registered = this.registered.bind(this);
+    this.sendInputs = this.sendInputs.bind(this);
+    this.sendOrBufferPostMessage = this.sendOrBufferPostMessage.bind(this);
+    this.sendRpc = this.sendRpc.bind(this);
+    this.sendRpcInternal = this.sendRpcInternal.bind(this);
+    this.setInput = this.setInput.bind(this);
+    this.setInputs = this.setInputs.bind(this);
+    this.setMetapage = this.setMetapage.bind(this);
+    this.setOutput = this.setOutput.bind(this);
+    this.setOutputs = this.setOutputs.bind(this);
+    this.setPlugin = this.setPlugin.bind(this);
   }
 
   public setPlugin(): IFrameRpcClient {
@@ -1153,7 +1219,7 @@ class IFrameRpcClient extends EventEmitter {
   };
   public setInputs(maybeNewInputs : MetaframeInputMap): IFrameRpcClient {
     // this.log({m:'IFrameRpcClient', inputs:maybeNewInputs});
-    if (!this.inputs.merge(maybeNewInputs)) {
+    if (!merge(this.inputs, maybeNewInputs)) {
       return this;
     }
     if (!this._loaded) {
@@ -1196,7 +1262,7 @@ class IFrameRpcClient extends EventEmitter {
     inputs: null
   };
   public setOutputs(maybeNewOutputs : MetaframeInputMap) {
-    if (!this.outputs.merge(maybeNewOutputs)) {
+    if (!merge(this.outputs, maybeNewOutputs)) {
       return;
     }
     this.emit(MetapageEvents.Outputs, maybeNewOutputs);
@@ -1371,13 +1437,16 @@ class IFrameRpcClient extends EventEmitter {
   _bufferMessages: any[];
   _bufferTimeout: number;
   sendOrBufferPostMessage(message : any) {
+    if (!this.iframe || !this.iframe.contentWindow) {
+      console.log('no this.iframe.contentWindow, not sending message');
+    }
     if (this.iframe.contentWindow != null) {
       this.iframe.contentWindow.postMessage(message, this.url);
     } else {
       if (this._bufferMessages == null) {
         this._bufferMessages = [message];
         this._bufferTimeout = window.setInterval(function () {
-          if (this.iframe.contentWindow != null) {
+          if (this.iframe && this.iframe.contentWindow) {
             this._bufferMessages.forEach(m => this.iframe.contentWindow.postMessage(m, this.url));
             window.clearInterval(this._bufferTimeout);
             this._bufferTimeout = null;

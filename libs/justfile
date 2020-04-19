@@ -14,29 +14,44 @@ help:
 # TODO: remove the jekyll dependency, and just create a static page to serve
 # Run tests, expects jekyll running to serve the page
 test:
-	# node test/test.js
+	just test
+	node test/test.js
 
 generate:
 	#!/usr/bin/env node
 	console.log('sfsf')
 
 # Build the production distributions in build/metaframe and build/metapage
-build: clean
-	{{parcel}} build ts/metapage/client/Metaframe.ts --out-dir build/metaframe
-	{{parcel}} build ts/metapage/client/Metapage.ts --out-dir build/metapage
+@build: clean _build
+
+@_build:
+	{{parcel}} build --target browser --global metaframe --out-dir build/metaframe ts/metapage/client/Metaframe.ts
+	{{parcel}} build --target browser --global metapage  --out-dir build/metapage  ts/metapage/client/Metapage.ts
 
 	@# copy production builds to the (dev+docs+test) dir
 	cp -r build/metaframe/* ../docs/js/
 	cp -r build/metapage/* ../docs/js/
 	cp -r build/metapage/Metapage* test/page/js/
-	cp -r build/metapage/Metaframe* test/page/js/
+	cp -r build/metaframe/Metaframe* test/page/js/
 
+	echo "✅ created build/metapage"
+	echo "✅ created build/metaframe"
+	echo "✅ created ../docs/js/Meta*"
+	echo "✅ created test/page/js/Meta*"
+
+@_build_for_test_dev:
+	NODE_ENV=development {{parcel}} build --target browser --global metaframe --public-url '/js' --out-dir test/page/js/ ts/metapage/client/Metaframe.ts
+	NODE_ENV=development {{parcel}} build --target browser --global metapage  --public-url '/js' --out-dir test/page/js/ ts/metapage/client/Metapage.ts
+	echo "✅ created test/page/js/Meta*"
 
 # watch for file changes, building on change.
-watch out="{{dev_out_dir}}": clean
-    {{parcel}} watch ts/metapage/client/Metaframe.ts ts/metapage/client/Metapage.ts --out-dir {{out}}
+@watch out=dev_out_dir: clean
+	echo "✅ watching and building for test/page/js/ only"
+	watchexec --watch ts -- just _build_for_test_dev
 
-@clean:
+clean:
+	rm -rf build
+	rm -rf dist
 	rm -rf ../docs/js/Metapage*
 	rm -rf ../docs/js/Metaframe*
 	rm -rf test/page/js/Metapage*

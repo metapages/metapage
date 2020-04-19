@@ -6,7 +6,7 @@ help:
 
 # watch all files and rebuild the tests and run them, on every change
 watch:
-    watchexec --exts js,json,html --ignore node_modules --ignore page/index.html --ignore page/js/ --restart -- just test
+    watchexec --exts js,json,html --ignore node_modules --ignore page/index.html --ignore page/js --restart -- just serve
 
 # run the tests, every metapage lib using every metaframe lib
 test:
@@ -18,11 +18,12 @@ build:
 
 
 # Use with '<libs/> just watch' and manually refresh the browser
-serve: generate build
+serve: generate
     #!/usr/bin/env node
-    const lib = require(path.join(process.cwd(), './lib'));
+    const path = require('path'); const lib = require(path.join(process.cwd(), './lib'));
     (async () => {
-        await lib.createServer();
+        await lib.createServer(3000);
+        console.log('✅ server listening on localhost:3000');
     })()
 
 
@@ -32,4 +33,5 @@ generate:
     const path = require('path'); const lib = require(path.join(process.cwd(), './lib'));
     (async () => {
         await lib.generate();
+        console.log('✅ created page/index.html');
     })()

@@ -7,3 +7,4 @@ site
 dist
 build
 test/page/index.html
+libs/test/page/js/Meta*

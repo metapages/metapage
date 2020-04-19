@@ -15,7 +15,7 @@ export const convertToCurrentDefinition = (def : any): MetapageDefinition => {
     try {
       def = JSON.parse(def);
     } catch (err) {
-      throw "Cannot parse into JSON:\n${def}";
+      throw `Cannot parse into JSON:\n${def}`;
     }
   }
 
@@ -86,7 +86,7 @@ export const getMatchingVersion = (version : string): Versions => {
     return Versions.V0_3;
   } else {
     // Return something, assume latest
-    console.log("Could not match version=${version} to any known version, assuming ${Metapage.version}");
+    console.log(`Could not match version=${version} to any known version, assuming ${CurrentVersion}`);
     return CurrentVersion;
   }
 };
@@ -146,11 +146,11 @@ export const log = (o : any, color? : string, backgroundColor? : string) => {
   }
 
   if (color != null && color.trim() != "") {
-    var cssstring = "color: #$color";
+    var cssstring = `color: #${color}`;
     if (backgroundColor != null) {
-      cssstring = "$cssstring; background: #$backgroundColor";
+      cssstring = `${cssstring}; background: #${backgroundColor}`;
     }
-    s = "%c$s";
+    s = `%c${s}`;
     window.console.log(s, cssstring);
   } else {
     window.console.log(s);

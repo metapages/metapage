@@ -10,7 +10,7 @@ import {
   SetupIframeServerResponseData,
   MinimumClientMessage
 } from "../v0_3/JsonRpcMethods";
-import {getUrlParamDEBUG, stringToRgb, log as MetapageToolsLog} from "./MetapageTools";
+import {getUrlParamDEBUG, stringToRgb, log as MetapageToolsLog, merge} from "./MetapageTools";
 
 enum MetaframeEvents {
   Input = "input",
@@ -18,15 +18,16 @@ enum MetaframeEvents {
   Message = "message"
 }
 
-export class Metaframe extends EventEmitter {
-  public static isIframe(): boolean {
-    //http://stackoverflow.com/questions/326069/how-to-identify-if-a-webpage-is-being-loaded-inside-an-iframe-or-directly-into-t
-    try {
-      return window !== window.top;
-    } catch (ignored) {
-      return false;
-    }
+export const isIframe = () :boolean => {
+  //http://stackoverflow.com/questions/326069/how-to-identify-if-a-webpage-is-being-loaded-inside-an-iframe-or-directly-into-t
+  try {
+    return window !== window.top;
+  } catch (ignored) {
+    return false;
   }
+}
+
+export class Metaframe extends EventEmitter {
 
   public static readonly version = VERSION;
 
@@ -59,7 +60,28 @@ export class Metaframe extends EventEmitter {
   constructor() {
     super();
     this.debug = getUrlParamDEBUG();
-    this._isIframe = Metaframe.isIframe();
+    this._isIframe = isIframe();
+
+    this.addEventListener = this.addEventListener.bind(this);
+    this.dispose = this.dispose.bind(this);
+    this.error = this.error.bind(this);
+    this.getInput = this.getInput.bind(this);
+    this.getInputs = this.getInputs.bind(this);
+    this.getOutput = this.getOutput.bind(this);
+    this.getOutputs = this.getOutputs.bind(this);
+    this.log = this.log.bind(this);
+    this.logInternal = this.logInternal.bind(this);
+    this.onInput = this.onInput.bind(this);
+    this.onInputs = this.onInputs.bind(this);
+    this.onWindowMessage = this.onWindowMessage.bind(this);
+    this.sendRpc = this.sendRpc.bind(this);
+    this.setInput = this.setInput.bind(this);
+    this.setInputs = this.setInputs.bind(this);
+    this.setInternalInputsAndNotify = this.setInternalInputsAndNotify.bind(this);
+    this.setOutput = this.setOutput.bind(this);
+    this.setOutputs = this.setOutputs.bind(this);
+    this.warn = this.warn.bind(this);
+
 
     if (!this._isIframe) {
       //Don't add any of the machinery, it only works if we're iframes.
@@ -71,7 +93,7 @@ export class Metaframe extends EventEmitter {
       return;
     }
 
-    this.onWindowMessage = this.onWindowMessage.bind(this);
+    
 
     window.addEventListener("message", this.onWindowMessage);
 
@@ -230,7 +252,7 @@ export class Metaframe extends EventEmitter {
   }
 
   setInternalInputsAndNotify(inputs : MetaframeInputMap) {
-    if (!this._inputPipeValues.merge(inputs)) {
+    if (!merge(this._inputPipeValues, inputs)) {
       return;
     }
     Object.keys(inputs).forEach(pipeId => this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId]));
@@ -267,7 +289,7 @@ export class Metaframe extends EventEmitter {
   }
 
   public setOutputs(outputs : MetaframeInputMap): void {
-    if (!this._outputPipeValues.merge(outputs)) {
+    if (!merge(this._outputPipeValues, outputs)) {
       return;
     }
     this.sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);

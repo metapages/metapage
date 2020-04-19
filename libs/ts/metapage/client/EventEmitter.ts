@@ -5,7 +5,15 @@ export class EventEmitter {
     [key: string]: Function[]
   } = {};
 
-  constructor() {}
+  constructor() {
+    this.on = this.on.bind(this);
+    this.isListeners = this.isListeners.bind(this);
+    this.addEventListener = this.addEventListener.bind(this);
+    this.once = this.once.bind(this);
+    this.removeEventListener = this.removeEventListener.bind(this);
+    this.emit = this.emit.bind(this);
+    this.dispose = this.dispose.bind(this);
+  }
 
   on(event : string, listener : Function): () => void {
     return this.addEventListener(event, listener);
@@ -21,7 +29,7 @@ export class EventEmitter {
     if (!this._events.hasOwnProperty(event)) {
       this._events[event] = [];
     }
-    this._events._events[event].push(listener);
+    this._events[event].push(listener);
     return removeEventListener.bind(event, listener);
   }
 
