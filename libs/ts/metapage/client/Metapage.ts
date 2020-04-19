@@ -571,7 +571,6 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
           if (inputPipe.metaframe == source) {
             //Check the kind of source string
             // it could be a basic string, or a glob?
-            console.log('attempting to match with:', minimatch);
             if (minimatch(outputPipeId, inputPipe.source)) {
               // A match, now figure out the actual input pipe name
               // since it might be * or absent meaning that the input

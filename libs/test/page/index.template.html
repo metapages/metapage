@@ -110,7 +110,7 @@ const getStatusText = (err) => {
     if (err) {
         document.body.style.backgroundColor = "red";
         text += 'TESTS FAIL:<br/>' + err;
-        console.log(`Tests err:${err}`, err);
+        console.error(`Tests err:${err}`, err);
     } else if (TESTS.reduce((isPassing, test) => {
         return isPassing && test.success;
     }, true)) {
@@ -194,9 +194,6 @@ TESTS = [
                 };
                 metapage.addListener(Metapage.STATE, onStateChange);
                 disposeListener = () => metapage.removeListener(Metapage.STATE, onStateChange);
-                console.log('disposeListener', disposeListener);
-                console.log('metapage.getState()', metapage.getState());
-                console.log('onStateChange')
                 onStateChange(metapage.getState());
             });
         }
@@ -259,8 +256,6 @@ TESTS = [
                         VERSIONS_EXPECTED[0] = 'latest';
                         VERSIONS_EXPECTED.pop(); // the other 'latest'
                     }
-                    // console.log('VERSIONS_EXPECTED', VERSIONS_EXPECTED);
-                    // console.log('VERSIONS_METAFRAME', VERSIONS_METAFRAME);
                     // check all the inputs of all the metaframes, they should
                     // have a specific order of metaframe versions depending on
                     // where they are in the chain.
@@ -269,13 +264,6 @@ TESTS = [
 
                         const expectedInputVersions = JSON.stringify(VERSIONS_METAFRAME.slice(0, i));
                         const expectedOutputVersions = JSON.stringify(VERSIONS_METAFRAME.slice(0, i + 1));
-
-                        // console.log(`TEST inputs chain saved in state for ${metapageId}`);
-                        // // console.log('expectedInputVersions', expectedInputVersions);
-                        // console.log('expectedOutputVersions', expectedOutputVersions);
-                        // console.log('outputs[metapageId]', JSON.stringify(outputs[metapageId] && outputs[metapageId].output ? outputs[metapageId].output.versions : null));
-                        // console.log('expectedInputVersions', expectedInputVersions);
-                        // console.log('inputs[metapageId]', JSON.stringify(inputs[metapageId] && inputs[metapageId].input ? inputs[metapageId].input.versions : null));
 
                         return (inputs[metapageId]
                                 && inputs[metapageId]['input']
@@ -311,6 +299,7 @@ TESTS = [
                 let disposeListener;
                 
                 const onStateChange = (metapageState) => {
+                    console.log('metapageState', metapageState);
                     const metapageIds = metapage.getMetaframeIds();
                     const pluginIds = metapage.getPluginIds();
 
