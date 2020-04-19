@@ -49,4 +49,24 @@ const generate = async () => {
     fs.writeFileSync('./page/index.html', html);
 }
 
-module.exports = { getMetapageVersions, generate };
+// serve the pages to the puppeteer browser
+const createServer = async (port) => {
+    const server = require('fastify')({ logger: false })
+    const path = require('path')
+  
+    server.register(require('fastify-static'), {
+      root: path.join(__dirname, 'page'),
+      prefix: '/', // optional: default '/'
+    })
+  
+    try {
+      await server.listen(port)
+      server.log.info(`server listening on ${server.server.address().port}`)
+    } catch (err) {
+      server.log.error(err)
+      process.exit(1)
+    }
+    return server;
+  }
+
+module.exports = { getMetapageVersions, generate, createServer };

@@ -26,8 +26,8 @@ build: clean
 	{{parcel}} build ts/metapage/client/Metapage.ts --out-dir build/metapage
 
 	@# copy production builds to the (dev+docs+test) dir
-	cp -r build/metaframe/* {{dev_out_dir}}/
-	cp -r build/metapage/* {{dev_out_dir}}/
+	cp -r build/metaframe/* ../docs/js/
+	cp -r build/metapage/* ../docs/js/
 	cp -r build/metapage/Metapage* test/page/js/
 	cp -r build/metapage/Metaframe* test/page/js/
 
@@ -37,9 +37,8 @@ watch out="{{dev_out_dir}}": clean
     {{parcel}} watch ts/metapage/client/Metaframe.ts ts/metapage/client/Metapage.ts --out-dir {{out}}
 
 @clean:
-	mkdir -p {{dev_out_dir}}
-	rm -rf {{dev_out_dir}}/Metapage*
-	rm -rf {{dev_out_dir}}/Metaframe*
+	rm -rf ../docs/js/Metapage*
+	rm -rf ../docs/js/Metaframe*
 	rm -rf test/page/js/Metapage*
 	rm -rf test/page/js/Metaframe*
 

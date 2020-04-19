@@ -2,14 +2,14 @@
     "compilerOptions": {
       "lib": ["dom", "es2016"],
       "target": "es6",
-      "module": "system",
+      "module": "CommonJS",
       "noEmit": true,
       "removeComments": true,
       "declaration": true,
       "typeRoots": ["node_modules/@types", "ts/metapage/types"],
       "baseUrl": "ts",
       "paths": {
-        "@definitions/*": ["metapage/v0_3/*"]
+        // "@definitions/*": ["metapage/v0_3/*"]
       }
     }
   }

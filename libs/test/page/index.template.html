@@ -405,7 +405,7 @@ window.onload = function() {
     metaPageDefinition.plugins = VERSIONS_METAFRAME
         .filter((v) => v.startsWith('latest') || window.compareVersions(v, '0.3') >= 0)
         .map((versionMetaframe) => {
-            let url = `/metaframes/test/?VERSION=${versionMetaframe}`;
+            let url = `/metaframe/?VERSION=${versionMetaframe}`;
             if (urlParams.has('MP_DEBUG') || urlParams.has('DEBUG') || urlParams.has('MF_DEBUG')) {
                 url += '&MP_DEBUG';
             }

@@ -1,16 +1,31 @@
+# Needed because local execution of node scripts actually creates a script far away from the local node_modules
+export NODE_PATH := `pwd`+ "/../node_modules"
 
 help:
     @just --list
 
 # watch all files and rebuild the tests and run them, on every change
 watch:
-    watchexec --exts js,json,html --ignore node_modules --ignore page/index.html --restart -- just test
+    watchexec --exts js,json,html --ignore node_modules --ignore page/index.html --ignore page/js/ --restart -- just test
 
 # run the tests, every metapage lib using every metaframe lib
 test:
+    just ../build
     node test.js
 
-export NODE_PATH := `pwd`+ "/../node_modules"
+build:
+    just ../build
+
+
+# Use with '<libs/> just watch' and manually refresh the browser
+serve: generate build
+    #!/usr/bin/env node
+    const lib = require(path.join(process.cwd(), './lib'));
+    (async () => {
+        await lib.createServer();
+    })()
+
+
 # generates the test index.html from a template, processing all the valid npm lib versions
 generate:
     #!/usr/bin/env node

@@ -13,7 +13,7 @@ import {
   MetapageId,
   MetapageInstanceInputs,
   MetapageDefinition
-} from "@definitions/all";
+} from "../v0_3/all";
 import {
   JsonRpcMethodsFromParent,
   JsonRpcMethodsFromChild,
@@ -22,7 +22,7 @@ import {
   SetupIframeClientAckData,
   OtherEvents,
   ClientMessageRecievedAck
-} from "@definitions/JsonRpcMethods";
+} from "../v0_3/JsonRpcMethods";
 import {
   stringToRgb,
   log as MetapageToolsLog,

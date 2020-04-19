@@ -56,49 +56,30 @@ async function runSingleMetapageTest(version, timeout) {
   console.log(`☘☘☘☘☘☘☘☘☘☘☘   SUCCESS version:${version}   ☘☘☘☘☘☘☘☘☘☘☘ `); 
 }
 
-// serve the pages to the puppeteer browser
-const createServer = async () => {
-  if (server) {
-    await server.close();
-  }
-  server = require('fastify')({ logger: true })
-  const path = require('path')
 
-  server.register(require('fastify-static'), {
-    root: path.join(__dirname, 'page'),
-    prefix: '/', // optional: default '/'
-  })
 
-  try {
-    await server.listen(serverPort)
-    server.log.info(`server listening on ${server.server.address().port}`)
-  } catch (err) {
-    server.log.error(err)
-    process.exit(1)
-  }
-}
 
 const getMetapageTestUrl = (version) => {
-  return `http://localhost:${serverPort}/tests/?VERSION=${version}${debugMetapage ? "&MP_DEBUG" : ""}`;
+  return `http://localhost:${serverPort}/?VERSION=${version}${debugMetapage ? "&MP_DEBUG" : ""}`;
 }
 
 (async () => {
   
-  await createServer();
+  server = await lib.createServer(serverPort);
   await lib.generate();
 
   let allVersions = await lib.getMetapageVersions();
   allVersions.push('latest');
   console.log('allVersions', allVersions);
 
-  const maxTimeAllTests = timePerTest * allVersions.length ** 2;
-  console.log(`Timeout: ${maxTimeAllTests / 1000}s`);
-  const timeout = setTimeout(() => {
-    console.log('☢☢☢☢☢☢☢☢☢☢   FAIL: tests timed out!   ☢☢☢☢☢☢☢☢☢☢');
-    process.exit(1);
-  }, maxTimeAllTests);
+  // const maxTimeAllTests = timePerTest * allVersions.length ** 2;
+  // console.log(`Timeout: ${maxTimeAllTests / 1000}s`);
+  // const timeout = setTimeout(() => {
+  //   console.log('☢☢☢☢☢☢☢☢☢☢   FAIL: tests timed out!   ☢☢☢☢☢☢☢☢☢☢');
+  //   process.exit(1);
+  // }, maxTimeAllTests);
 
-  console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('docs', 'localhost')).join("\n  ")}`);
+  // console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('docs', 'localhost')).join("\n  ")}`);
 
   // // run tests sequentially, not concurrently
   // await (async () => {

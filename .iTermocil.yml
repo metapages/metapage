@@ -6,13 +6,15 @@ windows:
     panes:
       - name: 'docker-compose'
         commands:
-        - just down
-        - just build
-        - just up
+          - just test/watch
+        # - just down
+        # - just build
+        # - just up
         # - lzd
+      - name: 'watch'
+        commands:
+        - just watch
       - name: 'git'
         commands:
         - git status
-      - name: 'test'
-        commands:
-        - ls
+      
