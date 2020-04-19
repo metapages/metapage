@@ -58,11 +58,18 @@ script.setAttribute('type', 'text/javascript');
 if (VERSION == 'latest') {
     script.setAttribute('src', `/js/Metapage.js`);
 } else {
-    let minSuffix = '';
-  if (!VERSION.startsWith('latest') && debug && window.compareVersions(VERSION, '0.3.4') >= 0) {
-      minSuffix = '.min';
-  }
-    script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metapage@${VERSION}/browser${minSuffix}.js`);
+    if (window.compareVersions(VERSION, '0.4.100') >= 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metapage@${VERSION}/browser/index.js`);
+    } else {
+        let minSuffix = '';
+        if (!VERSION.startsWith('latest') && debug && window.compareVersions(VERSION, '0.3.4') >= 0) {
+            minSuffix = '.min';
+        }
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metapage@${VERSION}/browser${minSuffix}.js`);
+    }
+
+    
+    
 }
 head.appendChild(script);
 
@@ -86,7 +93,6 @@ const VERSIONS_METAFRAME = [];
     VERSIONS_METAFRAME.unshift('latestFirst');
     VERSIONS_METAFRAME.push('latest');
 {{?}}
-
 
 // {% for v in site.data.versions.versions %}
 //     VERSIONS_METAFRAME.push("{v}");

@@ -80,13 +80,12 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
     this.setOutput = this.setOutput.bind(this);
     this.setOutputs = this.setOutputs.bind(this);
     this.warn = this.warn.bind(this);
+    this._resolveSetupIframeServerResponse = this._resolveSetupIframeServerResponse.bind(this);
 
     if (!this._isIframe) {
       //Don't add any of the machinery, it only works if we're iframes.
       //This will never return
-      this.ready = new Promise((resolve, _) => {
-        resolve(false);
-      });
+      this.ready = new Promise((_) => {});
       this.log("Not an iframe, metaframe code disabled");
       return;
     }
@@ -94,56 +93,63 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
     window.addEventListener("message", this.onWindowMessage);
 
     //Get ready, request the parent to register to establish messaging pipes
+    const thisRef = this;
     this.ready = new Promise(function (resolve, _) {
+      thisRef._resolver = resolve;
       // First listen to the parent metapage response
-      this.once(JsonRpcMethodsFromParent.SetupIframeServerResponse, function (params : SetupIframeServerResponseData) {
-        if (this._iframeId == null) {
-          this._iframeId = params.iframeId;
-          this.id = params.iframeId;
-          this._parentVersion = params.version;
-          this.color = stringToRgb(this._iframeId);
-          this._parentId = params.parentId;
-          this.log(
-            `metapage[${this._parentId}](v${this._parentVersion
-            ? this._parentVersion
-            : "unknown"}) registered`);
-
-          this._inputPipeValues = params.state != null && params.state.inputs != null
-            ? params.state.inputs
-            : this._inputPipeValues;
-
-          //Tell the parent we have registered.
-          this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {version: this.version});
-
-          //Send notifications of initial inputs (if non-null)
-          //so you don't have to listen to the ready event if you don't want to
-          if (this._inputPipeValues && this._inputPipeValues.keys().length > 0) {
-            this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
-            Object.keys(this._inputPipeValues).forEach(pipeId => this.emit(MetaframeEvents.Input, pipeId, this._inputPipeValues[pipeId]));
-          }
-
-          // if this is a plugin, initialize the plugin object
-          if (params.plugin) {
-            this.plugin = new MetaframePlugin(this);
-          }
-
-          //Resolve AFTER sending inputs. This way consumers can either:
-          //1) Just listen to inputs updates. The first will be when the metaframe is ready
-          //2) Listen to the ready event, get the inputs if desired, and listen to subsequent
-          //   inputs updates. You may not wish to respond to the first updates but you might
-          //   want to know when the metaframe is ready
-          //*** Does this distinction make sense?
-          resolve(true);
-
-          // window.addEventListener('resize', sendWindowDimensions);
-          // sendWindowDimensions();
-        } else {
-          this.log("Got JsonRpcMethods.SetupIframeServerResponse but already resolved");
-        }
-      });
+      // thisRef.once(JsonRpcMethodsFromParent.SetupIframeServerResponse, 
+      // });
       // Now that we're listening, request to the parent to register us
-      this.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {version: this.version});
+      thisRef.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {version: Metaframe.version});
     });
+  }
+
+  _resolver :(val :boolean)=>void;
+
+  _resolveSetupIframeServerResponse (params : SetupIframeServerResponseData) {
+    if (this._iframeId == null) {
+      this._iframeId = params.iframeId;
+      this.id = params.iframeId;
+      this._parentVersion = params.version;
+      this.color = stringToRgb(this._iframeId);
+      this._parentId = params.parentId;
+      this.log(
+        `metapage[${this._parentId}](v${this._parentVersion
+        ? this._parentVersion
+        : "unknown"}) registered`);
+
+      this._inputPipeValues = params.state != null && params.state.inputs != null
+        ? params.state.inputs
+        : this._inputPipeValues;
+
+      //Tell the parent we have registered.
+      this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {version: Metaframe.version});
+
+      //Send notifications of initial inputs (if non-null)
+      //so you don't have to listen to the ready event if you don't want to
+      if (this._inputPipeValues && Object.keys(this._inputPipeValues).length > 0) {
+        this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
+        Object.keys(this._inputPipeValues).forEach(pipeId => this.emit(MetaframeEvents.Input, pipeId, this._inputPipeValues[pipeId]));
+      }
+
+      // if this is a plugin, initialize the plugin object
+      if (params.plugin) {
+        this.plugin = new MetaframePlugin(this);
+      }
+
+      //Resolve AFTER sending inputs. This way consumers can either:
+      //1) Just listen to inputs updates. The first will be when the metaframe is ready
+      //2) Listen to the ready event, get the inputs if desired, and listen to subsequent
+      //   inputs updates. You may not wish to respond to the first updates but you might
+      //   want to know when the metaframe is ready
+      //*** Does this distinction make sense?
+      this._resolver(true);
+
+      // window.addEventListener('resize', sendWindowDimensions);
+      // sendWindowDimensions();
+    } else {
+      this.log("Got JsonRpcMethods.SetupIframeServerResponse but already resolved");
+    }
   }
 
   addListenerReturnDisposer(event : MetaframeEvents | JsonRpcMethodsFromChild, listener : ListenerFn<any[]>): () => void {
@@ -264,7 +270,7 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
 
   public getInput(pipeId : MetaframePipeId): any {
     console.assert(pipeId != null);
-    return this._inputPipeValues.get(pipeId);
+    return this._inputPipeValues[pipeId];
   }
 
   public getInputs(): MetaframeInputMap {
@@ -273,7 +279,7 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
 
   public getOutput(pipeId : MetaframePipeId): any {
     console.assert(pipeId != null);
-    return this._outputPipeValues.get(pipeId);
+    return this._outputPipeValues[pipeId];
   }
 
   /**
@@ -333,6 +339,7 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
 
         switch (method) {
           case JsonRpcMethodsFromParent.SetupIframeServerResponse:
+            this._resolveSetupIframeServerResponse(jsonrpc.params);
             break; //Handled elsewhere
           case JsonRpcMethodsFromParent.InputsUpdate:
             this.setInternalInputsAndNotify(jsonrpc.params.inputs);

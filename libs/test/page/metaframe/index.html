@@ -48,7 +48,6 @@ if (VERSION == 'latest') {
     } else {
         script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/browser${debug ? '' : '.min'}.js`);
     }
-    
 }
 head.appendChild(script);
 
@@ -259,15 +258,19 @@ TESTS = [
 const runTests = async() => {
     // instantiate the metaframe object
     if (VERSION == 'latest') {
-        var mf = new Metaframe();
-    } else if (window.compareVersions(VERSION, '0.1.35') <= 0) {
+        var mf = new metaframe.Metaframe();
+    } else if (window.compareVersions(VERSION, '0.1.35') <= 0 || window.compareVersions(VERSION, '0.4.100') >= 0) {
         // earlier versions have the annoying package name (since removed)
         var mf = new metaframe.Metaframe();
     } else {
         var mf = new Metaframe();
     }
     // wait until its connected to the parent
-    await mf.ready;
+    const isReady = await mf.ready;
+    if (!isReady) {
+        return;
+    }
+
 
     if (!mf._iframeId) {
         throw 'Metaframe claims ready but missing ._iframeId';
