@@ -1,5 +1,0 @@
-build-base.hxml
-
-js.metapage.client.Metapage
--js docs/js/metapage.js
-

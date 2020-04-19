@@ -1,5 +1,4 @@
-// import { EventEmitter } from "./EventEmitter";
-import {EventEmitter, ListenerFn } from 'eventemitter3';
+import {EventEmitter, ListenerFn} from "eventemitter3";
 import minimatch from "minimatch";
 import {URL_PARAM_DEBUG, VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION} from "../Constants";
 import {Versions} from "../MetaLibsVersion";
@@ -31,7 +30,7 @@ import {
   generateMetapageId,
   existsAnyUrlParam,
   convertToCurrentDefinition,
-  merge,
+  merge
 } from "./MetapageTools";
 import {JsonRpcRequest} from "../jsonrpc2";
 
@@ -51,10 +50,10 @@ export enum MetapageEventStateType {
 export interface MetapageEventDefinition {
   definition: MetapageDefinition;
   metaframes: {
-    [key: string]: IFrameRpcClient
+    [key: string]: IFrameRpcClient;
   };
   plugins?: {
-    [key: string]: IFrameRpcClient
+    [key: string]: IFrameRpcClient;
   };
 }
 
@@ -89,7 +88,7 @@ export const getLibraryVersionMatching = (version : string): Versions => {
 
 const CONSOLE_BACKGROUND_COLOR_DEFAULT = "bcbcbc";
 
-export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromParent | OtherEvents> {
+export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFromParent | OtherEvents > {
   // The current version is always the latest
   public static readonly version = VERSION;
 
@@ -120,10 +119,10 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
   _definition: MetapageDefinition;
   _state: MetapageState = emptyState();
   _metaframes: {
-    [key: string]: IFrameRpcClient
+    [key: string]: IFrameRpcClient;
   } = {}; //<MetaframeId, IFrameRpcClient>
   _plugins: {
-    [key: string]: IFrameRpcClient
+    [key: string]: IFrameRpcClient;
   } = {}; // <Url, IFrameRpcClient>
   _pluginOrder: Url[] = [];
 
@@ -136,13 +135,13 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
     [key: string]: {
       [key: string]: {
         metaframe: MetaframeId;
-        pipe: MetaframePipeId
+        pipe: MetaframePipeId;
       }[];
     };
   } = {};
   // _inputMap :JSMap<MetaframeId, Array<PipeInput>> = {};
   _inputMap: {
-    [key: string]: PipeInput[]
+    [key: string]: PipeInput[];
   } = {};
   // Example:
   // 	{
@@ -224,7 +223,7 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
     super.addListener(event, listener);
     const disposer = () => {
       super.removeListener(event, listener);
-    }
+    };
     return disposer;
   }
 
@@ -433,14 +432,16 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
   }
 
   public getMetaframes(): {
-    [key: string]: IFrameRpcClient
-  } { //<MetaframeId,IFrameRpcClient>
+    [key: string]: IFrameRpcClient;
+  } {
+    //<MetaframeId,IFrameRpcClient>
     return Object.assign({}, this._metaframes);
   }
 
   public plugins(): {
-    [key: string]: IFrameRpcClient
-  } { //<Url,IFrameRpcClient>
+    [key: string]: IFrameRpcClient;
+  } {
+    //<Url,IFrameRpcClient>
     return Object.assign({}, this._plugins);
   }
 
@@ -547,7 +548,7 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
 
   getInputsFromOutput(source : MetaframeId, outputPipeId : MetaframePipeId): {
     metaframe: MetaframeId;
-    pipe: MetaframePipeId
+    pipe: MetaframePipeId;
   }[]{
     // Do all the cache checking
     if (!this._cachedInputLookupMap[source]) {
@@ -557,7 +558,7 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
     if (!this._cachedInputLookupMap[source][outputPipeId]) {
       var targets: {
         metaframe: MetaframeId;
-        pipe: MetaframePipeId
+        pipe: MetaframePipeId;
       }[] = [];
       this._cachedInputLookupMap[source][outputPipeId] = targets;
       // Go through the data structure, getting all the matching inputs that match this output
@@ -710,7 +711,9 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
             : this._state.plugins.outputs;
 
         // Ensure a map
-        inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null ? inputOrOutputState[metaframeId] : {} as MetaframeInstance;
+        inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null
+          ? inputOrOutputState[metaframeId]
+          : ({} as MetaframeInstance);
 
         Object.keys(metaframeValuesNew).forEach(metaframePipedId => {
           // A key with a value of undefined means remove the key from the state object
@@ -739,7 +742,8 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
       if (typeof inputPipeId === "string") {
         // Ensure a map
         inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null
-          ? inputOrOutputState[metaframeId] : {} as MetaframeInstance;
+          ? inputOrOutputState[metaframeId]
+          : ({} as MetaframeInstance);
 
         const metaframePipeId: MetaframePipeId = inputPipeId;
 
@@ -752,7 +756,9 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
         }
       } else if (typeof inputPipeId === "object") {
         // Ensure a map
-        inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null ? inputOrOutputState[metaframeId] : {} as MetaframeInstance;
+        inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null
+          ? inputOrOutputState[metaframeId]
+          : ({} as MetaframeInstance);
 
         const metaframeValuesNew: MetaframeInputMap = inputPipeId;
 
@@ -783,7 +789,7 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
   }
 
   onMessage(e : any) {
-    if (typeof(e.data) === "object") {
+    if (typeof e.data === "object") {
       const jsonrpc = e.data as MinimumClientMessage<any>;
       if (!this.isValidJSONRpcMessage(jsonrpc)) {
         // if (this.debug) {
@@ -983,7 +989,7 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
     }
   }
 
-  logInternal(o : any, color? : string, backgroundColor ?:string) {
+  logInternal(o : any, color? : string, backgroundColor? : string) {
     backgroundColor = backgroundColor != null
       ? backgroundColor
       : this._consoleBackgroundColor;
@@ -1025,7 +1031,7 @@ export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromPa
 }
 // #end
 
-class IFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEvents> {
+class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | MetapageEvents > {
   iframe: HTMLIFrameElement;
   id: MetaframeId;
   version: Versions;
@@ -1117,7 +1123,7 @@ class IFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEv
     super.addListener(event, listener);
     const disposer = () => {
       super.removeListener(event, listener);
-    }
+    };
     return disposer;
   }
 

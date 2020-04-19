@@ -18,17 +18,16 @@ enum MetaframeEvents {
   Message = "message"
 }
 
-export const isIframe = () :boolean => {
+export const isIframe = (): boolean => {
   //http://stackoverflow.com/questions/326069/how-to-identify-if-a-webpage-is-being-loaded-inside-an-iframe-or-directly-into-t
   try {
     return window !== window.top;
   } catch (ignored) {
     return false;
   }
-}
+};
 
-export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFromChild> {
-
+export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFromChild > {
   public static readonly version = VERSION;
 
   public static readonly INPUT = MetaframeEvents.Input;
@@ -82,7 +81,6 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
     this.setOutputs = this.setOutputs.bind(this);
     this.warn = this.warn.bind(this);
 
-
     if (!this._isIframe) {
       //Don't add any of the machinery, it only works if we're iframes.
       //This will never return
@@ -92,8 +90,6 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
       this.log("Not an iframe, metaframe code disabled");
       return;
     }
-
-    
 
     window.addEventListener("message", this.onWindowMessage);
 
@@ -154,7 +150,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
     super.addListener(event, listener);
     const disposer = () => {
       super.removeListener(event, listener);
-    }
+    };
     return disposer;
   }
 

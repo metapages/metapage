@@ -1,4 +1,4 @@
-import { compare } from "compare-versions";
+import {compare} from "compare-versions";
 import {URL_PARAM_DEBUG} from "../Constants";
 import {Versions, AllVersions, CurrentVersion} from "../MetaLibsVersion";
 import {MetaframeInputMap, MetaframeId, MetapageId, MetapageDefinition} from "../v0_3/all";
@@ -76,13 +76,13 @@ export const merge = (current : MetaframeInputMap, newInputs : MetaframeInputMap
 export const getMatchingVersion = (version : string): Versions => {
   if (version == "latest") {
     return CurrentVersion;
-  } else if (compare(version, "0.0.x", '<')) {
+  } else if (compare(version, "0.0.x", "<")) {
     return Versions.V0_0_1;
-  } else if (compare(version, "0.1.36", '>=') && compare(version, Versions.V0_2, '<')) {
+  } else if (compare(version, "0.1.36", ">=") && compare(version, Versions.V0_2, "<")) {
     return Versions.V0_1_0;
-  } else if (compare(version, "0.2", '>=') && compare(version, Versions.V0_3, '<')) {
+  } else if (compare(version, "0.2", ">=") && compare(version, Versions.V0_3, "<")) {
     return Versions.V0_2;
-  } else if (compare(version, "0.3", '>=')) {
+  } else if (compare(version, "0.3", ">=")) {
     return Versions.V0_3;
   } else {
     // Return something, assume latest
@@ -161,7 +161,8 @@ export const stringToRgb = (str : string): string => {
   return intToRGB(hashCode(str));
 };
 
-export const hashCode = (str : string): number => { // java string#hashCode
+export const hashCode = (str : string): number => {
+  // java string#hashCode
   var hash = 0;
   for (let i = 0; i < str.length; i++) {
     hash = str.charCodeAt(i) + ((hash << 5) - hash);
