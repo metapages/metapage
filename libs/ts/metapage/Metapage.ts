@@ -1,7 +1,7 @@
 import {EventEmitter, ListenerFn} from "eventemitter3";
 import minimatch from "minimatch";
-import {URL_PARAM_DEBUG, VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION} from "../Constants";
-import {Versions} from "../MetaLibsVersion";
+import {URL_PARAM_DEBUG, VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION} from "./Constants";
+import {Versions} from "./MetaLibsVersion";
 import {
   MetaframeDefinition,
   MetaframeInstance,
@@ -13,7 +13,7 @@ import {
   MetapageId,
   MetapageInstanceInputs,
   MetapageDefinition
-} from "../v0_3/all";
+} from "./v0_3/all";
 import {
   JsonRpcMethodsFromParent,
   JsonRpcMethodsFromChild,
@@ -22,7 +22,7 @@ import {
   SetupIframeClientAckData,
   OtherEvents,
   ClientMessageRecievedAck
-} from "../v0_3/JsonRpcMethods";
+} from "./v0_3/JsonRpcMethods";
 import {
   stringToRgb,
   log as MetapageToolsLog,
@@ -32,7 +32,7 @@ import {
   convertToCurrentDefinition,
   merge
 } from "./MetapageTools";
-import {JsonRpcRequest} from "../jsonrpc2";
+import {JsonRpcRequest} from "./jsonrpc2";
 
 export enum MetapageEvents {
   Inputs = "inputs",

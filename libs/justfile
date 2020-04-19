@@ -19,24 +19,40 @@ generate:
 	#!/usr/bin/env node
 	console.log('sfsf')
 
-# Build the production distributions in build/metaframe and build/metapage
+# Build the production npm distributions in dist/metaframe and dist/metapage
 @build: clean _build
 
 @_build:
-	tsc --declaration --emitDeclarationOnly
-	{{parcel}} build --target browser --global metaframe --out-dir build/browser/metaframe ts/metapage/client/Metaframe.ts
-	{{parcel}} build --target browser --global metapage  --out-dir build/browser/metapage  ts/metapage/client/Metapage.ts
+	@tsc --declaration --outFile dist/metapage/index.d.ts --emitDeclarationOnly
+	@{{parcel}} build --target browser --global metapage ts/metapage/Metapage.ts --out-dir dist/metapage/browser --out-file index.js
+	@{{parcel}} build --target node ts/metapage/Metapage.ts --out-dir dist/metapage --out-file index.js
+	cp package.json dist/metapage/package.json
+	cp README-PACKAGE.md dist/metapage/README.md
+	cp LICENSE dist/metapage/
 
-	@# copy production builds to the (dev+docs+test) dir
-	cp -r build/metaframe/* ../docs/js/
-	cp -r build/metapage/* ../docs/js/
-	cp -r build/metapage/Metapage* test/page/js/
-	cp -r build/metaframe/Metaframe* test/page/js/
+	@{{parcel}} build --target browser --global metaframe ts/metapage/Metaframe.ts --out-dir dist/metaframe/browser --out-file index.js
+	@{{parcel}} build --target node ts/metapage/Metaframe.ts --out-dir dist/metaframe --out-file index.js
+	cp dist/metapage/index.d.ts dist/metaframe/
+	# use the same package.json but change the name
+	cat package.json | jq '.name = "metaframe"' > dist/metaframe/package.json
+	cp README-PACKAGE.md dist/metaframe/README.md
+	cp LICENSE dist/metaframe/
 
-	echo "✅ created build/metapage"
-	echo "✅ created build/metaframe"
-	echo "✅ created ../docs/js/Meta*"
-	echo "✅ created test/page/js/Meta*"
+
+
+	#{{parcel}} build --target browser --global metaframe --out-file dist/metaframe.js ts/metapage/Metaframe.ts
+	#{{parcel}} build --target browser --global metapage  --out-dir build/browser/metapage  ts/metapage/client/Metapage.ts
+
+	# @# copy production builds to the (dev+docs+test) dir
+	# cp -r build/metaframe/* ../docs/js/
+	# cp -r build/metapage/* ../docs/js/
+	# cp -r build/metapage/Metapage* test/page/js/
+	# cp -r build/metaframe/Metaframe* test/page/js/
+
+	# echo "✅ created build/metapage"
+	# echo "✅ created build/metaframe"
+	# echo "✅ created ../docs/js/Meta*"
+	# echo "✅ created test/page/js/Meta*"
 
 @_build_for_test_dev:
 	NODE_ENV=development {{parcel}} build --target browser --global metaframe --public-url '/js' --out-dir test/page/js/ ts/metapage/client/Metaframe.ts
@@ -48,7 +64,7 @@ generate:
 	echo "✅ watching and building for test/page/js/ only"
 	watchexec --watch ts -- 'tsc && just _build_for_test_dev'
 
-clean:
+@clean:
 	rm -rf build
 	rm -rf dist
 	rm -rf ../docs/js/Metapage*
@@ -64,3 +80,44 @@ _versions-write-versions-to-jekyll:
 	var fs = require('fs');
 	var p = lib.getMetapageVersions(true);
 	p.then((versions) => { var out = 'versions: ' + JSON.stringify(versions); console.log('./docs/_data/versions.yml:\n' + out + '\n'); fs.writeFileSync('/docs/_data/versions.yml', out + '\n')});
+
+# npm publish the packages (metaframe+metapage)
+publish: require_NPM_TOKEN build
+	@echo "PUBLISHING npm version `cat package.json | jq -r '.version'`"
+
+	echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> dist/metapage/.npmrc
+	echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> dist/metaframe/.npmrc
+
+	cd dist/metapage; npm publish .
+	cd dist/metaframe; npm publish .
+
+# @rm -rf ${BASE_DIST}
+# @npx webpack --mode=production
+# @for name in "metaframe" "metapage" ; do \
+# 	mkdir -p ${BASE_DIST}/$${name} ; \
+# 	cat package.json | jq ". .name = \"$${name}\"" > ${BASE_DIST}/$${name}/package.json ; \
+# 	cp README-PACKAGE.md ${BASE_DIST}/$${name}/README.md ; \
+# 	cp LICENSE ${BASE_DIST}/$${name}/ ; \
+# 	echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" >> ${BASE_DIST}/$${name}/.npmrc ; \
+# 	pushd ${BASE_DIST}/$${name} ; \
+# 	npm publish . || exit 1 ; \
+# 	popd ; \
+# done
+
+# .PHONY: publish-update-jekyll-script-links
+# publish-update-jekyll-script-links: ###npm Get the version from package.json and update hard-coded fields elsewhere
+# 	export VERSION=$$(cat package.json | jq -r '.version') && \
+# 		sed -i "s#[0-9]\+\.[0-9]\+\.[0-9]\+#$${VERSION}#g" docs/_includes/metaframe_lib_script.html && \
+# 		sed -i "s#[0-9]\+\.[0-9]\+\.[0-9]\+#$${VERSION}#g" docs/_includes/metapage_lib_script.html && \
+# 		printf "metaframe: \"$${VERSION}\"\nmetapage: \"$${VERSION}\"\n" > docs/_data/lib_versions.yml
+
+
+# # Bump the npm+git-tag version
+# NEW_VERSION ?= patch
+# # https://docs.npmjs.com/cli/version.html
+# .PHONY: publish-new-version
+# publish-new-version: guard-env-NEW_VERSION ###npm npm version, git tag, and push to release a new version and publish docs
+# 	npm version ${NEW_VERSION}
+
+@require_NPM_TOKEN:
+	if [ -z "$NPM_TOKEN" ]; then echo "Missing require_NPM_TOKEN"; exit 1; fi

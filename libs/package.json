@@ -1,10 +1,12 @@
 {
     "name": "metapage",
-    "version": "0.5.0",
+    "version": "0.4.100-test1",
     "description": "Connect web pages together",
     "repository": "https://github.com/dionjwa/metapage",
     "homepage": "https://metapages.org/",
     "main": "index.js",
+    "module": "index.js",
+    "browser": "browser/index.js",
     "types": "index.d.ts",
     "dependencies": {
         "compare-versions": "^3.6.0",

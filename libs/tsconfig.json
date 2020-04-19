@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "lib": ["dom", "ES2017"],
+        "target": "es6",
+        "module": "es2015",
+        "moduleResolution": "node",
+        // "noEmit": true,
+        "removeComments": true,
+        "declaration": true,
+        "typeRoots": ["node_modules/@types", "ts/metapage/types"],
+        "baseUrl": "./ts",
+        "paths": {
+            "~*": ["./*"]
+        }
+        // "include": ["ts/**/*"]
+    }
+}

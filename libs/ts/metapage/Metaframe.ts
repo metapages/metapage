@@ -1,7 +1,7 @@
 import {EventEmitter, ListenerFn} from "eventemitter3";
-import {VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION} from "../Constants";
-import {Versions} from "../MetaLibsVersion";
-import {MetaframeInputMap, MetaframePipeId, MetaframeId, MetapageId} from "../v0_3/all";
+import {VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION} from "./Constants";
+import {Versions} from "./MetaLibsVersion";
+import {MetaframeInputMap, MetaframePipeId, MetaframeId, MetapageId} from "./v0_3/all";
 import {
   ApiPayloadPluginRequest,
   ApiPayloadPluginRequestMethod,
@@ -9,7 +9,7 @@ import {
   JsonRpcMethodsFromChild,
   SetupIframeServerResponseData,
   MinimumClientMessage
-} from "../v0_3/JsonRpcMethods";
+} from "./v0_3/JsonRpcMethods";
 import {getUrlParamDEBUG, stringToRgb, log as MetapageToolsLog, merge} from "./MetapageTools";
 
 enum MetaframeEvents {
