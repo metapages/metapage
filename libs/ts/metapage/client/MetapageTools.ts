@@ -1,7 +1,7 @@
 import compareVersions from "compare-versions";
 import {URL_PARAM_DEBUG} from "../Constants";
 import {Versions, AllVersions, CurrentVersion} from "../MetaLibsVersion";
-import {MetaframeInputMap, MetaframeId, MetapageId, MetapageDefinition} from "@definitions/all";
+import {MetaframeInputMap, MetaframeId, MetapageId, MetapageDefinition} from "../v0_3/all";
 
 import {MetapageDefinition as V0_2MetapageDefinition} from "v0_2/all";
 import {MetapageDefinition as V0_3MetapageDefinition} from "v0_3/all";

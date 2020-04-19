@@ -179,7 +179,6 @@ export class Metapage extends EventEmitter {
       ? opts.color
       : CONSOLE_BACKGROUND_COLOR_DEFAULT;
 
-    this._setStateOnly
     this.addPipe = this.addPipe.bind(this);
     this.dispose = this.dispose.bind(this);
     this.getDefinition = this.getDefinition.bind(this);
@@ -486,12 +485,6 @@ export class Metapage extends EventEmitter {
     return iframeClient;
   }
 
-  getMetaframe
-  getPlugin
-  addMetaframe
-  addPlugin
-  dispose
-
   // do not expose, change definition instead
   addPlugin(url : Url): IFrameRpcClient {
     if (!url) {
@@ -508,8 +501,12 @@ export class Metapage extends EventEmitter {
   public dispose() {
     super.dispose();
     window.removeEventListener("message", this.onMessage);
-    Object.keys(this._metaframes).forEach(metaframeId => this._metaframes[metaframeId].dispose());
-    Object.keys(this._plugins).forEach(pluginId => this._plugins[pluginId].dispose());
+    if (this._metaframes) {
+      Object.keys(this._metaframes).forEach(metaframeId => this._metaframes[metaframeId].dispose());
+    }
+    if (this._plugins) {
+      Object.keys(this._plugins).forEach(pluginId => this._plugins[pluginId].dispose());
+    }
 
     this._id = null;
     this._metaframes = null;
@@ -564,6 +561,7 @@ export class Metapage extends EventEmitter {
           if (inputPipe.metaframe == source) {
             //Check the kind of source string
             // it could be a basic string, or a glob?
+            console.log('attempting to match with:', match);
             if (match(outputPipeId, inputPipe.source)) {
               // A match, now figure out the actual input pipe name
               // since it might be * or absent meaning that the input
@@ -597,7 +595,7 @@ export class Metapage extends EventEmitter {
         // TODO: check origin+source
         var iframeId: MetaframeId = message.iframeId;
         if (!(message.parentId === this._id && (this._metaframes[iframeId] || this._plugins[iframeId]))) {
-          this.error(`message.parentId=${message.parentId} this._id=${this._id} message.iframeId=${iframeId} this._metaframes.exists(message.iframeId)=${this._metaframes[iframeId] !== undefined} this._plugins.exists(message.iframeId)=${this._plugins[iframeId] !== undefined} message=${JSON.stringify(message).substr(0, 200)}`);
+          // this.error(`message.parentId=${message.parentId} this._id=${this._id} message.iframeId=${iframeId} this._metaframes.exists(message.iframeId)=${this._metaframes[iframeId] !== undefined} this._plugins.exists(message.iframeId)=${this._plugins[iframeId] !== undefined} message=${JSON.stringify(message).substr(0, 200)}`);
           return false;
         }
         return true;
@@ -776,13 +774,12 @@ export class Metapage extends EventEmitter {
   }
 
   onMessage(e : any) {
-    console.log('onMessage', e);
     if (typeof e.data === "object") {
       const jsonrpc = e.data as MinimumClientMessage<any>;
       if (!this.isValidJSONRpcMessage(jsonrpc)) {
-        if (this.debug) {
-          this.log(`invalid message ${JSON.stringify(jsonrpc).substr(0, 200)}`);
-        }
+        // if (this.debug) {
+        //   this.log(`invalid message ${JSON.stringify(jsonrpc).substr(0, 200)}`);
+        // }
         return;
       }
       // var origin :string = untyped e.origin;

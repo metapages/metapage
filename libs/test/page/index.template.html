@@ -193,6 +193,7 @@ TESTS = [
                     }
                 };
                 disposeListener = metapage.addEventListener('state', onStateChange);
+                console.log('disposeListener', disposeListener);
                 onStateChange(metapage.getState());
             });
         }
