@@ -42,7 +42,7 @@ const generate = async () => {
     var data = { environment: "production", versions:allVersions };
     // console.log('data', data);
 
-    const template = fs.readFileSync('./page/index.template.html');//"Hey, look over there! It's {{=it.thatThingOverThere}}!"
+    const template = fs.readFileSync(path.join(__dirname, './page/index.template.html'));
     const tempFunc = doT.template(template);
     var html = tempFunc(data);
 
@@ -51,7 +51,7 @@ const generate = async () => {
 
 // serve the pages to the puppeteer browser
 const createServer = async (port) => {
-    const server = require('fastify')({ logger: true })
+    const server = require('fastify')({ logger: false })
     const path = require('path')
   
     server.register(require('fastify-static'), {

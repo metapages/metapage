@@ -5,16 +5,15 @@ help:
     @just --list
 
 # watch all files and rebuild the tests and run them, on every change
-watch:
+watch: build
     watchexec --exts js,json,html --ignore node_modules --ignore page/index.html --ignore page/js --restart -- just serve
 
 # run the tests, every metapage lib using every metaframe lib
-test:
-    just ../build
+test: generate
     node test.js
 
 build:
-    just ../build
+    just ../_build_for_test_dev
 
 
 # Use with '<libs/> just watch' and manually refresh the browser

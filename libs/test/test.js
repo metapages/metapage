@@ -66,27 +66,29 @@ const getMetapageTestUrl = (version) => {
 (async () => {
   
   server = await lib.createServer(serverPort);
+  console.log('serging!!!')
   await lib.generate();
+  console.log('generated!!!')
 
   let allVersions = await lib.getMetapageVersions();
   allVersions.push('latest');
   console.log('allVersions', allVersions);
 
-  // const maxTimeAllTests = timePerTest * allVersions.length ** 2;
-  // console.log(`Timeout: ${maxTimeAllTests / 1000}s`);
-  // const timeout = setTimeout(() => {
-  //   console.log('☢☢☢☢☢☢☢☢☢☢   FAIL: tests timed out!   ☢☢☢☢☢☢☢☢☢☢');
-  //   process.exit(1);
-  // }, maxTimeAllTests);
+  const maxTimeAllTests = timePerTest * allVersions.length ** 2;
+  console.log(`Timeout: ${maxTimeAllTests / 1000}s`);
+  const timeout = setTimeout(() => {
+    console.log('☢☢☢☢☢☢☢☢☢☢   FAIL: tests timed out!   ☢☢☢☢☢☢☢☢☢☢');
+    process.exit(1);
+  }, maxTimeAllTests);
 
-  // console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('docs', 'localhost')).join("\n  ")}`);
+  console.log(`  ${allVersions.map(getMetapageTestUrl).map(e => e.replace('docs', 'localhost')).join("\n  ")}`);
 
-  // // run tests sequentially, not concurrently
-  // await (async () => {
-  //     for (let job of allVersions.map(v => () => runSingleMetapageTest(v, timePerTest * allVersions.length)))
-  //         await job()
-  // })();
+  // run tests sequentially, not concurrently
+  await (async () => {
+      for (let job of allVersions.map(v => () => runSingleMetapageTest(v, timePerTest * allVersions.length)))
+          await job()
+  })();
 
-  // clearTimeout(timeout);
-  // console.log(`🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀   SUCCESS Test(s) pass!   🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀`);
+  clearTimeout(timeout);
+  console.log(`🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀   SUCCESS Test(s) pass!   🍀🍀🍀🍀🍀🍀🍀🍀🍀🍀`);
 })();

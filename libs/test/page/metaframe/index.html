@@ -43,11 +43,12 @@ script.setAttribute('type', 'text/javascript');
 if (VERSION == 'latest') {
     script.setAttribute('src', `/js/Metaframe.js`);
 } else {
-    let minSuffix = '';
-    if (!VERSION.startsWith('latest') && debug && window.compareVersions(VERSION, '0.3.4') >= 0) {
-        minSuffix = '.min';
+    if (window.compareVersions(VERSION, '0.4.100') >= 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/browser/index.js`);
+    } else {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/browser${debug ? '' : '.min'}.js`);
     }
-    script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/browser${debug ? '' : '.min'}.js`);
+    
 }
 head.appendChild(script);
 

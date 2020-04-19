@@ -12,7 +12,7 @@ help:
     @just --list
 
 # Run tests
-test:
+test: _build_for_test_dev
 	node test/test.js
 
 generate:
@@ -55,14 +55,15 @@ generate:
 	# echo "✅ created test/page/js/Meta*"
 
 @_build_for_test_dev:
-	NODE_ENV=development {{parcel}} build --target browser --global metaframe --public-url '/js' --out-dir test/page/js/ ts/metapage/client/Metaframe.ts
-	NODE_ENV=development {{parcel}} build --target browser --global metapage  --public-url '/js' --out-dir test/page/js/ ts/metapage/client/Metapage.ts
+	NODE_ENV=development {{parcel}} build --target browser --global metaframe --public-url '/js' --out-dir test/page/js/ --out-file Metaframe.js ts/metapage/Metaframe.ts
+	NODE_ENV=development {{parcel}} build --target browser --global metapage  --public-url '/js' --out-dir test/page/js/ --out-file Metapage.js ts/metapage/Metapage.ts
 	echo "✅ created test/page/js/Meta*"
 
 # watch for file changes, building on change.
 @watch out=dev_out_dir: clean
 	echo "✅ watching and building for test/page/js/ only"
-	watchexec --watch ts -- 'tsc && just _build_for_test_dev'
+	tsc --noEmit
+	watchexec --watch ts -- 'tsc --noEmit && just _build_for_test_dev'
 
 @clean:
 	rm -rf build
