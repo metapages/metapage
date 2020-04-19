@@ -5,6 +5,7 @@
     "repository": "https://github.com/dionjwa/metapage",
     "homepage": "https://metapages.org/",
     "main": "index.js",
+    "types": "index.d.ts",
     "dependencies": {
         "compare-versions": "^3.6.0",
         "dot": "^1.1.3",

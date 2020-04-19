@@ -11,10 +11,8 @@ dev_out_dir     := "test/page/js/"
 help:
     @just --list
 
-# TODO: remove the jekyll dependency, and just create a static page to serve
-# Run tests, expects jekyll running to serve the page
+# Run tests
 test:
-	just test
 	node test/test.js
 
 generate:
@@ -25,8 +23,9 @@ generate:
 @build: clean _build
 
 @_build:
-	{{parcel}} build --target browser --global metaframe --out-dir build/metaframe ts/metapage/client/Metaframe.ts
-	{{parcel}} build --target browser --global metapage  --out-dir build/metapage  ts/metapage/client/Metapage.ts
+	tsc --declaration --emitDeclarationOnly
+	{{parcel}} build --target browser --global metaframe --out-dir build/browser/metaframe ts/metapage/client/Metaframe.ts
+	{{parcel}} build --target browser --global metapage  --out-dir build/browser/metapage  ts/metapage/client/Metapage.ts
 
 	@# copy production builds to the (dev+docs+test) dir
 	cp -r build/metaframe/* ../docs/js/

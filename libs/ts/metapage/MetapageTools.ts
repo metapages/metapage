@@ -1,10 +1,10 @@
 import {compare} from "compare-versions";
-import {URL_PARAM_DEBUG} from "../Constants";
-import {Versions, AllVersions, CurrentVersion} from "../MetaLibsVersion";
-import {MetaframeInputMap, MetaframeId, MetapageId, MetapageDefinition} from "../v0_3/all";
+import {URL_PARAM_DEBUG} from "./Constants";
+import {Versions, AllVersions, CurrentVersion} from "./MetaLibsVersion";
+import {MetaframeInputMap, MetaframeId, MetapageId, MetapageDefinition} from "./v0_3/all";
 
-import {MetapageDefinition as V0_2MetapageDefinition} from "../v0_2/all";
-import {MetapageDefinition as V0_3MetapageDefinition} from "../v0_3/all";
+import {MetapageDefinition as V0_2MetapageDefinition} from "./v0_2/all";
+import {MetapageDefinition as V0_3MetapageDefinition} from "./v0_3/all";
 
 // metapages can convert any past version to the current version.
 export const convertToCurrentDefinition = (def : any): MetapageDefinition => {
