@@ -134,6 +134,7 @@ Reminders:
     just _post-version-new-publish
 
     Last task and commands:
-    - converting to typescript and use parcel to package
+    - converted to typescript! just libs/test needs to properly test, and package.
     - commands: just up, make sure all docker-compose paths are correct, then get tests working.
+    - clean up, and copy test html to the right place
 '

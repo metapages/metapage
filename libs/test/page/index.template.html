@@ -41,14 +41,6 @@ var VERSION = urlParams.get('VERSION');
     VERSION = VERSION == null ? 'latest' : VERSION;
 {{?}}
 
-
-
-// {% if jekyll.environment == "production" %}
-// VERSION = VERSION == null ? '{site.data.versions.versions.last}' : VERSION;
-// {% else %}
-// VERSION = VERSION == null ? 'latest' : VERSION;
-// {% endif %}
-
 const debug = ['DEBUG', 'debug', 'MP_DEBUG', 'mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag));
 
 document.getElementById('version').innerText = `metapage v${VERSION}`;
@@ -93,15 +85,6 @@ const VERSIONS_METAFRAME = [];
     VERSIONS_METAFRAME.unshift('latestFirst');
     VERSIONS_METAFRAME.push('latest');
 {{?}}
-
-// {% for v in site.data.versions.versions %}
-//     VERSIONS_METAFRAME.push("{v}");
-// {% endfor %}
-// {% if jekyll.environment != "production" %}
-//     // Test the current version inputs *and* outputs
-//     VERSIONS_METAFRAME.unshift('latestFirst');
-//     VERSIONS_METAFRAME.push('latest');
-// {% endif %}
 
 var PAGEURL = new URL(window.location.href);
 
