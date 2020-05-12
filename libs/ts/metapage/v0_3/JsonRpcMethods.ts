@@ -34,8 +34,8 @@ export interface SetupIframeServerResponseData {
 }
 
 export interface MinimumClientMessage<T> extends JsonRpcRequest<T> {
-  iframeId: MetaframeId;
-  parentId: MetapageId;
+  iframeId: MetaframeId | undefined;
+  parentId: MetapageId | undefined;
 }
 
 export interface SetupIframeClientAckData<T> extends MinimumClientMessage<T> {

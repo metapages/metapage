@@ -68,7 +68,7 @@ export interface MetapageState {
 }
 
 type Url = string;
-type Listener = (a1? : any, a2? : any) => void;
+// type Listener = (a1? : any, a2? : any) => void;
 
 const emptyState = (): MetapageState => {
   return {
@@ -85,6 +85,12 @@ const emptyState = (): MetapageState => {
 export const getLibraryVersionMatching = (version : string): Versions => {
   return getMatchingVersion(version);
 };
+
+
+type MetaframeInputTargetsFromOutput = {
+  metaframe: MetaframeId;
+  pipe: MetaframePipeId;
+}
 
 const CONSOLE_BACKGROUND_COLOR_DEFAULT = "bcbcbc";
 
@@ -116,7 +122,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
   }
 
   _id: MetapageId;
-  _definition: MetapageDefinition;
+  _definition: MetapageDefinition | undefined;
   _state: MetapageState = emptyState();
   _metaframes: {
     [key: string]: IFrameRpcClient;
@@ -132,11 +138,8 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
   // for caching input lookups
   // _cachedInputLookupMap :JSMap<MetaframeId, JSMap<MetaframePipeId, Array<{metaframe :MetaframeId, pipe :MetaframePipeId}>>> = {};
   _cachedInputLookupMap: {
-    [key: string]: {
-      [key: string]: {
-        metaframe: MetaframeId;
-        pipe: MetaframePipeId;
-      }[];
+    [key: string]: { // metaframeId
+      [key: string]: MetaframeInputTargetsFromOutput[]; // <metaframeId, MetaframeInputTargetsFromOutput[]>
     };
   } = {};
   // _inputMap :JSMap<MetaframeId, Array<PipeInput>> = {};
@@ -172,10 +175,10 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
 
   constructor(opts? : MetapageOptions) {
     super();
-    this._id = opts != null && opts.id != null
+    this._id = opts && opts.id
       ? opts.id
       : generateMetapageId();
-    this._consoleBackgroundColor = opts != null && opts.color != null
+    this._consoleBackgroundColor = opts && opts.color
       ? opts.color
       : CONSOLE_BACKGROUND_COLOR_DEFAULT;
 
@@ -259,15 +262,15 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
     return this._state.metaframes;
   }
 
-  public getDefinition(): MetapageDefinition {
+  public getDefinition(): MetapageDefinition | undefined {
     return this._definition;
   }
 
   public setDefinition(def : any, state? : MetapageState): Metapage {
     // Some validation
     // can metaframes and plugins share IDs? No.
-    const newDefinition = convertToCurrentDefinition(def);
-    if (newDefinition.metaframes != null) {
+    const newDefinition :MetapageDefinition = convertToCurrentDefinition(def);
+    if (newDefinition.metaframes) {
       Object.keys(newDefinition.metaframes).forEach(metaframeId => {
         if (newDefinition.plugins && newDefinition.plugins.includes(metaframeId)) {
           this.emitErrorMessage(`Plugin with url=${metaframeId} matches metaframe. Metaframe ids and plugin urls are not allowed to collide`);
@@ -295,7 +298,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
     // destroy any metaframes not in the new definition
     Object.keys(this._metaframes).forEach(metaframeId => {
       // Doesn't exist? Destroy it
-      if (!this._definition.metaframes || !this._definition.metaframes[metaframeId]) {
+      if (!newDefinition.metaframes || !newDefinition.metaframes[metaframeId]) {
         // this removes the metaframe, pipes, inputs, caches
         this.removeMetaframe(metaframeId);
       }
@@ -304,34 +307,34 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
     // destroy any plugins not in the new definition
     Object.keys(this._plugins).forEach(url => {
       // Doesn't exist? Destroy it
-      if (!this._definition.plugins.includes(url)) {
+      if (newDefinition.plugins && !newDefinition.plugins.includes(url)) {
         this.removePlugin(url);
       }
     });
 
     // the plugin order
-    this._pluginOrder = this._definition.plugins != null
-      ? this._definition.plugins
+    this._pluginOrder = newDefinition.plugins
+      ? newDefinition.plugins
       : [];
 
     // if the state is updated, set that now
-    if (state != null) {
+    if (state) {
       this._state = state;
     }
 
     // Create any new metaframes needed
-    if (this._definition.metaframes != null) {
-      Object.keys(this._definition.metaframes).forEach(newMetaframeId => {
+    if (newDefinition.metaframes) {
+      Object.keys(newDefinition.metaframes).forEach(newMetaframeId => {
         if (!this._metaframes.hasOwnProperty(newMetaframeId)) {
-          const metaframeDefinition = this._definition.metaframes[newMetaframeId];
+          const metaframeDefinition = newDefinition.metaframes[newMetaframeId];
           this.addMetaframe(newMetaframeId, metaframeDefinition);
         }
       });
     }
 
     // Create any new plugins
-    if (this._definition.plugins != null) {
-      this._definition.plugins.forEach(url => {
+    if (newDefinition.plugins) {
+      newDefinition.plugins.forEach(url => {
         if (!this._plugins.hasOwnProperty(url)) {
           this.addPlugin(url);
         }
@@ -349,7 +352,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
     };
     window.setTimeout(() => {
       this.emit(MetapageEvents.Definition, event);
-      if (state != null) {
+      if (state) {
         this.emit(MetapageEvents.State, this._state);
       }
     }, 0);
@@ -481,11 +484,11 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
       throw `Metaframe definition missing url id=${metaframeId}`;
     }
 
-    var iframeClient = new IFrameRpcClient(definition.url, metaframeId, this._id, this._consoleBackgroundColor, this.debug).setMetapage(this);
+    var iframeClient = new IFrameRpcClient(this, definition.url, metaframeId, this._id, this._consoleBackgroundColor, this.debug).setMetapage(this);
     this._metaframes[metaframeId] = iframeClient;
 
     // add the pipes
-    if (definition.inputs != null) {
+    if (definition.inputs) {
       definition.inputs.forEach(input => this.addPipe(metaframeId, input));
     }
 
@@ -501,7 +504,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
       throw "Plugin missing url";
     }
 
-    var iframeClient = new IFrameRpcClient(url, url, this._id, this._consoleBackgroundColor, this.debug).setInputs(this._state.plugins.inputs[url]).setMetapage(this).setPlugin();
+    var iframeClient = new IFrameRpcClient(this, url, url, this._id, this._consoleBackgroundColor, this.debug).setInputs(this._state.plugins.inputs[url]).setMetapage(this).setPlugin();
 
     this._plugins[url] = iframeClient;
 
@@ -519,13 +522,20 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
       Object.keys(this._plugins).forEach(pluginId => this._plugins[pluginId].dispose());
     }
 
-    this._id = null;
-    this._metaframes = null;
-    this._plugins = null;
-    this._state = null;
-    this._definition = null;
-    this._cachedInputLookupMap = null;
-    this._inputMap = null;
+    // help the gc remove references but ignore the TS warnings as this object is now gone so don't touch it
+    // @ts-ignore
+    this._id = undefined;
+    // @ts-ignore
+    this._metaframes = undefined;
+    // @ts-ignore
+    this._plugins = undefined;
+    // @ts-ignore
+    this._state = undefined;
+    this._definition = undefined;
+    // @ts-ignore
+    this._cachedInputLookupMap = undefined;
+    // @ts-ignore
+    this._inputMap = undefined;
   }
 
   public log(o : any, color? : string, backgroundColor? : string) {
@@ -545,21 +555,14 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
   }
 
   // This call is cached
-
-  getInputsFromOutput(source : MetaframeId, outputPipeId : MetaframePipeId): {
-    metaframe: MetaframeId;
-    pipe: MetaframePipeId;
-  }[]{
+  getInputsFromOutput(source : MetaframeId, outputPipeId : MetaframePipeId): MetaframeInputTargetsFromOutput[]{
     // Do all the cache checking
     if (!this._cachedInputLookupMap[source]) {
       this._cachedInputLookupMap[source] = {};
     }
 
     if (!this._cachedInputLookupMap[source][outputPipeId]) {
-      var targets: {
-        metaframe: MetaframeId;
-        pipe: MetaframePipeId;
-      }[] = [];
+      var targets: MetaframeInputTargetsFromOutput[] = [];
       this._cachedInputLookupMap[source][outputPipeId] = targets;
       // Go through the data structure, getting all the matching inputs that match this output
       Object.keys(this._inputMap).forEach(metaframeId => {
@@ -603,8 +606,8 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
         return true;
       default:
         // TODO: check origin+source
-        var iframeId: MetaframeId = message.iframeId;
-        if (!(message.parentId === this._id && (this._metaframes[iframeId] || this._plugins[iframeId]))) {
+        var iframeId: MetaframeId | undefined = message.iframeId;
+        if (iframeId && !(message.parentId === this._id && (this._metaframes[iframeId] || this._plugins[iframeId]))) {
           // this.error(`message.parentId=${message.parentId} this._id=${this._id} message.iframeId=${iframeId} this._metaframes.hasOwnProperty(message.iframeId)=${this._metaframes[iframeId] !== undefined} this._plugins.hasOwnProperty(message.iframeId)=${this._plugins[iframeId] !== undefined} message=${JSON.stringify(message).substr(0, 200)}`);
           return false;
         }
@@ -644,7 +647,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
           throw "bad arguments, see API docs";
         }
         var iframeClient = this._metaframes[metaframeId];
-        if (iframeClient != null) {
+        if (iframeClient) {
           iframeClient.setInputs(metaframeInputs);
         } else {
           this.error("No iframe id=$metaframeId");
@@ -711,7 +714,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
             : this._state.plugins.outputs;
 
         // Ensure a map
-        inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null
+        inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId]
           ? inputOrOutputState[metaframeId]
           : ({} as MetaframeInstance);
 
@@ -741,7 +744,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
 
       if (typeof inputPipeId === "string") {
         // Ensure a map
-        inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null
+        inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId]
           ? inputOrOutputState[metaframeId]
           : ({} as MetaframeInstance);
 
@@ -756,7 +759,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
         }
       } else if (typeof inputPipeId === "object") {
         // Ensure a map
-        inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId] != null
+        inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId]
           ? inputOrOutputState[metaframeId]
           : ({} as MetaframeInstance);
 
@@ -830,22 +833,29 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
           /* A client iframe responded */
         case JsonRpcMethodsFromChild.SetupIframeServerResponseAck:
           /* Send all inputs when a client has registered. */
-          var params = jsonrpc.params as SetupIframeClientAckData<any>;
-          var metaframe = this.getMetaframeOrPlugin(jsonrpc.iframeId);
-          metaframe.registered(params.version);
+          if (jsonrpc.iframeId) {
+            var params = jsonrpc.params as SetupIframeClientAckData<any>;
+            var metaframe = this.getMetaframeOrPlugin(jsonrpc.iframeId);
+            metaframe.registered(params.version);
+          }
           break;
 
         case JsonRpcMethodsFromChild.OutputsUpdate:
-          var metaframeId: MetaframeId = jsonrpc.iframeId;
+          console.log(JsonRpcMethodsFromChild.OutputsUpdate);
+          var metaframeId: MetaframeId | undefined = jsonrpc.iframeId;
+          if (!metaframeId) {
+            break;
+          }
+
           var outputs: MetaframeInputMap = jsonrpc.params;
 
           if (this.debug) 
-            this.log(`outputs ${outputs} from ${metaframeId}`);
+            this.log(`outputs from ${metaframeId}: ${JSON.stringify(outputs, null, '  ').substr(0, 100)}`);
           
           if (this._metaframes[metaframeId]) {
             var iframe = this._metaframes[metaframeId];
 
-            // set the internal state, no event yet
+            // set the internal state, no event yet, nor downstream inputs update (yet)
             this.setOutputStateOnly(metaframeId, outputs);
             // iframe outputs, metaframe only event sent
             iframe.setOutputs(outputs);
@@ -855,16 +865,15 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
             // cached lookup of where those outputs are going
             var modified = false;
             Object.keys(outputs).forEach(outputKey => {
-              const targets = this.getInputsFromOutput(metaframeId, outputKey);
+              const targets :MetaframeInputTargetsFromOutput[] = this.getInputsFromOutput(metaframeId!, outputKey);
               if (targets.length > 0) {
-                Object.keys(targets).forEach(id => {
-                  const outputSet = targets[id];
+                targets.forEach(target => {
                   var inputBlob: MetaframeInputMap = {};
-                  inputBlob[outputSet.pipe] = outputs[outputKey];
+                  inputBlob[target.pipe] = outputs[outputKey];
                   // update the metapage state first (no events)
-                  this.setInputStateOnly(outputSet.metaframe, outputSet.pipe, outputs[outputKey]);
+                  this.setInputStateOnly(target.metaframe, target.pipe, outputs[outputKey]);
                   // setting the individual inputs sends an event
-                  this._metaframes[outputSet.metaframe].setInputs(inputBlob);
+                  this._metaframes[target.metaframe].setInputs(inputBlob);
                   modified = true;
                 });
               }
@@ -901,19 +910,25 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
             this.error(`missing metaframe/plugin=$metaframeId`);
           }
 
+          console.log(`${JsonRpcMethodsFromChild.OutputsUpdate} end state`, this._state);
+          break;
+
         case JsonRpcMethodsFromChild.InputsUpdate:
           // logInternal("metapage InputsUpdate " + JSON.stringify(jsonrpc, null, "  "));
           // This is triggered by the metaframe itself, meaning the metaframe
           // decided to save this state info.
           // We store it in the local state, then send it back so
           // the metaframe is notified of its input state.
-          var metaframeId: MetaframeId = jsonrpc.iframeId;
+          var metaframeId: MetaframeId | undefined = jsonrpc.iframeId;
+          if (!metaframeId) {
+            break;
+          }
           // #if jsondiff
           // 					logDiff = getDiffRelease('${metaframeId}: ${method}');
           // #end
           var inputs: MetaframeInputMap = jsonrpc.params;
           if (this.debug) 
-            this.log(`inputs ${inputs} from ${metaframeId}`);
+            this.log(`inputs ${JSON.stringify(inputs)} from ${metaframeId}`);
           if (this._metaframes[metaframeId]) {
             // Set the internal inputs state first so that anything that
             // responds to events will get the updated state if requested
@@ -965,24 +980,29 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
             console.error(`InputsUpdate failed no metaframe or plugin id: "${metaframeId}"`);
             this.error(`InputsUpdate failed no metaframe or plugin id: "${metaframeId}"`);
           }
+          break;
         case JsonRpcMethodsFromChild.PluginRequest:
           var pluginId = jsonrpc.iframeId;
+          if (!pluginId) {
+            break;
+          }
           // #if jsondiff
           // 					logDiff = getDiffRelease('${pluginId}: ${method}');
           // #end
-          if (this._plugins[pluginId] != null && this._plugins[pluginId].hasPermissionsState()) {
+          if (this._plugins[pluginId] && this._plugins[pluginId].hasPermissionsState()) {
             this._plugins[pluginId].setInput(METAPAGE_KEY_STATE, this._state);
             if (this.debug) {
               this._plugins[pluginId].ack({jsonrpc: jsonrpc, state: this._state});
             }
           }
+          break;
         default:
           if (this.debug) {
             this.log(`Unknown RPC method: "${method}"`);
           }
       }
       // #if jsondiff
-      // 			if (logDiff != null) logDiff();
+      // 			if (logDiff) logDiff();
       // #end
 
       this.emit(OtherEvents.Message, jsonrpc);
@@ -990,7 +1010,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
   }
 
   logInternal(o : any, color? : string, backgroundColor? : string) {
-    backgroundColor = backgroundColor != null
+    backgroundColor = backgroundColor
       ? backgroundColor
       : this._consoleBackgroundColor;
     let s: string;
@@ -1001,7 +1021,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
     } else {
       s = JSON.stringify(o);
     }
-    s = this._id != null
+    s = this._id
       ? `Metapage[${this._id}] ${s}`
       : s;
     MetapageToolsLog(s, color, backgroundColor);
@@ -1034,7 +1054,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
 class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | MetapageEvents > {
   iframe: HTMLIFrameElement;
   id: MetaframeId;
-  version: Versions;
+  version: Versions | undefined;
   // Used for securing postMessage
   url: string;
   _color: string;
@@ -1049,12 +1069,12 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
   _parentId: MetapageId;
   _debug: boolean;
   _sendInputsAfterRegistration: boolean = false;
-  _definition: MetaframeDefinition;
-  _plugin: boolean;
+  _definition: MetaframeDefinition | undefined;
+  _plugin: boolean = false;
 
   _metapage: Metapage;
 
-  constructor(url : string, iframeId : MetaframeId, parentId : MetapageId, consoleBackgroundColor : string, debug : boolean = false) {
+  constructor(metapage :Metapage, url : string, iframeId : MetaframeId, parentId : MetapageId, consoleBackgroundColor : string, debug : boolean = false) {
     super();
     // Url sanitation
     // Urls can be relative paths, if so, turn them into absolute URLs
@@ -1065,11 +1085,12 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
         url = url.substr(1);
       }
       url = location.protocol + "//" + location.hostname + (
-        location.port != null && location.port != ""
+        location.port && location.port != ""
         ? ":" + location.port
         : "") + "/" + url;
     }
     this.url = url;
+    this._metapage = metapage;
 
     // Add the custom URL params
     var urlBlob = new URL(this.url);
@@ -1090,6 +1111,12 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
     this._parentId = parentId;
     this._color = stringToRgb(this.id);
     this._consoleBackgroundColor = consoleBackgroundColor;
+
+    this._ready = new Promise((resolve, _) => {
+      this.iframe.addEventListener('load', (_) => {
+        resolve();
+      });
+    });
 
     this.ack = this.ack.bind(this);
     this.bindPlugin = this.bindPlugin.bind(this);
@@ -1184,7 +1211,7 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
 
       if (this.hasPermissionsState()) {
         // if the plugin sets the metapage state, set it here
-        if (metaframeDef.outputs != null) {
+        if (metaframeDef.outputs) {
           var disposer = this.onOutput(METAPAGE_KEY_STATE, state => {
             this._metapage.setState(state);
           });
@@ -1198,11 +1225,11 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
   }
 
   public hasPermissionsState(): boolean {
-    return (this._definition != null && this._definition.inputs[METAPAGE_KEY_STATE] != null);
+    return (this._definition  !== undefined && this._definition.inputs !== undefined && this._definition.inputs![METAPAGE_KEY_STATE] !== undefined);
   }
 
   public hasPermissionsDefinition(): boolean {
-    return (this._definition != null && this._definition.inputs[METAPAGE_KEY_DEFINITION] != null);
+    return (this._definition  !== undefined && this._definition.inputs !== undefined && this._definition.inputs![METAPAGE_KEY_DEFINITION] !== undefined);
   }
 
   public getDefinitionUrl(): string {
@@ -1215,7 +1242,7 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
   }
 
   public async getDefinition(): Promise<MetaframeDefinition> {
-    if(this._definition != null) {
+    if(this._definition) {
       return this._definition;
     }
     var url = this.getDefinitionUrl();
@@ -1226,7 +1253,7 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
   }
 
   public setInput(name : MetaframePipeId, inputBlob : any) {
-    console.assert(name != null);
+    console.assert(!!name);
     var inputs: MetaframeInputMap = {};
     inputs[name] = inputBlob;
     this.setInputs(inputs);
@@ -1235,9 +1262,9 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
   /**
    * Sends the updated inputs to the iframe
    */
-  _cachedEventInputsUpdate = {
-    iframeId: null,
-    inputs: null
+  _cachedEventInputsUpdate :{iframeId:string|undefined, inputs:MetaframeInputMap|undefined}= {
+    iframeId: undefined,
+    inputs: undefined
   };
   public setInputs(maybeNewInputs : MetaframeInputMap): IFrameRpcClient {
     // this.log({m:'IFrameRpcClient', inputs:maybeNewInputs});
@@ -1251,7 +1278,7 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
     // if it's not registered, don't worry, inputs are merged,
     // and when the metaframe is registered, current inputs will
     // be sent
-    if (this.iframe.parentNode != null && this._loaded) {
+    if (this.iframe.parentNode && this._loaded) {
       this.sendInputs(maybeNewInputs);
       // } else {
       // 	log('Not setting input bc this._loaded=$_loaded');
@@ -1273,7 +1300,7 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
   }
 
   public setOutput(pipeId : MetaframePipeId, updateBlob : any) {
-    console.assert(pipeId != null);
+    console.assert(!!pipeId);
     var outputs: MetaframeInputMap = {};
     outputs[pipeId] = updateBlob;
     this.setOutputs(outputs);
@@ -1327,23 +1354,34 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
 
   public dispose() {
     super.removeAllListeners();
-    while (this._disposables != null && this._disposables.length > 0) {
-      this._disposables.pop()();
+    while (this._disposables && this._disposables.length > 0) {
+      const val = this._disposables.pop();
+      if (val) {
+        val();
+      }
     }
-    this._rpcListeners = null;
-    this.inputs = null;
-    this.outputs = null;
-    this._ready = null;
-    if (this.iframe != null && this.iframe.parentNode != null) {
+    // @ts-ignore
+    this._rpcListeners = undefined;
+    // @ts-ignore
+    this.inputs = undefined;
+    // @ts-ignore
+    this.outputs = undefined;
+    // @ts-ignore
+    this._ready = undefined;
+    if (this.iframe && this.iframe.parentNode) {
       this.iframe.parentNode.removeChild(this.iframe);
     }
-    this.iframe = null;
-    this._bufferMessages = null;
-    if (this._bufferTimeout != null) {
+    // @ts-ignore
+    this.iframe = undefined;
+    // @ts-ignore
+    this._bufferMessages = undefined;
+    if (this._bufferTimeout) {
       window.clearInterval(this._bufferTimeout);
-      this._bufferTimeout = null;
+      // @ts-ignore
+      this._bufferTimeout = undefined;
     }
-    this._metapage = null;
+    // @ts-ignore
+    this._metapage = undefined;
   }
 
   /**
@@ -1377,8 +1415,8 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
       this.version = Versions.V0_1_0;
     }
     this._loaded = true;
-    while (this._onLoaded != null && this._onLoaded.length > 0) {
-      this._onLoaded.pop()();
+    while (this._onLoaded && this._onLoaded.length > 0) {
+      this._onLoaded.pop()!();
     }
     // You still need to set the inputs even though they
     // may have been set initially, because the inputs may
@@ -1398,12 +1436,13 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
   }
 
   public sendRpc(method : string, params : any) {
-    if (this.iframe.parentNode != null && this._loaded) {
+    if (this.iframe.parentNode && this._loaded) {
       this.sendRpcInternal(method, params);
     } else {
       this._metapage.error("sending rpc later");
-      this._onLoaded.push(function () {
-        this.sendRpcInternal(method, params);
+      const thing = this;
+      this._onLoaded.push(() => {
+        thing.sendRpcInternal(method, params);
       });
     }
   }
@@ -1449,15 +1488,15 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
       params: params,
       parentId: this._parentId
     };
-    if (this.iframe != null) {
+    if (this.iframe) {
       this.sendOrBufferPostMessage(messageJSON);
     } else {
       this._metapage.error("Cannot send to child iframe messageJSON=${JSON.stringify(messageJSON).substr(0, 200)}");
     }
   }
 
-  _bufferMessages: any[];
-  _bufferTimeout: number;
+  _bufferMessages: any[] | undefined;
+  _bufferTimeout: number|undefined;
   sendOrBufferPostMessage(message : any) {
     // if (!this.iframe || !this.iframe.contentWindow) {
     //   console.log('no this.iframe.contentWindow, not sending message');
@@ -1465,14 +1504,15 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
     if (this.iframe && this.iframe.contentWindow) {
       this.iframe.contentWindow.postMessage(message, this.url);
     } else {
-      if (this._bufferMessages == null) {
+      if (!this._bufferMessages) {
         this._bufferMessages = [message];
+        const thing = this;
         this._bufferTimeout = window.setInterval(function () {
-          if (this.iframe && this.iframe.contentWindow) {
-            this._bufferMessages.forEach(m => this.iframe.contentWindow.postMessage(m, this.url));
-            window.clearInterval(this._bufferTimeout);
-            this._bufferTimeout = null;
-            this._bufferMessages = null;
+          if (thing.iframe && thing.iframe.contentWindow) {
+            thing._bufferMessages!.forEach(m => thing.iframe!.contentWindow!.postMessage(m, thing.url));
+            window.clearInterval(thing._bufferTimeout);
+            thing._bufferTimeout = undefined;
+            thing._bufferMessages = undefined;
           }
         }, 0);
       } else {

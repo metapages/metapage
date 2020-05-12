@@ -29,7 +29,6 @@ down +args='':
 build +args='':
     docker-compose build {{args}}
 
-
 # DEV: generate TLS certs for HTTPS over localhost https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
 _mkcert: clean
     mkdir -p apps/https/conf.d/certs/
@@ -134,7 +133,7 @@ Reminders:
     just _post-version-new-publish
 
     Last task and commands:
-    - converted to typescript! just libs/test needs to properly test, and package.
+    - converted to typescript! tests work. but they are not automated. publishing works, but also not automated.
     - commands: just up, make sure all docker-compose paths are correct, then get tests working.
     - clean up, and copy test html to the right place
 '

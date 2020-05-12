@@ -91,7 +91,10 @@ export const getMatchingVersion = (version : string): Versions => {
   }
 };
 
-export const getUrlParam = (key : string): string | undefined => {
+export const getUrlParam = (key : string): string | null => {
+  if (!window.location.search) {
+    return null;
+  }
   return new URLSearchParams(window.location.search).get(key);
 };
 
@@ -130,11 +133,11 @@ export const generateId = (length : number = 8): string => {
 };
 
 export const log = (o : any, color? : string, backgroundColor? : string) => {
-  color = color != null
+  color = color
     ? color
     : "000";
-  if (color != null && color.trim() == "") {
-    color = null;
+  if (color && color.trim() == "") {
+    color = undefined;
   }
   let s: string;
   if (typeof o === "string") {
@@ -145,9 +148,9 @@ export const log = (o : any, color? : string, backgroundColor? : string) => {
     s = JSON.stringify(o, null, "  ");
   }
 
-  if (color != null && color.trim() != "") {
+  if (color && color.trim() != "") {
     var cssstring = `color: #${color}`;
-    if (backgroundColor != null) {
+    if (backgroundColor) {
       cssstring = `${cssstring}; background: #${backgroundColor}`;
     }
     s = `%c${s}`;

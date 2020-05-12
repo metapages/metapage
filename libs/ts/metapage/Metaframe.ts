@@ -37,15 +37,15 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
   _inputPipeValues: MetaframeInputMap = {};
   _outputPipeValues: MetaframeInputMap = {};
   // obsoleted, use this.id
-  _iframeId: MetaframeId;
-  _parentId: MetapageId;
-  _parentVersion: Versions;
+  _iframeId: MetaframeId | undefined;
+  _parentId: MetapageId | undefined;
+  _parentVersion: Versions | undefined;
   _isIframe: boolean;
 
   debug: boolean = false;
   ready: Promise<boolean>;
-  color: string;
-  plugin: MetaframePlugin;
+  color: string | undefined;
+  plugin: MetaframePlugin | undefined;
 
   /**
    * This is the (locally) unique id that the parent metapage
@@ -54,7 +54,7 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
    */
   // TODO obsoleted, use this.id
   // name:string;
-  id: string;
+  id: string | undefined;
 
   constructor() {
     super();
@@ -104,7 +104,7 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
     });
   }
 
-  _resolver :(val :boolean)=>void;
+  _resolver :((val :boolean)=>void) | undefined;
 
   _resolveSetupIframeServerResponse (params : SetupIframeServerResponseData) {
     if (this._iframeId == null) {
@@ -143,7 +143,7 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
       //   inputs updates. You may not wish to respond to the first updates but you might
       //   want to know when the metaframe is ready
       //*** Does this distinction make sense?
-      this._resolver(true);
+      if (this._resolver) this._resolver(true);
 
       // window.addEventListener('resize', sendWindowDimensions);
       // sendWindowDimensions();
@@ -205,8 +205,10 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
   public dispose() {
     super.removeAllListeners();
     window.removeEventListener("message", this.onWindowMessage);
-    this._inputPipeValues = null;
-    this._outputPipeValues = null;
+    // @ts-ignore
+    this._inputPipeValues = undefined;
+    // @ts-ignore
+    this._outputPipeValues = undefined;
   }
 
   public addListener(event : MetaframeEvents | JsonRpcMethodsFromChild, listener : ListenerFn<any[]>) {
@@ -312,7 +314,7 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
     if (this._isIframe) {
       const message: MinimumClientMessage<any> = {
         jsonrpc: "2.0",
-        id: null,
+        id: undefined,
         // id     : MetapageTools.generateNonce(),
         method: method,
         params: params,
