@@ -81,6 +81,7 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
     this.setOutputs = this.setOutputs.bind(this);
     this.warn = this.warn.bind(this);
     this._resolveSetupIframeServerResponse = this._resolveSetupIframeServerResponse.bind(this);
+    this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
 
     if (!this._isIframe) {
       //Don't add any of the machinery, it only works if we're iframes.
@@ -97,7 +98,7 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
     this.ready = new Promise(function (resolve, _) {
       thisRef._resolver = resolve;
       // First listen to the parent metapage response
-      // thisRef.once(JsonRpcMethodsFromParent.SetupIframeServerResponse, 
+      // thisRef.once(JsonRpcMethodsFromParent.SetupIframeServerResponse,
       // });
       // Now that we're listening, request to the parent to register us
       thisRef.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {version: Metaframe.version});
@@ -267,7 +268,7 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
       // console.log('⚡🌶 Metaframe.setInternalInputsAndNotify failed merge');
       return;
     }
-    
+
     Object.keys(inputs).forEach(pipeId => this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId]));
     // console.log(`⚡🍩 Metaframe emit (listeners:${this.listenerCount(MetaframeEvents.Input)}) MetaframeEvents.Inputs`, inputs);
     this.emit(MetaframeEvents.Inputs, inputs);
@@ -351,11 +352,11 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
             this.setInternalInputsAndNotify(jsonrpc.params.inputs);
             break;
           case JsonRpcMethodsFromParent.MessageAck:
-            if (this.debug) 
+            if (this.debug)
               this.log(`ACK: ${JSON.stringify(jsonrpc)}`);
             break;
           default:
-            if (this.debug) 
+            if (this.debug)
               this.log(`window.message: unknown JSON-RPC method: ${JSON.stringify(jsonrpc)}`);
             break;
         }

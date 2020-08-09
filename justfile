@@ -27,6 +27,8 @@ down +args='':
 build +args='':
     docker-compose build {{args}}
 
+test:
+    
 
 
 # https://docs.npmjs.com/cli/version.html
