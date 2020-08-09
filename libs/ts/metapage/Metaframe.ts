@@ -264,9 +264,12 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
 
   setInternalInputsAndNotify(inputs : MetaframeInputMap) {
     if (!merge(this._inputPipeValues, inputs)) {
+      // console.log('⚡🌶 Metaframe.setInternalInputsAndNotify failed merge');
       return;
     }
+    
     Object.keys(inputs).forEach(pipeId => this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId]));
+    // console.log(`⚡🍩 Metaframe emit (listeners:${this.listenerCount(MetaframeEvents.Input)}) MetaframeEvents.Inputs`, inputs);
     this.emit(MetaframeEvents.Inputs, inputs);
   }
 
@@ -344,6 +347,7 @@ export class Metaframe extends EventEmitter < MetaframeEvents | JsonRpcMethodsFr
             this._resolveSetupIframeServerResponse(jsonrpc.params);
             break; //Handled elsewhere
           case JsonRpcMethodsFromParent.InputsUpdate:
+            // console.log('⚡ Metaframe.InputsUpdate', jsonrpc.params.inputs);
             this.setInternalInputsAndNotify(jsonrpc.params.inputs);
             break;
           case JsonRpcMethodsFromParent.MessageAck:

@@ -1,0 +1,19 @@
+# just docs: https://github.com/casey/just
+
+@help:
+    just --list
+
+# Idempotent. The local compose stack requires some host setup. If any of this fails, see the underlying commands
+@init:
+    if [ ! -f https/conf.d/certs/cert-key.pem ]; then \
+        just _mkcert; \
+    fi
+
+clean:
+    rm -rf https/conf.d/certs/*
+
+# DEV: generate TLS certs for HTTPS over localhost https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
+_mkcert: clean
+    mkdir -p https/conf.d/certs/
+    cd https/conf.d/certs/ && mkcert -cert-file cert.pem -key-file cert-key.pem metapages.local localhost
+    @echo "Don't forget to add '127.0.0.1 metapages.local' to /etc/hosts"

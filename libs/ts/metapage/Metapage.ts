@@ -841,7 +841,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
           break;
 
         case JsonRpcMethodsFromChild.OutputsUpdate:
-          console.log(JsonRpcMethodsFromChild.OutputsUpdate);
+          // console.log(JsonRpcMethodsFromChild.OutputsUpdate);
           var metaframeId: MetaframeId | undefined = jsonrpc.iframeId;
           if (!metaframeId) {
             break;
@@ -849,9 +849,9 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
 
           var outputs: MetaframeInputMap = jsonrpc.params;
 
-          if (this.debug) 
+          if (this.debug)
             this.log(`outputs from ${metaframeId}: ${JSON.stringify(outputs, null, '  ').substr(0, 100)}`);
-          
+
           if (this._metaframes[metaframeId]) {
             var iframe = this._metaframes[metaframeId];
 
@@ -910,7 +910,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
             this.error(`missing metaframe/plugin=$metaframeId`);
           }
 
-          console.log(`${JsonRpcMethodsFromChild.OutputsUpdate} end state`, this._state);
+          // console.log(`${JsonRpcMethodsFromChild.OutputsUpdate} end state`, this._state);
           break;
 
         case JsonRpcMethodsFromChild.InputsUpdate:
@@ -927,7 +927,7 @@ export class Metapage extends EventEmitter < MetapageEvents | JsonRpcMethodsFrom
           // 					logDiff = getDiffRelease('${metaframeId}: ${method}');
           // #end
           var inputs: MetaframeInputMap = jsonrpc.params;
-          if (this.debug) 
+          if (this.debug)
             this.log(`inputs ${JSON.stringify(inputs)} from ${metaframeId}`);
           if (this._metaframes[metaframeId]) {
             // Set the internal inputs state first so that anything that
@@ -1084,9 +1084,9 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
       while (url.startsWith("/")) {
         url = url.substr(1);
       }
-      url = location.protocol + "//" + location.hostname + (
-        location.port && location.port != ""
-        ? ":" + location.port
+      url = window.location.protocol + "//" + window.location.hostname + (
+        window.location.port && window.location.port != ""
+        ? ":" + window.location.port
         : "") + "/" + url;
     }
     this.url = url;
@@ -1144,6 +1144,8 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
     this.setOutput = this.setOutput.bind(this);
     this.setOutputs = this.setOutputs.bind(this);
     this.setPlugin = this.setPlugin.bind(this);
+    this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
+
   }
 
   addListenerReturnDisposer(event : JsonRpcMethodsFromParent | MetapageEvents, listener : ListenerFn<any[]>): () => void {
@@ -1267,11 +1269,14 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
     inputs: undefined
   };
   public setInputs(maybeNewInputs : MetaframeInputMap): IFrameRpcClient {
+    // console.log('⛑ IFrameRpcClient.setInputs', maybeNewInputs);
     // this.log({m:'IFrameRpcClient', inputs:maybeNewInputs});
     if (!merge(this.inputs, maybeNewInputs)) {
+      // console.log('⛑ IFrameRpcClient.setInputs failed merge');
       return this;
     }
     if (!this._loaded) {
+      // console.log('⛑ IFrameRpcClient.setInputs !this._loaded');
       this._sendInputsAfterRegistration = true;
     }
     // Only send the new inputs to the actual metaframe iframe
@@ -1285,6 +1290,7 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
     }
 
     // Notify
+    // console.log('⛑ IFrameRpcClient.setInputs emitting!');
     this.emit(MetapageEvents.Inputs, this.inputs);
     if (this._metapage.listenerCount(MetapageEvents.Inputs) > 0) {
       var inputUpdate: MetapageInstanceInputs = {};
@@ -1429,6 +1435,7 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
   }
 
   sendInputs(inputs : MetaframeInputMap) {
+    // console.log('⛑⛑ IFrameRpcClient.sendInputs', inputs);
     this.sendRpc(JsonRpcMethodsFromParent.InputsUpdate, {
       inputs: inputs,
       parentId: this._parentId

@@ -4,25 +4,25 @@ A **metapage** is a webpage that consists of a network of other embedded webpage
 
 For documentation and examples: [https://metapages.org/](https://metapages.org/)
 
-## Developers
+## Published artifacts
 
-The following lists the directories and the artifacts they produce:
+This repository publishes the following artifacts (and lists the source directory):
 
-1. [libs] => javascript libraries:
-    1. [metapage](https://www.npmjs.com/package/metapage)
-    2. [metaframe](https://www.npmjs.com/package/metaframe)
-2. [docs] => [documentation](https://metapages.org/documentation/) with running, interactive examples.
+1. javascript libraries:
+    1. https://www.npmjs.com/package/metapage <- `libs/metapage`
+    2. https://www.npmjs.com/package/metaframe <- `libs/metaframe`
+2. https://metapages.org/documentation/ <- `docs` documentation with running, interactive examples.
 
 ### 1) Javascript Libraries
 
 #### Setup
 
-**Install required:** 
+**Install required:**
 
 - [docker + docker-compose](https://docs.docker.com/compose/install/)
 - [just](https://github.com/casey/just)
 
-**Install optional (advanced):** 
+**Install optional (advanced):**
 
 These tools are only required if you are compiling code on your host machine (if you want to do this, you'll know how to setup) rather than use the pre-configured docker-compose stack that requires no local host installs (except docker) and possibly [just](https://github.com/casey/just) for the build commands.
 
@@ -32,7 +32,7 @@ These tools are only required if you are compiling code on your host machine (if
 #### Development loop
 
 First
-  
+
     `just run`  OR `docker-compose up jekyll proxy shell-haxe test`: starts the jekyll dev server
 
 Then:
@@ -65,5 +65,3 @@ If required, run the CI tests locally:
 The docs and examples are static webpages built by jekyll and server via github pages:
 
 https://help.github.com/articles/using-jekyll-as-a-static-site-generator-with-github-pages/
-
-

@@ -10,13 +10,11 @@ cli:
 
 # Idempotent. The local compose stack requires some host setup. If any of this fails, see the underlying commands
 @init:
-    if [ ! -f apps/https/conf.d/certs/cert-key.pem ]; then \
-        just _mkcert; \
-    fi
+    just apps/init
 
 clean:
     just libs/clean
-    rm -rf apps/https/conf.d/certs/*
+    just apps/clean
 
 # Run the stack, defaulting to all. Just target "jekyll" for a minimal server  metapage-app
 up +args='--remove-orphans -d': init
@@ -28,14 +26,6 @@ down +args='':
 
 build +args='':
     docker-compose build {{args}}
-
-# DEV: generate TLS certs for HTTPS over localhost https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
-_mkcert: clean
-    mkdir -p apps/https/conf.d/certs/
-    cd apps/https/conf.d/certs/ && mkcert -cert-file cert.pem -key-file cert-key.pem metapages.local localhost
-    @echo "Don't forget to add '127.0.0.1 metapages.local' to /etc/hosts"
-
-
 
 
 

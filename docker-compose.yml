@@ -28,29 +28,31 @@ services:
     build:
       context: ./libs
       target: test
-      cache_from:
-        - gcr.io/t9-docker-images/metapage:shell
-        - gcr.io/t9-docker-images/metapage:shell-haxe
+      # cache_from:
+      #   - gcr.io/t9-docker-images/metapage:shell
+      #   - gcr.io/t9-docker-images/metapage:shell-haxe
     command: ["/bin/sh", "-c", "node test/test.js"]
     networks:
       - default
 
   docs:
-    image: gcr.io/t9-docker-images/metapage:docs
+    # image: gcr.io/t9-docker-images/metapage:docs
+    image: metapage:docs
     build:
       context: ./docs
       args:
         JEKYLL_GITHUB_TOKEN: ${JEKYLL_GITHUB_TOKEN}
-      cache_from:
-        - gcr.io/t9-docker-images/metapage:docs
+      # cache_from:
+      #   - gcr.io/t9-docker-images/metapage:docs
     command: jekyll serve --watch --force_polling --config _config.yml
+    environment:
+     - "JEKYLL_GITHUB_TOKEN=${JEKYLL_GITHUB_TOKEN}"
+    #  - "JEKYLL_ENV=development"
     # ports:
     #   - "4000:${PORT_METAPAGE:-4000}"
     networks:
       - default
-    environment:
-     - "JEKYLL_GITHUB_TOKEN=${JEKYLL_GITHUB_TOKEN}"
-    #  - "JEKYLL_ENV=development"
+
 
 
 networks:
