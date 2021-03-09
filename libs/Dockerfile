@@ -1,25 +1,21 @@
+
+
+#################################################################
+# Base image
 # This is the shell image for compiling haxe -> javascript libraries
 # and for running functional tests (requires puppeteer/chromium)
+#################################################################
 
-FROM haxe:4.0.0-rc.3-alpine3.10 as shell-haxe
+FROM us.gcr.io/zenika-hub/alpine-chrome:85-with-puppeteer as build
+# FROM haxe:4.0.0-rc.3-alpine3.10 as shell-haxe
 
 RUN apk update && apk upgrade && apk --no-cache add \
 	bash \
-	curl \
-	chromium \
-	g++ \
-	gcc \
-	git \
-	jq \
-	make \
-	nodejs nodejs-npm \
-	python-dev \
-	openssl-dev \
-	libffi-dev
+	curl
 
 # justfile https://github.com/casey/just
-RUN VERSION=0.5.1 ; \
-    SHA256SUM=13e3411f137bf7b94bc6844820f11725f98621cfea3244bd33943cfa1b4c81fc ; \
+RUN VERSION=0.8.4 ; \
+    SHA256SUM=c361b0df74dcd64f7a8aeb839dce5ae2bb0d14b8ceb2046b4828ee042ec7c98e ; \
     curl -L -O https://github.com/casey/just/releases/download/v$VERSION/just-v$VERSION-x86_64-unknown-linux-musl.tar.gz && \
     (echo "$SHA256SUM  just-v$VERSION-x86_64-unknown-linux-musl.tar.gz" | sha256sum  -c -) && \
     mkdir -p /tmp/just && mv just-v$VERSION-x86_64-unknown-linux-musl.tar.gz /tmp/just && cd /tmp/just && \
@@ -28,38 +24,36 @@ RUN VERSION=0.5.1 ; \
 # just tweak: unify the just binary location on host and container platforms because otherwise the shebang doesn't work properly due to no string token parsing (it gets one giant string)
 ENV PATH $PATH:/usr/local/bin
 
-# build tools
-RUN npm install -g nodemon
+# watchexec for live reloading in development https://github.com/watchexec/watchexec
+RUN VERSION=1.14.1 ; \
+    SHA256SUM=34126cfe93c9c723fbba413ca68b3fd6189bd16bfda48ebaa9cab56e5529d825 ; \
+    curl -L -O https://github.com/watchexec/watchexec/releases/download/$VERSION/watchexec-$VERSION-i686-unknown-linux-musl.tar.xz && \
+    (echo "$SHA256SUM  watchexec-${VERSION}-i686-unknown-linux-musl.tar.xz" | sha256sum -c) && \
+    tar xvf watchexec-$VERSION-i686-unknown-linux-musl.tar.xz watchexec-$VERSION-i686-unknown-linux-musl/watchexec -C /usr/bin/ --strip-components=1 && \
+    rm -rf watchexec-*
 
-# Tell Puppeteer to skip installing Chrome. We'll be using the installed package.
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD true
+RUN npm install -g npm@6.14.5
 
+#################################################################
+# libs: setup
+#################################################################
 WORKDIR /workspace/libs
 ADD package.json ./
 ADD package-lock.json ./
 RUN npm i
 
-ADD ts ./ts
+#################################################################
+# libs: build
+#################################################################
+
+ADD src ./src
 ADD tsconfig.json ./tsconfig.json
 ADD justfile ./justfile
 
-# Best to remove these so other scripts cannot possibly be confused
-# RUN rm package.json && rm package-lock.json && rm build-base.hxml
+#################################################################
+# test
+#################################################################
 
-# ENV CI true
-
-
-# There is no building/compiling here, it happens in the
-# shell containers, via cloudbuild.yaml
-
-
-
-
-
-
-
-FROM shell-haxe as test
-# For running tests. The container cannot mount in files at runtime (Google Cloud Build) so add everything now
-# ADD ./etc ./etc
-# ADD ./Makefile ./Makefile
+FROM build as test
+# For running tests. The container cannot mount in files at runtime (in cloud CI builds) so add everything now
 ADD ./test ./test

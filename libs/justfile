@@ -5,32 +5,24 @@ parcel          := "node_modules/parcel-bundler/bin/cli.js"
 tsc             := "./node_modules/typescript/bin/tsc"
 
 # When developing, watch+build the libs in the following dir
-# as e.g. docs/js/Metapage.js. This is served by jekyll and 
+# as e.g. docs/js/Metapage.js. This is served by jekyll and
 # runs the tests. Will move this docs dependency soon.
 dev_out_dir     := "test/page/js/"
 
 
-help:
-    @just --list
-
-# Run tests
-test: _build_for_test_dev
-	node test/test.js
-
-generate:
-	#!/usr/bin/env node
-	console.log('sfsf')
+_help:
+    @just --list --unsorted
 
 # Build the production npm distributions in dist/metaframe and dist/metapage
 @build: clean _build
 
 @_build:
-	@{{tsc}} --declaration --outFile dist/metapage/index.d.ts --emitDeclarationOnly
-	@{{parcel}} build --target browser --global metapage ts/metapage/Metapage.ts --out-dir dist/metapage/browser --out-file index.js
-	@{{parcel}} build --target node ts/metapage/Metapage.ts --out-dir dist/metapage --out-file index.js
-	cp package.json dist/metapage/package.json
-	cp README-PACKAGE.md dist/metapage/README.md
-	cp LICENSE dist/metapage/
+	@{{tsc}}
+	# @{{parcel}} build --target browser --global metapage ts/metapage/Metapage.ts --out-dir dist/metapage/browser --out-file index.js
+	# @{{parcel}} build src/metapage/Metapage.ts --out-dir dist/metapage/lib
+	# cp package.json dist/metapage/package.json
+	# cp README-PACKAGE.md dist/metapage/README.md
+	# cp LICENSE dist/metapage/
 
 	@{{parcel}} build --target browser --global metaframe ts/metapage/Metaframe.ts --out-dir dist/metaframe/browser --out-file index.js
 	@{{parcel}} build --target node ts/metapage/Metaframe.ts --out-dir dist/metaframe --out-file index.js
@@ -56,6 +48,15 @@ generate:
 	# echo "✅ created ../docs/js/Meta*"
 	# echo "✅ created test/page/js/Meta*"
 
+# Run tests
+test: _build_for_test_dev
+	node test/test.js
+
+# watch and compile (no output yet)
+dev:
+	{{tsc}} --watch
+
+
 @_build_for_test_dev:
 	NODE_ENV=development {{parcel}} build --target browser --global metaframe --public-url '/js' --out-dir test/page/js/ --out-file Metaframe.js ts/metapage/Metaframe.ts
 	NODE_ENV=development {{parcel}} build --target browser --global metapage  --public-url '/js' --out-dir test/page/js/ --out-file Metapage.js ts/metapage/Metapage.ts
@@ -64,8 +65,8 @@ generate:
 # watch for file changes, building on change.
 @watch out=dev_out_dir: clean
 	echo "✅ watching and building for test/page/js/ only"
-	{{tsc}} --noEmit
-	watchexec --watch ts -- '{{tsc}} --noEmit && just _build_for_test_dev'
+	{{tsc}} --watch
+	# watchexec --watch ts -- '{{tsc}} --noEmit && just _build_for_test_dev'
 
 @clean:
 	rm -rf build

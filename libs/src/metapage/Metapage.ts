@@ -1059,7 +1059,7 @@ class IFrameRpcClient extends EventEmitter < JsonRpcMethodsFromParent | Metapage
   url: string;
   _color: string;
   _consoleBackgroundColor: string;
-  _ready: Promise<boolean>;
+  _ready: Promise<void>;
   inputs: MetaframeInputMap = {};
   outputs: MetaframeInputMap = {};
   _disposables: (() => void)[] = [];
