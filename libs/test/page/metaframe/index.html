@@ -1,7 +1,7 @@
 <!doctype html>
 
 <html lang="en">
-<!-- 
+<!--
     This is a metaframe for functionally testing core functionality and verifiying
     ALL versions of metaframes work with ALL versions of metapages.
  -->
@@ -22,7 +22,7 @@ var urlParams = new URLSearchParams(window.location.search);
 var VERSION = urlParams.get('VERSION');
 VERSION = VERSION == null ? 'latest' : VERSION;
 
-// the URL param VERSION=latestFirst is a way of having 
+// the URL param VERSION=latestFirst is a way of having
 // the same metaframe/plugin in multiple places without
 // id/key collisions. The actual version of 'latestFirst'
 // is 'latest' which we check below, but we want to display
@@ -41,9 +41,11 @@ var head = document.getElementsByTagName('head').item(0);
 var script = document.createElement('script');
 script.setAttribute('type', 'text/javascript');
 if (VERSION == 'latest') {
-    script.setAttribute('src', `/js/Metaframe.js`);
+    script.setAttribute('src', `/js/metaframe/index.js`);
 } else {
-    if (window.compareVersions(VERSION, '0.4.100') >= 0) {
+    if (window.compareVersions(VERSION, '0.5.0') >= 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metaframe/index.js`);
+    } else if (window.compareVersions(VERSION, '0.4.100') >= 0) {
         script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/browser/index.js`);
     } else {
         script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/browser${debug ? '' : '.min'}.js`);
@@ -51,7 +53,7 @@ if (VERSION == 'latest') {
 }
 head.appendChild(script);
 
-// set up some hooks to visualize the individual test results 
+// set up some hooks to visualize the individual test results
 
 let TESTS;
 
@@ -167,7 +169,7 @@ TESTS = [
     // TODO: re-enable this test once we figure out when or how to run it without
     // messing up concurrently running tests.
     // new Test('plugin: state get/modify/set',
-    //     // 1. we get a `metapage/state` 
+    //     // 1. we get a `metapage/state`
     //     // 2. modify our own input field in the state blob
     //     // 3. send the state blob back. all metaframes/plugins get their inputs set
     //     // 4. listen to modifications on our own inputs
@@ -200,7 +202,7 @@ TESTS = [
     //                 }
 
     //                 // modify the global state, specifically our own inputs
-    //                 // the metapage should update our inputs and send them 
+    //                 // the metapage should update our inputs and send them
     //                 // down
     //                 if (!state.plugins.inputs[mf.id] || !state.plugins.inputs[mf.id][inputKey]) {
     //                     state.plugins.inputs[mf.id] = state.plugins.inputs[mf.id] ? state.plugins.inputs[mf.id] : {};
@@ -231,8 +233,8 @@ TESTS = [
 
 
 //     // IF this metaframe is the plugin, test:
-    //     //  - 
-    //     //  - 
+    //     //  -
+    //     //  -
     //     //  - the input pipe `${VERSION}` has the value `${VERSION}-preset` when initialized
     //     //    this tests plugin input state being correctly set
     //     //  - the input pipe `new-input` is set with: `${VERSION}-new`
@@ -291,7 +293,7 @@ const runTests = async() => {
 
     const promises = TESTS.map((test) => test.run(mf));
 
-    // This is our part of the metaframe daisy chain. 
+    // This is our part of the metaframe daisy chain.
     //  when we get a input [input], we read the array from the "versions"
     // field (or create one) and append our version to the array, then
     // send the value to the output: { "output": { "versions": [...] } }
@@ -307,7 +309,7 @@ const runTests = async() => {
             }
         }
     }
-    
+
     // When I get the input array, add my version to the list
     // This will be passed around to all metaframe in the version list
     mf.onInput('input', function(value) {

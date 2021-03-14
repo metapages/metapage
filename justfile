@@ -1,12 +1,8 @@
 # just docs: https://github.com/casey/just
 
 help:
-    @just --list
+    @just --list --unsorted
     @echo "{{HELP}}"
-
-# create the single iterm window with all the views https://github.com/TomAnthony/itermocil
-cli:
-    itermocil --here --layout .iTermocil.yml
 
 # Idempotent. The local compose stack requires some host setup. If any of this fails, see the underlying commands
 @init:
@@ -28,7 +24,7 @@ build +args='':
     docker-compose build {{args}}
 
 test:
-    
+
 
 
 # https://docs.npmjs.com/cli/version.html

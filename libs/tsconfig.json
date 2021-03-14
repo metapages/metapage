@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
         "baseUrl": "src",
-        "outDir": "./dist/",
+        // "outDir": "./dist/",
         "declaration": true,
         "declarationMap": true,
         "lib": ["dom", "ES2017"],

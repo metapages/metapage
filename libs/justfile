@@ -1,8 +1,10 @@
 # https://github.com/casey/just
 # Build the npm libraries: metapage, metaframe
 
-parcel          := "node_modules/parcel-bundler/bin/cli.js"
+parcel          := "./node_modules/parcel-bundler/bin/cli.js"
 tsc             := "./node_modules/typescript/bin/tsc"
+
+OUTPUT          := "./dist/@metapage/metapage"
 
 # When developing, watch+build the libs in the following dir
 # as e.g. docs/js/Metapage.js. This is served by jekyll and
@@ -16,37 +18,34 @@ _help:
 # Build the production npm distributions in dist/metaframe and dist/metapage
 @build: clean _build
 
+
 @_build:
-	@{{tsc}}
-	# @{{parcel}} build --target browser --global metapage ts/metapage/Metapage.ts --out-dir dist/metapage/browser --out-file index.js
-	# @{{parcel}} build src/metapage/Metapage.ts --out-dir dist/metapage/lib
-	# cp package.json dist/metapage/package.json
-	# cp README-PACKAGE.md dist/metapage/README.md
-	# cp LICENSE dist/metapage/
+	# Compiles the entire codebase to typescript files in ./dist. Packaged into the npm module '@metapage/metapages'
+	# How to test installation of the build?
+	echo "Compiling typescript  => {{OUTPUT}}/"
+	{{tsc}} --outDir {{OUTPUT}}
+	cp package.json      {{OUTPUT}}/package.json
+	cp README-PACKAGE.md {{OUTPUT}}/README.md
+	cp LICENSE           {{OUTPUT}}/
 
-	@{{parcel}} build --target browser --global metaframe ts/metapage/Metaframe.ts --out-dir dist/metaframe/browser --out-file index.js
-	@{{parcel}} build --target node ts/metapage/Metaframe.ts --out-dir dist/metaframe --out-file index.js
-	cp dist/metapage/index.d.ts dist/metaframe/
-	# use the same package.json but change the name
-	cat package.json | jq '.name = "metaframe"' > dist/metaframe/package.json
-	cp README-PACKAGE.md dist/metaframe/README.md
-	cp LICENSE dist/metaframe/
+	echo "Building standalone browser downloads"
+	@{{parcel}} build --target browser --global metaframe src/metapage/Metaframe.ts --out-dir {{OUTPUT}}/browser/metaframe --out-file index.js
+	@{{parcel}} build --target browser --global metapage src/metapage/Metapage.ts --out-dir {{OUTPUT}}/browser/metapage --out-file index.js
 
+	# copy production builds to the (dev+docs+test) dir
+	rm -rf test/page/js/*
+	cp -r {{OUTPUT}}/browser/metapage test/page/js/
+	cp -r {{OUTPUT}}/browser/metaframe test/page/js/
 
+	rm -rf ../docs/js/*
+	cp -r {{OUTPUT}}/browser/metapage ../docs/js/
+	cp -r {{OUTPUT}}/browser/metaframe ../docs/js/
 
-	#{{parcel}} build --target browser --global metaframe --out-file dist/metaframe.js ts/metapage/Metaframe.ts
-	#{{parcel}} build --target browser --global metapage  --out-dir build/browser/metapage  ts/metapage/client/Metapage.ts
-
-	# @# copy production builds to the (dev+docs+test) dir
-	# cp -r build/metaframe/* ../docs/js/
-	# cp -r build/metapage/* ../docs/js/
-	# cp -r build/metapage/Metapage* test/page/js/
-	# cp -r build/metaframe/Metaframe* test/page/js/
-
-	# echo "✅ created build/metapage"
-	# echo "✅ created build/metaframe"
-	# echo "✅ created ../docs/js/Meta*"
-	# echo "✅ created test/page/js/Meta*"
+	echo "✅ {{OUTPUT}}"
+	echo "✅ {{OUTPUT}}/browser/metapage"
+	echo "✅ {{OUTPUT}}/browser/metaframe"
+	echo "✅ test/page/js/"
+	echo "✅ ../docs/js/"
 
 # Run tests
 test: _build_for_test_dev
@@ -69,8 +68,8 @@ dev:
 	# watchexec --watch ts -- '{{tsc}} --noEmit && just _build_for_test_dev'
 
 @clean:
-	rm -rf build
-	rm -rf dist
+	mkdir -p dist
+	rm -rf dist/*
 	rm -rf ../docs/js/Metapage*
 	rm -rf ../docs/js/Metaframe*
 	rm -rf test/page/js/Metapage*

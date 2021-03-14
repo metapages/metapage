@@ -2,7 +2,7 @@
 <!doctype html>
 
 <html lang="en">
-<!-- 
+<!--
     This metapage is part of the functional test suite.
 
     Test 1:
@@ -10,12 +10,12 @@
     It creates a metaframe for each existing version, and linking each
     metaframe with the next. The first metaframe gets some input, and
     concats the input array with its version and passes it to the next.
-    At the end, the metapage should get a notification from the 
+    At the end, the metapage should get a notification from the
     last metaframe with all versions appended to the array.
 
     Test 2:
 
-    Each metaframe sends 
+    Each metaframe sends
  -->
 
 
@@ -48,9 +48,11 @@ var head = document.getElementsByTagName('head').item(0);
 var script = document.createElement('script');
 script.setAttribute('type', 'text/javascript');
 if (VERSION == 'latest') {
-    script.setAttribute('src', `/js/Metapage.js`);
+    script.setAttribute('src', `/js/metapage/index.js`);
 } else {
-    if (window.compareVersions(VERSION, '0.4.100') >= 0) {
+    if (window.compareVersions(VERSION, '0.5.0') >= 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metapage/index.js`);
+    } else if (window.compareVersions(VERSION, '0.4.100') >= 0) {
         script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metapage@${VERSION}/browser/index.js`);
     } else {
         let minSuffix = '';
@@ -59,9 +61,6 @@ if (VERSION == 'latest') {
         }
         script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metapage@${VERSION}/browser${minSuffix}.js`);
     }
-
-    
-    
 }
 head.appendChild(script);
 
@@ -263,7 +262,7 @@ TESTS = [
                                 && outputs[metapageId].output.versions
                                 && JSON.stringify(outputs[metapageId].output.versions) === expectedOutputVersions);
                     });
-                    
+
                     passed = passed.reduce((current, testPassed) => current && testPassed, true);
 
                     if (passed) {
@@ -286,7 +285,7 @@ TESTS = [
         (metapage) => { // metapage instance
             return new Promise((resolve, reject) => {
                 let disposeListener;
-                
+
                 const onStateChange = (metapageState) => {
                     const metapageIds = metapage.getMetaframeIds();
                     const pluginIds = metapage.getPluginIds();
@@ -356,7 +355,7 @@ const convertNpmToInternalVersion = (version) => {
 window.onload = function() {
     console.log(`TEST-MP: Metapage ${convertNpmToInternalVersion(VERSION)}`);
 
-    // Define the metapage definition dynamically 
+    // Define the metapage definition dynamically
     const metaPageDefinition = {
         version: convertNpmToInternalVersion(VERSION),
     };
@@ -419,7 +418,7 @@ window.onload = function() {
     window.metapageInstance = Metapage.from(metaPageDefinition);
     metapageInstance = Metapage.from(metaPageDefinition);
     window.metapageInstance = metapageInstance;
-    // >= 0.3.5 
+    // >= 0.3.5
     if (metapageInstance.setDebugFromUrlParams) {
         metapageInstance.setDebugFromUrlParams();
     }
@@ -447,7 +446,7 @@ window.onload = function() {
 
         var col2 = document.createElement("div");
         col2.className += col2.className ? ' col-md-6' : 'col-md-6';
-        
+
         row.appendChild(col1);
         row.appendChild(col2);
 
