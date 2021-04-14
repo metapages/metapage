@@ -1,0 +1,19 @@
+set shell := ["bash", "-c"]
+
+@_help:
+    just --list
+    echo ""
+    echo "    just https/"
+    echo ""
+
+# all one-off tasks to get started. idempotent
+init:
+    #!/usr/bin/env bash
+    if [ -n "$CI" ]; then
+        echo "CI=$CI ∴ skipping ingress/init"
+        exit 0
+    fi
+    just https/init
+
+@clean:
+    just https/clean

@@ -1,0 +1,17 @@
+# cloudseed cached deno source
+**/.deno_dir
+
+# cloudseed local
+/.tmp
+
+# Ignore the root .env file, child .env files are symlinked to this one
+# so there is a SINGLE global .env context for a given operation
+/.env
+
+###########################################################################################
+# app/
+###########################################################################################
+
+# browser
+**/node_modules
+**/.cache

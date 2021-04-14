@@ -1,0 +1,5 @@
+
+@_help:
+    echo "This directory is a library of Github Actions workflows"
+    echo "Copy (and modify) into </.github/workflows> to activate"
+    just --list --unsorted

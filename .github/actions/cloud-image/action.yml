@@ -1,0 +1,31 @@
+# https://docs.github.com/en/free-pro-team@latest/actions/creating-actions/metadata-syntax-for-github-actions
+name: 'CLOUD image: build'
+description: |
+  Image: ghcr.io/$GITHUB_REPOSITORY/cloud
+  Prepare the ⬆ CI image specifically for this exact git SHA currently running.
+  Also exports GIT_SHORT_TAG for the following steps
+  The CI image performs all CI/CD operations that are not done directly on the host machine.
+   - pull
+   - build
+   - tag
+   - push
+  This action typically takes about 10s so 👍
+
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: |
+        export DOCKER_BUILDKIT=1 &&
+        echo "GITHUB_REPOSITORY=${GITHUB_REPOSITORY}" &&
+        export DOCKER_CLI_EXPERIMENTAL=enabled &&
+        export DOCKER_IMAGE="ghcr.io/${GITHUB_REPOSITORY}/$(basename "${GITHUB_REPOSITORY}")-cloud" &&
+        CACHE="${DOCKER_IMAGE}:cache" &&
+        echo "CACHE=${CACHE}" &&
+        echo -e "🌱 docker pull $CACHE" &&
+        (docker pull $CACHE || true) &&
+        echo -e "🌱 docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from=$CACHE --tag ${DOCKER_IMAGE}:cache --file ./.cloudseed/cloud/Dockerfile" &&
+        docker build . --build-arg BUILDKIT_INLINE_CACHE=1 --cache-from=$CACHE --tag ${DOCKER_IMAGE}:cache --file ./.cloudseed/cloud/Dockerfile &&
+        echo -e "🌱 docker push $CACHE" &&
+        docker push $CACHE &&
+        sed -i'' "s#  image: .*#  image: $CACHE#g" .github/actions/cloud/action.yml

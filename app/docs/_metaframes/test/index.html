@@ -1,0 +1,330 @@
+<!--
+    This is a metaframe for functionally testing core functionality and verifiying
+    ALL versions of metaframes work with ALL versions of metapages.
+ -->
+<head>
+    <script src="/js/compare-versions-3.4.0.js"></script>
+</head>
+<body style="background-color:yellow;">
+    <div id='body'></div>
+    <div id='status'></div>
+</body>
+
+<script>
+
+// Download the specific metaframe library version
+// to make it easier to test all versions against all
+var urlParams = new URLSearchParams(window.location.search);
+// Allow specifying the metaframe version tested
+var VERSION = urlParams.get('VERSION');
+VERSION = VERSION == null ? 'latest' : VERSION;
+
+// the URL param VERSION=latestFirst is a way of having
+// the same metaframe/plugin in multiple places without
+// id/key collisions. The actual version of 'latestFirst'
+// is 'latest' which we check below, but we want to display
+// the version given
+const DISPLAY_VERSION = VERSION;
+
+document.getElementById('body').innerText = `metaframe v${DISPLAY_VERSION}`;
+if (VERSION.startsWith('latest')) {
+    // it can be versionLatest in the URL header but the internal VERSION must then be 'latest';
+    VERSION = 'latest';
+}
+
+const debug = ['DEBUG', 'debug', 'MP_DEBUG', 'mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag));
+
+var head = document.getElementsByTagName('head').item(0);
+var script = document.createElement('script');
+script.setAttribute('type', 'text/javascript');
+if (VERSION == 'latest') {
+    script.setAttribute('src', `/js/metaframe/index.js`);
+} else {
+    let minSuffix = '';
+    if (!VERSION.startsWith('latest') && debug && window.compareVersions(VERSION, '0.3.4') >= 0) {
+        minSuffix = '.min';
+    }
+    script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/browser${debug ? '' : '.min'}.js`);
+}
+head.appendChild(script);
+
+// set up some hooks to visualize the individual test results
+
+let TESTS;
+
+const getStatusText = () => {
+    return TESTS.map((test) => test.getText()).join("");
+};
+
+const setStatus = () => {
+    document.getElementById('status').innerHTML = getStatusText();
+};
+
+class Test {
+    constructor(description, testFunc) {
+        this.description = description;
+        this.testFunc = testFunc;
+        this.success = false;
+        this.isPlugin = description.startsWith('plugin');
+    }
+
+    async run(metaframe) {
+        this.metaframe = metaframe;
+        // don't run plugin tests when not a plugin
+        if (this.isPlugin && !metaframe.plugin) {
+            this.success = true;
+            return true;
+        // also don't run non-plugin tests when a plugin
+        } else if (!this.isPlugin && metaframe.plugin) {
+            this.success = true;
+            return true;
+        }
+        this.success = await this.testFunc(metaframe);
+        setStatus();
+        return this.success;
+    }
+
+    getText() {
+        // don't show anything if this test is skipped
+        if (!this.metaframe) {
+            return "";
+        } else if(this.isPlugin && !this.metaframe.plugin) {
+            return "";
+        } else if(!this.isPlugin && this.metaframe.plugin) {
+            return "";
+        }
+        return `<br/> ${this.success ? "✓" : "⌛"}: ${this.description}`;
+    }
+}
+
+TESTS = [
+    new Test('save inputs to metapage',
+        // verify that when setting inputs, they are sent to the metapage
+        // then sent back, which we listen to here
+        (mf) => { // metaframe instance
+            return new Promise((resolve, reject) => {
+                let unbind;
+                unbind = mf.onInput('save-input-check', function(value) {
+                    if (value == mf._iframeId) {
+                        resolve(true);
+                    } else {
+                        reject(`'save-input-check' != '${mf._iframeId}'`);
+                    }
+                    unbind();
+                });
+                // send the inputs to the metapage, we listen to the event above
+                mf.setInput('save-input-check', mf._iframeId);
+            });
+        }
+    ),
+
+    new Test('receive then send',
+        // verify that the metaframe got data from the pipe (confusingly named "input")
+        (mf) => { // metaframe instance
+            return new Promise((resolve, reject) => {
+                let unbind;
+                unbind = mf.onInput('input', function(value) {
+                    resolve(true);
+                    unbind();
+                });
+            });
+        }
+    ),
+
+    new Test('plugin: definition get/modify/set',
+        // we get a `metapage/definition`, modify it (add a metadata tag) and
+        // send it to the same output pipe. The test script will check if it gets the
+        // modified definition. We also test here.
+        (mf) => { // metaframe instance
+            console.log('starting plugin: definition get/modify/set')
+            return new Promise((resolve, reject) => {
+                const metaKey = `PluginDefinitionCheck-${DISPLAY_VERSION}`;
+                let unbind;
+                const checkDefinition = (definition) => {
+                    console.log('checkDefinition');
+                    if (!definition) {
+                        return;
+                    }
+                    if (!definition.meta || !definition.meta[metaKey]) {
+                        // If we change the 'meta' keyword check versions here
+                        definition.meta = definition.meta ? definition.meta : {};
+                        definition.meta[metaKey] = true;
+                        mf.plugin.setDefinition(definition);
+                    } else {
+                        if (definition.meta && definition.meta[metaKey] == true) {
+                            resolve(true);
+                            unbind();
+                        }
+                    }
+                };
+                unbind = mf.plugin.onDefinition(checkDefinition);
+            });
+        }
+    ),
+
+    // TODO: re-enable this test once we figure out when or how to run it without
+    // messing up concurrently running tests.
+    // new Test('plugin: state get/modify/set',
+    //     // 1. we get a `metapage/state`
+    //     // 2. modify our own input field in the state blob
+    //     // 3. send the state blob back. all metaframes/plugins get their inputs set
+    //     // 4. listen to modifications on our own inputs
+    //     // TODO what about checking if existing inputs are removed?
+    //     (mf) => { // metaframe instance
+    //         return new Promise((resolve, reject) => {
+    //             const inputKey = `PluginStateCheck-${DISPLAY_VERSION}`;
+    //             let disposers = [];
+    //             const checkState = (state) => {
+    //                 if (!state) {
+    //                     mf.plugin.requestState();
+    //                     return;
+    //                 }
+
+    //                 // we are going to wait until all the non-plugin tests have finished
+    //                 // since if we mess with the metapage state, it's going to bork the
+    //                 // metaframe tests currently running in other parallel metaframes
+    //                 // THIS IS ACTUALLY HAPPENING PLEASE STOP
+    //                 if (Object.keys(state.metaframes.inputs) < 2) { // this is *always* at least two
+    //                     mf.plugin.requestState();
+    //                     return;
+    //                 }
+    //                 const allMetaframeTestsPassed = Object.keys(state.metaframes.outputs).reduce((passing, metaframeId) => {
+    //                     return passing && state.metaframes.outputs[metaframeId].tests === 'pass';
+    //                 }, true);
+
+    //                 if (!allMetaframeTestsPassed) { // wait until the metaframe (not plugin) tests pass
+    //                     mf.plugin.requestState();
+    //                     return;
+    //                 }
+
+    //                 // modify the global state, specifically our own inputs
+    //                 // the metapage should update our inputs and send them
+    //                 // down
+    //                 if (!state.plugins.inputs[mf.id] || !state.plugins.inputs[mf.id][inputKey]) {
+    //                     state.plugins.inputs[mf.id] = state.plugins.inputs[mf.id] ? state.plugins.inputs[mf.id] : {};
+    //                     state.plugins.inputs[mf.id][inputKey] = true;
+    //                     mf.plugin.setState(state);
+    //                     mf.plugin.requestState();
+    //                     return;
+    //                 }
+    //             };
+
+    //             // listen to global state changes
+    //             disposers.push(mf.plugin.onState(checkState));
+
+    //             // listen to our own inputs changing, from the global state changes above
+    //             disposers.push(mf.onInput(inputKey, (value) => {
+    //                 resolve(true);
+    //                 while (disposers.length > 0) {
+    //                     disposers.pop()();
+    //                 }
+    //             }));
+
+    //             // get the state, we'll keep calling this until we like what we see
+    //             mf.plugin.requestState();
+    //         });
+    //     }
+    // ),
+];
+
+
+//     // IF this metaframe is the plugin, test:
+    //     //  -
+    //     //  -
+    //     //  - the input pipe `${VERSION}` has the value `${VERSION}-preset` when initialized
+    //     //    this tests plugin input state being correctly set
+    //     //  - the input pipe `new-input` is set with: `${VERSION}-new`
+    //     //  - when we get updated state, eventually it has our plugin state
+    //     //  - when we get updated state, eventually it has the correct metaframe state
+    //     new Promise((resolve, reject) => {
+    //         let unbinds = [];
+    //         unbinds.push(mf.onInput('metapage/definition', function(value) {
+
+    //             TEST_OK_INPUT_PASS_THROUGH = true;
+    //             setStatus();
+    //             resolve(true);
+    //             unbind();
+    //         }));
+    //     }),
+
+    //     mf
+    // ];
+
+
+// start the test, async because we loaded the versioned metapage library
+// dynamically, so wait for window.onload
+const runTests = async() => {
+    if (VERSION == 'latest') {
+        var mf = new Metaframe();
+    } else if (window.compareVersions(VERSION, '0.1.35') <= 0) {
+        // earlier versions have the annoying package name (since removed)
+        var mf = new metaframe.Metaframe();
+    } else {
+        var mf = new Metaframe();
+    }
+    await mf.ready;
+
+    if (!mf._iframeId) {
+        throw 'Metaframe claims ready but missing ._iframeId';
+    }
+
+    if (mf.plugin) {
+        if (VERSION !== 'latest' && window.compareVersions(VERSION, '0.3') < 0) {
+            // plugins not supported
+            document.getElementById('body').innerText = `no plugin support v${DISPLAY_VERSION} (${VERSION})`;
+            document.body.style.backgroundColor = "green";
+            return;
+        }
+
+        document.getElementById('body').innerText = `plugin v${DISPLAY_VERSION}`;
+    }
+
+    document.body.style.backgroundColor = mf._color || mf.color;
+
+    const promises = TESTS.map((test) => test.run(mf));
+
+    // This is our part of the metaframe daisy chain.
+    //  when we get a input [input], we read the array from the "versions"
+    // field (or create one) and append our version to the array, then
+    // send the value to the output: { "output": { "versions": [...] } }
+    const onUpdate = (value) => {
+        if (value == null) {
+            return;
+        }
+        if (typeof(value) === 'object') {
+            value.versions = value.versions ? value.versions : [];
+            value.versions.push(DISPLAY_VERSION);
+            if (mf.getOutput('output') == null || JSON.stringify(mf.getOutput('output').versions) != JSON.stringify(value.versions)) {
+                mf.setOutput("output", value);
+            }
+        }
+    }
+
+    // When I get the input array, add my version to the list
+    // This will be passed around to all metaframe in the version list
+    mf.onInput('input', function(value) {
+        onUpdate(value);
+    });
+
+    // Update from the initial inputs
+    onUpdate(mf.getInput('input'));
+
+    Promise.all(promises)
+        .then(() => {
+            document.body.style.backgroundColor = "green";
+            setStatus();
+            // the metapage can listen for this change
+            // console.log(`Metaframe[${DISPLAY_VERSION}]: sending 'tests': 'pass'`);
+            mf.setOutput('tests', 'pass');
+        })
+        .catch((err) => {
+            console.error(err);
+            document.body.style.backgroundColor = "red";
+            setStatus();
+        });
+}
+
+// Run the test only when the metaframe library is loaded
+window.onload = runTests;
+
+</script>

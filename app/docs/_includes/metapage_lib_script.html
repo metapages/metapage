@@ -1,0 +1,5 @@
+{% if jekyll.environment == "production" %}
+<script src="https://cdn.jsdelivr.net/npm/metapage@{{site.data.versions.versions.last}}/browser.js"></script>
+{% else %}
+<script src="/js/metapage/browser.js"></script>
+{% endif %}

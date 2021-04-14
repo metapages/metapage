@@ -1,0 +1,64 @@
+# Template docker-compose application
+
+version: "2.4"
+
+services:
+
+  libs:
+    x-publish: true
+    image: ${DOCKER_REGISTRY}${DOCKER_IMAGE_PREFIX}libs:${DOCKER_TAG:-cache}
+    build:
+      context: ./libs
+      target: build
+    command: just test
+    environment:
+      - "NPM_TOKEN=${NPM_TOKEN:-}"
+    networks:
+      - default
+
+  tests-server:
+    build:
+      context: ./libs
+      target: build
+    command: just test/serve
+    environment:
+      - "TEST_SERVER_PORT=${TEST_SERVER_PORT:-3000}"
+    networks:
+      - default
+    healthcheck:
+      test: ["CMD-SHELL", "PORT=${TEST_SERVER_PORT:-3000} deno run --allow-env --allow-net=localhost /healthcheck.ts"]
+      start_period: 3s
+      interval: 8s
+      timeout: 4s
+      retries: 15
+
+
+
+  # # BROKEN:
+  # # Permission issues on the docker build
+  # docs:
+  #   # x-publish consumed by cloudseed
+  #   x-publish: true
+  #   image: ${DOCKER_REGISTRY}${DOCKER_IMAGE_PREFIX}docs:${DOCKER_TAG:-cache}
+  #   build:
+  #     context: ./docs
+  #     args:
+  #       JEKYLL_GITHUB_TOKEN: ${JEKYLL_GITHUB_TOKEN}
+  #       DOCKER_TAG: ${DOCKER_TAG:-cache}
+  #       DOCKER_REGISTRY: ${DOCKER_REGISTRY:-}
+  #       DOCKER_IMAGE_PREFIX: ${DOCKER_IMAGE_PREFIX:-}
+  #     # cache_from:
+  #     #   - ${DOCKER_REGISTRY:-}${DOCKER_IMAGE_PREFIX:-}metapage:docs
+  #   command: jekyll build --config _config.yml
+  #   environment:
+  #    - "JEKYLL_GITHUB_TOKEN=${JEKYLL_GITHUB_TOKEN}"
+  #   #  - "JEKYLL_ENV=development"
+  #   # ports:
+  #   #   - "4000:${PORT_METAPAGE:-4000}"
+  #   networks:
+  #     - default
+
+
+networks:
+  default:
+    driver: bridge

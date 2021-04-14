@@ -1,0 +1,14 @@
+{
+	"version": "0.2",
+	"metadata": {
+		"version": "0.1",
+		"title": "A button example",
+		"author": "Dion Whitehead",
+		"image": "pumpkin.svg"
+	},
+	"outputs": {
+		"button_out": {
+			"type": "string"
+		}
+	}
+}

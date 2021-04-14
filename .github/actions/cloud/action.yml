@@ -1,0 +1,23 @@
+# https://docs.github.com/en/free-pro-team@latest/actions/creating-actions/metadata-syntax-for-github-actions
+name: 'cloud image: all operations'
+description: 'cloud operations (deploy)'
+inputs:
+  command:
+    description: 'just command'
+    required: true
+    default: 'just'
+  github_token:
+    description: 'https://docs.github.com/en/actions/configuring-and-managing-workflows/authenticating-with-the-github_token#about-the-github_token-secret'
+    required: true
+runs:
+  using: 'docker'
+  # the image value cannot be templated or set by inputs or env vars so
+  # it is set by .github/actions/cloud-image using sed text replacement
+  image: <replaced by .github/actions/cloud-image>
+  args:
+   - 'bash'
+   - '-c'
+   - '${{ inputs.command }}'
+branding:
+  icon: 'aperture'
+  color: 'green'

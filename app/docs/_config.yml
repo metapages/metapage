@@ -1,0 +1,44 @@
+#Controls logic for changing asset urls
+environment: production
+
+#Site settings
+source: ./
+title: Metapages
+# description: A short description of your site's purpose
+baseurl: ""
+repository: metapages/metapage
+
+include: ['pages']
+collections:
+  metaframes:
+    output: true
+  metapages:
+    output: true
+  tools:
+    output: true
+  plugins:
+    output: true
+  versions:
+    output: true
+
+webrick:
+  headers:
+    "Access-Control-Allow-Origin": "*"
+
+# Build settings
+markdown: kramdown
+
+# https://pmarsceill.github.io/just-the-docs//docs/configuration/
+remote_theme: pmarsceill/just-the-docs@v0.2.6
+# Enable or disable the site search
+# This doesn't work yet
+search_enabled: false
+
+# Aux links for the upper right navigation
+aux_links:
+    "GitHub":
+      - "//github.com/metapages/metapage"
+    "npm":
+      - "//www.npmjs.com/package/metapage"
+    "Metapage Viewer":
+      - "//app.metapages.org/"

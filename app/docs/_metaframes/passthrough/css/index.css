@@ -1,0 +1,134 @@
+
+html body {
+    height: 100%;
+}
+
+.container {
+    height: 100vh;
+    width: 100%;
+    max-width: 100%;
+    max-height: 100%;
+    margin: 0px;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-rows {
+    flex: 100 1 auto;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    border-top: 1px solid #D3D3D3;
+}
+
+/* Expand vertical as much as needed, but don't shrink mas minimum */
+.input-row {
+    flex: 4 0 auto;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: stretch;
+    min-height: 10px;
+    max-height: 300px;
+
+    border-bottom: 1px solid #D3D3D3;
+}
+
+.input-row-element {
+}
+
+.input-row-element-name {
+    flex: 1 0 auto;
+    min-width: 50px;
+    margin-right: 10px;
+    border-right: 1px solid #D3D3D3;
+    padding: 2px;
+}
+
+.input-row-element-value {
+    flex: 100 1 auto;
+    padding-left: 5px;
+}
+
+.input-row-element-value-textarea {
+    flex: 100 1 auto;
+    width: 100%;
+    height: 100%;
+    min-height: 100%;
+    resize: none;
+    overflow-y: scroll;
+    border-top: none;
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+}
+
+.input-row-element-delete {
+    flex: 0 0 auto;
+    /*max-width: 36px;*/
+    /*min-width: 36px;*/
+}
+
+.button {
+    max-width: 36px;
+    min-width: 36px;
+}
+
+#header {
+    flex: 0 1 auto;
+    width: 100%;
+    min-width: 0px;
+    min-height: 36px;
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+}
+
+#input-button {
+    flex: 0 0 auto;
+}
+
+#nodata {
+    flex: 0 1 auto;
+}
+
+/*.prop-text{font-size:1.0vw}
+
+@media (max-width : 768px) {
+    .prop-text{font-size:4.0vw}
+}
+*/
+/*@media screen and (max-width: 300px) {
+    #header {
+        display: none;
+    }
+    .button {
+        display: none;
+    }
+}*/
+
+
+/*@media screen and (min-width: 201px) and (max-width: 768px) {
+    .column-name {
+        width: 15%;
+    }
+    .column-value {
+        width: 70%;
+    }
+    .column-delete {
+        width: 15%;
+    }
+}
+
+@media screen and (min-width: 769px) {
+    .column-name {
+        width: 16%;
+    }
+    .column-value {
+        width: 80%;
+    }
+    .column-delete {
+        width: 4%;
+    }
+}
+*/

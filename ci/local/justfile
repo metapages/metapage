@@ -1,0 +1,34 @@
+# CI (continuous integragtion)
+# Automates building, testing, and deployment
+#  - Commands beginning with "@" are (or will be) used for automation and are required to link to docs explaining further if needed
+
+set shell := ["bash", "-c"]
+# minimal formatting, bold is very useful
+bold     := '\033[1m'
+normal   := '\033[0m'
+
+@_help:
+    echo "CI: automated build|test|deploy on your local machine"
+    echo ""
+    just --list --unsorted
+    echo ""
+
+# 🌱 Publish versioned+tagged docker images to the configured docker registry. List images with 'just app/images'
+@publish:
+    CI_PROVIDER=$(basename $PWD) just ../publish
+
+# returns the CI workspace location, where the repository is checked out and/or mounted
+@workspace:
+    echo "/repo"
+
+# Returns the git sha. CI environments usually supply this. For local development, git is installed in the ci image (ci/Dockerfile)
+@git_tag:
+    echo "`(which git >/dev/null && git rev-parse --short HEAD) || echo local`"
+
+# Required. Provider specific docker registry host. For the local case, do not have a registry
+@docker_registry:
+    printf ""
+
+# Required
+@docker_registry_authenticate:
+    # pass

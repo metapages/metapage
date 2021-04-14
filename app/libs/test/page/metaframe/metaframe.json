@@ -1,0 +1,21 @@
+{
+	"version": "0.3",
+	"inputs": {
+		"metapage/definition": {
+			"type": "metapage/definition"
+		},
+		"metapage/state": {
+			"type": "metapage/state"
+		},
+		"input": {}
+	},
+	"outputs": {
+		"metapage/definition": {
+			"type": "metapage/definition"
+		},
+		"metapage/state": {
+			"type": "metapage/state"
+		},
+		"output": {}
+	}
+}
