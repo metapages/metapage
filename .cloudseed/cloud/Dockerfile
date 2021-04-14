@@ -53,106 +53,10 @@ RUN apk add --virtual .download --no-cache curl ; \
     && mv deno /bin/deno \
     && apk del .download
 
-#sops (keys and encrypting secrets)
-ENV SOPS_VERSION=3.6.1
-RUN curl -L -O https://github.com/mozilla/sops/releases/download/v${SOPS_VERSION}/sops-v${SOPS_VERSION}.linux && \
-    mv sops-v${SOPS_VERSION}.linux /usr/bin/sops && \
-    chmod 755 /usr/bin/sops && \
-    sops --version
-
-# terraform
-ENV VERSION_TERRAFORM=0.13.6
-RUN PACKAGE=terraform ; VERSION=${VERSION_TERRAFORM} ; \
-    SHA256SUM=55f2db00b05675026be9c898bdd3e8230ff0c5c78dd12d743ca38032092abfc9 ; \
-    curl -L -O https://releases.hashicorp.com/${PACKAGE}/${VERSION}/${PACKAGE}_${VERSION}_linux_amd64.zip && \
-    (echo "$SHA256SUM  ${PACKAGE}_${VERSION}_linux_amd64.zip" | sha256sum -c) && \
-	unzip ${PACKAGE}_${VERSION}_linux_amd64.zip && \
-	rm ${PACKAGE}_${VERSION}_linux_amd64.zip && \
-    mv ${PACKAGE} /usr/local/bin/${PACKAGE} && chmod +x /usr/local/bin/${PACKAGE}
-
-# gcloud
-ARG VERSION_gcloud_sdk=324.0.0
-ENV VERSION_gcloud_sdk=$VERSION_gcloud_sdk
-ENV CLOUDSDK_CORE_DISABLE_PROMPTS=1
-ENV PATH /google-cloud-sdk/bin:$PATH
-# libc6-compat package not needed due to the above alpine-3.12_glibc-2.32
-RUN apk --no-cache add \
-    python3 \
-    py3-crcmod \
-    openssh-client \
-    git \
-    gnupg \
-    && curl -L -O https://dl.google.com/dl/cloudsdk/channels/rapid/downloads/google-cloud-sdk-${VERSION_gcloud_sdk}-linux-x86_64.tar.gz && \
-    tar xzf google-cloud-sdk-${VERSION_gcloud_sdk}-linux-x86_64.tar.gz && \
-    rm google-cloud-sdk-${VERSION_gcloud_sdk}-linux-x86_64.tar.gz && \
-    gcloud config set core/disable_usage_reporting true && \
-    gcloud config set component_manager/disable_update_check true && \
-    gcloud config set metrics/environment github_docker_image && \
-    gcloud --version
-RUN git config --system credential.'https://source.developers.google.com'.helper gcloud.sh
-VOLUME ["/root/.config"]
-# beta components required all over the place
-RUN gcloud components install beta
-RUN gcloud components install alpha
-
-
-# terragrunt
-RUN PACKAGE=terragrunt ; VERSION=v0.27.1 ; \
-    SHA256SUM=b9f174e6613fe84121352ecdd238783504b642d390df87f8f8d760b42c44c02a ; \
-    curl -L -O https://github.com/gruntwork-io/${PACKAGE}/releases/download/${VERSION}/${PACKAGE}_linux_amd64 && \
-    (echo "$SHA256SUM  ${PACKAGE}_linux_amd64" | sha256sum -c) && \
-    mv ${PACKAGE}_linux_amd64 /usr/local/bin/${PACKAGE} && chmod +x /usr/local/bin/${PACKAGE}
-
-# terraform modules are fetched here and the versions hard coded
-# it prevents wasted time downloading plugins all the time but does
-# bake in versions. i think the trade-off is worth it, but updgrades
-# will have to be done carefully, but upgrading a plugin then updating
-# all the terraform deployments
-# ENV TERRAFORM_PLUGIN_DIR=/usr/local/share/terraform/plugin-cache
-# https://www.terraform.io/docs/commands/cli-config.html#provider-plugin-cache
-ENV TF_PLUGIN_CACHE_DIR=/root/.terraform.d/plugin-cache
-
-RUN mkdir -p $TF_PLUGIN_CACHE_DIR
-# ENV XDG_DATA_DIRS=/root
-# WORKDIR ${TERRAFORM_PLUGIN_DIR}
-
-# Some modules need random
-ENV VERSION_TERRAFORM_RANDOM=2.2.1
-# RUN PACKAGE=terraform-provider-random ; VERSION=${VERSION_TERRAFORM_RANDOM} ; \
-#     curl -L -O https://releases.hashicorp.com/${PACKAGE}/${VERSION}/${PACKAGE}_${VERSION}_linux_amd64.zip && \
-# 	unzip ${PACKAGE}_${VERSION}_linux_amd64.zip && \
-# 	rm ${PACKAGE}_${VERSION}_linux_amd64.zip
-
-ENV VERSION_TERRAFORM_GOOGLE=3.53.0
-ENV VERSION_TERRAFORM_GOOGLE_BETA=3.53.0
-# RUN PACKAGE=terraform-provider-google ; VERSION=${VERSION_TERRAFORM_GOOGLE} ; \
-#     curl -L -O https://releases.hashicorp.com/${PACKAGE}/${VERSION}/${PACKAGE}_${VERSION}_linux_amd64.zip && \
-# 	unzip ${PACKAGE}_${VERSION}_linux_amd64.zip && \
-# 	rm ${PACKAGE}_${VERSION}_linux_amd64.zip
-
-ENV VERSION_TERRAFORM_NULL=3.0.0
-# RUN PACKAGE=terraform-provider-null ; VERSION=${VERSION_TERRAFORM_NULL} ; \
-#     curl -L -O https://releases.hashicorp.com/${PACKAGE}/${VERSION}/${PACKAGE}_${VERSION}_linux_amd64.zip && \
-# 	unzip ${PACKAGE}_${VERSION}_linux_amd64.zip && \
-# 	rm ${PACKAGE}_${VERSION}_linux_amd64.zip
-ENV VERSION_TERRAFORM_TEMPLATE=2.2.0
-
-
-
 ENV DENO_DIR=/root/.deno
 
 # Our workdir
 WORKDIR /repo/cloud
-
-# Core cloud libraries
-# COPY ci /repo/ci
-
-# Core cloud libraries
-COPY .cloudseed/cloud/lib/terragrunt /repo/cloud/lib/terragrunt
-# copy (seed) the terraform plugin cache as a workaround to terragrunt and plugin cache problems: https://github.com/gruntwork-io/terragrunt/issues/1212
-# https://www.terraform.io/docs/commands/cli-config.html#implied-local-mirror-directories
-RUN cd /repo/cloud/lib/terragrunt terragrunt providers mirror /usr/local/share/terraform/plugins
-RUN cd /repo/cloud/lib/terragrunt && mkdir -p /cloudseed && terragrunt init && rm provider.tf
 
 ###################################################################################################
 # cloudseed deno scripts
