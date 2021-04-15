@@ -1,0 +1,7 @@
+# The .env file in this directory is ignored, but child folder .env files are committed
+/.env
+# cached deno source
+/.deno_dir
+
+**/.terragrunt-cache
+**/.terraform

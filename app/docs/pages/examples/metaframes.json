@@ -1,0 +1,16 @@
+---
+permalink: /examples/metaframes.json
+---
+[
+{%- assign first = true -%}
+{%- for metaframe in site.metaframes -%}
+    {%- if metaframe.url contains 'index.html' -%}
+        {%- if first == true %}
+            {% assign first = false -%}
+            "{{metaframe.id}}"
+        {%- else %}
+            ,"{{metaframe.id}}"
+        {%- endif -%}
+    {%- endif -%}
+{% endfor %}
+]

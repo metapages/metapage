@@ -1,0 +1,54 @@
+version: "2.4"
+
+services:
+
+  https:
+    image: openresty/openresty:1.15.8.3-1-buster-fat-nosse42
+    # depends_on:
+    #   docs:
+    #     condition: service_healthy
+    depends_on:
+      tests-server:
+        condition: service_healthy
+    command: /start.sh
+    environment:
+      # point to both the application and the auth domain
+      # they are separate because it makes auth logistically easier
+      - "APP_FQDN=${APP_FQDN:-app1.dev}"
+      - "APP_PORT=${APP_PORT:-443}"
+      - "TEST_SERVER_PORT=${TEST_SERVER_PORT:-3000}"
+    volumes:
+      - ./ingress/https/conf.d:/etc/nginx/conf.d
+      - ./ingress/https:/app/https
+      - ./ingress/https/start.sh:/start.sh
+    networks:
+      - default
+    ports:
+      - "${APP_PORT:-443}:${APP_PORT:-443}"
+    logging:
+      driver: ${LOGGING_HTTPS:-none}
+
+
+  libs:
+    command: just dev
+    volumes:
+      - ./libs:/workspace/libs
+      # The compiled output is put there
+      - ./docs:/workspace/docs
+    environment:
+      - "TEST_SERVER_PORT=${TEST_SERVER_PORT:-3000}"
+
+
+  # BROKEN:
+  # Permission issues on the docker build
+  # docs:
+  #   command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
+  #   volumes:
+  #     - ./docs:/workspace/docs
+
+  tests-server:
+      volumes:
+        - ./docs:/workspace/docs
+        - ./libs:/workspace/libs
+      ports:
+        - "${TEST_SERVER_PORT:-3000}:${TEST_SERVER_PORT:-3000}"

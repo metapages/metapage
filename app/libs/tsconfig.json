@@ -1,0 +1,21 @@
+{
+    "compilerOptions": {
+        "baseUrl": "src",
+        // "outDir": "./dist/",
+        "declaration": true,
+        "declarationMap": true,
+        "lib": ["dom", "ES2017"],
+        "module": "es2015",
+        "moduleResolution": "node",
+        // "noEmit": true,
+        "removeComments": true,
+        "strict": true,
+        "sourceMap": true,
+        "target": "es6",
+        "typeRoots": ["node_modules/@types", "src/metapage/types"],
+        "paths": {
+            "~*": ["./*"]
+        }
+    },
+    "include": ["src/**/*.ts"]
+}

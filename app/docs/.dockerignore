@@ -1,0 +1,5 @@
+.DS_Store
+.dockerignore
+_site
+.jekyll-metadata
+.gitignore

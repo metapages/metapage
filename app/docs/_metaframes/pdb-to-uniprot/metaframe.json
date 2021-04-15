@@ -1,0 +1,25 @@
+{
+	"version": "0.1.0",
+	"metadata": {
+		"version": "0.1",
+		"title": "PDB to Uniprot converter",
+		"image": "http://cdn.rcsb.org/rcsb-pdb/v2/common/images/rcsb_logo.png",
+		"author": "Dion Whitehead"
+	},
+	"inputs": {
+		"pdb_id" : {
+			"type": "string"
+		}
+	},
+	"outputs": {
+		"uniprot_id": {
+			"type": "string"
+		},
+		"error": {
+			"type": "string"
+		},
+		"status": {
+			"type": "string"
+		}
+	}
+}

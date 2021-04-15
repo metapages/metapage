@@ -1,0 +1,162 @@
+# just docs: https://github.com/casey/just
+
+# CI (continuous integragtion)
+# Automates building, testing, and deployment
+#  - Commands beginning with "@" are (or will be) used for automation and are required to link to docs explaining further if needed
+set shell := ["bash", "-c"]
+# git repository root
+export ROOT                     := env_var_or_default("GITHUB_WORKSPACE", `git rev-parse --show-toplevel`)
+# This is the default CI provider. Change this as needed, but imagining you won't that often
+# This maps local commands to identical commands in <CI_PROVIDER>/justfile
+export CI_PROVIDER              := env_var_or_default("CI_PROVIDER", `if [ "$GITHUB_ACTIONS" = "true" ]; then echo "github"; else echo "local"; fi`)
+# You shouldn't need to set this yourself
+# Eg "yourname/yourrepo". By default, we'll try to get it whereever it might be available (env vars, git)
+# This line is duplicated in app/justfile
+export DOCKER_IMAGE_PREFIX      := env_var_or_default("DOCKER_IMAGE_PREFIX", `(which deno >/dev/null && which git >/dev/null && deno run --unstable --allow-all ../.cloudseed/deno/cloudseed/docker_image_prefix.ts) || echo ''`)
+# By default, set by these scripts. Eg <git sha>, v1.2.3, or some other meaningful tag (cache|local)
+# For typical operations (outside of debugging), you won't need to set this yourself
+# This line is duplicated in app/justfile
+export GIT_TAG_SHORT            := `(which git >/dev/null && git rev-parse --short HEAD) || echo cache`
+# Required for local https certificates, OAuth config, and the https URL
+export APP_FQDN                 := env_var_or_default("APP_FQDN", "app1.dev")
+export APP_PORT                 := env_var_or_default("APP_PORT", "443")
+# Default to the CI commands (no .override file that is used for local development)
+export DOCKER_COMPOSE           := "docker-compose -f docker-compose.yml"
+export DOCKER_BUILDKIT          := "1"
+export COMPOSE_DOCKER_CLI_BUILD := "1"
+# See comments in app/justfile#DENO_SOURCE
+DENO_SOURCE                     := ROOT + "/.cloudseed/deno"
+# minimal formatting, bold is very useful
+bold     := '\033[1m'
+normal   := '\033[0m'
+
+
+# Temporarily disabled attempting to automatically jump into docker for the ci ops, since they
+# rely on building docker images, and mounting host directories is rife with permissions problems:
+# https://github.com/moby/moby/issues/2259#issuecomment-48284631
+# If not in docker, 🚪 get inside 🚪
+_help:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    #if [ -f /.dockerenv ]; then
+        echo -e ""
+        echo -e "Continuous Integration (CI): automated build|test|deploy (using CI provider: {{bold}}{{CI_PROVIDER}}{{normal}})"
+        echo -e ""
+        echo -e "🌱: required by automation"
+        echo -e ""
+        just --list --unsorted
+        echo ""
+        echo ""
+        echo "DEBUGGING: e.g. 'DEBUG=1 just test'"
+        echo ""
+        echo -e "DOCKER_IMAGE_PREFIX=${DOCKER_IMAGE_PREFIX}"
+    #else
+    #    just _docker $(basename $PWD);
+    #fi
+
+# Prints the configured (or default) root path of the repository when run in a container (local or CI)
+@workspace:
+    just {{CI_PROVIDER}}/workspace
+
+# Build versioned docker images.
+# List images to build with 'just app/images'
+# 🌱 In app/: Pull cache, build, push cache. Ready for running, testing, or publishing
+@build +images="":
+    # pull :cache using cache_from
+    just _pull {{images}} || true
+    # build cache afresh,then push the fresh :cache tag of relevant images to the registry for later
+    just _build cache {{images}}
+    if [ "$CI" = "true" ]; then just _push cache {{images}}; fi
+    # Now we can build the git tagged version without overwriting (possibly required later) caches
+    # This build functions like a 'docker tag' since it is 100% using the caches, so should be FAST
+    # and there is no mass tag capability in docker-compose
+    just _build $(just version) {{images}}
+    echo "Images built:"
+    VERSION=$(just version) ; \
+    for artifact in $(just ../app/images); do \
+        echo -e "🌟🌟🌟       $(just ../ci/{{CI_PROVIDER}}/docker_registry)${DOCKER_IMAGE_PREFIX}{{bold}}${artifact}{{normal}}:${VERSION}"; \
+    done
+
+@tag_and_push registry *images:
+    VERSION=$(just version) ; \
+    ALL_IMAGES=$(just ../app/images); \
+    IMAGES=$(if [ "{{images}}" = "" ]; then echo "${ALL_IMAGES}"; else echo {{images}}; fi); \
+    for artifact in ${IMAGES}; do \
+        docker tag $(just {{CI_PROVIDER}}/docker_registry)${DOCKER_IMAGE_PREFIX}${artifact}:${VERSION} {{registry}}/${DOCKER_IMAGE_PREFIX}${artifact}:${VERSION} ; \
+        docker push {{registry}}/${DOCKER_IMAGE_PREFIX}${artifact}:${VERSION}; \
+    done
+
+# prints the full versioned docker image URL given an image (e.g. 'api') and optional registry (default whatever is configured for the ci provider)
+full_image_url image registry="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    REGISTRY={{registry}}
+    if [ "${REGISTRY}" = "" ]; then
+        REGISTRY=$(just {{CI_PROVIDER}}/docker_registry)
+    fi
+    printf ${REGISTRY}/${DOCKER_IMAGE_PREFIX}{{image}}:$(just version)
+
+# 🌱 Run app/test with the ci (production) images
+@test: build
+    cd ../app && \
+        DOCKER_REGISTRY=$(just ../ci/{{CI_PROVIDER}}/docker_registry) \
+        DOCKER_COMPOSE="{{DOCKER_COMPOSE}}" \
+        DOCKER_TAG=$(just ../ci/version) \
+        just test
+
+# 🌱 Publish versioned+tagged docker images to the configured docker registry. List images with 'just app/images'
+@publish: build
+    just _push $(just version)
+
+# 🌱 Get the git sha based tag used for tagging images and deployments
+@version short="8": _ensureDeno
+    DOCKER_TAG=$DOCKER_TAG deno run --unstable --allow-all {{DENO_SOURCE}}/git/getGitSha.ts --short={{short}}
+
+###################################################
+# Internal utilies
+###################################################
+
+# Unfortunately Github Actions currently DOESN'T Seem to support docker caching between steps: https://github.com/actions/cache/issues/31
+# Pull app '*:cache' images from the docker registry. Rarely would you modify the parameters (hardcode?)
+@_pull +images="":
+    # TODO: remove this if not needed
+    # Do not actually authenticate here, the CI provider will do it elsewhere
+    just {{CI_PROVIDER}}/docker_registry_authenticate
+    if [ "$CI" = "true" ]; then DOCKER_REGISTRY="$(just {{CI_PROVIDER}}/docker_registry)" \
+        just ../app/_pull --quiet {{images}}; \
+    fi
+
+# build tagged application images
+# arguments used to maintain efficient cache without overwrites due to bugs and limitations in docker-compose
+_build DOCKER_TAG="cache" +images="":
+    cd ../app && \
+        DOCKER_REGISTRY=$(just ../ci/{{CI_PROVIDER}}/docker_registry) \
+        DOCKER_COMPOSE="{{DOCKER_COMPOSE}}" \
+        DOCKER_TAG={{DOCKER_TAG}} \
+        DOCKER_IMAGE_PREFIX={{DOCKER_IMAGE_PREFIX}} \
+        just build {{images}}
+
+# Push app '*:cache' images to the docker registry
+@_push DOCKER_TAG="cache" +images="":
+    just {{CI_PROVIDER}}/docker_registry_authenticate
+    export DOCKER_REGISTRY=$(just {{CI_PROVIDER}}/docker_registry) && \
+    DOCKER_TAG={{DOCKER_TAG}} \
+    DOCKER_IMAGE_PREFIX={{DOCKER_IMAGE_PREFIX}} \
+    just ../app/_push {{images}}
+
+# Do ./app operations in docker with all required tools installed, including local bash history
+# Build and run the ci image, used for building, publishing, and deployments
+@_docker +args="bash":
+    just ../cloud/_docker ci {{args}}
+
+_ensure_inside_docker:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f /.dockerenv ]; then
+        echo -e "🌵🔥🌵🔥🌵🔥🌵 First run the command: just 🌵🔥🌵🔥🌵🔥🌵"
+        exit 1
+    fi
+
+# deno check
+@_ensureDeno:
+    if ! command -v deno &> /dev/null; then echo '💥 deno💥 is not installed (manual.md#host-requirements): https://deno.land/manual/getting_started/installation'; exit 1; fi

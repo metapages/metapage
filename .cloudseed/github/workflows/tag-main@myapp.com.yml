@@ -1,0 +1,34 @@
+# Copy this example into .github/workflows and then replace all "myapp.com" with your <fqdn>
+# Then on every push to the main branch this workflow will:
+#  - git tag @<fqdn>
+#    - you have to create the deployment first e.g: just create gcp <fqdn>
+#  - the tag subsequently triggers the workflow deploy.yml to deploy the main branch to the domain <fqdn>
+name: Tag main branch
+on:
+  push:
+    branches:
+      - main
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    steps:
+
+    - id: checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: '0'
+        # NOTE @v2 uses the token as an auth http header. Set it to
+        # a Personal Access Token instead of secrets.GITHUB_TOKEN
+        # so that tag pushes trigger repo push events.
+        token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+    - id: tag
+      name: Bump version and push tag
+      env:
+        # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#about-the-github_token-secret
+        GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        DEPLOY: myapp.com
+      run: |
+        git push origin :@$DEPLOY || true
+        git tag --delete @$DEPLOY || true
+        git tag @$DEPLOY && git push origin --tags

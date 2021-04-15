@@ -1,0 +1,16 @@
+source 'https://rubygems.org'
+
+gem "json"
+gem "jekyll"
+gem "jekyll-sitemap"
+gem "jekyll-feed"
+gem "jekyll-paginate"
+gem "jekyll-gist"
+gem "kramdown"
+gem "rouge"
+gem "jekyll-watch"
+gem "jekyll-remote-theme"
+# Automatically building is disabled because this guy won't install
+# gem "github-pages", group: :jekyll_plugins
+
+gem "jekyll-tidy", "~> 0.2.2"

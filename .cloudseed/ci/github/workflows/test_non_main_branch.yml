@@ -1,0 +1,83 @@
+# .yaml files in this directory are executed workflows:
+# https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
+# This workflow is triggered on pushes to non-master branches
+# Builds and tests the app (just test)
+name: Build and test app
+
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+on:
+  push:
+    # only non-master branches
+    branches:
+      - "**"
+      - "!master"
+
+    # only test on changes to the app/ + ci/ directories (plus ops directories .cloudseed + .github)
+    paths:
+      # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
+      - "app/**"
+      - "ci/**"
+      - ".cloudseed/**"
+
+env:
+  DOCKER_COMPOSE_VERSION: 1.25.4
+  DOCKER_BUILDKIT: 1
+  COMPOSE_DOCKER_CLI_BUILD: 1
+
+jobs:
+  test_on_push:
+    name: Build and test app/
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: '0'
+
+      # Check if any secrets accidentally got committed
+      - name: trufflehog-actions-scan
+        uses: edplato/trufflehog-actions-scan@master
+        with:
+          scanArguments: "--max_depth=1 --exclude_paths .github/config/actions_trufflehog_exclude_list.txt"
+
+      # This enables build caching
+      - name: buildx
+        uses: docker/setup-buildx-action@v1
+        id: buildx
+        with:
+          install: true
+          driver: docker
+
+      - name: Login to GitHub Container Registry
+        # We could login directly, but the docker/login-action@v1 action includes a cleanup operation that deletes the auth credential
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          # the docs say to use the above, but the local tester 'act' hates it but this works on both
+          # username: ${{ github.actor }}
+          # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#about-the-github_token-secret
+          password: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+
+      - name: Prepare cloud/CI image
+        uses: ./.github/actions/cloud-image
+
+      # This is also actually called inside the step below, but I pulled it out to measure
+      # how long it takes to pull the images, assuming the local docker cache is reused between steps
+      # But actually the docker cache is NOT used between steps: https://github.com/actions/cache/issues/31
+      # I'll leave this in here, add it back when the above issue is addressed
+      # - name: Pull cache images
+      #   uses: ./.github/actions/cloud
+      #   with:
+      #     command: "just ci/_pull"
+      #     github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and test app inside the cloud/CI image built above
+        uses: ./.github/actions/cloud
+        env:
+          DOCKER_REGISTRY: ghcr.io
+          # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#about-the-github_token-secret
+          GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+        with:
+          command: "just test"
+          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}

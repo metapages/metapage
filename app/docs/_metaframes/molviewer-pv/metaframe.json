@@ -1,0 +1,29 @@
+{
+  "version": "0.2",
+  "metadata": {
+    "version": "0.1",
+    "title": "PV Protein Viewer",
+    "image": "protein.png"
+  },
+  "inputs": {
+    "pdb_id": {
+      "type": "pdb_id:rcsb.org"
+    },
+    "pdb_data": {},
+    "pdb_url": {},
+    "zoom": {
+      "type": "json"
+    },
+    "rotation": {
+      "type": "float"
+    }
+  },
+  "outputs": {
+    "zoom": {
+      "type": "json"
+    },
+    "rotation": {
+      "type": "float"
+    }
+  }
+}

@@ -1,0 +1,24 @@
+.horizontal {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-around;
+
+	border: 5px solid #e5e5e5;
+
+	height: 100%;
+	padding: 5px;
+}
+
+.column-inputs-outputs {
+	flex: 1 1 auto;
+}
+
+.column-metaframe {
+	flex: 2 1 auto;
+}
+
+iframe {
+	flex: 1 1 auto;
+	border: 5px solid #396aba;
+	min-height: 500px;
+}

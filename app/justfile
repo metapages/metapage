@@ -1,0 +1,206 @@
+# just docs: https://github.com/casey/just
+set shell := ["bash", "-c"]
+export ROOT                        := `git rev-parse --show-toplevel`
+# Eg "ghcr.io". By default, the ci environment will set this.
+# Required for pulling/pushing images, not required for locally building and running.
+export DOCKER_REGISTRY             := env_var_or_default("DOCKER_REGISTRY", "")
+# Eg "yourname/yourrepo". By default, we'll try to get it whereever it might be available, no value means local development
+# This line is duplicated in ci/justfile
+export DOCKER_IMAGE_PREFIX         := env_var_or_default("DOCKER_IMAGE_PREFIX", "")
+# By default, set by these scripts. Eg <git sha>, v1.2.3, or some other meaningful tag (cache|local)
+# For typical operations (outside of debugging), you won't need to set this yourself
+# This line is duplicated in ci/justfile
+# export DOCKER_TAG               := env_var_or_default("DOCKER_TAG", `(which git >/dev/null && git rev-parse --short HEAD) || echo local`)
+export DOCKER_TAG               := env_var_or_default("DOCKER_TAG", "local")
+# Required for local https certificates, OAuth config, and the https URL
+# This line is duplicated in ci/justfile
+export APP_FQDN                    := env_var_or_default("APP_FQDN", "app1.dev")
+# Default to the local development stack, publishing typically is only DOCKER_COMPOSE="docker-compose -f docker-compose.yml"
+export DOCKER_COMPOSE              := env_var_or_default("DOCKER_COMPOSE", "docker-compose -f docker-compose.yml -f docker-compose.override.yml")
+# App level env vars for ports etc
+# This line is duplicated in ci/justfile
+export APP_PORT                    := env_var_or_default("APP_PORT", "443")
+# Enforce use of buildkit
+export DOCKER_BUILDKIT             := "1"
+export COMPOSE_DOCKER_CLI_BUILD    := "1"
+# Source for deno scripts (backbone of this application)
+# You can switch between:
+#  - developing with published (immutable) remote code (NOET YET default but soon). This version is hard-coded elsewhere, so when changing, search and replace
+#  - or locally, with the checked in code (current, temporary)
+#  - or locally, with the github repo cloned in at $DENO_SOURCE absolute path
+#    - git clone git@github.com:metapages/cloudseed-deno.git $DENO_SOURCE
+#    - set "DENO_SOURCE=$DENO_SOURCE" in .env
+# DENO_SOURCE                        := env_var_or_default("DENO_SOURCE", "https://deno.land/x/cloudseed@0.0.7")
+DENO_SOURCE                        := ROOT + "/.cloudseed/deno"
+# minimal formatting, bold is very useful
+bold     := '\033[1m'
+normal   := '\033[0m'
+
+
+# If not in docker, 🚪 get inside 🚪
+_help:
+    #!/usr/bin/env bash
+    echo ""
+    echo "Local app stack development. Run the stack fresh: 'just build && just up'"
+    echo ""
+    just --list --unsorted
+    echo ""
+    echo -e "  🌱: required by automation or otherwise linked to other tools"
+    echo ""
+    if command -v deno &> /dev/null ; then deno run --unstable --allow-read=./ {{DENO_SOURCE}}/help/listPublishedDockerComposeServices.ts ; fi
+
+# 🌱 Build the application stack
+@build +args="": _init
+    if [ "{{args}}" = "" ]; then just _build libs; fi
+    just _build {{args}}
+
+# 🌱 Test the application stack
+@test:
+    echo -e "🚪 <app/> {{bold}}DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} build test{{normal}} 🚪 "
+    DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} build
+    echo -e "🚪 <app/> {{bold}}DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} up --exit-code-from test test{{normal}} 🚪 "
+    DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} up --abort-on-container-exit --exit-code-from libs libs
+
+# build, up, open
+dev: _ensureDeno
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # The following rather confusing steps are necessary to do a complete refresh (build)
+    # without repeating expensive build steps or missing any initialization
+    # Other stand-alone steps (e.g. just up) will make sure any required steps are performed
+    just _init
+    just _build
+    echo "🚀 https://${APP_FQDN}:${APP_PORT}/"
+    if [ -f /.dockerenv ]; then
+        echo "Cannot open browser from docker. 'exit', then 'just app/_open_url https://${APP_FQDN}:${APP_PORT}/'" ;
+        exit;
+    fi
+    just open
+    just _up
+
+# 🌱 Publish new npm module version (defined in package.json)
+publish:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f /.dockerenv ]; then
+        # This check is here to prevent publishing if there are uncommitted changes, but this check does not work in CI environments
+        # because it starts as a clean checkout and git is not installed and it is not a full checkout, just the tip
+        if [[ $(git status --short) != '' ]]; then
+            git status
+            echo -e '💥 Cannot publish with uncommitted changes'
+            exit 2
+        fi
+        {{DOCKER_COMPOSE}} build libs
+        {{DOCKER_COMPOSE}} run libs just npm_publish
+    else
+        just libs/npm_publish
+    fi
+
+# tbb I don't really like this command structure, I want it simple and not cluttered with commands but also need flexibility
+# 🌱 command:<list|json|push|pull> all or defined docker images
+images command="list" +images="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ "{{command}}" = "list" ]; then
+        deno run --unstable --allow-read=./ {{DENO_SOURCE}}/help/listPublishedDockerComposeServices.ts --format=list
+    elif [ "{{command}}" = "json" ]; then
+        deno run --unstable --allow-read=./ {{DENO_SOURCE}}/help/listPublishedDockerComposeServices.ts --format=json
+    elif [ "{{command}}" = "push" ]; then
+        just _push {{images}}
+    elif [ "{{command}}" = "pull" ]; then
+        just _pull {{images}}
+    else
+        echo -e "💥 Unrecognized command: '{{command}}'. Allowed values: <list|json|push|pull>"
+        exit 1
+    fi
+
+# 'docker-compose up' to run the stack (with correct env vars)
+@up +args="": _init
+    just _up {{args}}
+
+@_up +args="":
+    {{DOCKER_COMPOSE}} up --remove-orphans {{args}}
+
+# 'docker-compose down' (with correct env vars)
+down +args="":
+    {{DOCKER_COMPOSE}} down {{args}}
+
+# 'docker-compose {{args}}' (with correct env vars)
+dc +args="":
+    DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} {{args}}
+
+# Open a browser tab pointing to the stack (assumes stack is running)
+@open:
+    just _open_url https://${APP_FQDN}:${APP_PORT}/
+
+# Deletes generated files
+@clean:
+    just ingress/clean
+
+# Tail logs for a given service (lazydocker is currently broken)
+@logs service="":
+    if [ "{{service}}" = "" ]; then echo "Requires a service (ignore *-builder): $(just images list)"; exit 0; fi && \
+    {{DOCKER_COMPOSE}} logs --tail=1000 -f {{service}}
+
+###################################################
+# Internal utilies
+###################################################
+
+# Idempotent. The local compose stack requires some host setup. If any of this fails, see the underlying commands
+@_init:
+    just ingress/init
+
+# Internal docker-compose build command with env vars documented
+@_build +args="":
+    echo "_build args={{args}}"
+    echo -e "🚪 {{bold}}DOCKER_TAG=$DOCKER_TAG DOCKER_REGISTRY=$DOCKER_REGISTRY DOCKER_IMAGE_PREFIX=$DOCKER_IMAGE_PREFIX {{DOCKER_COMPOSE}} build --build-arg BUILDKIT_INLINE_CACHE=1 {{args}}{{normal}} 🚪 " && \
+    DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} build --build-arg BUILDKIT_INLINE_CACHE=1 {{args}}
+
+# docker-compose push the images
+_push +images="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # This check is here to prevent publishing if there are uncommitted changes, but this check does not work in CI environments
+    # because it starts as a clean checkout and git is not installed and it is not a full checkout, just the tip
+    #if [[ $(git status --short) != '' ]]; then
+    #    git status
+    #    exit 2
+    #fi
+    if [ "{{images}}" = "" ]; then
+        echo -e "🚪 <app/> {{bold}}DOCKER_TAG={{DOCKER_TAG}} {{DOCKER_COMPOSE}} push $(just images list){{normal}} 🚪";
+        if [[ -z "${DOCKER_REGISTRY}" ]]; then
+            echo "🔥🔥🔥 aborted because DOCKER_REGISTRY is missing. Run 'just ci/publish' (ci sets DOCKER_REGISTRY automatically) or set manually e.g. 'DOCKER_REGISTRY=ghcr.io/' in .env. ‼ NOTE THE TRAILING SLASH.";
+            exit 1;
+        fi
+        DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} push $(just images list);
+    else
+        echo -e "🚪 <app/> {{bold}}DOCKER_TAG={{DOCKER_TAG}} {{DOCKER_COMPOSE}} push {{images}}{{normal}} 🚪";
+        DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} push {{images}};
+    fi
+
+# 🌱 Pull cached docker images (tag is literally "cache")
+@_pull +images="":
+    echo -e "🚪 <app/> {{bold}}DOCKER_REGISTRY=$DOCKER_REGISTRY DOCKER_IMAGE_PREFIX=$DOCKER_IMAGE_PREFIX DOCKER_TAG=cache {{DOCKER_COMPOSE}} pull --ignore-pull-failures {{images}}{{normal}} 🚪"
+    if [[ -z "${DOCKER_REGISTRY}" ]]; then \
+        echo "docker-compose pull: skipping because DOCKER_REGISTRY is missing. Either 1) just ci/pull, or 2) set e.g. 'DOCKER_REGISTRY=ghcr.io/' in .env. ‼ NOTE THE TRAILING SLASH"; \
+        exit 0; \
+    fi
+    DOCKER_TAG=cache {{DOCKER_COMPOSE}} pull --ignore-pull-failures {{images}}
+
+# deno check
+@_ensureDeno:
+    if ! command -v deno &> /dev/null; then echo '💥 deno💥 is not installed (manual.md#host-requirements): https://deno.land/manual/getting_started/installation'; exit 1; fi
+
+# Do ./app operations in docker with all required tools installed, including local bash history
+# Build and run the ci image, used for building, publishing, and deployments
+@_docker +args="bash":
+    just ../ci/_docker {{args}}
+
+# OS independent open URL in browser. If in a docker context, print the URL instead
+_open_url url:
+    deno run --unstable --allow-all {{DENO_SOURCE}}/exec/open_url.ts {{url}}
+
+# these service aliases make commands nicer, but are they needed?
+alias ingress := _ingress
+@_ingress +args="":
+    just ingress/{{args}}
