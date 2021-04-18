@@ -9,18 +9,19 @@ nav_order: 5
 
 |:--------------------|:-----------------------|:------------------------|
 {%- for metapage in site.metapages -%}
+
 	{%- if metapage.url contains 'index.html' -%}
 		{%- assign tokens = metapage.url | remove: "/index.html" | split: "/" -%}
 		{%- assign token = tokens.last -%}
 		{%- if jekyll.environment == "production" -%}
-			{%- assign url = "https://app.metapages.org/#url=" | append: site.url | append: "/metapages/" | append: token | append: "/metapage.json" -%}
+			{%- assign url = "https://app.metapages.org/#url=" | append: site.url | append: site.baseurl | append: "/metapages/" | append: token | append: "/metapage.json" -%}
 		{%- else -%}
-			{%- assign url = site.data.urls.app-metapage-local | append: "#url=" | append: site.url | append: "/metapages/" | append: token | append: "/metapage.json" -%}
+			{%- assign url = site.data.urls.app-metapage-local | append: "#url=" | append: site.url | append: site.baseurl | append: "/metapages/" | append: token | append: "/metapage.json" -%}
 		{%- endif -%}
 		{%- if token == "test" -%}
 			{%- assign url = site.baseurl | append: "/metapages/" | append: token -%}
 		{%- endif -%}
-		{%- assign urlJson = site.url | append: "/metapages/" | append: token | append: "/metapage.json" -%}
+		{%- assign urlJson = site.url | append: site.baseurl | append: "/metapages/" | append: token | append: "/metapage.json" -%}
 		{%- assign urlDebug = url | append: "?DEBUG" %}
 | [{{ token }}]({{ url }})  | [debug]({{ urlDebug }}) | [Metapage JSON definition]({{ urlJson }}) |
 	{%- endif -%}
@@ -35,18 +36,19 @@ nav_order: 5
 		{%- assign index = metaframe.url | remove: "index.html" -%}
 		{%- assign tokens = metaframe.url | remove: "/index.html" | split: "/" -%}
 		{%- assign token = tokens.last -%}
-		{%- assign urlJson = index | append: "metaframe.json" -%}
-		{%- assign inspect = site.url | append: "/tools/metaframeview?url=" | append: site.url | append: "/metaframes/" | append: token | append: "/" %}
-| [{{ token }}]({{ index }}) | [Inspect]({{ inspect }})  | [JSON Definition]({{ urlJson }}) |
+		{%- assign urlJson = site.baseurl | append: index | append: "metaframe.json" -%}
+		{%- assign inspect = site.url | append: site.baseurl | append: "/tools/metaframeview?url=" | append: site.url | append: site.baseurl | append: "/metaframes/" | append: token | append: "/" %}
+|  [{{ token }}]({{site.baseurl}}{{ index }}) | [Inspect]({{ inspect }})  | [JSON Definition]({{ urlJson }}) |
 	{%- endif -%}
 {% endfor %}
 {%- assign externalMetaframes = "https://metapages.github.io/metaframe-editor-json/" | split: "," -%}
 {%- for metaframeUrl in externalMetaframes -%}
+
 	{%- if jekyll.environment != "production" -%}
 		{%- assign metaframeUrl = "https://metapages.github.io/metaframe-editor-json/" | prepend: "http://localhost:3000/" -%}
 	{%- endif -%}
-	{%- assign urlJson = metaframeUrl | append: "metaframe.json" -%}
-	{%- assign inspect = site.url | append: "/tools/metaframeview?url=" | append: metaframeUrl %}
+	{%- assign urlJson = site.baseurl | metaframeUrl | append: "metaframe.json" -%}
+	{%- assign inspect = site.url | append: site.baseurl | append: "/tools/metaframeview?url=" | append: metaframeUrl %}
 | [{{ metaframeUrl }}]({{ metaframeUrl }}) | [Inspect]({{ inspect }})  | [JSON Definition]({{ urlJson }}) |
 {% endfor %}
 
@@ -67,5 +69,3 @@ nav_order: 5
 ## Plugins
 
 [Plugin examples](https://github.com/metapages/metapage/issues/36) are coming soon.
-
-

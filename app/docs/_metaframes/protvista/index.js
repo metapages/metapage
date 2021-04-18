@@ -1,5 +1,5 @@
 /* Set up the metaframe channel */
-var metaframe = new Metaframe();
+var metaframe = new metapage.Metaframe();
 
 function on_uniprot_id(blob) {
     if (!blob) {
@@ -46,4 +46,3 @@ if (metaframe.getInput("uniprot_id")) {
 }
 
 // loadUniprotId("P68871");
-

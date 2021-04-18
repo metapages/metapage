@@ -1,9 +1,9 @@
 ---
-layout   : default-with-mermaid
 title    : Data Flow
 parent   : Documentation
 nav_order: 3
----        
+mermaid  : true
+---
 
 # Metapage Data flow
 

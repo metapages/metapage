@@ -1,8 +1,7 @@
-bootstrap_path: "/js/bootstrap.min.css"
-jquery_path: "/js/jquery-3.1.1.slim.min.js"
-promise_polyfill: "/js/promise.min.js"
-bulma: "css/bulma-0.7.1.css"
-minicss: "/js/mini-default.min.css"
+bootstrap_path: "/assets/js/bootstrap.min.css"
+jquery_path: "/assets/js/jquery-3.1.1.slim.min.js"
+bulma: "/assets/css/bulma-0.7.1.css"
+minicss: "/assets/js/mini-default.min.css"
 # When using the deployed app.metapage
 app-metapage-local: https://app.metapages.org/
 # When using the local app.metapage
@@ -12,5 +11,3 @@ app-metapage-local: https://app.metapages.org/
 metaframe-editor-json-local: https://metapages.github.io/metaframe-editor-json/
 # When using the local app.metapage
 # metaframe-editor-json-local: http://localhost:1234/
-
-

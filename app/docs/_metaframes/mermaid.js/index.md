@@ -1,13 +1,13 @@
 ---
-layout: vanilla
 ---
 
+<html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 {% if jekyll.environment == "production" %}
 <script src="https://unpkg.com/mermaid@8.0.0/dist/mermaid.min.js"></script>
 {% else %}
-<script src="/js/mermaid.min.js"></script>
+<script src="{{site.baseurl}}/assets/js/mermaid.min.js"></script>
 {% endif %}
 <script>
 	mermaid.initialize(
@@ -28,14 +28,14 @@ layout: vanilla
 
 const setGraphFromString = (graphString) => {
 	let element = document.querySelector(`#graph`);
-	
+
 	if (element) {
 		const parent = element.parentElement;
 		if (element && parent) {
 			parent.removeChild(element);
 		}
 	}
-	
+
 	const parent = document.body;
 
 	element = document.createElement('div');
@@ -100,7 +100,7 @@ const createMermaidFlowchartFromMetapage = (metapageDefinition) => {
 	setGraphFromString(graphDefinition);
 };
 
-const metaframe = new Metaframe();
+const metaframe = new metapage.Metaframe();
 
 metaframe.onInputs((inputs) => {
 	var oneKey = Object.keys(inputs)[0];
@@ -118,3 +118,4 @@ metaframe.onInputs((inputs) => {
 
 </script>
 </body>
+</html>

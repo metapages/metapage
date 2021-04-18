@@ -1,17 +1,17 @@
 ---
-layout: vanilla
 ---
 
+<html>
 <head>
 	<style>
 		html, body { height: 100% }
-		
+
 		.iframe-container {
 			overflow: hidden;
 			padding-top: 100%;
 			position: relative;
 		}
-		
+
 		.iframe-container iframe {
 			border: 1px solid red;
 			height: 100%;
@@ -26,7 +26,7 @@ layout: vanilla
 </head>
 
 <body>
-	
+
 <div class="container">
     <div class="row">
         <div class="col-sm-2">
@@ -37,11 +37,11 @@ layout: vanilla
         </div>
     </div>
     <div class="row">
-        
+
     </div>
 </div>
-	
-	
+
+
 <script>
 Metapage.load()
     .catch((err) => {
@@ -49,6 +49,4 @@ Metapage.load()
     })
 </script>
 </body>
-
-
-
+</html>

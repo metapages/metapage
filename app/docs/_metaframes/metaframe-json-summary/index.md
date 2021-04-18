@@ -1,7 +1,7 @@
 ---
-layout: vanilla
 ---
 
+<html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/siimple@3.3.1/dist/siimple.css">
@@ -27,7 +27,7 @@ const setJsonVal = (name, blob) => {
     document.getElementById("json").innerHTML = htmlString;
 }
 
-const metaframe = new Metaframe();
+const metaframe = new metapage.Metaframe();
 metaframe.onInputs((inputs) => {
 	var oneKey = Object.keys(inputs)[0];
 	if (!oneKey) {
@@ -51,6 +51,4 @@ metaframe.onInputs((inputs) => {
 
 </script>
 </body>
-
-
-
+</html>

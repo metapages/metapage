@@ -1,9 +1,7 @@
 ---
-layout: default-with-mermaid
 title: api_0.2.1
 permalink: /api/0.2.1/
 version: 0.2.1
-nav_exclude: true
 ---
 
 
@@ -121,7 +119,7 @@ metapage.addPipe(targetMetaframe :String, pipeInput :PipeInput)
 
 `targetMetaframe`: metaframeId of the target metaframe
 
-`pipeInput`: object describing the source metaframe, output pipe name, and input pipe name 
+`pipeInput`: object describing the source metaframe, output pipe name, and input pipe name
 ```js
 {
   "metaframe": "<sourceMetaframeId>",
@@ -259,7 +257,7 @@ Removes all metaframes, essentially resetting the metapage. It doesn't remove wi
 
 ### Metapage#setInput/setInputs
 
-Set metaframe inputs a variety of ways (there is no difference between `setInput/setInputs` calls). 
+Set metaframe inputs a variety of ways (there is no difference between `setInput/setInputs` calls).
 
 
 ```ts
@@ -303,7 +301,7 @@ metapage.on('inputs', function(update) {
 });
 ```
 
-Listens to changes in the `inputs` for metaframes. The listener is called on every discrete input update. 
+Listens to changes in the `inputs` for metaframes. The listener is called on every discrete input update.
 
 
 ```ts
@@ -317,11 +315,11 @@ Listens to changes in the `inputs` for metaframes. The listener is called on eve
  * }
  */
 metapage.on('outputs', function(update) {
-  
+
 });
 ```
 
-Listens to changes in the `outputs` for metaframes. The listener is called on every discrete output update. 
+Listens to changes in the `outputs` for metaframes. The listener is called on every discrete output update.
 
 You can also just listen to a specific metaframe client:
 
@@ -333,7 +331,7 @@ You can also just listen to a specific metaframe client:
  * }
  */
 metapage.get(metaframeId).on('outputs', function(update) {
-  
+
 });
 ```
 
@@ -525,4 +523,3 @@ metaframe.dispose()
 ```
 
 Removes window message listener, event listeners, and nulls potentially large fields.
-

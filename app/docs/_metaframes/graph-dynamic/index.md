@@ -1,7 +1,7 @@
 ---
-layout: vanilla
 ---
 
+<html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 <script src="https://cdn.plot.ly/plotly-1.47.1.min.js"></script>
@@ -29,7 +29,7 @@ Plotly.plot('chart',[{
     type:'line'
 }], layout, {displayModeBar: false});
 
-const metaframe = new Metaframe();
+const metaframe = new metapage.Metaframe();
 
 var cnt = 0;
 metaframe.onInput('y', (y) => {
@@ -47,3 +47,4 @@ metaframe.onInput('y', (y) => {
 
 </script>
 </body>
+</html>

@@ -1,7 +1,8 @@
 ---
-layout: vanilla
 ---
 
+<html>
+<head>
 {% if jekyll.environment == "production" %}
 <script src="https://unpkg.com/mermaid@8.0.0/dist/mermaid.min.js"></script>
 {% else %}
@@ -9,8 +10,8 @@ layout: vanilla
 {% endif %}
 
 <script>mermaid.initialize({startOnLoad:true});</script>
-        
-
+</head>
+<body>
 # Metapage Data flow
 
 ***
@@ -34,3 +35,5 @@ sequenceDiagram
     Note right of F: send update events
 
 </div>
+</body>
+</html>

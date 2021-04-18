@@ -1,9 +1,8 @@
 ---
-layout: vanilla
 ---
 
+<html>
 <head>
-<script src="{{site.baseurl}}{{site.data.urls.promise_polyfill}}"></script>
 </head>
 <body>
 <div>
@@ -14,5 +13,4 @@ Convert PDB ID => UniProt ID
 </body>
 {% include metaframe_lib_script.html %}
 <script src="index.js"></script>
-
-
+</html>

@@ -1,0 +1,13 @@
+# Template docker-compose application
+version: "2.4"
+services:
+
+  libs:
+    build:
+      cache_from:
+        - ${DOCKER_REGISTRY:-}${DOCKER_IMAGE_PREFIX:-}libs:cache
+
+  docs:
+    build:
+      cache_from:
+        - ${DOCKER_REGISTRY:-}${DOCKER_IMAGE_PREFIX:-}docs:cache

@@ -3,8 +3,8 @@ layout: vanilla
 ---
 
 <head>
-<link rel="stylesheet" href="{{site.data.urls.bulma}}">
-<link rel="stylesheet" href="css/styles.css">
+<link rel="stylesheet" href="{{site.baseurl}}{{site.data.urls.bulma}}">
+<link rel="stylesheet" href="{{site.baseurl}}/assets/css/styles.css">
 {% include metapage_lib_script.html %}
 </head>
 

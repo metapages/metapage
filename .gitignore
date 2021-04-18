@@ -8,6 +8,12 @@
 # so there is a SINGLE global .env context for a given operation
 /.env
 
+# I would love to commit this, but it's probably not a good idea
+/.vscode
+
+# by default, do not commit the build documentation
+/docs
+
 ###########################################################################################
 # app/
 ###########################################################################################

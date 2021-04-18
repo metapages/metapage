@@ -1,7 +1,7 @@
 ---
-layout: vanilla
 ---
 
+<html>
 <head>
 <base target="_parent">
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
@@ -49,7 +49,7 @@ const run = async () => {
     }
 }
 
-const metaframe = new Metaframe();
+const metaframe = new metapage.Metaframe();
 metaframe.onInputs((inputs) => {
     var oneKey = Object.keys(inputs)[0];
     if (!oneKey) {
@@ -70,6 +70,4 @@ run();
 
 </script>
 </body>
-
-
-
+</html>

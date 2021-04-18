@@ -1,12 +1,12 @@
 ---
-layout: vanilla
 ---
+
+<html>
 <head>
 	<style>
 		html { height: 100%; }
 		body { min-height: 100%; }
 	</style>
-	<script src="{{site.baseurl}}{{site.data.urls.promise_polyfill}}"></script>
 </head>
 <body>
 	<!-- <link rel="stylesheet" href="pure-min.css"> -->
@@ -19,7 +19,7 @@ layout: vanilla
 	<!-- </div> -->
 	<script>
 /* Set up the metaframe channel */
-var metaframe = new Metaframe();
+var metaframe = new metapage.Metaframe();
 
 /* Push random numbers to the next page every time the button is clicked */
 document.getElementById("button1")
@@ -39,3 +39,4 @@ document.getElementById("button3")
 
 	</script>
 </body>
+</html>
