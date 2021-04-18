@@ -1,5 +1,5 @@
 # Description
 
-`lib`: code for generated `@metapages/metapage` library
-`ingress`: service required to test
-`docs`: generated API documentation
+- `lib`: code for generated `@metapages/metapage` library
+- `docs`: generated API documentation
+- `ingress`: service required to develop locally (https)
