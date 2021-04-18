@@ -4,12 +4,11 @@ services:
 
   https:
     image: openresty/openresty:1.15.8.3-1-buster-fat-nosse42
-    # depends_on:
-    #   docs:
-    #     condition: service_healthy
     depends_on:
-      tests-server:
+      libs:
         condition: service_healthy
+      docs:
+        condition: service_started
     command: /start.sh
     environment:
       # point to both the application and the auth domain
@@ -31,24 +30,39 @@ services:
 
   libs:
     command: just dev
+    # command: just test/serve
     volumes:
       - ./libs:/workspace/libs
       # The compiled output is put there
       - ./docs:/workspace/docs
     environment:
       - "TEST_SERVER_PORT=${TEST_SERVER_PORT:-3000}"
+    healthcheck:
+      test: ["CMD-SHELL", "PORT=${TEST_SERVER_PORT:-3000} deno run --allow-env --allow-net=localhost /healthcheck.ts"]
+      start_period: 3s
+      interval: 8s
+      timeout: 4s
+      retries: 15
 
+  docs:
+    command: just dev
+    environment:
+      - "APP_FQDN=${APP_FQDN:-app1.dev}"
+      - "APP_PORT=${APP_PORT:-443}"
+      - "JEKYLL_ENV=testing"
+    volumes:
+      - ./docs:/workspace/docs
+      # Where final site gets publised for gh-pages
+      # NB it's confusing, the output of <app/docs> goes to <docs/>
+      - ../docs:/docs
+    ports:
+      # internal port is hard coded in _config.dev.yml
+      # For debugging, normal traffic is routed though the ingress service to support HTTPS
+      - "${PORT_DOCS:-4000}:4000"
 
-  # BROKEN:
-  # Permission issues on the docker build
-  # docs:
-  #   command: jekyll serve --watch --force_polling --config _config.yml,_config.dev.yml
-  #   volumes:
-  #     - ./docs:/workspace/docs
-
-  tests-server:
-      volumes:
-        - ./docs:/workspace/docs
-        - ./libs:/workspace/libs
-      ports:
-        - "${TEST_SERVER_PORT:-3000}:${TEST_SERVER_PORT:-3000}"
+  # tests-server:
+  #     volumes:
+  #       - ./docs:/workspace/docs
+  #       - ./libs:/workspace/libs
+  #     ports:
+  #       - "${TEST_SERVER_PORT:-3000}:${TEST_SERVER_PORT:-3000}"

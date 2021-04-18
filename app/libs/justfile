@@ -7,6 +7,7 @@ NPM_MODULE_OUTPUT  := "./dist/" + NPM_MODULE
 NPM_TOKEN          := env_var_or_default("NPM_TOKEN", "")
 SERVER_PORT        := env_var_or_default("SERVER_PORT", "3000")
 export CI          := env_var_or_default("CI", "")
+export JEKYLL_ENV  := env_var_or_default("JEKYLL_ENV", "production")
 parcel             := "./node_modules/parcel-bundler/bin/cli.js"
 tsc                := "./node_modules/typescript/bin/tsc"
 # DENO_SOURCE        := ROOT + "/.cloudseed/deno"
@@ -34,7 +35,7 @@ _build:
     just _build_browser_modules {{NPM_MODULE_OUTPUT}}/browser/
 
     # copy production builds to the (dev+docs+test) dir
-    for MODULES_TARGET in "test/page/js" "../docs/js"; do
+    for MODULES_TARGET in "test/page/js"; do
         mkdir -p $MODULES_TARGET
         for meta in "metapage" "metaframe"; do
             rm -rf $MODULES_TARGET/$meta
@@ -46,7 +47,6 @@ _build:
     echo "✅ {{NPM_MODULE_OUTPUT}}/browser/metapage"
     echo "✅ {{NPM_MODULE_OUTPUT}}/browser/metaframe"
     echo "✅ test/page/js/"
-    echo "✅ ../docs/js/"
 
 # Run tests
 test:
@@ -79,19 +79,20 @@ _versions-write-versions-to-jekyll:
     #!/usr/bin/env node
     var lib = require(process.cwd() + '/test/lib.js');
     var fs = require('fs');
-    var p = lib.getMetapageVersions({includeLocal:true});
-    p.then((versions) => { var out = 'versions: ' + JSON.stringify(versions); console.log('./docs/_data/versions.yml:\n' + out + '\n'); fs.writeFileSync('/docs/_data/versions.yml', out + '\n')});
-
+    // async in a sync scipt (this is not deno)
+    (async () => {
+        const versions = await lib.getMetapageVersions({includeLocal:true});
+        const out = 'versions: ' + JSON.stringify(versions);
+        console.log('./docs/_data/versions.yml:\n' + out + '\n');
+        fs.writeFileSync('../docs/_data/versions.yml', out + '\n');
+    })()
 
 # List all published versions
 @npm_list:
     npm view {{NPM_MODULE}} versions --json
 
 # If the version does not exist, publish the packages (metaframe+metapage)
-npm_publish: build _publish
-
-# actual publish npm module without any required steps
-_publish: _require_NPM_TOKEN
+npm_publish: _require_NPM_TOKEN
     #!/usr/bin/env bash
     set -euo pipefail
     if [ "$CI" != "true" ]; then
@@ -104,11 +105,12 @@ _publish: _require_NPM_TOKEN
         fi
     fi
     VERSION=`cat package.json | jq -r '.version'`
-    INDEX=`npm view {{NPM_MODULE}} versions --json | jq "index( \"11$VERSION\" )"`
+    INDEX=`npm view {{NPM_MODULE}} versions --json | jq "index( \"$VERSION\" )"`
     if [ "$INDEX" != "null" ]; then
         echo -e '🌳 Version exists, not publishing'
         exit 0
     fi
+    just build
     echo "PUBLISHING npm version $VERSION"
     cd {{NPM_MODULE_OUTPUT}} && \
         echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc && \
@@ -127,11 +129,10 @@ module_deprecate version +message:
 clean:
     @mkdir -p dist
     rm -rf dist/*
-    rm -rf ../docs/js/*
     just test/clean
 
 # build meta(page/frame) browser modules for testing
-_build_browser_modules outdir development="":
+_build_browser_modules outdir testing="":
     #!/usr/bin/env bash
     set -euo pipefail
     rm -rf {{outdir}}/metaframe
@@ -140,14 +141,14 @@ _build_browser_modules outdir development="":
     # {{tsc}} --noEmit
     # echo "✅ typescript check"
     {{tsc}} --noEmit
-    if [ "{{development}}" = "development" ]; then
+    if [ "{{testing}}" = "testing" ]; then
         echo "👉 development builds for test/page/js/"
-        NODE_ENV=development {{parcel}} build --no-minify --target browser --global metaframe ./src/metapage/Metaframe.ts --out-dir {{outdir}}/metaframe --out-file index.js
-        NODE_ENV=development {{parcel}} build --no-minify --target browser --global metapage  ./src/metapage/Metapage.ts  --out-dir {{outdir}}/metapage  --out-file index.js
+        NODE_ENV=development {{parcel}} build --no-minify --target browser --global metapage ./src/metapage/Metaframe.ts --out-dir {{outdir}}/metaframe --out-file index.js
+        NODE_ENV=development {{parcel}} build --no-minify --target browser --global metapage ./src/metapage/Metapage.ts  --out-dir {{outdir}}/metapage  --out-file index.js
     else
         echo "👉 production builds for test/page/js/"
-        {{parcel}} build --target browser --global metaframe ./src/metapage/Metaframe.ts --out-dir {{outdir}}/metaframe --out-file index.js
-        {{parcel}} build --target browser --global metapage  ./src/metapage/Metapage.ts  --out-dir {{outdir}}/metapage  --out-file index.js
+        {{parcel}} build --target browser --global metapage ./src/metapage/Metaframe.ts --out-dir {{outdir}}/metaframe --out-file index.js
+        {{parcel}} build --target browser --global metapage  ./src/metapage/Metapage.ts --out-dir {{outdir}}/metapage  --out-file index.js
     fi
 
 @_require_NPM_TOKEN:

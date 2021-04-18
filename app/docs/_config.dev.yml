@@ -1,15 +1,11 @@
+# https://jekyllrb.com/docs/configuration/options/
 #Controls logic for changing asset urls
-environment: development
-# port: 4000
-# host: metapages.local
-# baseurl: metapages.local
-host: metapages.local
-port: 4000
-url: https://metapages.local
-
-
+environment: testing
+baseurl: "/docs"
+url: "https://metapage-npm.dev:4440"
 
 jekyll_tidy:
-  # exclude: ["index.html"]
+  exclude: ["README.md"]
+  # I don't know what this line means
   # ignore_env: development
-  compress_html: false  # or false
+  compress_html: false

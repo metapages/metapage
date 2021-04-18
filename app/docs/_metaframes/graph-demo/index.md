@@ -1,10 +1,9 @@
 ---
-layout: vanilla
 ---
 
+<html>
 <head>
 <meta charset="utf-8">
-<script src="{{site.baseurl}}{{site.data.urls.promise_polyfill}}"></script>
 <!-- Author: Bo Ericsson -->
 <title>Real Time Chart Multi</title>
 <link rel="stylesheet type=text/css" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/2.3.2/css/bootstrap.min.css" media="all">
@@ -15,7 +14,7 @@ layout: vanilla
 .chartTitle {
   font-size: 12px;
   font-weight: bold;
-  text-anchor: middle; 
+  text-anchor: middle;
 }
 .axis .title {
   font-weight: bold;
@@ -90,7 +89,7 @@ var chartDiv = d3.select("#viewDiv").append("div")
     .call(chart);
 
 // alternative and equivalent invocation
-//chart(chartDiv); 
+//chart(chartDiv);
 
 // event handler for debug checkbox
 d3.select("#debug").on("change", function() {
@@ -180,7 +179,7 @@ function dataGenerator() {
       }
 
       // send the datum to the chart
-      chart.datum(obj);      
+      chart.datum(obj);
     });
 
     // drive data into the chart at average interval of five seconds
@@ -200,3 +199,4 @@ function dataGenerator() {
 
 {% include metaframe_lib_script.html %}
 <script src="index.js"></script>
+</html>

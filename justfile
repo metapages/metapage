@@ -5,6 +5,10 @@
 #  - Commands containing 🌱 in the docs are (or will be) used for automation and are required to link to docs explaining further if needed
 
 set shell := ["bash", "-c"]
+# TODO: bold doesn't work, and it used to. What happened?
+bold     := '\033[1m'
+normal   := '\033[0m'
+blue     := '\033[0;34m'
 
 # Temporarily disabled attempting to automatically jump into docker for the ci ops, since they
 # rely on building docker images, and mounting host directories is rife with permissions problems:
@@ -12,14 +16,14 @@ set shell := ["bash", "-c"]
 _help:
     #!/usr/bin/env bash
     #if [ -f /.dockerenv ]; then
-        echo ""
-        echo "🌱 Cloudseed 🌱 gitops powered application framework"
-        echo ""
-        just --list --unsorted --list-heading $'Commands:\n'
         echo -e ""
-        echo -e "    🔽 Sub-commands:"
-        echo -e "    app"
-        echo -e "    ci"
+        echo -e "🌱 Cloudseed 🌱 gitops powered application delivery framework"
+        echo -e ""
+        just --list --unsorted --list-heading $'🚪 Commands root level: (simple, reliable, probably slow)\n\n'
+        echo -e ""
+        echo -e "    🔽 {{bold}}Sub-commands:{{normal}}"
+        echo -e "    app  {{blue}}# docs and libs developing and publishing{{normal}}"
+        echo -e "    ci   {{blue}}# CI versions of build/test/deploy{{normal}}"
         echo -e ""
     #else
     #    just ci/_docker .;

@@ -1,12 +1,15 @@
+# https://jekyllrb.com/docs/configuration/options/
+
 #Controls logic for changing asset urls
 environment: production
+url: "https://metapages.org"
 
 #Site settings
 source: ./
 title: Metapages
 # description: A short description of your site's purpose
 baseurl: ""
-repository: metapages/metapage
+repository: "@metapages/metapage"
 
 include: ['pages']
 collections:
@@ -26,10 +29,11 @@ webrick:
     "Access-Control-Allow-Origin": "*"
 
 # Build settings
-markdown: kramdown
+# markdown: kramdown
 
 # https://pmarsceill.github.io/just-the-docs//docs/configuration/
-remote_theme: pmarsceill/just-the-docs@v0.2.6
+# remote_theme: pmarsceill/just-the-docs@v0.2.6
+theme: just-the-docs
 # Enable or disable the site search
 # This doesn't work yet
 search_enabled: false
@@ -42,3 +46,28 @@ aux_links:
       - "//www.npmjs.com/package/metapage"
     "Metapage Viewer":
       - "//app.metapages.org/"
+
+plugins:
+  - jekyll-sitemap
+
+defaults:
+  # Make sure mermaid (and other libraries) are loaded when needed
+  # The 'mermaid' value is read in _includes/head.html and _layouts/default.html
+  -
+    scope:
+      path: "_versions"
+    values:
+      layout: default
+      mermaid: true
+      nav_exclude: true
+  -
+    scope:
+      path: "pages/*api.md"
+    values:
+      mermaid: true
+  # All the metaframes use a bare minimal layout
+  -
+    scope:
+      path: "_metaframes"
+    values:
+      layout: vanilla

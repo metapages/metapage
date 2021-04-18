@@ -1,13 +1,7 @@
----
-layout: vanilla
 
-title: Tests
-permalink: /tests/
-nav_order: 8
-has_children: false
-has_toc: false
----
+<!doctype html>
 
+<html lang="en">
 <!--
     This metapage is part of the functional test suite.
 
@@ -24,11 +18,20 @@ has_toc: false
     Each metaframe sends
  -->
 
+
 <head>
-    <script src="/js/compare-versions-3.4.0.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/flexboxgrid/6.3.1/flexboxgrid.min.css" type="text/css">
+    <script src="js/compare-versions-3.4.0.js" ></script>
+    <link rel="stylesheet" href="css/flexboxgrid.min.css" type="text/css">
 </head>
 <body style="background-color:yellow;">
+
+    <div>
+        <a href="/docs">/docs</a>
+        <br/>
+    </div>
+
+
+
     <div id='version'></div>
     <div id='status'>TESTS running...<br/></div>
     <div id='body'></div>
@@ -39,11 +42,10 @@ has_toc: false
 // to make it easier to test all versions against all
 var urlParams = new URLSearchParams(window.location.search);
 var VERSION = urlParams.get('VERSION');
-{% if jekyll.environment == "production" %}
-VERSION = VERSION == null ? '{{site.data.versions.versions.last}}' : VERSION;
-{% else %}
-VERSION = VERSION == null ? 'latest' : VERSION;
-{% endif %}
+
+
+    VERSION = VERSION == null ? 'latest' : VERSION;
+
 
 const debug = ['DEBUG', 'debug', 'MP_DEBUG', 'mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag));
 
@@ -51,15 +53,27 @@ document.getElementById('version').innerText = `metapage v${VERSION}`;
 var head = document.getElementsByTagName('head').item(0);
 var script = document.createElement('script');
 script.setAttribute('type', 'text/javascript');
+let metapageSourceUrl;
 if (VERSION == 'latest') {
-    script.setAttribute('src', `/js/metapage/index.js`);
+    metapageSourceUrl = 'js/metapage/index.js';
 } else {
-    let minSuffix = '';
-  if (!VERSION.startsWith('latest') && debug && window.compareVersions(VERSION, '0.3.4') >= 0) {
-      minSuffix = '.min';
-  }
-    script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metapage@${VERSION}/browser${minSuffix}.js`);
+    if (window.compareVersions(VERSION, '0.5.2') > 0) {
+        metapageSourceUrl = `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metapage/index.js`;
+    } else if (window.compareVersions(VERSION, '0.4.9999') >= 0) {
+        metapageSourceUrl = `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metapage/index.js`;
+    } else if (window.compareVersions(VERSION, '0.4.100') >= 0) {
+        metapageSourceUrl = `https://cdn.jsdelivr.net/npm/metapage@${VERSION}/browser/index.js`;
+    } else {
+        let minSuffix = '';
+        if (!VERSION.startsWith('latest') && debug && window.compareVersions(VERSION, '0.3.4') >= 0) {
+            minSuffix = '.min';
+        }
+        metapageSourceUrl = `https://cdn.jsdelivr.net/npm/metapage@${VERSION}/browser${minSuffix}.js`;
+    }
 }
+
+console.log(`metapage library source: ${metapageSourceUrl}`);
+script.setAttribute('src', metapageSourceUrl);
 head.appendChild(script);
 
 ////////////////////////////////////////////////////////////////////////
@@ -68,17 +82,16 @@ head.appendChild(script);
 // each will pass the next a data blob {versions:[]}. At the end the
 // metapage will verify that all metaframes added their versions
 // For this, we need all current supported library versions.
-// The versions data is created and commmited, then consumed by
-// jekyll to populate the data here
+// The versions data is created and commmited (../versions.json)
 const VERSIONS_METAFRAME = [];
-{% for v in site.data.versions.versions %}
-    VERSIONS_METAFRAME.push("{{v}}");
-{% endfor %}
-{% if jekyll.environment != "production" %}
-    // Test the current version inputs *and* outputs
-    VERSIONS_METAFRAME.unshift('latestFirst');
-    VERSIONS_METAFRAME.push('latest');
-{% endif %}
+
+VERSIONS_METAFRAME.push("0.5.1");
+
+VERSIONS_METAFRAME.push("0.5.2");
+
+
+
+
 
 var PAGEURL = new URL(window.location.href);
 
@@ -93,7 +106,7 @@ const getStatusText = (err) => {
     if (err) {
         document.body.style.backgroundColor = "red";
         text += 'TESTS FAIL:<br/>' + err;
-        console.log(`Tests err:${err}`);
+        console.error(`Tests err:${err}`, err);
     } else if (TESTS.reduce((isPassing, test) => {
         return isPassing && test.success;
     }, true)) {
@@ -140,6 +153,8 @@ class Test {
     }
 }
 
+
+
 TESTS = [
     new Test('metaframe internal sent inputs saved in state',
         // ensure that when metaframes save their own inputs state,
@@ -173,7 +188,8 @@ TESTS = [
                         setStatus();
                     }
                 };
-                disposeListener = metapage.addEventListener('state', onStateChange);
+                metapage.addListener(Metapage.STATE, onStateChange);
+                disposeListener = () => metapage.removeListener(Metapage.STATE, onStateChange);
                 onStateChange(metapage.getState());
             });
         }
@@ -236,8 +252,6 @@ TESTS = [
                         VERSIONS_EXPECTED[0] = 'latest';
                         VERSIONS_EXPECTED.pop(); // the other 'latest'
                     }
-                    // console.log('VERSIONS_EXPECTED', VERSIONS_EXPECTED);
-                    // console.log('VERSIONS_METAFRAME', VERSIONS_METAFRAME);
                     // check all the inputs of all the metaframes, they should
                     // have a specific order of metaframe versions depending on
                     // where they are in the chain.
@@ -246,13 +260,6 @@ TESTS = [
 
                         const expectedInputVersions = JSON.stringify(VERSIONS_METAFRAME.slice(0, i));
                         const expectedOutputVersions = JSON.stringify(VERSIONS_METAFRAME.slice(0, i + 1));
-
-                        // console.log(`TEST inputs chain saved in state for ${metapageId}`);
-                        // // console.log('expectedInputVersions', expectedInputVersions);
-                        // console.log('expectedOutputVersions', expectedOutputVersions);
-                        // console.log('outputs[metapageId]', JSON.stringify(outputs[metapageId] && outputs[metapageId].output ? outputs[metapageId].output.versions : null));
-                        // console.log('expectedInputVersions', expectedInputVersions);
-                        // console.log('inputs[metapageId]', JSON.stringify(inputs[metapageId] && inputs[metapageId].input ? inputs[metapageId].input.versions : null));
 
                         return (inputs[metapageId]
                                 && inputs[metapageId]['input']
@@ -273,7 +280,8 @@ TESTS = [
                     }
                 };
 
-                disposeListener = metapage.addEventListener('state', onStateChange);
+                metapage.addListener(Metapage.STATE, onStateChange);
+                disposeListener = () => metapage.removeListener(Metapage.STATE, onStateChange);
                 onStateChange(metapage.getState());
             });
         }
@@ -284,41 +292,47 @@ TESTS = [
         // outputs["tests"] = "OK"
         (metapage) => { // metapage instance
             return new Promise((resolve, reject) => {
-                let disposeListener;
+                try{
+                    let disposeListener;
 
-                const onStateChange = (metapageState) => {
-                    const metapageIds = metapage.getMetaframeIds();
-                    const pluginIds = metapage.getPluginIds();
+                    const onStateChange = (metapageState) => {
+                        const metapageIds = metapage.getMetaframeIds();
+                        const pluginIds = metapage.getPluginIds();
 
-                    var metaframeAndPluginIdsPassed = {};
-                    Object.keys(metapageState.metaframes.outputs).forEach((metaframeId) => {
-                        if (metapageState.metaframes.outputs[metaframeId]
-                            && metapageState.metaframes.outputs[metaframeId].tests === 'pass'
-                        ) {
-                            metaframeAndPluginIdsPassed[metaframeId] = true;
+                        var metaframeAndPluginIdsPassed = {};
+                        Object.keys(metapageState.metaframes.outputs).forEach((metaframeId) => {
+                            if (metapageState.metaframes.outputs[metaframeId]
+                                && metapageState.metaframes.outputs[metaframeId].tests === 'pass'
+                            ) {
+                                metaframeAndPluginIdsPassed[metaframeId] = true;
+                            }
+                        });
+                        Object.keys(metapageState.plugins.outputs).forEach((pluginId) => {
+                            if (metapageState.plugins.outputs[pluginId]
+                                && metapageState.plugins.outputs[pluginId].tests === 'pass'
+                            ) {
+                                metaframeAndPluginIdsPassed[pluginId] = true;
+                            }
+                        });
+
+                        const idsPassed = Object.keys(metaframeAndPluginIdsPassed);
+                        idsPassed.sort();
+                        if (idsPassed.length === metapageIds.length + pluginIds.length) {
+                            disposeListener();
+                            resolve(true);
+                            setStatus();
+                        } else {
+                            console.log(`Metaframe tests pass: [${idsPassed.join(",")}] (${idsPassed.length} / ${metapageIds.length + pluginIds.length})`);
                         }
-                    });
-                    Object.keys(metapageState.plugins.outputs).forEach((pluginId) => {
-                        if (metapageState.plugins.outputs[pluginId]
-                            && metapageState.plugins.outputs[pluginId].tests === 'pass'
-                        ) {
-                            metaframeAndPluginIdsPassed[pluginId] = true;
-                        }
-                    });
-
-                    const idsPassed = Object.keys(metaframeAndPluginIdsPassed);
-                    idsPassed.sort();
-                    if (idsPassed.length === metapageIds.length + pluginIds.length) {
-                        disposeListener();
-                        resolve(true);
-                        setStatus();
-                    } else {
-                        console.log(`Metaframe tests pass: [${idsPassed.join(",")}] (${idsPassed.length} / ${metapageIds.length + pluginIds.length})`);
-                    }
-                };
-                // initial value send immediately
-                disposeListener = metapage.onState(onStateChange);
-                onStateChange(metapage.getState())
+                    };
+                    // initial value send immediately
+                    metapage.addListener(Metapage.STATE, onStateChange);
+                    disposeListener = () => metapage.removeListener(Metapage.STATE, onStateChange);
+                    onStateChange(metapage.getState())
+                } catch(err) {
+                    console.error(err);
+                    reject(err);
+                }
             });
         }
     ),
@@ -326,11 +340,20 @@ TESTS = [
 
 // version stabilized
 const convertNpmToInternalVersion = (version) => {
-    if (Metapage.getLibraryVersionMatching) {
+    let getLibraryVersionMatching = window.getLibraryVersionMatching;
+    if (!getLibraryVersionMatching) {
+        getLibraryVersionMatching = window.Metapage && window.Metapage.getLibraryVersionMatching;
+    }
+    if (!getLibraryVersionMatching) {
+        getLibraryVersionMatching = window.metapage && window.metapage.getLibraryVersionMatching;
+    }
+    if (!getLibraryVersionMatching) {
+        getLibraryVersionMatching = window.metapage && window.metapage.Metapage && window.metapage.Metapage.getLibraryVersionMatching;
+    }
+    if (getLibraryVersionMatching) {
         // use the internal version matching code
         // This file gets updated when the version is bumped
-        // return "{{site.data.versions.versions.last}}";
-        return Metapage.getLibraryVersionMatching(version);
+        return getLibraryVersionMatching(version);
     // otherwise the above logic wasn't yet implemented, so we have to do it here (versioning lessons)
     } else if (window.compareVersions(version, '0.2') >= 0) {
         return '0.2';
@@ -366,7 +389,7 @@ window.onload = function() {
     // and sending to the parent metapage
     VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
         versionMetaframe = versionMetaframe == 'latest' && index == 0 ? 'latestFirst' : versionMetaframe;
-        let url = `/metaframes/test/?VERSION=${versionMetaframe}`;
+        let url = `/metaframe/?VERSION=${versionMetaframe}`;
         if (urlParams.has('MP_DEBUG') || urlParams.has('DEBUG') || urlParams.has('MF_DEBUG')) {
             url += '&MP_DEBUG';
         }
@@ -389,7 +412,7 @@ window.onload = function() {
     metaPageDefinition.plugins = VERSIONS_METAFRAME
         .filter((v) => v.startsWith('latest') || window.compareVersions(v, '0.3') >= 0)
         .map((versionMetaframe) => {
-            let url = `/metaframes/test/?VERSION=${versionMetaframe}`;
+            let url = `/metaframe/?VERSION=${versionMetaframe}`;
             if (urlParams.has('MP_DEBUG') || urlParams.has('DEBUG') || urlParams.has('MF_DEBUG')) {
                 url += '&MP_DEBUG';
             }
@@ -398,24 +421,45 @@ window.onload = function() {
 
     console.log(JSON.stringify(metaPageDefinition, null, '  '));
 
-    window.metapage = Metapage.from(metaPageDefinition);
-    // >= 0.3.5
-    if (window.metapage.setDebugFromUrlParams) {
-        window.metapage.setDebugFromUrlParams();
+    // very old libraries:
+    let Metapage = window.Metapage;
+    if (!Metapage) {
+        // current implementation packaging
+        Metapage = window.metapage && window.metapage.Metapage;
     }
+    // set the Metapage class into the window object for easier manipulation later
+    window.Metapage = Metapage;
+
+    const metapageInstance = Metapage.from(metaPageDefinition);
+    window.metapageInstance = metapageInstance;
+    // window.metapageInstance = Metapage.from(metaPageDefinition);
+    // metapageInstance = Metapage.from(metaPageDefinition);
+    // window.metapageInstance = metapageInstance
+    // window.metapageInstance = metapageInstance;
+    // >= 0.3.5
+    if (metapageInstance.setDebugFromUrlParams) {
+        metapageInstance.setDebugFromUrlParams();
+    }
+
+    // There was a refactor addEventListener -> addListener
+    if (!metapageInstance.addListener) {
+        metapageInstance.addListener = metapageInstance.addEventListener;
+        metapageInstance.removeListener = metapageInstance.removeEventListener;
+    }
+
     window.metaPageDefinition = metaPageDefinition;
 
     // This is just for debugging
-    // metapage.addEventListener('inputs', (e) => {
+    // metapage.addListener(Metapage.INPUTS, (e) => {
     //     const metaframeId = Object.keys(e)[0];
     //     console.log(`METAPAGE inputs event [${metaframeId}][${Object.keys(e[metaframeId]).join(", ")}]`, e);
     //     console.log('METAPAGE inputs total', metapage._inputsState);
     // });
 
-    const promises = TESTS.map((test) => test.run(metapage));
+    const promises = TESTS.map((test) => test.run(metapageInstance));
 
     // add the metaframe and plugin iframes to the page
-    var metaframeIds = metapage.metaframeIds();
+    var metaframeIds = metapageInstance.metaframeIds();
     var pluginsIds = metaPageDefinition.plugins.concat([]);
     // Add the metaframe (and plugin) iframes to the page
     metaframeIds.forEach((metaframeId) => {
@@ -431,11 +475,11 @@ window.onload = function() {
         row.appendChild(col1);
         row.appendChild(col2);
 
-        col1.appendChild(metapage.getMetaframe(metaframeId).iframe);
+        col1.appendChild(metapageInstance.getMetaframe(metaframeId).iframe);
 
         if (pluginsIds.length > 0) {
             const pluginId = pluginsIds.shift();
-            col2.appendChild(metapage.getPlugin(pluginId).iframe);
+            col2.appendChild(metapageInstance.getPlugin(pluginId).iframe);
         }
 
         document.getElementById("body").appendChild(row);
@@ -455,3 +499,4 @@ window.onload = function() {
 };
 
 </script>
+</html>

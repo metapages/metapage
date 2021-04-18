@@ -11,7 +11,7 @@
         "version": 1,
         "docs": "http://flexboxgrid.com/",
         "layout": [
-          [ {"name":"input-button", "width":"col-xs-4", "style": {"maxHeight":"400px"}}, {"url":"{{site.url}}/metaframes/passthrough-arrow/?rotation=90", "width":"col-xs-2"}, {"name":"viewer1", "width":"col-xs-6"} ],
+          [ {"name":"input-button", "width":"col-xs-4", "style": {"maxHeight":"400px"}}, {"url":"{{site.url}}{{site.baseurl}}/metaframes/passthrough-arrow/?rotation=90", "width":"col-xs-2"}, {"name":"viewer1", "width":"col-xs-6"} ],
           [ {"name":"passthrough2", "width":"col-xs-6"}, {"name":"passthrough1", "width":"col-xs-6", "style": {"maxHeight":"100px"}} ],
           [ {"name":"viewer2", "width":"col-xs-6", "style": {"maxHeight":"400px"}} , {"name":"viewer3", "width":"col-xs-6"} ]
         ],
@@ -23,13 +23,13 @@
   },
   "metaframes": {
     "input-button": {
-      "url": "{{site.url}}/metaframes/pdb-input-button/"
+      "url": "{{site.url}}{{site.baseurl}}/metaframes/pdb-input-button/"
     },
     "input-button": {
-      "url": "{{site.url}}/metaframes/pdb-input-button/"
+      "url": "{{site.url}}{{site.baseurl}}/metaframes/pdb-input-button/"
     },
     "viewer1": {
-      "url": "{{site.url}}/metaframes/molviewer-pv/",
+      "url": "{{site.url}}{{site.baseurl}}/metaframes/molviewer-pv/",
       "inputs": [
         {
           "metaframe": "input-button",
@@ -38,7 +38,7 @@
       ]
     },
     "viewer2": {
-      "url": "{{site.url}}/metaframes/molviewer-pv/",
+      "url": "{{site.url}}{{site.baseurl}}/metaframes/molviewer-pv/",
       "inputs": [
         {
           "metaframe": "input-button",
@@ -56,7 +56,7 @@
       ]
     },
     "viewer3": {
-      "url": "{{site.url}}/metaframes/molviewer-pv/",
+      "url": "{{site.url}}{{site.baseurl}}/metaframes/molviewer-pv/",
       "inputs": [
         {
           "metaframe": "input-button",
@@ -74,7 +74,7 @@
       ]
     },
     "passthrough1": {
-      "url": "{{site.url}}/metaframes/passthrough/",
+      "url": "{{site.url}}{{site.baseurl}}/metaframes/passthrough/",
       "inputs": [
         {
           "metaframe": "viewer1",
@@ -83,7 +83,7 @@
       ]
     },
     "passthrough2": {
-      "url": "{{site.url}}/metaframes/passthrough/",
+      "url": "{{site.url}}{{site.baseurl}}/metaframes/passthrough/",
       "inputs": [
         {
           "metaframe": "viewer1",

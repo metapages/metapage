@@ -1,5 +1,5 @@
 ---
-layout: default-with-mermaid
+layout: default
 title: API
 permalink: /api/
 nav_order: 4
@@ -9,7 +9,7 @@ nav_order: 4
 {: .no_toc }
 
 ###### <a href="/versions">previous versions</a>
-{: .no_toc } 
+{: .no_toc }
 
 <br/>
 
@@ -71,9 +71,9 @@ Defined by:
 ```
 
 {% if jekyll.environment == "production" %}
-  [Run above example](https://app.metapages.org/#url={{site.url}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
+  [Run above example](https://app.metapages.org/#url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
 {% else %}
-  [Run above example]({{site.data.urls.app-metapage-local}}/#url={{site.url}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
+  [Run above example]({{site.data.urls.app-metapage-local}}/#url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
 {% endif %}
 
 To run the same example as the button above:
@@ -84,7 +84,7 @@ To run the same example as the button above:
 
 
 
-The `pipe` entries of "inputs" are objects describing the source metaframe, source metaframe output pipe name, and the target metaframe (the owning metaframe) input pipe name 
+The `pipe` entries of "inputs" are objects describing the source metaframe, source metaframe output pipe name, and the target metaframe (the owning metaframe) input pipe name
 ```js
 {
   "metaframe": "<sourceMetaframeId>",
@@ -330,7 +330,7 @@ Removes all metaframes, essentially resetting the metapage. It doesn't remove wi
 
 ### Metapage#setInput/setInputs
 
-Set metaframe inputs a variety of ways (there is no difference between `setInput/setInputs` calls). 
+Set metaframe inputs a variety of ways (there is no difference between `setInput/setInputs` calls).
 
 
 ```ts
@@ -361,7 +361,7 @@ Update the metapage definition.
 
 This will destroy the current metaframes and plugins, and recreate new ones based on the new definition.
 
-The 
+The
 
 ### Metapage events
 
@@ -680,7 +680,7 @@ They are defined in the definition as unique URL to the plugin metaframe:
       "https://plugin1.io",
       "https://plugin2.io?param1=value1"
     ]
-      
+
 }
 ```
 

@@ -1,4 +1,4 @@
-var connection = new Metaframe();
+var connection = new metapage.Metaframe();
 
 //Initialize the viewer
 // override the default options with something less restrictive.

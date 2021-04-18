@@ -1,9 +1,7 @@
 ---
-layout: default-with-mermaid
 title: api_0.1.35
 permalink: /api/0.1.35/
 version: 0.1.35
-nav_exclude: true
 ---
 
 # API Reference v0.1.35
@@ -97,7 +95,7 @@ metapage.addPipe(targetMetaframe :String, pipeInput :PipeInput)
 
 `targetMetaframe`: metaframeId of the target metaframe
 
-`pipeInput`: object describing the source metaframe, output pipe name, and input pipe name 
+`pipeInput`: object describing the source metaframe, output pipe name, and input pipe name
 ```js
 {
   "metaframe": "<sourceMetaframeId>",
@@ -198,7 +196,7 @@ metapage.on('inputs', function(update) {
 });
 ```
 
-Listens to changes in the `inputs` for metaframes. The listener is called on every discrete input update. 
+Listens to changes in the `inputs` for metaframes. The listener is called on every discrete input update.
 
 
 ```ts
@@ -212,11 +210,11 @@ Listens to changes in the `inputs` for metaframes. The listener is called on eve
  * }
  */
 metapage.on('outputs', function(update) {
-  
+
 });
 ```
 
-Listens to changes in the `outputs` for metaframes. The listener is called on every discrete output update. 
+Listens to changes in the `outputs` for metaframes. The listener is called on every discrete output update.
 
 ### MetaframeClient
 
@@ -225,5 +223,3 @@ An internal object managing the data flow in and out of the actual metaframe ifr
 ### MetaframeClient#iframe
 
 The concrete metaframe [iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) HTML element.
-
-

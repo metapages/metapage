@@ -1,7 +1,7 @@
 ---
-layout: vanilla
 ---
 
+<html>
 <head>
 <link rel="stylesheet" href="{{site.baseurl}}{{site.data.urls.bootstrap_path}}">
 </head>
@@ -19,3 +19,4 @@ layout: vanilla
 </body>
 {% include metaframe_lib_script.html %}
 <script src="index.js"></script>
+</html>

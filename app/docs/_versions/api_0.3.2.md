@@ -1,9 +1,7 @@
 ---
-layout: default-with-mermaid
 title: API
 permalink: /api/0.3.2/
 version: 0.3.2
-nav_exclude: true
 ---
 
 
@@ -73,7 +71,7 @@ Defined by:
   [Run above example]({{site.data.urls.app-metapage-local}}/#url={{site.url}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
 {% endif %}
 
-The `pipe` entries of "inputs" are objects describing the source metaframe, source metaframe output pipe name, and the target metaframe (the owning metaframe) input pipe name 
+The `pipe` entries of "inputs" are objects describing the source metaframe, source metaframe output pipe name, and the target metaframe (the owning metaframe) input pipe name
 ```js
 {
   "metaframe": "<sourceMetaframeId>",
@@ -311,7 +309,7 @@ Removes all metaframes, essentially resetting the metapage. It doesn't remove wi
 
 ### Metapage#setInput/setInputs
 
-Set metaframe inputs a variety of ways (there is no difference between `setInput/setInputs` calls). 
+Set metaframe inputs a variety of ways (there is no difference between `setInput/setInputs` calls).
 
 
 ```ts
@@ -342,7 +340,7 @@ Update the metapage definition.
 
 This will destroy the current metaframes and plugins, and recreate new ones based on the new definition.
 
-The 
+The
 
 ### Metapage events
 
@@ -659,7 +657,7 @@ They are defined in the definition as unique URL to the plugin metaframe:
       "https://plugin1.io",
       "https://plugin2.io?param1=value1"
     ]
-      
+
 }
 ```
 

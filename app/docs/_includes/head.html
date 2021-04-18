@@ -1,8 +1,46 @@
+<!-- Copied and modified: /jekyll/gems/ruby/2.7.0/gems/just-the-docs-0.3.3/_includes/head.html
+Least impact way of adding different javascript libraries to various pages -->
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge">
 
-{% include base.html %}
-<meta charset="utf-8">
-  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  {% unless site.plugins contains "jekyll-seo-tag" %}
+    <title>{{ page.title }} - {{ site.title }}</title>
+
+    {% if page.description %}
+      <meta name="Description" content="{{ page.description }}">
+    {% endif %}
+  {% endunless %}
+
+  <link rel="shortcut icon" href="{{ 'favicon.ico' | relative_url }}" type="image/x-icon">
+
+  <link rel="stylesheet" href="{{ '/assets/css/just-the-docs-default.css' | relative_url }}">
+
+  {% if page.mermaid != nil %}
+  <script type="text/javascript" src="https://unpkg.com/mermaid@8.2.6/dist/mermaid.min.js"></script>
+  {% endif %}
+
+  {% if site.ga_tracking != nil %}
+    <script async src="https://www.googletagmanager.com/gtag/js?id={{ site.ga_tracking }}"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', '{{ site.ga_tracking }}'{% unless site.ga_tracking_anonymize_ip == nil %}, { 'anonymize_ip': true }{% endunless %});
+    </script>
+
+  {% endif %}
+
+  {% if site.search_enabled != false %}
+    <script type="text/javascript" src="{{ '/assets/js/vendor/lunr.min.js' | relative_url }}"></script>
+  {% endif %}
+  <script type="text/javascript" src="{{ '/assets/js/just-the-docs.js' | relative_url }}"></script>
+
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- {% include metaframe_lib_script.html %} -->
-  <title><a href="{{ page.url }}"> {% if page.title %}{{ page.title | escape }}{% else %}{{ site.title | escape }}{% endif %}</a></title>
+  {% seo %}
+
+  {% include head_custom.html %}
+
+</head>

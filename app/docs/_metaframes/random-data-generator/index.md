@@ -1,7 +1,7 @@
 ---
-layout: vanilla
 ---
 
+<html>
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 <link rel="stylesheet" href="//cdn.rawgit.com/milligram/milligram/master/dist/milligram.min.css">
@@ -45,7 +45,7 @@ try {
   frequency = 200;
 }
 
-var metaframe = new Metaframe();
+var metaframe = new metapage.Metaframe();
 metaframe.ready
     .then(() => {
         document.getElementById('title').innerHTML = "";
@@ -62,3 +62,4 @@ metaframe.ready
 </script>
 </div>
 </body>
+</html>

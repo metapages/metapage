@@ -85,16 +85,15 @@ publish:
     if [ ! -f /.dockerenv ]; then
         # This check is here to prevent publishing if there are uncommitted changes, but this check does not work in CI environments
         # because it starts as a clean checkout and git is not installed and it is not a full checkout, just the tip
-        if [[ $(git status --short) != '' ]]; then
-            git status
-            echo -e '💥 Cannot publish with uncommitted changes'
-            exit 2
-        fi
+        just _fail_on_uncommitted_changes
         {{DOCKER_COMPOSE}} build libs
         {{DOCKER_COMPOSE}} run libs just npm_publish
     else
         just libs/npm_publish
     fi
+    # build docs on a new gh_pages branch based from here and push
+    just libs/_versions-write-versions-to-jekyll
+    just docs/publish
 
 # tbb I don't really like this command structure, I want it simple and not cluttered with commands but also need flexibility
 # 🌱 command:<list|json|push|pull> all or defined docker images
@@ -131,7 +130,7 @@ dc +args="":
 
 # Open a browser tab pointing to the stack (assumes stack is running)
 @open:
-    just _open_url https://${APP_FQDN}:${APP_PORT}/
+    just _open_url https://${APP_FQDN}:${APP_PORT}/?VERSION=latest
 
 # Deletes generated files
 @clean:
@@ -162,10 +161,7 @@ _push +images="":
     set -euo pipefail
     # This check is here to prevent publishing if there are uncommitted changes, but this check does not work in CI environments
     # because it starts as a clean checkout and git is not installed and it is not a full checkout, just the tip
-    #if [[ $(git status --short) != '' ]]; then
-    #    git status
-    #    exit 2
-    #fi
+    # just _fail_on_uncommitted_changes
     if [ "{{images}}" = "" ]; then
         echo -e "🚪 <app/> {{bold}}DOCKER_TAG={{DOCKER_TAG}} {{DOCKER_COMPOSE}} push $(just images list){{normal}} 🚪";
         if [[ -z "${DOCKER_REGISTRY}" ]]; then
@@ -204,3 +200,14 @@ _open_url url:
 alias ingress := _ingress
 @_ingress +args="":
     just ingress/{{args}}
+
+_fail_on_uncommitted_changes:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # This check is here to prevent publishing if there are uncommitted changes, but this check does not work in CI environments
+    # because it starts as a clean checkout and git is not installed and it is not a full checkout, just the tip
+    if [[ $(git status --short) != '' ]]; then
+        git status
+        echo -e '💥 Cannot publish with uncommitted changes'
+        exit 2
+    fi

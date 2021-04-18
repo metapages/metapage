@@ -1,3 +1,5 @@
 {% if jekyll.environment == "production" %}
-<script src="https://cdn.jsdelivr.net/npm/metaframe@{{site.data.versions.versions.last}}/browser.js"></script>{% else %}
-<script src="/js/metaframe/browser.js"></script>{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/@metapages/metapage@{{site.data.versions.versions.last}}/browser/metaframe/index.js"></script>
+{% else %}
+<script src="{{site.baseurl}}/pages/test/js/metaframe/index.js"></script>
+{% endif %}

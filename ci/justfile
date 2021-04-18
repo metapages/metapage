@@ -21,7 +21,7 @@ export GIT_TAG_SHORT            := `(which git >/dev/null && git rev-parse --sho
 export APP_FQDN                 := env_var_or_default("APP_FQDN", "app1.dev")
 export APP_PORT                 := env_var_or_default("APP_PORT", "443")
 # Default to the CI commands (no .override file that is used for local development)
-export DOCKER_COMPOSE           := "docker-compose -f docker-compose.yml"
+export DOCKER_COMPOSE           := "docker-compose -f docker-compose.yml -f docker-compose.cache.yml"
 export DOCKER_BUILDKIT          := "1"
 export COMPOSE_DOCKER_CLI_BUILD := "1"
 # See comments in app/justfile#DENO_SOURCE

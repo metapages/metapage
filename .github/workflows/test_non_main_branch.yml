@@ -1,24 +1,22 @@
 # .yaml files in this directory are executed workflows:
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
-# This workflow is triggered on pushes to non-main (or master) branches
-# Builds and tests the app (just test)
-name: Build and test app
+# This workflow is triggered on pushes to main (or master) branches
+# Builds and publishes the app (just publish)
+name: Publish npm libraries and docs
 
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
 on:
   push:
-    # only non-main (and non-master) branches
+    # only main (and master) branches
     branches:
-      - "**"
-      - "!main"
-      - "!master"
+      - "main"
+      - "master"
 
-    # only test on changes to the app/ + ci/ directories (plus ops directories .cloudseed + .github)
+    # only test on changes to the app/ + .github/ directories
     paths:
       # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions#filter-pattern-cheat-sheet
       - "app/**"
-      - "ci/**"
-      - ".cloudseed/**"
+      - ".github/**"
 
 env:
   DOCKER_COMPOSE_VERSION: 1.25.4

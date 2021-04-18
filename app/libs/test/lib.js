@@ -12,7 +12,7 @@ doT.templateSettings.strip = false
  */
 const getMetapageVersions = async (args) => {
   const {includeLocal} = args || {};
-  const package = JSON.parse(fs.readFileSync('../package.json', 'utf8')).name;
+  const package = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).name;
   const { stdout, stderr } = await exec(`npm show ${package} versions --json`);
   if (stderr) {
     console.error(`error: ${stderr}`);
@@ -41,10 +41,13 @@ const getMetapageVersions = async (args) => {
   return versions;
 }
 
-const generate = async () => {
-  // input
+const generate = async (args) => {
   const allVersions = await getMetapageVersions();
-  var data = { environment: "production", versions: allVersions };
+  // input
+  const data = { environment: "production", versions: allVersions };
+  if (args && args.environment && args.environment.length > 0) {
+    data.environment = args.environment;
+  }
   const template = fs.readFileSync(path.join(__dirname, './page/index.template.html'));
   const tempFunc = doT.template(template);
   var html = tempFunc(data);

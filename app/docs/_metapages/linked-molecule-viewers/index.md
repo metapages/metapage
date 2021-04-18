@@ -1,6 +1,7 @@
 ---
-layout: vanilla
 ---
+
+<html>
 <head></head>
 <body>
 	<div id="input-button" ></div>
@@ -42,3 +43,4 @@ fetch('metapage.json')
     console.error(error);
   });
 </script>
+</html>
