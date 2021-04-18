@@ -39,8 +39,11 @@ _watch testing="":
     just generate "{{testing}}"
     rm -rf ../../docs/pages/test
     # Update the test site, so the docs contain out public commitment to version compatability
-    cp -r page ../../docs/pages/test
-    echo -e "✅ ../../docs/pages/test"
+    # If this directory does not exist, then we are in an isolated docker container, not in the repo
+    if [ -d ../../docs/pages ]; then \
+        cp -r page ../../docs/pages/test; \
+        echo -e "✅ ../../docs/pages/test"; \
+    fi
 
 # Use with '<libs/> just watch' and manually refresh the browser
 serve:
