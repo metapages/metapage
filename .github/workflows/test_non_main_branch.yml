@@ -2,7 +2,7 @@
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
 # This workflow is triggered on pushes to non-main (or master) branches
 # Builds and tests the app (just test)
-name: Build and test app
+name: Build and test
 
 # https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
 on:
@@ -19,6 +19,7 @@ on:
       - "app/**"
       - "ci/**"
       - ".cloudseed/**"
+      - ".github/**"
 
 env:
   DOCKER_COMPOSE_VERSION: 1.25.4
@@ -27,7 +28,7 @@ env:
 
 jobs:
   test_on_push:
-    name: Build and test app/
+    name: Build and test
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repo
