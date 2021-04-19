@@ -58,6 +58,7 @@ RUN bundle install
 ADD . /workspace/docs
 # COPY --from=libs /workspace/libs/dist/@metapage/metapage/browser /workspace/docs/js
 
-RUN jekyll build --strict_front_matter --config _config.yml
+RUN mkdir -p /docs && chmod 777 /docs
+RUN JEKYLL_ENV=production bundle exec jekyll build --disable-disk-cache --strict_front_matter --trace --config _config.yml --destination /docs
 
 HEALTHCHECK --interval=3s --timeout=2s --start-period=5s CMD curl --fail http://localhost:4000 || exit 1
