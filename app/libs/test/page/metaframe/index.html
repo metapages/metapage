@@ -75,7 +75,6 @@ class Test {
 
     async run(metaframe) {
         this.metaframe = metaframe;
-        // console.log('metaframe.plugin', metaframe.plugin);
         // don't run plugin tests when not a plugin
         if (this.isPlugin && !metaframe.plugin) {
             this.success = true;
@@ -257,7 +256,7 @@ TESTS = [
 
 // start the test, async because we loaded the versioned metapage library
 // dynamically, so wait for window.onload
-const runTests = async() => {
+const runTests = async () => {
     // instantiate the metaframe object
     if (VERSION == 'latest') {
         var mf = new metapage.Metaframe();
@@ -271,10 +270,15 @@ const runTests = async() => {
     } else {
         var mf = new metaframe.Metaframe();
     }
-    // wait until its connected to the parent
-    const isReady = await mf.ready;
-    if (!isReady) {
-        return;
+
+    // current implementation is Metaframe.connected
+    if (mf.connected) {
+        await mf.connected();
+    } else {
+        // old versions <= 0.5.2
+        if (mf.ready) {
+            await mf.ready;
+        }
     }
 
     if (!mf._iframeId) {
@@ -329,7 +333,6 @@ const runTests = async() => {
             document.body.style.backgroundColor = "green";
             setStatus();
             // the metapage can listen for this change
-            // console.log(`Metaframe[${DISPLAY_VERSION}]: sending 'tests': 'pass'`);
             mf.setOutput('tests', 'pass');
         })
         .catch((err) => {
