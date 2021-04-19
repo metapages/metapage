@@ -1,42 +1,29 @@
 import {EventEmitter, ListenerFn} from "eventemitter3";
-import minimatch from "minimatch";
 import {URL_PARAM_DEBUG, VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION} from "./Constants";
 import {Versions} from "./MetaLibsVersion";
 import {
   MetaframeDefinition,
-  MetaframeInstance,
-  PipeInput,
-  MetapageOptions,
   MetaframeInputMap,
   MetaframePipeId,
   MetaframeId,
   MetapageId,
   MetapageInstanceInputs,
-  MetapageDefinition
 } from "./v0_3/all";
 import {
   JsonRpcMethodsFromParent,
-  JsonRpcMethodsFromChild,
   SetupIframeServerResponseData,
   MinimumClientMessage,
-  SetupIframeClientAckData,
-  OtherEvents,
   ClientMessageRecievedAck
 } from "./v0_3/JsonRpcMethods";
 import {
   stringToRgb,
   log as MetapageToolsLog,
-  getMatchingVersion,
-  generateMetapageId,
   existsAnyUrlParam,
-  convertToCurrentDefinition,
   merge,
-  isPageLoaded,
   pageLoaded,
 } from "./MetapageTools";
 import {JsonRpcRequest} from "./jsonrpc2";
 import {MetapageEvents, MetapageShared} from "./Shared";
-
 
 /**
  * Initialization sequence:
@@ -52,7 +39,6 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
   url: string;
   _color: string;
   _consoleBackgroundColor: string;
-  // _ready: Promise<void>;
   inputs: MetaframeInputMap = {};
   outputs: MetaframeInputMap = {};
   _disposables: (() => void)[] = [];
@@ -105,9 +91,6 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
 
     // I think just creating but not attaching to the dom is OK
     this.iframe = document.createElement("iframe");
-    this.iframe.frameBorder = "0";
-    // this is bullshit
-    // pageLoaded().then(() => {
     // wait until the metapage page is loaded, otherwise
     // communication errors will likely occur
     const selfThis = this;
@@ -115,14 +98,8 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
       // parent page loaded, set the iframe src to start loading
       selfThis.iframe.src = this.url;
     });
-    // this._ready = new Promise((resolve, _) => {
-    //   this.iframe.addEventListener('load', (_) => {
-    //     resolve();
-    //   });
-    // });
 
     this.ack = this.ack.bind(this);
-    // this.bindPlugin = this.bindPlugin.bind(this);
     this.dispose = this.dispose.bind(this);
     this.getDefinition = this.getDefinition.bind(this);
     this.getDefinitionUrl = this.getDefinitionUrl.bind(this);
@@ -148,7 +125,6 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
     this.setOutputs = this.setOutputs.bind(this);
     this.setPlugin = this.setPlugin.bind(this);
     this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
-
   }
 
   addListenerReturnDisposer(event : JsonRpcMethodsFromParent | MetapageEvents, listener : ListenerFn<any[]>): () => void {
@@ -164,7 +140,6 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
       throw "Cannot setPlugin after MetapageIFrameRpcClient already loaded";
     }
     this._plugin = true;
-    // this.bindPlugin();
     return this;
   }
 
@@ -172,63 +147,6 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
     this._metapage = metapage;
     return this;
   }
-
-  // /**
-  //  * Plugins can get and set the metapage definition and state.
-  //  * The inputs/outputs of the plugin MUST define those inputs
-  //  * otherwise the
-  //  * @return Promise<boolean>
-  //  */
-  // async bindPlugin() {
-  //   //   1) check for metapage/definition inputs and outputs
-  //   //		- if found, wire up listeners and responses and send current definition
-  //   //   2) check for metapage/state inputs and outputs
-  //   //		- if found, listen for JSON-RPC events from that plugin and send the state.
-  //   //      - if found, set the entire state on 'metapage/state' output
-  //   try {
-  //     const metaframeDef = await this.getDefinition();
-  //     // definition get/set
-  //     // send the metapage/definition immediately
-  //     // on getting a metapage/definition value, set that
-  //     // value on the metapage itself.
-  //     // console.log(`bindPlugin id=${this.id} hasPermissionsDefinition()  ${this.hasPermissionsDefinition()}`);
-
-  //     if (this.hasPermissionsDefinition()) {
-  //       var disposer = this._metapage.addListenerReturnDisposer(MetapageEvents.Definition, definition => {
-  //         this.setInput(METAPAGE_KEY_DEFINITION, definition.definition);
-  //       });
-  //       this._disposables.push(disposer);
-  //       // we do not need to send the current actual definition, because
-  //       // a MetapageEvents.Definition event will be fired subsequent to adding this
-  //       // Set the metapage definition now, otherwise it will not ever get
-  //       // the event.
-  //       var currentMetapageDef = this._metapage.getDefinition();
-  //       this.setInput(METAPAGE_KEY_DEFINITION, currentMetapageDef);
-
-  //       if (metaframeDef.outputs) {
-  //         var disposer = this.onOutput(METAPAGE_KEY_DEFINITION, definition => {
-  //           // trace('_metapage.setDefinition, definition=${definition}');
-  //           this._metapage.setDefinition(definition);
-  //         });
-  //         this._disposables.push(disposer);
-  //       }
-  //     }
-
-
-  //     if (this.hasPermissionsState()) {
-  //       // if the plugin sets the metapage state, set it here
-  //       if (metaframeDef.outputs) {
-  //         var disposer = this.onOutput(METAPAGE_KEY_STATE, state => {
-  //           this._metapage.setState(state);
-  //         });
-  //         this._disposables.push(disposer);
-  //       }
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     this._metapage.emit(MetapageEvents.Error, `Failed to get plugin definition from "${this.getDefinitionUrl()}", error=${err}`);
-  //   }
-  // }
 
   public hasPermissionsState(): boolean {
     return (this._definition  !== undefined && this._definition.inputs !== undefined && this._definition.inputs![METAPAGE_KEY_STATE] !== undefined);
@@ -279,14 +197,11 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
     inputs: undefined
   };
   public setInputs(maybeNewInputs : MetaframeInputMap): MetapageIFrameRpcClient {
-    // console.log('⛑ MetapageIFrameRpcClient.setInputs', maybeNewInputs);
     // this.log({m:'MetapageIFrameRpcClient', inputs:maybeNewInputs});
     if (!merge(this.inputs, maybeNewInputs)) {
-      // console.log('⛑ MetapageIFrameRpcClient.setInputs failed merge');
       return this;
     }
     if (!this._loaded) {
-      // console.log('⛑ MetapageIFrameRpcClient.setInputs !this._loaded');
       this._sendInputsAfterRegistration = true;
     }
     // Only send the new inputs to the actual metaframe iframe
@@ -295,12 +210,9 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
     // be sent
     if (this.iframe.parentNode && this._loaded) {
       this.sendInputs(maybeNewInputs);
-      // } else {
-      // 	log('Not setting input bc this._loaded=$_loaded');
     }
 
     // Notify
-    // console.log('⛑ MetapageIFrameRpcClient.setInputs emitting!');
     this.emit(MetapageEvents.Inputs, this.inputs);
     if (this._metapage.listenerCount(MetapageEvents.Inputs) > 0) {
       var inputUpdate: MetapageInstanceInputs = {};
@@ -332,9 +244,6 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
     }
     this.emit(MetapageEvents.Outputs, maybeNewOutputs);
 
-    // for (outputPipeId in maybeNewOutputs.keys()) {
-    // 	log('output [${outputPipeId}]');
-    // }
     if (this._metapage.listenerCount(MetapageEvents.Outputs) > 0) {
       var outputsUpdate: MetapageInstanceInputs = {};
       outputsUpdate[this.id] = this.outputs;
@@ -383,7 +292,6 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
     // @ts-ignore
     this.outputs = undefined;
     // @ts-ignore
-    // this._ready = undefined;
     if (this.iframe && this.iframe.parentNode) {
       this.iframe.parentNode.removeChild(this.iframe);
     }
@@ -440,11 +348,9 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
     if (this._sendInputsAfterRegistration) {
       this.sendInputs(this.inputs);
     }
-    // this.log('registered version=${this.version}');
   }
 
   sendInputs(inputs : MetaframeInputMap) {
-    // console.log('⛑⛑ MetapageIFrameRpcClient.sendInputs', inputs);
     this.sendRpc(JsonRpcMethodsFromParent.InputsUpdate, {
       inputs: inputs,
       parentId: this._parentId
@@ -514,9 +420,6 @@ export class MetapageIFrameRpcClient extends EventEmitter < JsonRpcMethodsFromPa
   _bufferMessages: any[] | undefined;
   _bufferTimeout: number|undefined;
   sendOrBufferPostMessage(message : any) {
-    // if (!this.iframe || !this.iframe.contentWindow) {
-    //   console.log('no this.iframe.contentWindow, not sending message');
-    // }
     if (this.iframe && this.iframe.contentWindow) {
       this.iframe.contentWindow.postMessage(message, this.url);
     } else {
