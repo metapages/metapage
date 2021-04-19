@@ -104,7 +104,7 @@ const getMetapageTestUrl = (version) => {
   await lib.generate();
   console.log('🍳👉 generated page from templates with all metaframe versions')
 
-  let allVersions = await lib.getMetapageVersions({includeLocal:!nolocalBuild});
+  let allVersions = await lib.getMetapageVersions({includeLocal:false});
   if (!nolocalBuild) {
     allVersions.push('latest');
   }
