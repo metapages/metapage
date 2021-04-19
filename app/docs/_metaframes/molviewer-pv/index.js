@@ -163,7 +163,7 @@ connection.onInput("zoom", function(inputBlob) {
 });
 
 /* Set up the connection channel */
-connection.ready
+connection.connected()
 	.then(function() {
 		if (connection.getInput(ZOOM_INPUT_INTERNAL)
 			&& connection.getInput(ROTATION_INPUT_INTERNAL)) {

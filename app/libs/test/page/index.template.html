@@ -42,7 +42,6 @@
 // to make it easier to test all versions against all
 var urlParams = new URLSearchParams(window.location.search);
 var VERSION = urlParams.get('VERSION');
-
 {{? it.environment == "production" }}
 	VERSION = VERSION == null ? '{{= it.versions[it.versions.length - 1]}}' : VERSION;
 {{?? true }}
@@ -74,7 +73,6 @@ if (VERSION == 'latest') {
     }
 }
 
-console.log(`metapage library source: ${metapageSourceUrl}`);
 script.setAttribute('src', metapageSourceUrl);
 head.appendChild(script);
 
@@ -91,7 +89,7 @@ VERSIONS_METAFRAME.push("{{=k}}");
 {{~}}
 
 
-{{? !it.environment === "production" }}
+{{? it.environment !== "production" }}
 // Test the current version inputs *and* outputs
 VERSIONS_METAFRAME.unshift('latestFirst');
 VERSIONS_METAFRAME.push('latest');
@@ -431,11 +429,21 @@ window.onload = function() {
         // current implementation packaging
         Metapage = window.metapage && window.metapage.Metapage;
     }
+
+    window.metapage.isPa
     // set the Metapage class into the window object for easier manipulation later
     window.Metapage = Metapage;
 
+
+    const isPageLoaded = () => {
+        // https://stackoverflow.com/questions/13364613/how-to-know-if-window-load-event-was-fired-already/28093606
+        // TODO ugh casting here but I can't seem to get the right type with the loadEventEnd
+        return window.performance.getEntriesByType("navigation").every((e) => { return e.loadEventEnd > 0 });
+    };
+
     const metapageInstance = Metapage.from(metaPageDefinition);
     window.metapageInstance = metapageInstance;
+
     // window.metapageInstance = Metapage.from(metaPageDefinition);
     // metapageInstance = Metapage.from(metaPageDefinition);
     // window.metapageInstance = metapageInstance
@@ -478,6 +486,7 @@ window.onload = function() {
 
         row.appendChild(col1);
         row.appendChild(col2);
+
 
         col1.appendChild(metapageInstance.getMetaframe(metaframeId).iframe);
 

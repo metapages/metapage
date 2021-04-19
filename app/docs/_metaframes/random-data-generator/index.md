@@ -46,7 +46,7 @@ try {
 }
 
 var metaframe = new metapage.Metaframe();
-metaframe.ready
+metaframe.connected()
     .then(() => {
         document.getElementById('title').innerHTML = "";
         setInterval(() => {

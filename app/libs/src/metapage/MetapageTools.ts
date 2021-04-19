@@ -1,13 +1,13 @@
-import {compare} from "compare-versions";
-import {URL_PARAM_DEBUG} from "./Constants";
-import {Versions, AllVersions, CurrentVersion} from "./MetaLibsVersion";
-import {MetaframeInputMap, MetaframeId, MetapageId, MetapageDefinition} from "./v0_3/all";
+import { compare } from "compare-versions";
+import { URL_PARAM_DEBUG } from "./Constants";
+import { Versions, AllVersions, CurrentVersion } from "./MetaLibsVersion";
+import { MetaframeInputMap, MetaframeId, MetapageId, MetapageDefinition } from "./v0_3/all";
 
-import {MetapageDefinition as V0_2MetapageDefinition} from "./v0_2/all";
-import {MetapageDefinition as V0_3MetapageDefinition} from "./v0_3/all";
+import { MetapageDefinition as V0_2MetapageDefinition } from "./v0_2/all";
+import { MetapageDefinition as V0_3MetapageDefinition } from "./v0_3/all";
 
 // metapages can convert any past version to the current version.
-export const convertToCurrentDefinition = (def : any): MetapageDefinition => {
+export const convertToCurrentDefinition = (def: any): MetapageDefinition => {
   if (def === null) {
     throw "Metapage definition cannot be null";
   }
@@ -34,14 +34,13 @@ export const convertToCurrentDefinition = (def : any): MetapageDefinition => {
       }
     default:
       {
-        throw `Unknown metapage version: ${
-        def.version}. Supported versions: [${AllVersions.join(", ")}]`;
+        throw `Unknown metapage version: ${def.version}. Supported versions: [${AllVersions.join(", ")}]`;
       }
   }
   return updatedDefinition;
 };
 
-const definition_v0_2_to_v0_3 = (old : V0_2MetapageDefinition): V0_3MetapageDefinition => {
+const definition_v0_2_to_v0_3 = (old: V0_2MetapageDefinition): V0_3MetapageDefinition => {
   // Exactly the same except v0.3 has plugins
   old.version = Versions.V0_3;
   return old;
@@ -55,12 +54,12 @@ const definition_v0_2_to_v0_3 = (old : V0_2MetapageDefinition): V0_3MetapageDefi
  * be passed in.
  * Returns true if the original map was modified.
  */
-export const merge = (current : MetaframeInputMap, newInputs : MetaframeInputMap): boolean => {
+export const merge = (current: MetaframeInputMap, newInputs: MetaframeInputMap): boolean => {
   if (!newInputs) {
     return false;
   }
   let modified = false;
-  Object.keys(newInputs).forEach((pipeId : string) => {
+  Object.keys(newInputs).forEach((pipeId: string) => {
     modified = true;
     // undefined means remove the key
     // null means keep the key, but set to null
@@ -73,7 +72,7 @@ export const merge = (current : MetaframeInputMap, newInputs : MetaframeInputMap
   return modified;
 };
 
-export const getMatchingVersion = (version : string): Versions => {
+export const getMatchingVersion = (version: string): Versions => {
   if (version == "latest") {
     return CurrentVersion;
   } else if (compare(version, "0.0.x", "<")) {
@@ -91,7 +90,7 @@ export const getMatchingVersion = (version : string): Versions => {
   }
 };
 
-export const getUrlParam = (key : string): string | null => {
+export const getUrlParam = (key: string): string | null => {
   if (!window.location.search) {
     return null;
   }
@@ -102,27 +101,27 @@ export const getUrlParamDEBUG = (): boolean => {
   return new URLSearchParams(window.location.search).has(URL_PARAM_DEBUG);
 };
 
-export const existsAnyUrlParam = (k : string[]): boolean => {
-  const members = k.filter((param : string) => {
+export const existsAnyUrlParam = (k: string[]): boolean => {
+  const members = k.filter((param: string) => {
     return new URLSearchParams(window.location.search).has(param);
   });
   return members.length > 0;
 };
 
-export const generateMetaframeId = (length : number = 8): MetaframeId => {
+export const generateMetaframeId = (length: number = 8): MetaframeId => {
   return generateId(length);
 };
 
-export const generateMetapageId = (length : number = 8): MetapageId => {
+export const generateMetapageId = (length: number = 8): MetapageId => {
   return generateId(length);
 };
 
-export const generateNonce = (length : number = 8): string => {
+export const generateNonce = (length: number = 8): string => {
   return generateId(length);
 };
 
 const LETTERS = "abcdefghijklmnopqrstuvwxyz0123456789";
-export const generateId = (length : number = 8): string => {
+export const generateId = (length: number = 8): string => {
   var result = "";
   var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   var charactersLength = LETTERS.length;
@@ -132,7 +131,7 @@ export const generateId = (length : number = 8): string => {
   return result;
 };
 
-export const log = (o : any, color? : string, backgroundColor? : string) => {
+export const log = (o: any, color?: string, backgroundColor?: string) => {
   color = color
     ? color
     : "000";
@@ -160,11 +159,11 @@ export const log = (o : any, color? : string, backgroundColor? : string) => {
   }
 };
 
-export const stringToRgb = (str : string): string => {
+export const stringToRgb = (str: string): string => {
   return intToRGB(hashCode(str));
 };
 
-export const hashCode = (str : string): number => {
+export const hashCode = (str: string): number => {
   // java string#hashCode
   var hash = 0;
   for (let i = 0; i < str.length; i++) {
@@ -173,7 +172,7 @@ export const hashCode = (str : string): number => {
   return hash;
 };
 
-export const intToRGB = (i : number): string => {
+export const intToRGB = (i: number): string => {
   var c = (i & 0x00ffffff).toString(16).toUpperCase();
   return "00000".substring(0, 6 - c.length) + c;
 };
@@ -194,7 +193,7 @@ for (var i = 0; i < chars.length; i++) {
   lookup[chars.charCodeAt(i)] = i;
 }
 
-export function base64encode(arraybuffer : ArrayBuffer) :string {
+export function base64encode(arraybuffer: ArrayBuffer): string {
   let bytes = new Uint8Array(arraybuffer);
   let i: number;
   let len = bytes.length;
@@ -216,13 +215,13 @@ export function base64encode(arraybuffer : ArrayBuffer) :string {
   return base64;
 }
 
-export function base64decode(base64 : string) :ArrayBuffer {
-    if (!base64) {
-        throw new Error("base64decode string argument given");
-    }
+export function base64decode(base64: string): ArrayBuffer {
+  if (!base64) {
+    throw new Error("base64decode string argument given");
+  }
   let bufferLength = base64.length * 0.75,
     len = base64.length,
-    i:number,
+    i: number,
     p = 0,
     encoded1: number,
     encoded2: number,
@@ -252,3 +251,34 @@ export function base64decode(base64 : string) :ArrayBuffer {
 
   return arraybuffer;
 }
+
+
+export const isPageLoaded = (): boolean => {
+  return document.readyState == "complete" || document.readyState == "interactive";
+  // https://stackoverflow.com/questions/13364613/how-to-know-if-window-load-event-was-fired-already/28093606
+  // // TODO ugh casting here but I can't seem to get the right type with the loadEventEnd
+  // return window.performance.getEntriesByType("navigation").every((e) => { return (e as PerformanceNavigationTiming).loadEventEnd > 0 });
+};
+
+export const pageLoaded = async (): Promise<void> => {
+  if (isPageLoaded()) {
+    return Promise.resolve();
+  }
+  return new Promise((resolve) => {
+    let loaded = false;
+    window.addEventListener('load', () => {
+      if (loaded) {
+        return;
+      }
+      loaded = true;
+      resolve();
+    });
+    // tiny chance of missing the document.readyState === "loaded"
+    const timer = setTimeout(() => {
+      if (!loaded && isPageLoaded()) {
+        loaded = true;
+        resolve();
+      }
+    }, 200);
+  })
+};

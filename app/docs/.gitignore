@@ -4,3 +4,5 @@ _site
 .jekyll-cache
 assets/js/metaframe
 assets/js/metapage
+# pages/test is copied from ../libs/test/page
+pages/test
