@@ -37,16 +37,14 @@
         </div>
     </div>
     <div class="row">
-
     </div>
 </div>
 
 
 <script>
-Metapage.load()
-    .catch((err) => {
-        console.error(err);
-    })
+(async () => {
+	await Metapage.load();
+})()
 </script>
 </body>
 </html>
