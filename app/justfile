@@ -92,7 +92,6 @@ publish:
         just libs/npm_publish
     fi
     # build docs on a new gh_pages branch based from here and push
-    just libs/_versions-write-versions-to-jekyll
     just docs/publish
 
 # tbb I don't really like this command structure, I want it simple and not cluttered with commands but also need flexibility

@@ -31,7 +31,7 @@ publish:
     # create new gh-pages branch this commit
     git checkout -b gh-pages
     # build dependencies from ../libs
-    # just ../libs/build
+    just ../libs/build
     just ../libs/_versions-write-versions-to-jekyll
     # build the docs in ../../docs (<root/docs) https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages
     just build
@@ -39,7 +39,6 @@ publish:
     cd ../.. && \
         git add --force docs && \
         git commit -m 'ready to publish'
-    # git force push
     echo "git force push"
     git push -f origin gh-pages
     git checkout $CURRENT_BRANCH
@@ -60,7 +59,7 @@ build:
         docker-compose run docs just build
     else
         rm -rf ../../docs/*
-        JEKYLL_ENV=$JEKYLL_ENV bundle exec jekyll build --disable-disk-cache --strict_front_matter --trace --config _config.yml --destination ../../docs
+        JEKYLL_ENV=production bundle exec jekyll build --disable-disk-cache --strict_front_matter --trace --config _config.yml --destination ../../docs
     fi
 
 # https://metapage-npm.dev:4440/docs/
