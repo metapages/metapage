@@ -4,6 +4,8 @@ A **metapage** is a webpage that consists of a network of other embedded webpage
 
 For documentation and examples: [https://metapages.org/](https://metapages.org/)
 
+**THIS IS OUT OF DATE, UNDER HEAVY DEVELOPMENT, CONTACT AUTHOR**
+
 ## Published artifacts
 
 This repository publishes the following artifacts (and lists the source directory):

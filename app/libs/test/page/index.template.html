@@ -58,7 +58,9 @@ let metapageSourceUrl;
 if (VERSION == 'latest') {
     metapageSourceUrl = 'js/metapage/index.js';
 } else {
-    if (window.compareVersions(VERSION, '0.5.2') > 0) {
+    if (window.compareVersions(VERSION, '0.5.5') === 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage-backup@${VERSION}/browser/metaframe/index.js`);
+    } else if (window.compareVersions(VERSION, '0.5.2') > 0) {
         metapageSourceUrl = `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metapage/index.js`;
     } else if (window.compareVersions(VERSION, '0.4.9999') >= 0) {
         metapageSourceUrl = `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metapage/index.js`;
@@ -154,7 +156,6 @@ class Test {
         return '<br/>' + this.getText();
     }
 }
-
 
 
 TESTS = [
@@ -390,7 +391,7 @@ window.onload = function() {
     // if developing, the latest goes at the beginning AND end, to test getting
     // and sending to the parent metapage
     VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
-        versionMetaframe = versionMetaframe == 'latest' && index == 0 ? 'latestFirst' : versionMetaframe;
+        versionMetaframe = versionMetaframe == 'latest' && index == 0 && VERSIONS_METAFRAME.length > 1? 'latestFirst' : versionMetaframe;
         let url = `/metaframe/?VERSION=${versionMetaframe}`;
         if (urlParams.has('MP_DEBUG') || urlParams.has('DEBUG') || urlParams.has('MF_DEBUG')) {
             url += '&MP_DEBUG';
@@ -472,7 +473,7 @@ window.onload = function() {
 
     // add the metaframe and plugin iframes to the page
     var metaframeIds = metapageInstance.metaframeIds();
-    var pluginsIds = metaPageDefinition.plugins.concat([]);
+    var pluginsIds = metaPageDefinition.plugins ? metaPageDefinition.plugins.concat([]) : [];
     // Add the metaframe (and plugin) iframes to the page
     metaframeIds.forEach((metaframeId) => {
         var row = document.createElement("div");
