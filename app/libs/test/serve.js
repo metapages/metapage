@@ -13,15 +13,4 @@ server.register(require('fastify-static'), {
 console.log('port', port);
 server.listen(port, (err, address) => {
     server.log.info(`🚀 🍀😎 serving ./test/page @ http://${address}:${port}`);
-
-})
-
-// (async () => {
-//     try {
-
-//     } catch (err) {
-//         console.error(`Failed to start`, err);
-//         server.log.error(err)
-//         process.exit(1);
-//     }
-// })()
+});

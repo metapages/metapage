@@ -43,7 +43,9 @@ script.setAttribute('type', 'text/javascript');
 if (VERSION == 'latest') {
     script.setAttribute('src', `/js/metaframe/index.js`);
 } else {
-    if (window.compareVersions(VERSION, '0.5.0') >= 0) {
+    if (window.compareVersions(VERSION, '0.5.5') === 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage-backup@${VERSION}/browser/metaframe/index.js`);
+    } else if (window.compareVersions(VERSION, '0.5.0') >= 0) {
         script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metaframe/index.js`);
     } else if (window.compareVersions(VERSION, '0.4.100') >= 0) {
         script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/browser/index.js`);
@@ -110,15 +112,15 @@ TESTS = [
             return new Promise((resolve, reject) => {
                 let unbind;
                 unbind = mf.onInput('save-input-check', function(value) {
-                    if (value == mf._iframeId) {
+                    if (value == mf.id) {
                         resolve(true);
                     } else {
-                        reject(`'save-input-check' != '${mf._iframeId}'`);
+                        reject(`'save-input-check' != '${mf.id}'`);
                     }
                     unbind();
                 });
                 // send the inputs to the metapage, we listen to the event above
-                mf.setInput('save-input-check', mf._iframeId);
+                mf.setInput('save-input-check', mf.id);
             });
         }
     ),
@@ -281,8 +283,8 @@ const runTests = async () => {
         }
     }
 
-    if (!mf._iframeId) {
-        throw 'Metaframe claims ready but missing ._iframeId';
+    if (!mf.id) {
+        throw 'Metaframe claims ready but missing .id';
     }
 
     if (mf.plugin) {

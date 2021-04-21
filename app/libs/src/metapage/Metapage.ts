@@ -689,9 +689,7 @@ export class Metapage extends MetapageShared {
         if (!isMetaframe && !this._plugins.hasOwnProperty(metaframeId)) {
           throw "No metaframe or plugin: ${metaframeId}";
         }
-        // if (!isMetaframe) {
-        //   throw "🐋 No metaframe: ${metaframeId}";
-        // }
+
         const inputOrOutputState = isMetaframe
           ? isInputs
             ? this._state.metaframes.inputs
@@ -786,36 +784,27 @@ export class Metapage extends MetapageShared {
       if (!this.isValidJSONRpcMessage(jsonrpc)) {
         return;
       }
-      // var origin :string = untyped e.origin;
-      // var source :IFrameElement = untyped e.source;
       //Verify here
       var method = jsonrpc.method as JsonRpcMethodsFromChild;
+      const metaframeId = jsonrpc.iframeId;
+      // The metaframe gets its id from the window.name field so the iframe knows
+      // its id from the very beginning
+      if (!metaframeId) { // so if it's missing, bail early
+        return;
+      }
 
       switch (method) {
         /**
-         * An iframe has created a connection object.
+         * An iframe is sending a connection request.
          * Here we register it to set up a secure
-         * communication channel between other
-         * iframe clients.
-         * Any time *any* SetupIframeClientRequest
-         * message is received, send the appropriate
-         * response to all clients, since we do not
-         * know who sent the SetupIframeClientRequest.
-         * The response is idempotent (already registerd
-         * metaframes ignore further registration requests).
+         * communication channel.
          */
         case JsonRpcMethodsFromChild.SetupIframeClientRequest:
-
-
-          Object.keys(this._metaframes).forEach(metaframeId => {
-            const iframeClient = this._metaframes[metaframeId];
-            iframeClient.register();
-          });
-
-          Object.keys(this._plugins).forEach(url => {
-            const iframeClient = this._plugins[url];
-            iframeClient.register();
-          });
+          if (this._metaframes[metaframeId]) {
+            this._metaframes[metaframeId].register();
+          } else if (this._plugins[metaframeId]) {
+            this._plugins[metaframeId].register();
+          }
           break;
 
         /* A client iframe responded */
@@ -829,7 +818,6 @@ export class Metapage extends MetapageShared {
           break;
 
         case JsonRpcMethodsFromChild.OutputsUpdate:
-          var metaframeId: MetaframeId | undefined = jsonrpc.iframeId;
           if (!metaframeId) {
             break;
           }
@@ -902,15 +890,10 @@ export class Metapage extends MetapageShared {
           break;
 
         case JsonRpcMethodsFromChild.InputsUpdate:
-          // logInternal("metapage InputsUpdate " + JSON.stringify(jsonrpc, null, "  "));
           // This is triggered by the metaframe itself, meaning the metaframe
           // decided to save this state info.
           // We store it in the local state, then send it back so
           // the metaframe is notified of its input state.
-          var metaframeId: MetaframeId | undefined = jsonrpc.iframeId;
-          if (!metaframeId) {
-            break;
-          }
           var inputs: MetaframeInputMap = jsonrpc.params;
           if (this.debug)
             this.log(`inputs ${JSON.stringify(inputs)} from ${metaframeId}`);
@@ -1063,10 +1046,10 @@ const bindPlugin = async (metapage: Metapage, plugin: MetapageIFrameRpcClient) =
   }
 }
 
-const ERROR_MESSAGE_PAGE_NOT_LOADED = `
-The page must be loaded before metaframes(iframes) can be created:
-    import { pageLoaded } from "@metapages/metapage";
-    // somewhere in your code
-    await pageLoaded();
-    Metapage.from(... <definition>...)
-`
+// const ERROR_MESSAGE_PAGE_NOT_LOADED = `
+// The page must be loaded before metaframes(iframes) can be created:
+//     import { pageLoaded } from "@metapages/metapage";
+//     // somewhere in your code
+//     await pageLoaded();
+//     Metapage.from(... <definition>...)
+// `
