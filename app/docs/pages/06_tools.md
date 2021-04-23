@@ -20,7 +20,7 @@ has_toc: false
 ## Metaframe tools
 
 <ul id="tools-metaframe">
-	<li><a href="{{site.baseurl}}/tools/metaframeview?url={{site.url}}/metaframes/random-data-generator/">Metaframe Viewer</a></li>
+	<li><a href="{{site.baseurl}}/tools/metaframeview?url={{site.url}}{{site.baseurl}}/metaframes/random-data-generator/">Metaframe Viewer</a></li>
 </ul>
 
 <!-- Disabled until fixed: https://github.com/metapages/metapage/issues/37 -->

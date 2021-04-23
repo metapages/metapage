@@ -30,7 +30,6 @@ services:
 
   libs:
     command: just dev
-    # command: just test/serve
     volumes:
       - ./libs:/workspace/libs
       # The compiled output is put there
@@ -59,10 +58,3 @@ services:
       # internal port is hard coded in _config.dev.yml
       # For debugging, normal traffic is routed though the ingress service to support HTTPS
       - "${PORT_DOCS:-4000}:4000"
-
-  # tests-server:
-  #     volumes:
-  #       - ./docs:/workspace/docs
-  #       - ./libs:/workspace/libs
-  #     ports:
-  #       - "${TEST_SERVER_PORT:-3000}:${TEST_SERVER_PORT:-3000}"

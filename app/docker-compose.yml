@@ -17,22 +17,6 @@ services:
     networks:
       - default
 
-  # tests-server:
-  #   build:
-  #     context: ./libs
-  #     target: build
-  #   command: just test/serve
-  #   environment:
-  #     - "TEST_SERVER_PORT=${TEST_SERVER_PORT:-3000}"
-  #   networks:
-  #     - default
-  #   healthcheck:
-  #     test: ["CMD-SHELL", "PORT=${TEST_SERVER_PORT:-3000} deno run --allow-env --allow-net=localhost /healthcheck.ts"]
-  #     start_period: 3s
-  #     interval: 8s
-  #     timeout: 4s
-  #     retries: 15
-
   docs:
     # x-publish consumed by cloudseed
     x-publish: true

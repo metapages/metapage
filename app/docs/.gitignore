@@ -6,3 +6,5 @@ assets/js/metaframe
 assets/js/metapage
 # pages/test is copied from ../libs/test/page
 pages/test
+# generated from _config.dev.template.yml
+/_config.dev.yml
