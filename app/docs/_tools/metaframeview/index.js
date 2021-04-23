@@ -47,12 +47,12 @@ function buildEditorWithInitialInputs(startInputs) {
 	};
 
 	metapageDef.metaframes[idInputs] = {
-		url: '{{site.baseurl}}/metaframes/passthrough/?edit=1',
+		url: '{{site.url}}{{site.baseurl}}/metaframes/passthrough/?edit=1',
 		inputs: [],
 	};
-	
+
 	metapageDef.metaframes[idOutputs] = {
-		url: '{{site.baseurl}}/metaframes/passthrough/?edit=0',
+		url: '{{site.url}}{{site.baseurl}}/metaframes/passthrough/?edit=0',
 		inputs: [
 			{
 				metaframe: idTarget,
@@ -71,10 +71,10 @@ function buildEditorWithInitialInputs(startInputs) {
 		]
 	};
 
-	const metapage = Metapage.from(metapageDef);
-	const metaframe = metapage.getMetaframe(idTarget);
-	const metaframeInputs = metapage.getMetaframe(idInputs);
-	const metaframeOutputs = metapage.getMetaframe(idOutputs);
+	const metapageInstance = metapage.Metapage.from(metapageDef);
+	const metaframe = metapageInstance.getMetaframe(idTarget);
+	const metaframeInputs = metapageInstance.getMetaframe(idInputs);
+	const metaframeOutputs = metapageInstance.getMetaframe(idOutputs);
 
 	if (startInputs) {
 		const startState = {};
@@ -83,9 +83,9 @@ function buildEditorWithInitialInputs(startInputs) {
 			// This doesn't set a value, but it makes the input metaframe show the input names
 			startState[idInputs][inputKey] = null;
 		}
-		metapage.setInputs(startState);
+		metapageInstance.setInputs(startState);
 	}
-	
+
 	document.getElementById("container-inputs").appendChild(metaframeInputs.iframe);
 	document.getElementById("container-outputs").appendChild(metaframeOutputs.iframe);
 	document.getElementById("container-metaframe").appendChild(metaframe.iframe);

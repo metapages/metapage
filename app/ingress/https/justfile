@@ -24,7 +24,7 @@ mkcert ignorechecks="":
     if ! command -v mkcert &> /dev/null; then echo "💥 {{bold}}mkcert{{normal}}💥 is not installed (manual.md#host-requirements): https://github.com/FiloSottile/mkcert"; exit 1; fi
     if [ ! -f conf.d/certs/{{APP_FQDN}}-key.pem ]; then
         mkdir -p conf.d/certs ;
-        cd conf.d/certs && mkcert -cert-file {{APP_FQDN}}.pem -key-file {{APP_FQDN}}-key.pem {{APP_FQDN}} localhost ;
+        cd conf.d/certs && mkcert -cert-file {{APP_FQDN}}.pem -key-file {{APP_FQDN}}-key.pem {{APP_FQDN}} ;
     fi
     if [ "{{ignorechecks}}" = "" ]; then
         if ! cat /etc/hosts | grep "{{APP_FQDN}}" &> /dev/null; then
