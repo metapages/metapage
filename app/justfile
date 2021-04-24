@@ -87,9 +87,9 @@ publish:
         # because it starts as a clean checkout and git is not installed and it is not a full checkout, just the tip
         just _fail_on_uncommitted_changes
         {{DOCKER_COMPOSE}} build libs
-        {{DOCKER_COMPOSE}} run libs just npm_publish
+        {{DOCKER_COMPOSE}} run libs just publish
     else
-        just libs/npm_publish
+        just libs/publish
     fi
     # build docs on a new gh_pages branch based from here and push
     just docs/publish

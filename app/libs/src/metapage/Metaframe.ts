@@ -133,6 +133,8 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
         Object.keys(this._inputPipeValues).forEach(pipeId => this.emit(MetaframeEvents.Input, pipeId, this._inputPipeValues[pipeId]));
       }
 
+      this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
+
       // if this is a plugin, initialize the plugin object
       if (params.plugin) {
         this.plugin = new MetaframePlugin(this);

@@ -1,11 +1,11 @@
 {
     "name": "@metapages/metapage",
     "public": true,
-    "version": "0.5.7",
+    "version": "0.5.8",
     "description": "Connect web pages together",
     "repository": "https://github.com/metapages/metapage",
     "homepage": "https://metapages.org/",
-    "module": "index.js",
+    "main": "index.js",
     "browser": "dist/@metapages/metapages/browser/index.js",
     "source": "src/index.ts",
     "types": "index.d.ts",
