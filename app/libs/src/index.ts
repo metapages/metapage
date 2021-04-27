@@ -5,4 +5,5 @@ export * from "./metapage/MetapageTools";
 export * from "./metapage/v0_3/all";
 export * from "./metapage/v0_3/JsonRpcMethods";
 export * from "./metapage/Shared";
+export * from "./metapage/MetapageIFrameRpcClient";
 export const version = VERSION;

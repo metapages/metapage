@@ -13,11 +13,11 @@ Embedded webpages are called **metaframes**. A metaframe can be any webpage that
 An example metapage showing two metaframes, one generating randome data, the other plotting whatever date it gets:
 
 {% if jekyll.environment == "production" %}
-  [https://app.metapages.org/?header=0#url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/](https://app.metapages.org/?header=0#url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/)
-  <iframe border="0" src="https://app.metapages.org/?header=0#url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/" style="width:600px;height:400px"></iframe>
+  [https://app.metapages.org/?header=0#?url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/](https://app.metapages.org/?header=0#?url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/)
+  <iframe border="0" src="https://app.metapages.org/?header=0#?url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/" style="width:600px;height:400px"></iframe>
 {% else %}
-  [{{site.data.urls.app-metapage-local}}?header=0#url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/]({{site.data.urls.app-metapage-local}}?header=0#url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/)
-  <iframe border="0" src="{{site.data.urls.app-metapage-local}}?header=0#url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/" style="width:600px;height:400px"></iframe>
+  [{{site.data.urls.app-metapage-local}}?header=0#?url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/]({{site.data.urls.app-metapage-local}}?header=0#?url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/)
+  <iframe border="0" src="{{site.data.urls.app-metapage-local}}?header=0#?url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/" style="width:600px;height:400px"></iframe>
 {% endif %}
 
 The two pages above are completely separate websites, and have no idea about the other. One simply passes data to the other, controlled by the metapage code running in the parent page.

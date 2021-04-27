@@ -14,9 +14,9 @@ nav_order: 5
 		{%- assign tokens = metapage.url | remove: "/index.html" | split: "/" -%}
 		{%- assign token = tokens.last -%}
 		{%- if jekyll.environment == "production" -%}
-			{%- assign url = "https://app.metapages.org/#url=" | append: site.url | append: site.baseurl | append: "/metapages/" | append: token | append: "/metapage.json" -%}
+			{%- assign url = "https://app.metapages.org/#?url=" | append: site.url | append: site.baseurl | append: "/metapages/" | append: token | append: "/metapage.json" -%}
 		{%- else -%}
-			{%- assign url = site.data.urls.app-metapage-local | append: "#url=" | append: site.url | append: site.baseurl | append: "/metapages/" | append: token | append: "/metapage.json" -%}
+			{%- assign url = site.data.urls.app-metapage-local | append: "#?url=" | append: site.url | append: site.baseurl | append: "/metapages/" | append: token | append: "/metapage.json" -%}
 		{%- endif -%}
 		{%- if token == "test" -%}
 			{%- assign url = site.baseurl | append: "/metapages/" | append: token -%}

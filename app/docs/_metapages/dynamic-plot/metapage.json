@@ -3,6 +3,7 @@
 {
   "version": "0.3",
   "meta": {
+    "name":"Simple example: plot random data",
     "layouts": {
       "flexboxgrid" : {
         "docs": "http://flexboxgrid.com/",
@@ -28,9 +29,8 @@
   },
 	"plugins": [
 		"{{site.url}}{{site.baseurl}}/metaframes/mermaid.js/?TITLE=0",
-		"{{site.url}}{{site.baseurl}}/metaframes/passthrough/",
 {% if jekyll.environment == "production" %}
-		"https://metapages.github.io/metaframe-editor-json/"
+    "https://metapages.github.io/metaframe-editor/"
 {% else %}
 		"{{site.data.urls.metaframe-editor-json-local}}"
 {% endif %}

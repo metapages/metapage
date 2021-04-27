@@ -76,8 +76,9 @@ dev:
     watchexec --watch src -- 'just _build'
 
 # npm link the package in dist for local development. In the other project: 'npm link @metapages/metapage'
-@link: build
+@link: unlink build
     cd dist/{{NPM_MODULE}} && npm link
+    echo -e "👉 in the other project: 'npm link {{NPM_MODULE}}'"
 
 # unlink the package in dist from local development. You probably don't ever need to do this
 @unlink:
