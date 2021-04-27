@@ -18,12 +18,12 @@ export interface PipeInput extends PipeOutput {}
 
 export type MetaframeMetadata = {
   version?: string;
-  title?: string;
+  name?: string;
   author?: string;
   image?: string;
-  descriptionUrl?: string;
+  description?: string;
   keywords?: string[];
-  iconUrl?: string;
+  icon?: string;
 };
 
 export interface MetaframeDefinition {

@@ -12,5 +12,5 @@ Documentation and examples: [https://metapages.org/](https://metapages.org/)
 
 Simple example (two connected metaframes):
 
-[https://app.metapages.org/#url=https://metapages.org/metapages/dynamic-plot/](https://app.metapages.org/#url=https://metapages.org/metapages/dynamic-plot/)
-  <iframe src="https://app.metapages.org/#url=https://metapages.org/metapages/dynamic-plot/" frameBorder="0" style="width:600px;height:400px"></iframe>
+[https://app.metapages.org/#?url=https://metapages.org/metapages/dynamic-plot/](https://app.metapages.org/#?url=https://metapages.org/metapages/dynamic-plot/)
+  <iframe src="https://app.metapages.org/#?url=https://metapages.org/metapages/dynamic-plot/" frameBorder="0" style="width:600px;height:400px"></iframe>

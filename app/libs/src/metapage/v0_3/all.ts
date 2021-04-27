@@ -1,5 +1,4 @@
-import {Versions} from '../MetaLibsVersion';
-import {MetaframePipeDefinition, MetaframeInstance, MetaframePipeId, MetaframeInputMap, MetapageId, MetapageMetadata, MetaframeMetadata} from '../v0_2/all';
+import { MetapageId} from '../v0_2/all';
 import { MetapageDefinition as V0_2MetapageDefinition } from '../v0_2/all';
 export {Versions, CurrentVersion, AllVersions} from '../MetaLibsVersion';
 
@@ -16,16 +15,7 @@ export interface MetapageDefinition extends V0_2MetapageDefinition {
 	plugins ?:Url[];
 }
 
-
-
-// export MetapageInstanceInputs = { [key: string]: MetaframeInputMap; };//<MetaframeId, MetaframeInputMap>;
-
-
 export { MetapageInstanceInputs } from '../v0_2/all';
-export { ReactGridLayoutData } from '../v0_2/all';
-export { MetapageVersionLayoutGrid } from '../v0_2/all';
-export { MetapageMetadataLayout } from '../v0_2/all';
-export { MetapageVersionLayoutType } from '../v0_2/all';
 export { MetaframeInstance } from '../v0_2/all';
 export { PipeUpdateBlob } from '../v0_2/all';
 export { PipeInput } from '../v0_2/all';

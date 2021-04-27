@@ -34,9 +34,15 @@ export interface MetaframeDefinition {
 }
 
 export type MetapageMetadata = {
-  version?: string;
-  layout?: MetapageMetadataLayout;
   name?: string;
+  description?:string;
+  // the idea is there *could* be different ways of displaying the metapage, so we store the preferred ways here
+  // you cannot really bake in which one is the "default" since that is not under our control nor should we care
+  // but we can have preferences
+  layouts?: {
+    [key in string]: any
+  };
+  // layout?: MetapageMetadataLayout;
 };
 
 //Just needed for the metaframe editor, it can be
@@ -48,7 +54,6 @@ export interface MetaframeInstanceAnonymous {
   url: string;
   metaframe: MetaframeDefinition;
   screenshotUrl?: string;
-  // updatedAt :?Date;
 }
 
 export interface PipeInput {
@@ -87,34 +92,5 @@ export type MetaframeMetadata = {
   keywords?: string[];
   iconUrl?: string;
 };
-
-export type MetapageMetadataLayout = {
-  version?: string;
-  layouts?: {
-    [key in MetapageVersionLayoutType]: MetapageVersionLayoutGrid
-  };
-};
-
-export type MetapageVersionLayoutGrid = {
-  layout: ReactGridLayoutData[];
-};
-
-export type ReactGridLayoutData = {
-  i?: string;
-  x?: number;
-  y?: number;
-  w?: number;
-  h?: number;
-  minW?: number;
-  maxW?: number;
-  minH?: number;
-  maxH?: number;
-  isDraggable?: boolean;
-  isResizable?: boolean;
-};
-
-export enum MetapageVersionLayoutType {
-  gridlayout = "gridlayout"
-}
 
 export interface MetapageInstanceInputs { [key: string]: MetaframeInputMap; } ;

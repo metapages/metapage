@@ -71,9 +71,9 @@ Defined by:
 ```
 
 {% if jekyll.environment == "production" %}
-  [Run above example](https://app.metapages.org/#url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
+  [Run above example](https://app.metapages.org/#?url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
 {% else %}
-  [Run above example]({{site.data.urls.app-metapage-local}}/#url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
+  [Run above example]({{site.data.urls.app-metapage-local}}/#?url={{site.url}}{{site.baseurl}}/metapages/dynamic-plot/metapage.json){: .btn .btn-green }
 {% endif %}
 
 To run the same example as the button above:
@@ -436,7 +436,7 @@ The definition can be updated, this will fire on every change and give the full 
 An internal object managing the data flow in and out of the actual metaframe iframe. You shouldn't need to access this object directly.
 This object is in the *metapage* page, managing the metaframe data flow.
 
-### Metapage.MetaframeClient#url
+### Metapage.MetaframeClient#?url
 
 ```ts
 // The URL of the underlying iframe

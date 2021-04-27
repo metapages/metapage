@@ -12,20 +12,36 @@ nav_order: 5
 ### In the metaframe html:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/metaframe@{{site.data.versions.versions.last}}/browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@metapages/metapage@{{site.data.versions.versions.last}}/browser/metaframe/index.js"></script>
+```
+
+```javascript
+
+import { Metaframe } from "@metapages/metapage";
+
+const metaframe = new Metaframe();
+
 ```
 
 ### In the metapage html:
 
 ```html
-<script src="https://cdn.jsdelivr.net/npm/metapage@{{site.data.versions.versions.last}}/browser.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/metapage@{{site.data.versions.versions.last}}/browser/metapage/index.js"></script>
+```
+
+
+```javascript
+
+import { Metapage } from "@metapages/metapage";
+
+const metapage = Metapage.from(...)
+
 ```
 
 ## webpack/node.js/grunt etc
 
 ```bash
-npm i --save metapage
-npm i --save metaframe
+npm i --save @metapages/metapage
 ```
 
 ## Promise
