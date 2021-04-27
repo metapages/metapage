@@ -4,3 +4,5 @@ _site
 .jekyll-metadata
 .jekyll-cache
 .gitignore
+# Do not add the development configuration to the production image
+_config.dev.yml
