@@ -20,12 +20,12 @@ export JEKYLL_ENV := env_var_or_default("JEKYLL_ENV", "production")
 # Develop with autoloading, including on config changes
 dev:
     cp _config.dev.template.yml _config.dev.yml
-    sed -i'' 's#^url: .*#?url: "https://{{APP_FQDN}}:{{APP_PORT}}"#g' _config.dev.yml
+    sed -i'' 's#^url: .*#url: "https://{{APP_FQDN}}:{{APP_PORT}}"#g' _config.dev.yml
     watchexec -w _config.yml -w _config.dev.template.yml --restart --force-poll 2000 -- JEKYLL_ENV=$JEKYLL_ENV bundle exec jekyll serve --strict_front_matter --trace --watch --force_polling --host 0.0.0.0 --port $APP_PORT --config _config.yml,_config.dev.yml
 
 # Expects ../libs to already be published (just app/libs/(build or publish) )
 # build docs website in <../docs/> for https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages
-publish:
+publish: clean
     #!/usr/bin/env bash
     CURRENT_BRANCH=$(git branch --show-current)
     # delete existing gh-pages branch
@@ -69,3 +69,8 @@ build:
 # Updates Gemfile.lock (if you see errors about permissions writing to Gemfile.lock)
 @update-install:
     docker run --rm -ti -v $PWD:/workspace/docs -w /workspace/docs jekyll/jekyll:4.2.0 bundle install
+
+clean:
+    rm -rf _config.dev.yml
+    rm -rf _site
+    rm -rf .jekyll-cache
