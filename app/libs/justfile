@@ -3,7 +3,7 @@
 
 ROOT               := `dirname $(dirname $PWD)`
 NPM_MODULE         := `cat package.json | jq -r .name`
-NPM_MODULE_OUTPUT  := "./dist/" + NPM_MODULE
+NPM_MODULE_OUTPUT  := "./dist"
 NPM_TOKEN          := env_var_or_default("NPM_TOKEN", "")
 SERVER_PORT        := env_var_or_default("SERVER_PORT", "3000")
 export CI          := env_var_or_default("CI", "")
