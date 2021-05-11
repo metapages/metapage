@@ -793,6 +793,9 @@ export class Metapage extends MetapageShared {
         return;
       }
 
+      const metaframeOrPlugin = this.getMetaframeOrPlugin(metaframeId);
+      const isPlugin = this._plugins[metaframeId]!!;
+
       switch (method) {
         /**
          * An iframe is sending a connection request.
@@ -800,29 +803,22 @@ export class Metapage extends MetapageShared {
          * communication channel.
          */
         case JsonRpcMethodsFromChild.SetupIframeClientRequest:
-          if (this._metaframes[metaframeId]) {
-            this._metaframes[metaframeId].register();
-          } else if (this._plugins[metaframeId]) {
-            this._plugins[metaframeId].register();
+          if (metaframeOrPlugin) {
+            metaframeOrPlugin.register();
           }
           break;
 
         /* A client iframe responded */
         case JsonRpcMethodsFromChild.SetupIframeServerResponseAck:
           /* Send all inputs when a client has registered. */
-          if (jsonrpc.iframeId) {
-            var params = jsonrpc.params as SetupIframeClientAckData<any>;
-            var metaframe = this.getMetaframeOrPlugin(jsonrpc.iframeId);
-            metaframe.registered(params.version);
+          if (metaframeOrPlugin) {
+            const params = jsonrpc.params as SetupIframeClientAckData<any>;
+            metaframeOrPlugin.registered(params.version);
           }
           break;
 
         case JsonRpcMethodsFromChild.OutputsUpdate:
-          if (!metaframeId) {
-            break;
-          }
-
-          var outputs: MetaframeInputMap = jsonrpc.params;
+          const outputs: MetaframeInputMap = jsonrpc.params;
 
           if (this.debug)
             this.log(`outputs from ${metaframeId}: ${JSON.stringify(outputs, null, '  ').substr(0, 100)}`);
@@ -952,23 +948,30 @@ export class Metapage extends MetapageShared {
           }
           break;
         case JsonRpcMethodsFromChild.PluginRequest:
-          var pluginId = jsonrpc.iframeId;
-          if (!pluginId) {
-            break;
-          }
-          if (this._plugins[pluginId] && this._plugins[pluginId].hasPermissionsState()) {
-            this._plugins[pluginId].setInput(METAPAGE_KEY_STATE, this._state);
-            if (this.debug) {
-              this._plugins[pluginId].ack({ jsonrpc: jsonrpc, state: this._state });
+          if (isPlugin && metaframeOrPlugin) {
+            if (metaframeOrPlugin.hasPermissionsState()) {
+              metaframeOrPlugin.setInput(METAPAGE_KEY_STATE, this._state);
+              if (this.debug) {
+                metaframeOrPlugin.ack({ jsonrpc: jsonrpc, state: this._state });
+              }
             }
           }
+          break;
+        case JsonRpcMethodsFromChild.HashParamsUpdate:
+          // Not really sure how to "automatically" process this right here
+          // It's a potential automatic security concern, IF we want to put credentials
+          // in the hash params (and we do)
+          // So for now, just emit an event, and let the parent context handle it
+          // In the current use case this app: https://github.com/metapages/metapage-app
+          // will listen for the event and update the definition accordingly
+          this.emit(MetapageEvents.UrlHashUpdate, jsonrpc.params);
           break;
         default:
           if (this.debug) {
             this.log(`Unknown RPC method: "${method}"`);
           }
       }
-      this.emit(OtherEvents.Message, jsonrpc);
+      this.emit(MetapageEvents.Message, jsonrpc);
     }
   }
 

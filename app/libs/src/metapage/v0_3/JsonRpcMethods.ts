@@ -8,7 +8,9 @@ export enum JsonRpcMethodsFromChild {
   SetupIframeClientRequest = "SetupIframeClientRequest",
   SetupIframeServerResponseAck = "SetupIframeServerResponseAck",
   // Plugin API
-  PluginRequest = "SetupIframeServerPluginRequestResponseAck" // See further definitions: ApiPayloadPluginRequest*
+  PluginRequest = "SetupIframeServerPluginRequestResponseAck", // See further definitions: ApiPayloadPluginRequest*
+  // Experimental feature
+  HashParamsUpdate = "HashParamsUpdate",
 }
 
 export enum JsonRpcMethodsFromParent {
@@ -17,8 +19,8 @@ export enum JsonRpcMethodsFromParent {
   SetupIframeServerResponse = "SetupIframeServerResponse"
 }
 
-export enum OtherEvents {
-  Message = "Message"
+export type HashParamsUpdatePayload = {
+  hash: string;
 }
 
 export interface SetupIframeServerResponseData {

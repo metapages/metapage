@@ -8,7 +8,8 @@ import {
   JsonRpcMethodsFromParent,
   JsonRpcMethodsFromChild,
   SetupIframeServerResponseData,
-  MinimumClientMessage
+  MinimumClientMessage,
+  HashParamsUpdatePayload,
 } from "./v0_3/JsonRpcMethods";
 import { getUrlParamDEBUG, stringToRgb, log as MetapageToolsLog, merge, pageLoaded } from "./MetapageTools";
 import { isIframe } from "./Shared";
@@ -83,6 +84,8 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
     this._resolveSetupIframeServerResponse = this._resolveSetupIframeServerResponse.bind(this);
     this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
     this.connected = this.connected.bind(this);
+    this.notifyOnHashUrlChange = this.notifyOnHashUrlChange.bind(this);
+    this._onHashUrlChange = this._onHashUrlChange.bind(this);
 
     if (!this._isIframe) {
       //Don't add any of the machinery, it only works if we're iframes.
@@ -218,6 +221,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   public dispose() {
     super.removeAllListeners();
     window.removeEventListener("message", this.onMessage);
+    window.removeEventListener("hashchange", this._onHashUrlChange);
     // @ts-ignore
     this._inputPipeValues = undefined;
     // @ts-ignore
@@ -322,6 +326,24 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
 
   public getOutputs(): MetaframeInputMap {
     return this._outputPipeValues;
+  }
+
+  /**
+   * If the hash params of our URL changes, e.g. from updating because
+   * our state changed, then notify the parent metapage so that the
+   * parent metapage can save the state
+   */
+  public notifyOnHashUrlChange(): void {
+    window.addEventListener("hashchange", this._onHashUrlChange);
+  }
+
+  /** Tell the parent metapage our hash params changed */
+  _onHashUrlChange(_: HashChangeEvent) :void {
+    const payload :HashParamsUpdatePayload = {
+      hash: window.location.hash,
+      metaframe: this.id,
+    }
+    this.sendRpc(JsonRpcMethodsFromChild.HashParamsUpdate, payload);
   }
 
   sendRpc(method: JsonRpcMethodsFromChild, params: any) {

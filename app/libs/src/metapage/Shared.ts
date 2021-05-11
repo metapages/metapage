@@ -1,7 +1,6 @@
 import {EventEmitter} from "eventemitter3";
 import {
   JsonRpcMethodsFromParent,
-  OtherEvents,
 } from "./v0_3/JsonRpcMethods";
 
 export enum MetapageEvents {
@@ -9,7 +8,11 @@ export enum MetapageEvents {
   Outputs = "outputs",
   State = "state",
   Definition = "definition",
-  Error = "error"
+  Error = "error",
+  // when a metaframe wants to tell the metapage of the new URL (for saving state/config)
+  UrlHashUpdate = "urlhashupdate",
+  // general event, all events are emitted in their raw form to this namespace
+  Message = "Message",
 }
 
 export const isIframe = (): boolean => {
