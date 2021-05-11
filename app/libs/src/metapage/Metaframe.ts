@@ -13,6 +13,7 @@ import {
 } from "./v0_3/JsonRpcMethods";
 import { getUrlParamDEBUG, stringToRgb, log as MetapageToolsLog, merge, pageLoaded } from "./MetapageTools";
 import { isIframe } from "./Shared";
+import { MetaframeId } from './v0_0_1/all';
 
 // TODO combine/unify MetaframeEvents and MetaframeLoadingState
 enum MetaframeLoadingState {
@@ -341,7 +342,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   _onHashUrlChange(_: HashChangeEvent) :void {
     const payload :HashParamsUpdatePayload = {
       hash: window.location.hash,
-      metaframe: this.id,
+      metaframe: this.id as MetaframeId,
     }
     this.sendRpc(JsonRpcMethodsFromChild.HashParamsUpdate, payload);
   }

@@ -17,7 +17,6 @@ import {
   JsonRpcMethodsFromChild,
   MinimumClientMessage,
   SetupIframeClientAckData,
-  OtherEvents,
 } from "./v0_3/JsonRpcMethods";
 import {
 
@@ -112,7 +111,7 @@ export class Metapage extends MetapageShared {
 
   _id: MetapageId;
   // Easier to ensure this value is never null|undefined
-  _definition: MetapageDefinition = {version:Versions.V0_3, metaframes:{}};
+  _definition: MetapageDefinition = { version: Versions.V0_3, metaframes: {} };
   _state: MetapageState = emptyState();
   _metaframes: {
     [key: string]: MetapageIFrameRpcClient;
@@ -212,7 +211,7 @@ export class Metapage extends MetapageShared {
     });
   }
 
-  addListenerReturnDisposer(event: MetapageEvents | OtherEvents, listener: ListenerFn<any[]>): () => void {
+  addListenerReturnDisposer(event: MetapageEvents, listener: ListenerFn<any[]>): () => void {
     super.addListener(event, listener);
     const disposer = () => {
       super.removeListener(event, listener);

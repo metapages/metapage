@@ -1,4 +1,4 @@
-import {EventEmitter} from "eventemitter3";
+import { EventEmitter } from "eventemitter3";
 import {
   JsonRpcMethodsFromParent,
 } from "./v0_3/JsonRpcMethods";
@@ -24,7 +24,7 @@ export const isIframe = (): boolean => {
   }
 };
 
-export class MetapageShared extends EventEmitter<MetapageEvents | JsonRpcMethodsFromParent | OtherEvents> {
+export class MetapageShared extends EventEmitter<MetapageEvents | JsonRpcMethodsFromParent> {
   public error(err: any) {
     throw 'Subclass should implement';
   }
