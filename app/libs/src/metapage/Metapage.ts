@@ -244,11 +244,6 @@ export class Metapage extends MetapageShared {
   }
 
   public setDefinition(def: any, state?: MetapageState): Metapage {
-    // If the window hasn't finished loading, throw an error.
-    // if (!isPageLoaded()) {
-    //   throw new Error(ERROR_MESSAGE_PAGE_NOT_LOADED);
-    // }
-    console.log('newDefinition', def);
     // Some validation
     // can metaframes and plugins share IDs? No.
     const newDefinition: MetapageDefinition = convertToCurrentDefinition(def);
@@ -971,7 +966,6 @@ export class Metapage extends MetapageShared {
             //   - compare metapage.getDefinition() with any updates outside of this
             //     context to decide wether to re-render or recreate
             const hashParamsUpdatePayload: MetapageEventUrlHashUpdate = jsonrpc.params;
-            console.log(`reemitting jsonrpc.params`, hashParamsUpdatePayload);
             const url = new URL(metaframeOrPlugin.url);
             url.hash = hashParamsUpdatePayload.hash;
             // Update the local metaframe client reference
@@ -1027,7 +1021,6 @@ export class Metapage extends MetapageShared {
    * @return Promise<boolean>
    */
 const bindPlugin = async (metapage: Metapage, plugin: MetapageIFrameRpcClient) => {
-  console.log(`bindPlugin plugin${plugin.id}`);
   //   1) check for metapage/definition inputs and outputs
   //		- if found, wire up listeners and responses and send current definition
   //   2) check for metapage/state inputs and outputs
@@ -1044,7 +1037,6 @@ const bindPlugin = async (metapage: Metapage, plugin: MetapageIFrameRpcClient) =
     // on getting a metapage/definition value, set that
     // value on the metapage itself.
     if (plugin.hasPermissionsDefinition()) {
-      console.log(`bindPlugin hasPermissionsDefinition plugin${plugin.id}`);
       var disposer = metapage.addListenerReturnDisposer(MetapageEvents.Definition, definition => {
         plugin.setInput(METAPAGE_KEY_DEFINITION, definition.definition);
       });
