@@ -78,10 +78,13 @@ export class Metapage extends MetapageShared {
 
   // Event literals for users to listen to events
   public static readonly DEFINITION = MetapageEvents.Definition;
+  public static readonly DEFINITION_UPDATE_REQUEST = MetapageEvents.DefinitionUpdateRequest;
+  public static readonly ERROR = MetapageEvents.Error;
   public static readonly INPUTS = MetapageEvents.Inputs;
+  public static readonly MESSAGE = MetapageEvents.Message;
   public static readonly OUTPUTS = MetapageEvents.Outputs;
   public static readonly STATE = MetapageEvents.State;
-  public static readonly ERROR = MetapageEvents.Error;
+  public static readonly URL_HASH_UPDATE = MetapageEvents.UrlHashUpdate;
 
   public static from(metaPageDef: any, inputs?: any): Metapage {
     if (metaPageDef == null) {
@@ -1051,7 +1054,7 @@ const bindPlugin = async (metapage: Metapage, plugin: MetapageIFrameRpcClient) =
       if (metaframeDef.outputs) {
         var disposer = plugin.onOutput(METAPAGE_KEY_DEFINITION, definition => {
           // trace('_metapage.setDefinition, definition=${definition}');
-          metapage.emit(MetapageEvents.DefinitionUpdateRequest, definition)
+          metapage.emit(MetapageEvents.DefinitionUpdateRequest, definition);
           // metapage.setDefinition(definition);
         });
         plugin._disposables.push(disposer);

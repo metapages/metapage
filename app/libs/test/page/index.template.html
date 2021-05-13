@@ -445,6 +445,13 @@ window.onload = function() {
     const metapageInstance = Metapage.from(metaPageDefinition);
     window.metapageInstance = metapageInstance;
 
+    // New as of >=0.5.12
+    if (Metapage.DEFINITION_UPDATE_REQUEST) {
+        metapageInstance.addListener(Metapage.DEFINITION_UPDATE_REQUEST, (newDefinition) => {
+            metapageInstance.setDefinition(newDefinition);
+        });
+    }
+
     // window.metapageInstance = Metapage.from(metaPageDefinition);
     // metapageInstance = Metapage.from(metaPageDefinition);
     // window.metapageInstance = metapageInstance
