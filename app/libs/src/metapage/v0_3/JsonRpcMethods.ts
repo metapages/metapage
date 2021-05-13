@@ -1,7 +1,6 @@
 import { MetaframeId, MetapageId, MetaframeInputMap, Versions } from "./all";
 import { JsonRpcRequest } from '../jsonrpc2';
 
-
 export enum JsonRpcMethodsFromChild {
   InputsUpdate = "InputsUpdate",
   OutputsUpdate = "OutputsUpdate",
@@ -17,11 +16,6 @@ export enum JsonRpcMethodsFromParent {
   InputsUpdate = "InputsUpdate",
   MessageAck = "MessageAck",
   SetupIframeServerResponse = "SetupIframeServerResponse"
-}
-
-export type HashParamsUpdatePayload = {
-  metaframe: MetaframeId;
-  hash: string;
 }
 
 export interface SetupIframeServerResponseData {

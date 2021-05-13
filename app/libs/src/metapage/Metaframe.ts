@@ -9,11 +9,11 @@ import {
   JsonRpcMethodsFromChild,
   SetupIframeServerResponseData,
   MinimumClientMessage,
-  HashParamsUpdatePayload,
 } from "./v0_3/JsonRpcMethods";
 import { getUrlParamDEBUG, stringToRgb, log as MetapageToolsLog, merge, pageLoaded } from "./MetapageTools";
 import { isIframe } from "./Shared";
 import { MetaframeId } from './v0_0_1/all';
+import { MetapageEventUrlHashUpdate } from "./MetapageEvents";
 
 // TODO combine/unify MetaframeEvents and MetaframeLoadingState
 enum MetaframeLoadingState {
@@ -122,7 +122,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
           ? this._parentVersion
           : "unknown"}) registered`);
 
-      this._inputPipeValues = params.state != null && params.state.inputs != null
+      this._inputPipeValues = params.state && params.state.inputs
         ? params.state.inputs
         : this._inputPipeValues;
 
@@ -182,7 +182,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
       return;
     }
     this.logInternal(
-      o, color != null
+      o, color
       ? color
       : this.color);
   }
@@ -208,12 +208,12 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
       s = JSON.stringify(o);
     }
 
-    color = color != null
+    color = color
       ? color + ""
       : color;
 
     s = (
-      this.id != null
+      this.id
         ? `Metaframe[${this.id}] `
         : "") + `${s}`;
     MetapageToolsLog(s, color, backgroundColor);
@@ -237,7 +237,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
     //will always get a value if it exists
     if (event === MetaframeEvents.Inputs) {
       window.setTimeout(() => {
-        if (this._inputPipeValues != null) {
+        if (this._inputPipeValues) {
           listener(this._inputPipeValues);
         }
       }, 0);
@@ -290,7 +290,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   }
 
   public getInput(pipeId: MetaframePipeId): any {
-    console.assert(pipeId != null);
+    console.assert(pipeId);
     return this._inputPipeValues[pipeId];
   }
 
@@ -299,7 +299,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   }
 
   public getOutput(pipeId: MetaframePipeId): any {
-    console.assert(pipeId != null);
+    console.assert(pipeId);
     return this._outputPipeValues[pipeId];
   }
 
@@ -309,8 +309,8 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
    * @param updateBlob :any        [description]
    */
   public setOutput(pipeId: MetaframePipeId, updateBlob: any): void {
-    console.assert(pipeId != null);
-    console.assert(updateBlob != null);
+    console.assert(pipeId);
+    console.assert(updateBlob);
 
     var outputs: MetaframeInputMap = {};
     outputs[pipeId] = updateBlob;
@@ -339,8 +339,8 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   }
 
   /** Tell the parent metapage our hash params changed */
-  _onHashUrlChange(_: HashChangeEvent) :void {
-    const payload :HashParamsUpdatePayload = {
+  _onHashUrlChange(_: HashChangeEvent): void {
+    const payload: MetapageEventUrlHashUpdate = {
       hash: window.location.hash,
       metaframe: this.id as MetaframeId,
     }
@@ -359,7 +359,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
       };
       window.parent.postMessage(message, "*");
     } else {
-      this.error("Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe");
+      this.log("Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe");
     }
   }
 
@@ -427,7 +427,7 @@ export class MetaframePlugin {
 
   onState(listener: (_: any) => void): () => void {
     const disposer = this._metaframe.onInput(METAPAGE_KEY_STATE, listener);
-    if (this.getState() != null) {
+    if (this.getState()) {
       listener(this.getState());
     }
     return disposer;
@@ -443,7 +443,7 @@ export class MetaframePlugin {
 
   onDefinition(listener: (a: any) => void): () => void {
     var disposer = this._metaframe.onInput(METAPAGE_KEY_DEFINITION, listener);
-    if (this.getDefinition() != null) {
+    if (this.getDefinition()) {
       listener(this.getDefinition());
     }
     return disposer;
