@@ -23,7 +23,8 @@ import {
   pageLoaded,
 } from "./MetapageTools";
 import { JsonRpcRequest } from "./jsonrpc2";
-import { MetapageEvents, MetapageShared } from "./Shared";
+import { MetapageShared } from "./Shared";
+import { MetapageEvents } from "./MetapageEvents";
 
 /**
  * Initialization sequence:
@@ -126,6 +127,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     this.setOutputs = this.setOutputs.bind(this);
     this.setPlugin = this.setPlugin.bind(this);
     this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
+    this.isDisposed = this.isDisposed.bind(this);
   }
 
   addListenerReturnDisposer(event: JsonRpcMethodsFromParent | MetapageEvents, listener: ListenerFn<any[]>): () => void {
@@ -276,6 +278,10 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
       }
     };
     return this.addListenerReturnDisposer(MetapageEvents.Outputs, fWrap);
+  }
+
+  public isDisposed() {
+    return this.inputs === undefined;
   }
 
   public dispose() {

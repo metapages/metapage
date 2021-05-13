@@ -77,12 +77,12 @@ dev:
 
 # npm link the package in dist for local development. In the other project: 'npm link @metapages/metapage'
 @link: unlink build
-    cd dist/{{NPM_MODULE}} && npm link
+    cd dist && npm link
     echo -e "👉 in the other project: 'npm link {{NPM_MODULE}}'"
 
 # unlink the package in dist from local development. You probably don't ever need to do this
 @unlink:
-    cd dist/{{NPM_MODULE}} && npm unlink
+    cd dist && npm unlink
 
 # Write library versions to the place where jekyll can consume: docs/_data/versions.yml
 _versions-write-versions-to-jekyll:
@@ -98,7 +98,7 @@ _versions-write-versions-to-jekyll:
     })()
 
 # List all published versions
-@npm_list:
+@list:
     npm view {{NPM_MODULE}} versions --json
 
 # If the version does not exist, publish the packages (metaframe+metapage)

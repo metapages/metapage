@@ -1,6 +1,5 @@
-import {MetaframeId, MetapageId, MetaframeInputMap, Versions} from "./all";
-import {JsonRpcRequest} from '../jsonrpc2';
-
+import { MetaframeId, MetapageId, MetaframeInputMap, Versions } from "./all";
+import { JsonRpcRequest } from '../jsonrpc2';
 
 export enum JsonRpcMethodsFromChild {
   InputsUpdate = "InputsUpdate",
@@ -8,17 +7,15 @@ export enum JsonRpcMethodsFromChild {
   SetupIframeClientRequest = "SetupIframeClientRequest",
   SetupIframeServerResponseAck = "SetupIframeServerResponseAck",
   // Plugin API
-  PluginRequest = "SetupIframeServerPluginRequestResponseAck" // See further definitions: ApiPayloadPluginRequest*
+  PluginRequest = "SetupIframeServerPluginRequestResponseAck", // See further definitions: ApiPayloadPluginRequest*
+  // Experimental feature
+  HashParamsUpdate = "HashParamsUpdate",
 }
 
 export enum JsonRpcMethodsFromParent {
   InputsUpdate = "InputsUpdate",
   MessageAck = "MessageAck",
   SetupIframeServerResponse = "SetupIframeServerResponse"
-}
-
-export enum OtherEvents {
-  Message = "Message"
 }
 
 export interface SetupIframeServerResponseData {

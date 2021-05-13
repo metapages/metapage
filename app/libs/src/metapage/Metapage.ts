@@ -17,10 +17,8 @@ import {
   JsonRpcMethodsFromChild,
   MinimumClientMessage,
   SetupIframeClientAckData,
-  OtherEvents,
 } from "./v0_3/JsonRpcMethods";
 import {
-
   log as MetapageToolsLog,
   getMatchingVersion,
   generateMetapageId,
@@ -28,22 +26,13 @@ import {
   convertToCurrentDefinition,
   pageLoaded,
 } from "./MetapageTools";
-import { MetapageEvents, MetapageShared } from "./Shared";
+import { MetapageShared } from "./Shared";
+import { MetapageEvents, MetapageEventDefinition, MetapageEventUrlHashUpdate } from "./MetapageEvents";
 import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
 
 export enum MetapageEventStateType {
   all = "all",
   delta = "delta"
-}
-
-export interface MetapageEventDefinition {
-  definition: MetapageDefinition;
-  metaframes: {
-    [key: string]: MetapageIFrameRpcClient;
-  };
-  plugins?: {
-    [key: string]: MetapageIFrameRpcClient;
-  };
 }
 
 interface MetapageStatePartial {
@@ -89,10 +78,13 @@ export class Metapage extends MetapageShared {
 
   // Event literals for users to listen to events
   public static readonly DEFINITION = MetapageEvents.Definition;
+  public static readonly DEFINITION_UPDATE_REQUEST = MetapageEvents.DefinitionUpdateRequest;
+  public static readonly ERROR = MetapageEvents.Error;
   public static readonly INPUTS = MetapageEvents.Inputs;
+  public static readonly MESSAGE = MetapageEvents.Message;
   public static readonly OUTPUTS = MetapageEvents.Outputs;
   public static readonly STATE = MetapageEvents.State;
-  public static readonly ERROR = MetapageEvents.Error;
+  public static readonly URL_HASH_UPDATE = MetapageEvents.UrlHashUpdate;
 
   public static from(metaPageDef: any, inputs?: any): Metapage {
     if (metaPageDef == null) {
@@ -112,7 +104,7 @@ export class Metapage extends MetapageShared {
 
   _id: MetapageId;
   // Easier to ensure this value is never null|undefined
-  _definition: MetapageDefinition = {version:Versions.V0_3, metaframes:{}};
+  // _definition: MetapageDefinition = { version: Versions.V0_3, metaframes: {} };
   _state: MetapageState = emptyState();
   _metaframes: {
     [key: string]: MetapageIFrameRpcClient;
@@ -172,7 +164,7 @@ export class Metapage extends MetapageShared {
 
     this.addPipe = this.addPipe.bind(this);
     this.dispose = this.dispose.bind(this);
-    this.getDefinition = this.getDefinition.bind(this);
+    // this.getDefinition = this.getDefinition.bind(this);
     this.addMetaframe = this.addMetaframe.bind(this);
     this.addPlugin = this.addPlugin.bind(this);
     this.getInputsFromOutput = this.getInputsFromOutput.bind(this);
@@ -203,6 +195,10 @@ export class Metapage extends MetapageShared {
     this.setMetaframeClientInputAndSentClientEvent = this.setMetaframeClientInputAndSentClientEvent.bind(this);
     this.setOutputStateOnly = this.setOutputStateOnly.bind(this);
     this.setState = this.setState.bind(this);
+    // TODO is updatePluginsWithDefinition necessary with the emitDefinitionEvent?
+    this.updatePluginsWithDefinition = this.updatePluginsWithDefinition.bind(this);
+    this._emitDefinitionEvent = this._emitDefinitionEvent.bind(this);
+
 
     // see ARCHITECTURE.md
     // when the page is loaded, only then start listening to messages from metaframes
@@ -212,7 +208,7 @@ export class Metapage extends MetapageShared {
     });
   }
 
-  addListenerReturnDisposer(event: MetapageEvents | OtherEvents, listener: ListenerFn<any[]>): () => void {
+  addListenerReturnDisposer(event: MetapageEvents, listener: ListenerFn<any[]>): () => void {
     super.addListener(event, listener);
     const disposer = () => {
       super.removeListener(event, listener);
@@ -251,14 +247,10 @@ export class Metapage extends MetapageShared {
   }
 
   public setDefinition(def: any, state?: MetapageState): Metapage {
-    // If the window hasn't finished loading, throw an error.
-    // if (!isPageLoaded()) {
-    //   throw new Error(ERROR_MESSAGE_PAGE_NOT_LOADED);
-    // }
-
     // Some validation
     // can metaframes and plugins share IDs? No.
     const newDefinition: MetapageDefinition = convertToCurrentDefinition(def);
+
     if (newDefinition.metaframes) {
       Object.keys(newDefinition.metaframes).forEach(metaframeId => {
         if (newDefinition.plugins && newDefinition.plugins.includes(metaframeId)) {
@@ -286,6 +278,7 @@ export class Metapage extends MetapageShared {
       // Doesn't exist? Destroy it
       if (!newDefinition.metaframes || !newDefinition.metaframes[metaframeId]) {
         // this removes the metaframe, pipes, inputs, caches
+
         this.removeMetaframe(metaframeId);
       }
     });
@@ -331,19 +324,24 @@ export class Metapage extends MetapageShared {
 
     // Send the event on the next loop to give listeners time to re-add
     // after this method returns.
-    const event: MetapageEventDefinition = {
-      definition: this._definition,
-      metaframes: this._metaframes,
-      plugins: this._plugins
-    };
     window.setTimeout(() => {
-      this.emit(MetapageEvents.Definition, event);
+      this._emitDefinitionEvent();
       if (state) {
         this.emit(MetapageEvents.State, this._state);
       }
     }, 0);
 
     return this;
+  }
+
+  // Convenience method
+  _emitDefinitionEvent() {
+    const event: MetapageEventDefinition = {
+      definition: this._definition,
+      metaframes: this._metaframes,
+      plugins: this._plugins
+    };
+    this.emit(MetapageEvents.Definition, event);
   }
 
   // do not expose, change definition instead
@@ -371,7 +369,7 @@ export class Metapage extends MetapageShared {
       const inputPipes = this._inputMap[otherMetaframeId];
       let index = 0;
       while (index <= inputPipes.length) {
-        if (inputPipes[index].metaframe == metaframeId) {
+        if (inputPipes[index].metaframe === metaframeId) {
           inputPipes.splice(index, 1);
         } else {
           index++;
@@ -793,6 +791,9 @@ export class Metapage extends MetapageShared {
         return;
       }
 
+      const metaframeOrPlugin = this.getMetaframeOrPlugin(metaframeId);
+      const isPlugin = this._plugins[metaframeId]!!;
+
       switch (method) {
         /**
          * An iframe is sending a connection request.
@@ -800,29 +801,22 @@ export class Metapage extends MetapageShared {
          * communication channel.
          */
         case JsonRpcMethodsFromChild.SetupIframeClientRequest:
-          if (this._metaframes[metaframeId]) {
-            this._metaframes[metaframeId].register();
-          } else if (this._plugins[metaframeId]) {
-            this._plugins[metaframeId].register();
+          if (metaframeOrPlugin) {
+            metaframeOrPlugin.register();
           }
           break;
 
         /* A client iframe responded */
         case JsonRpcMethodsFromChild.SetupIframeServerResponseAck:
           /* Send all inputs when a client has registered. */
-          if (jsonrpc.iframeId) {
-            var params = jsonrpc.params as SetupIframeClientAckData<any>;
-            var metaframe = this.getMetaframeOrPlugin(jsonrpc.iframeId);
-            metaframe.registered(params.version);
+          if (metaframeOrPlugin) {
+            const params = jsonrpc.params as SetupIframeClientAckData<any>;
+            metaframeOrPlugin.registered(params.version);
           }
           break;
 
         case JsonRpcMethodsFromChild.OutputsUpdate:
-          if (!metaframeId) {
-            break;
-          }
-
-          var outputs: MetaframeInputMap = jsonrpc.params;
+          const outputs: MetaframeInputMap = jsonrpc.params;
 
           if (this.debug)
             this.log(`outputs from ${metaframeId}: ${JSON.stringify(outputs, null, '  ').substr(0, 100)}`);
@@ -952,15 +946,38 @@ export class Metapage extends MetapageShared {
           }
           break;
         case JsonRpcMethodsFromChild.PluginRequest:
-          var pluginId = jsonrpc.iframeId;
-          if (!pluginId) {
-            break;
-          }
-          if (this._plugins[pluginId] && this._plugins[pluginId].hasPermissionsState()) {
-            this._plugins[pluginId].setInput(METAPAGE_KEY_STATE, this._state);
-            if (this.debug) {
-              this._plugins[pluginId].ack({ jsonrpc: jsonrpc, state: this._state });
+          if (isPlugin && metaframeOrPlugin) {
+            if (metaframeOrPlugin.hasPermissionsState()) {
+              metaframeOrPlugin.setInput(METAPAGE_KEY_STATE, this._state);
+              if (this.debug) {
+                metaframeOrPlugin.ack({ jsonrpc: jsonrpc, state: this._state });
+              }
             }
+          }
+          break;
+        case JsonRpcMethodsFromChild.HashParamsUpdate:
+          // Not really sure how to "automatically" process this right here
+          // It's a potential automatic security concern, IF we want to put credentials
+          // in the hash params (and we do)
+          // So for now, just emit an event, and let the parent context handle it
+          // In the current use case this app: https://github.com/metapages/metapage-app
+          // will listen for the event and update the definition accordingly
+          if (!isPlugin && metaframeOrPlugin) {
+            // Update in place the local references to the new metaframe URL with the
+            // new hash params:
+            //   - if you call metapage.getDefinition() it will include the new URL
+            //   - compare metapage.getDefinition() with any updates outside of this
+            //     context to decide wether to re-render or recreate
+            const hashParamsUpdatePayload: MetapageEventUrlHashUpdate = jsonrpc.params;
+            const url = new URL(metaframeOrPlugin.url);
+            url.hash = hashParamsUpdatePayload.hash;
+            // Update the local metaframe client reference
+            metaframeOrPlugin.url = url.href;
+            // Update the definition in place
+            this._definition.metaframes[hashParamsUpdatePayload.metaframe].url = url.href;
+            // TODO needed?
+            this.emit(MetapageEvents.UrlHashUpdate, jsonrpc.params);
+            this._emitDefinitionEvent();
           }
           break;
         default:
@@ -968,8 +985,17 @@ export class Metapage extends MetapageShared {
             this.log(`Unknown RPC method: "${method}"`);
           }
       }
-      this.emit(OtherEvents.Message, jsonrpc);
+      this.emit(MetapageEvents.Message, jsonrpc);
     }
+  }
+
+  updatePluginsWithDefinition() {
+    const currentMetapageDef = this.getDefinition();
+    Object.values(this._plugins).forEach(plugin => {
+      if (plugin.hasPermissionsDefinition()) {
+        updatePluginWithDefinition(plugin);
+      }
+    });
   }
 
   logInternal(o: any, color?: string, backgroundColor?: string) {
@@ -1005,6 +1031,10 @@ const bindPlugin = async (metapage: Metapage, plugin: MetapageIFrameRpcClient) =
   //      - if found, set the entire state on 'metapage/state' output
   try {
     const metaframeDef = await plugin.getDefinition();
+    // A new definition can be loaded before the above finishes
+    if (plugin.isDisposed()) {
+      return;
+    }
     // definition get/set
     // send the metapage/definition immediately
     // on getting a metapage/definition value, set that
@@ -1024,12 +1054,12 @@ const bindPlugin = async (metapage: Metapage, plugin: MetapageIFrameRpcClient) =
       if (metaframeDef.outputs) {
         var disposer = plugin.onOutput(METAPAGE_KEY_DEFINITION, definition => {
           // trace('_metapage.setDefinition, definition=${definition}');
-          metapage.setDefinition(definition);
+          metapage.emit(MetapageEvents.DefinitionUpdateRequest, definition);
+          // metapage.setDefinition(definition);
         });
         plugin._disposables.push(disposer);
       }
     }
-
 
     if (plugin.hasPermissionsState()) {
       // if the plugin sets the metapage state, set it here
@@ -1044,6 +1074,11 @@ const bindPlugin = async (metapage: Metapage, plugin: MetapageIFrameRpcClient) =
     console.error(err);
     metapage.emit(MetapageEvents.Error, `Failed to get plugin definition from "${plugin.getDefinitionUrl()}", error=${err}`);
   }
+}
+
+const updatePluginWithDefinition = (plugin: MetapageIFrameRpcClient) => {
+  const currentMetapageDef = plugin._metapage.getDefinition();
+  plugin.setInput(METAPAGE_KEY_DEFINITION, currentMetapageDef);
 }
 
 // const ERROR_MESSAGE_PAGE_NOT_LOADED = `
