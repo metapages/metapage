@@ -31,6 +31,10 @@ enum MetaframeEvents {
 
 }
 
+type MetaframeOptions = {
+  disableHashChangeEvent?:boolean;
+}
+
 export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFromChild> {
   public static readonly version = VERSION;
 
@@ -57,7 +61,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
    */
   id: string = window.name;
 
-  constructor() {
+  constructor(options?:MetaframeOptions) {
     super();
     this.debug = getUrlParamDEBUG();
     this._isIframe = isIframe();
@@ -85,7 +89,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
     this._resolveSetupIframeServerResponse = this._resolveSetupIframeServerResponse.bind(this);
     this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
     this.connected = this.connected.bind(this);
-    this.notifyOnHashUrlChange = this.notifyOnHashUrlChange.bind(this);
+    this.disableNotifyOnHashUrlChange = this.disableNotifyOnHashUrlChange.bind(this);
     this._onHashUrlChange = this._onHashUrlChange.bind(this);
 
     if (!this._isIframe) {
@@ -106,6 +110,10 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
       thisRef.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, { version: Metaframe.version });
       thisRef._state = MetaframeLoadingState.SentSetupIframeClientRequest;
     });
+
+    if (!(options?.disableHashChangeEvent)) {
+      window.addEventListener("hashchange", this._onHashUrlChange);
+    }
   }
 
   _resolveSetupIframeServerResponse(params: SetupIframeServerResponseData) {
@@ -222,11 +230,12 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   public dispose() {
     super.removeAllListeners();
     window.removeEventListener("message", this.onMessage);
-    window.removeEventListener("hashchange", this._onHashUrlChange);
+    this.disableNotifyOnHashUrlChange();
     // @ts-ignore
     this._inputPipeValues = undefined;
     // @ts-ignore
     this._outputPipeValues = undefined;
+
   }
 
   public addListener(event: MetaframeEvents | JsonRpcMethodsFromChild, listener: ListenerFn<any[]>) {
@@ -334,8 +343,8 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
    * our state changed, then notify the parent metapage so that the
    * parent metapage can save the state
    */
-  public notifyOnHashUrlChange(): void {
-    window.addEventListener("hashchange", this._onHashUrlChange);
+  public disableNotifyOnHashUrlChange(): void {
+    window.removeEventListener("hashchange", this._onHashUrlChange);
   }
 
   /** Tell the parent metapage our hash params changed */
