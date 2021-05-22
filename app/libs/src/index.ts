@@ -1,10 +1,6 @@
-import {VERSION} from "./metapage/Constants";
 export * from "./metapage/Metapage";
 export * from "./metapage/Metaframe";
 export * from "./metapage/MetapageTools";
-export * from "./metapage/v0_3/all";
-export * from "./metapage/v0_3/JsonRpcMethods";
 export * from "./metapage/Shared";
 export * from "./metapage/MetapageIFrameRpcClient";
-export * from "./metapage/MetapageEvents";
-export const version = VERSION;
+export * from "./metapage/v0_4";

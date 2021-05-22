@@ -1,5 +1,6 @@
-import { MetaframeId, MetapageId, MetaframeInputMap } from "./all";
-import { VersionsMetaframe as Versions } from "../v0_4";
+import { MetaframeId, MetapageId } from "./core";
+import { VersionsMetaframe, VersionsMetapage } from "./versions";
+import { MetaframeInputMap} from "./metapage";
 import { JsonRpcRequest } from '../jsonrpc2';
 
 export enum JsonRpcMethodsFromChild {
@@ -26,7 +27,7 @@ export interface SetupIframeServerResponseData {
     inputs: MetaframeInputMap
   };
   // Allow newer metaframes to handle older metapage versions
-  version: Versions;
+  version: VersionsMetapage;
   //is this metaframe a plugin?
   plugin: boolean;
 }
@@ -37,7 +38,7 @@ export interface MinimumClientMessage<T> extends JsonRpcRequest<T> {
 }
 
 export interface SetupIframeClientAckData<T> extends MinimumClientMessage<T> {
-  version: Versions;
+  version: VersionsMetaframe;
 }
 
 export interface ClientMessageRecievedAck<T> {

@@ -2,8 +2,8 @@
 import {
     MetaframeId,
     MetapageDefinition
-} from "./v0_3/all";
-import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
+} from ".";
+import { MetapageIFrameRpcClient } from "../MetapageIFrameRpcClient";
 
 export enum MetapageEvents {
     Inputs = "inputs",

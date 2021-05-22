@@ -1,8 +1,6 @@
 import { compare } from "compare-versions";
 import { URL_PARAM_DEBUG } from "./Constants";
-import { Versions, AllVersions, CurrentVersion } from "./MetaLibsVersion";
-import { MetaframeInputMap, MetaframeId, MetapageId, MetapageDefinition } from "./v0_3/all";
-
+import { MetapageDefinition, MetaframeInputMap, MetaframeId, MetapageId, VersionsMetapage, MetapageVersionCurrent } from "./v0_4";
 import { MetapageDefinition as V0_2MetapageDefinition } from "./v0_2/all";
 import { MetapageDefinition as V0_3MetapageDefinition } from "./v0_3/all";
 
@@ -22,27 +20,27 @@ export const convertToCurrentDefinition = (def: any): MetapageDefinition => {
   // Recursively convert up the version
   let updatedDefinition: MetapageDefinition;
   switch (getMatchingVersion(def.version)) {
-    case Versions.V0_2:
+    case VersionsMetapage.V0_2:
       {
         updatedDefinition = convertToCurrentDefinition(definition_v0_2_to_v0_3(def as V0_2MetapageDefinition));
         break;
       }
-    case Versions.V0_3:
+    case VersionsMetapage.V0_3:
       {
         updatedDefinition = def as MetapageDefinition; // Latest
         break;
       }
     default:
-      {
-        throw `Unknown metapage version: ${def.version}. Supported versions: [${AllVersions.join(", ")}]`;
-      }
+      console.warn(`Metapage definition version=${def.version} but we only know up to version ${MetapageVersionCurrent}. Assuming the definition is compatible, but it's the future!`);
+      updatedDefinition = def as MetapageDefinition; // Latest
+      break;
   }
   return updatedDefinition;
 };
 
 const definition_v0_2_to_v0_3 = (old: V0_2MetapageDefinition): V0_3MetapageDefinition => {
   // Exactly the same except v0.3 has plugins
-  old.version = Versions.V0_3;
+  old.version = VersionsMetapage.V0_3;
   return old;
 };
 
@@ -72,21 +70,19 @@ export const merge = (current: MetaframeInputMap, newInputs: MetaframeInputMap):
   return modified;
 };
 
-export const getMatchingVersion = (version: string): Versions => {
+export const getMatchingVersion = (version: string): VersionsMetapage => {
   if (version == "latest") {
-    return CurrentVersion;
-  } else if (compare(version, "0.0.x", "<")) {
-    return Versions.V0_0_1;
-  } else if (compare(version, "0.1.36", ">=") && compare(version, Versions.V0_2, "<")) {
-    return Versions.V0_1_0;
-  } else if (compare(version, "0.2", ">=") && compare(version, Versions.V0_3, "<")) {
-    return Versions.V0_2;
+    return MetapageVersionCurrent;
+  } else if (compare(version, "0.2", "<")) {
+    throw `Unknown version: ${version}`;
+  } else if (compare(version, "0.2", ">=") && compare(version, VersionsMetapage.V0_3, "<")) {
+    return VersionsMetapage.V0_2;
   } else if (compare(version, "0.3", ">=")) {
-    return Versions.V0_3;
+    return VersionsMetapage.V0_3;
   } else {
     // Return something, assume latest
-    console.log(`Could not match version=${version} to any known version, assuming ${CurrentVersion}`);
-    return CurrentVersion;
+    console.log(`Could not match version=${version} to any known version, assuming ${MetapageVersionCurrent}`);
+    return MetapageVersionCurrent;
   }
 };
 

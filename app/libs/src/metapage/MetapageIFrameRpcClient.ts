@@ -1,20 +1,19 @@
 import { EventEmitter, ListenerFn } from "eventemitter3";
-import { URL_PARAM_DEBUG, VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION } from "./Constants";
-import { Versions } from "./MetaLibsVersion";
+import { URL_PARAM_DEBUG, VERSION_METAPAGE, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION } from "./Constants";
 import {
+  JsonRpcMethodsFromParent,
+  SetupIframeServerResponseData,
+  MinimumClientMessage,
+  ClientMessageRecievedAck,
   MetaframeDefinition,
   MetaframeInputMap,
   MetaframePipeId,
   MetaframeId,
   MetapageId,
   MetapageInstanceInputs,
-} from "./v0_3/all";
-import {
-  JsonRpcMethodsFromParent,
-  SetupIframeServerResponseData,
-  MinimumClientMessage,
-  ClientMessageRecievedAck
-} from "./v0_3/JsonRpcMethods";
+  VersionsMetapage,
+  VersionsMetaframe,
+} from "./v0_4";
 import {
   stringToRgb,
   log as MetapageToolsLog,
@@ -24,7 +23,7 @@ import {
 } from "./MetapageTools";
 import { JsonRpcRequest } from "./jsonrpc2";
 import { MetapageShared } from "./Shared";
-import { MetapageEvents } from "./MetapageEvents";
+import { MetapageEvents } from "./v0_4/events";
 
 /**
  * Initialization sequence:
@@ -35,7 +34,7 @@ import { MetapageEvents } from "./MetapageEvents";
 export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEvents> {
   iframe: HTMLIFrameElement;
   id: MetaframeId;
-  version: Versions | undefined;
+  version: VersionsMetaframe | undefined;
   // Used for securing postMessage
   url: string;
   _color: string;
@@ -96,8 +95,15 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     // wait until the metapage page is loaded, otherwise
     // communication errors will likely occur
     const selfThis = this;
-    pageLoaded().then(() => {
+    pageLoaded().then(async () => {
       // parent page loaded, set the iframe src to start loading
+      // get the definition in case we need to set allow permissions
+      const metaframeDef = await selfThis.getDefinition();
+      // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
+      if (metaframeDef?.allow) {
+        console.log(`metaframeDef.allow=${metaframeDef.allow}`);
+        selfThis.iframe.allow = metaframeDef.allow;
+      }
       selfThis.iframe.src = this.url;
     });
 
@@ -174,15 +180,21 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
    * (how to operate and connect the metaframe)
    * @returns
    */
-  public async getDefinition(): Promise<MetaframeDefinition> {
+  public async getDefinition(): Promise<MetaframeDefinition|undefined> {
     if (this._definition) {
       return this._definition;
     }
     var url = this.getDefinitionUrl();
-    const response = await window.fetch(url);
-    const metaframeDef = await response.json();
-    this._definition = metaframeDef;
-    return metaframeDef;
+    try {
+      // this should be retried?
+      const response = await window.fetch(url);
+      const metaframeDef = await response.json();
+      this._definition = metaframeDef;
+      return this._definition;
+    } catch(err) {
+      // hmm silent on failures to load the metaframe.json?
+      console.error(`Failed to download metaframe.json from: ${url}`);
+    }
   }
 
   public setInput(name: MetaframePipeId, inputBlob: any) {
@@ -329,21 +341,19 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
       state: {
         inputs: this.inputs
       },
-      version: VERSION as Versions
+      version: VERSION_METAPAGE as VersionsMetapage
     };
     this.sendRpcInternal(JsonRpcMethodsFromParent.SetupIframeServerResponse, response);
   }
 
-  public registered(version: Versions) {
+  public registered(version: VersionsMetaframe) {
     if (this._loaded) {
       return;
     }
-    this.version = version;
-    // Only very old versions don't send their version info
-    // Obsoleted?
-    if (this.version == null) {
-      this.version = Versions.V0_1_0;
+    if (!version) {
+      throw 'Cannot register without a version';
     }
+    this.version = version;
     this._loaded = true;
     while (this._onLoaded && this._onLoaded.length > 0) {
       this._onLoaded.pop()!();
