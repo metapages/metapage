@@ -1,12 +1,10 @@
 import { EventEmitter } from "eventemitter3";
 import {
   JsonRpcMethodsFromParent,
-} from "./v0_3/JsonRpcMethods";
-import {
-  MetapageDefinition
-} from "./v0_3/all";
-import { Versions } from "./MetaLibsVersion";
-import { MetapageEvents } from "./MetapageEvents";
+  MetapageDefinition,
+  VersionsMetapage
+} from "./v0_4";
+import { MetapageEvents } from "./v0_4/events";
 
 export const isIframe = (): boolean => {
   //http://stackoverflow.com/questions/326069/how-to-identify-if-a-webpage-is-being-loaded-inside-an-iframe-or-directly-into-t
@@ -20,7 +18,7 @@ export const isIframe = (): boolean => {
 export class MetapageShared extends EventEmitter<MetapageEvents | JsonRpcMethodsFromParent> {
 
   // Easier to ensure this value is never null|undefined
-  _definition: MetapageDefinition = { version: Versions.V0_3, metaframes: {} };
+  _definition: MetapageDefinition = { version: VersionsMetapage.V0_3, metaframes: {} };
 
   constructor() {
     super();

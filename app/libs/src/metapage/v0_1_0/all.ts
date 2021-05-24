@@ -1,4 +1,4 @@
-import {Versions} from "../MetaLibsVersion";
+import {VersionsMetaframe as Versions} from "../v0_4/versions";
 
 export type MetaframePipeId = string;
 export type MetaframeId = string;
@@ -79,9 +79,7 @@ export interface MetaframeInstanceAnonymous {
 }
 
 export interface MetaframeInstance extends MetaframeInstanceAnonymous {
-  //This id is only used when the metaframe is part of
-  //a metapage, i.e. it's an "instance" of the base metaframe
-  id: MetaframeId;
+  url: string;
   //This is starting data, a way to configure and
   //save metaframe instance state independent of pipes
   //and not part of the actual static definition.

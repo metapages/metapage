@@ -1,6 +1,5 @@
 import { MetapageId} from '../v0_2/all';
 import { MetapageDefinition as V0_2MetapageDefinition } from '../v0_2/all';
-export {Versions, CurrentVersion, AllVersions} from '../MetaLibsVersion';
 
 export type Url=string;
 

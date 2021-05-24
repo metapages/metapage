@@ -1,8 +1,10 @@
 import { ListenerFn } from "eventemitter3";
 import minimatch from "minimatch";
-import { VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION } from "./Constants";
-import { Versions } from "./MetaLibsVersion";
+import { VERSION_METAPAGE, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION } from "./Constants";
 import {
+  JsonRpcMethodsFromChild,
+  MinimumClientMessage,
+  SetupIframeClientAckData,
   MetaframeInstance,
   PipeInput,
   MetapageOptions,
@@ -11,13 +13,9 @@ import {
   MetaframeId,
   MetapageId,
   MetapageInstanceInputs,
-  MetapageDefinition
-} from "./v0_3/all";
-import {
-  JsonRpcMethodsFromChild,
-  MinimumClientMessage,
-  SetupIframeClientAckData,
-} from "./v0_3/JsonRpcMethods";
+  MetapageDefinition,
+  VersionsMetapage
+} from "./v0_4";
 import {
   log as MetapageToolsLog,
   getMatchingVersion,
@@ -27,7 +25,7 @@ import {
   pageLoaded,
 } from "./MetapageTools";
 import { MetapageShared } from "./Shared";
-import { MetapageEvents, MetapageEventDefinition, MetapageEventUrlHashUpdate } from "./MetapageEvents";
+import { MetapageEvents, MetapageEventDefinition, MetapageEventUrlHashUpdate } from "./v0_4/events";
 import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
 
 export enum MetapageEventStateType {
@@ -60,7 +58,7 @@ const emptyState = (): MetapageState => {
     }
   };
 };
-export const getLibraryVersionMatching = (version: string): Versions => {
+export const getLibraryVersionMatching = (version: string): VersionsMetapage => {
   return getMatchingVersion(version);
 };
 
@@ -74,7 +72,7 @@ const CONSOLE_BACKGROUND_COLOR_DEFAULT = "bcbcbc";
 // export class Metapage extends EventEmitter<MetapageEvents | JsonRpcMethodsFromParent | OtherEvents> {
 export class Metapage extends MetapageShared {
   // The current version is always the latest
-  public static readonly version = VERSION;
+  public static readonly version = VERSION_METAPAGE;
 
   // Event literals for users to listen to events
   public static readonly DEFINITION = MetapageEvents.Definition;
@@ -369,7 +367,7 @@ export class Metapage extends MetapageShared {
       const inputPipes = this._inputMap[otherMetaframeId];
       let index = 0;
       while (index <= inputPipes.length) {
-        if (inputPipes[index].metaframe === metaframeId) {
+        if (inputPipes[index]?.metaframe === metaframeId) {
           inputPipes.splice(index, 1);
         } else {
           index++;
@@ -488,7 +486,7 @@ export class Metapage extends MetapageShared {
       throw "Plugin missing url";
     }
 
-    var iframeClient = new MetapageIFrameRpcClient(this, url, url, this._id, this._consoleBackgroundColor, this.debug).setInputs(this._state.plugins.inputs[url]).setMetapage(this).setPlugin();
+    const iframeClient = new MetapageIFrameRpcClient(this, url, url, this._id, this._consoleBackgroundColor, this.debug).setInputs(this._state.plugins.inputs[url]).setMetapage(this).setPlugin();
     bindPlugin(this, iframeClient);
     this._plugins[url] = iframeClient;
 
@@ -895,31 +893,8 @@ export class Metapage extends MetapageShared {
             // Set the internal inputs state first so that anything that
             // responds to events will get the updated state if requested
             // Currently on for setting metaframe inputs that haven't loaded yet
-            // logInternal('metaframe ${metaframeId} _metaframes[metaframeId] ');
             this.setInputStateOnly(metaframeId, inputs);
-
-            switch (this._metaframes[metaframeId].version) {
-              // These old versions create a circular loop of inputs updating
-              // if you just set the inputs here. Those internal metaframes
-              // already have notified their own listeners, so just emit
-              // events but do not process the inputs further
-              // Emitting the events causes the internal state to get updated.
-              case Versions.V0_0_1:
-              case Versions.V0_1_0:
-                this._metaframes[metaframeId].emit(MetapageEvents.Inputs, inputs);
-                if (this.listenerCount(MetapageEvents.Inputs) > 0) {
-                  var metaframeInputs: MetapageInstanceInputs = {};
-                  metaframeInputs[metaframeId] = inputs;
-                  this.emit(MetapageEvents.Inputs, metaframeInputs);
-                }
-                break;
-              default:
-                // New versions can safely set their inputs here, their
-                // own internal listeners have not yet been notified.
-                // logInternal('metaframe ${metaframeId} setInputs ' + JSON.stringify(inputs, null, "  "));
-                this._metaframes[metaframeId].setInputs(inputs);
-                break;
-            }
+            this._metaframes[metaframeId].setInputs(inputs);
             this.emit(MetapageEvents.State, this._state);
             if (this.debug) {
               this._metaframes[metaframeId].ack({ jsonrpc: jsonrpc, state: this._state });
@@ -1031,6 +1006,9 @@ const bindPlugin = async (metapage: Metapage, plugin: MetapageIFrameRpcClient) =
   //      - if found, set the entire state on 'metapage/state' output
   try {
     const metaframeDef = await plugin.getDefinition();
+    if (!metaframeDef) {
+      throw `${plugin.url}`
+    }
     // A new definition can be loaded before the above finishes
     if (plugin.isDisposed()) {
       return;
@@ -1049,15 +1027,18 @@ const bindPlugin = async (metapage: Metapage, plugin: MetapageIFrameRpcClient) =
       // Set the metapage definition now, otherwise it will not ever get
       // the event.
       var currentMetapageDef = metapage.getDefinition();
-      plugin.setInput(METAPAGE_KEY_DEFINITION, currentMetapageDef);
+      if (currentMetapageDef) {
 
-      if (metaframeDef.outputs) {
-        var disposer = plugin.onOutput(METAPAGE_KEY_DEFINITION, definition => {
-          // trace('_metapage.setDefinition, definition=${definition}');
-          metapage.emit(MetapageEvents.DefinitionUpdateRequest, definition);
-          // metapage.setDefinition(definition);
-        });
-        plugin._disposables.push(disposer);
+        plugin.setInput(METAPAGE_KEY_DEFINITION, currentMetapageDef);
+
+        if (metaframeDef.outputs) {
+          var disposer = plugin.onOutput(METAPAGE_KEY_DEFINITION, definition => {
+            // trace('_metapage.setDefinition, definition=${definition}');
+            metapage.emit(MetapageEvents.DefinitionUpdateRequest, definition);
+            // metapage.setDefinition(definition);
+          });
+          plugin._disposables.push(disposer);
+        }
       }
     }
 

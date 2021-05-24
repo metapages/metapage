@@ -1,19 +1,21 @@
 import { EventEmitter, ListenerFn } from "eventemitter3";
-import { VERSION, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION } from "./Constants";
-import { Versions } from "./MetaLibsVersion";
-import { MetaframeInputMap, MetaframePipeId, MetapageId } from "./v0_3/all";
+import { VERSION_METAFRAME, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION } from "./Constants";
 import {
+  MetaframeId,
+  MetaframeInputMap,
+  MetaframePipeId,
+  MetapageId,
   ApiPayloadPluginRequest,
   ApiPayloadPluginRequestMethod,
   JsonRpcMethodsFromParent,
   JsonRpcMethodsFromChild,
   SetupIframeServerResponseData,
   MinimumClientMessage,
-} from "./v0_3/JsonRpcMethods";
+  VersionsMetapage
+} from "./v0_4";
 import { getUrlParamDEBUG, stringToRgb, log as MetapageToolsLog, merge, pageLoaded } from "./MetapageTools";
 import { isIframe } from "./Shared";
-import { MetaframeId } from './v0_0_1/all';
-import { MetapageEventUrlHashUpdate } from "./MetapageEvents";
+import { MetapageEventUrlHashUpdate } from "./v0_4/events";
 
 // TODO combine/unify MetaframeEvents and MetaframeLoadingState
 enum MetaframeLoadingState {
@@ -28,7 +30,6 @@ enum MetaframeEvents {
   Input = "input",
   Inputs = "inputs",
   Message = "message"
-
 }
 
 type MetaframeOptions = {
@@ -36,7 +37,7 @@ type MetaframeOptions = {
 }
 
 export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFromChild> {
-  public static readonly version = VERSION;
+  public static readonly version = VERSION_METAFRAME;
 
   public static readonly ERROR = MetaframeEvents.Error;
   public static readonly CONNECTED = MetaframeEvents.Connected;
@@ -47,7 +48,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   _inputPipeValues: MetaframeInputMap = {};
   _outputPipeValues: MetaframeInputMap = {};
   _parentId: MetapageId | undefined;
-  _parentVersion: Versions | undefined;
+  _parentVersion: VersionsMetapage | undefined;
   _isIframe: boolean;
   _state: MetaframeLoadingState = MetaframeLoadingState.WaitingForPageLoad;
 

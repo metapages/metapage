@@ -1,4 +1,4 @@
-import {Versions} from "../MetaLibsVersion";
+import {VersionsMetaframe as Versions} from "../v0_4/versions";
 
 export type MetaframePipeId = string;
 export type MetaframeId = string;
