@@ -175,10 +175,12 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
   }
 
   /**
-   * Cached. Fetches <metaframe url>/metaframe.json
+   * Cached in memory. Fetches <metaframe url>/metaframe.json
    * metaframe.json defines inputs/outputs and other metadata
    * (how to operate and connect the metaframe)
-   * @returns
+   * It is optional in that the metaframe will still work without it
+   * but advanced features e.g. allow permissions won't work and
+   * anything relying on metadata.
    */
   public async getDefinition(): Promise<MetaframeDefinition|undefined> {
     if (this._definition) {
@@ -188,9 +190,11 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     try {
       // this should be retried?
       const response = await window.fetch(url);
-      const metaframeDef = await response.json();
-      this._definition = metaframeDef;
-      return this._definition;
+      if (response.ok) {
+        const metaframeDef = await response.json();
+        this._definition = metaframeDef;
+        return this._definition;
+      }
     } catch(err) {
       // hmm silent on failures to load the metaframe.json?
       console.error(`Failed to download metaframe.json from: ${url}`);
