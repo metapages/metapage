@@ -469,6 +469,15 @@ export class Metapage extends MetapageShared {
     var iframeClient = new MetapageIFrameRpcClient(this, definition.url, metaframeId, this._id, this._consoleBackgroundColor, this.debug).setMetapage(this);
     this._metaframes[metaframeId] = iframeClient;
 
+    iframeClient.addListener(MetapageEvents.Error, (err) => {
+      // These can be displayed
+      this.emit(MetapageEvents.Error, {
+        metaframeId: iframeClient.id,
+        metaframeUrl: iframeClient.url,
+        error: err,
+      });
+    });
+
     // add the pipes
     if (definition.inputs) {
       definition.inputs.forEach(input => this.addPipe(metaframeId, input));

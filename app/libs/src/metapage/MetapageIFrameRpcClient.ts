@@ -101,7 +101,6 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
       const metaframeDef = await selfThis.getDefinition();
       // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
       if (metaframeDef?.allow) {
-        console.log(`metaframeDef.allow=${metaframeDef.allow}`);
         selfThis.iframe.allow = metaframeDef.allow;
       }
       selfThis.iframe.src = this.url;
@@ -194,10 +193,12 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
         const metaframeDef = await response.json();
         this._definition = metaframeDef;
         return this._definition;
+      } else {
+        this.emit(MetapageEvents.Error, `Failed to fetch: ${url}\nStatus: ${response.status}\nStatus text: ${response.statusText}`);
       }
     } catch(err) {
       // hmm silent on failures to load the metaframe.json?
-      console.error(`Failed to download metaframe.json from: ${url}`);
+      this.emit(MetapageEvents.Error, `Failed to fetch: ${url}\nError: ${err}`);
     }
   }
 
@@ -434,7 +435,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     if (this.iframe) {
       this.sendOrBufferPostMessage(messageJSON);
     } else {
-      this._metapage.error("Cannot send to child iframe messageJSON=${JSON.stringify(messageJSON).substr(0, 200)}");
+      this._metapage.error(`Cannot send to child iframe messageJSON=${JSON.stringify(messageJSON).substr(0, 200)}`);
     }
   }
 
@@ -461,11 +462,3 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     }
   }
 }
-
-// const ERROR_MESSAGE_PAGE_NOT_LOADED = `
-// The page must be loaded before metaframes(iframes) can be created:
-//     import { pageLoaded } from "@metapages/metapage";
-//     // somewhere in your code
-//     await pageLoaded();
-//     Metapage.from(... <definition>...)
-// `
