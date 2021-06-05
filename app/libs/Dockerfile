@@ -102,7 +102,7 @@ RUN npm install -g npm@7.6.0
 WORKDIR /workspace/libs
 ADD package.json ./
 ADD package-lock.json ./
-RUN npm i
+RUN npm i --silent
 
 # see https://github.com/parcel-bundler/parcel/issues/2031
 ENV PARCEL_WORKERS=1

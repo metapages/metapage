@@ -13,7 +13,7 @@ doT.templateSettings.strip = false
 const getMetapageVersions = async (args) => {
   const {includeLocal} = args || {};
   const package = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8')).name;
-  const { stdout, stderr } = await exec(`npm show ${package} versions --json`);
+  const { stdout, stderr } = await exec(`npm --silent show ${package} versions --json`);
   if (stderr) {
     console.error(`error: ${stderr}`);
     throw `error: ${stderr}`;
