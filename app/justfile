@@ -16,7 +16,8 @@ export DOCKER_TAG               := env_var_or_default("DOCKER_TAG", "local")
 # This line is duplicated in ci/justfile
 export APP_FQDN                    := env_var_or_default("APP_FQDN", "app1.dev")
 # Default to the local development stack, publishing typically is only DOCKER_COMPOSE="docker-compose -f docker-compose.yml"
-export DOCKER_COMPOSE              := env_var_or_default("DOCKER_COMPOSE", "docker-compose -f docker-compose.yml -f docker-compose.override.yml")
+export DOCKER_COMPOSE              := env_var_or_default("DOCKER_COMPOSE", "docker-compose -f docker-compose.yml")
+export DOCKER_COMPOSE_DEV          := DOCKER_COMPOSE + " -f docker-compose.override.yml"
 # App level env vars for ports etc
 # This line is duplicated in ci/justfile
 export APP_PORT                    := env_var_or_default("APP_PORT", "443")
@@ -117,15 +118,15 @@ images command="list" +images="":
     just _up {{args}}
 
 @_up +args="":
-    {{DOCKER_COMPOSE}} up --remove-orphans {{args}}
+    {{DOCKER_COMPOSE_DEV}} up --remove-orphans {{args}}
 
 # 'docker-compose down' (with correct env vars)
 down +args="":
-    {{DOCKER_COMPOSE}} down {{args}}
+    {{DOCKER_COMPOSE_DEV}} down {{args}}
 
 # 'docker-compose {{args}}' (with correct env vars)
 dc +args="":
-    DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} {{args}}
+    DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE_DEV}} {{args}}
 
 # Open a browser tab pointing to the stack (assumes stack is running)
 @open:
