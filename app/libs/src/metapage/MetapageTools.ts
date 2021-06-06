@@ -1,5 +1,5 @@
 import { compare } from "compare-versions";
-import { URL_PARAM_DEBUG } from "./Constants";
+import { MetapageHashParams } from "./Shared";
 import { MetapageDefinition, MetaframeInputMap, MetaframeId, MetapageId, VersionsMetapage, MetapageVersionCurrent } from "./v0_4";
 import { MetapageDefinition as V0_2MetapageDefinition } from "./v0_2/all";
 import { MetapageDefinition as V0_3MetapageDefinition } from "./v0_3/all";
@@ -86,15 +86,20 @@ export const getMatchingVersion = (version: string): VersionsMetapage => {
   }
 };
 
-export const getUrlParam = (key: string): string | null => {
+export const getUrlParam = (key: MetapageHashParams): string | null => {
   if (!window.location.search) {
     return null;
   }
   return new URLSearchParams(window.location.search).get(key);
 };
 
-export const getUrlParamDEBUG = (): boolean => {
-  return new URLSearchParams(window.location.search).has(URL_PARAM_DEBUG);
+export const getUrlParamDebug = (): boolean => {
+  return new URLSearchParams(window.location.search).has(MetapageHashParams.mp_debug);
+};
+
+export const isDebugFromUrlsParams = (): boolean => {
+  const param = new URLSearchParams(window.location.search).get(MetapageHashParams.mp_debug);
+  return param === "true" || param === "1";
 };
 
 export const existsAnyUrlParam = (k: string[]): boolean => {

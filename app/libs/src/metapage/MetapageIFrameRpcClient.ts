@@ -1,5 +1,5 @@
 import { EventEmitter, ListenerFn } from "eventemitter3";
-import { URL_PARAM_DEBUG, VERSION_METAPAGE, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION } from "./Constants";
+import { VERSION_METAPAGE, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION } from "./Constants";
 import {
   JsonRpcMethodsFromParent,
   SetupIframeServerResponseData,
@@ -17,12 +17,11 @@ import {
 import {
   stringToRgb,
   log as MetapageToolsLog,
-  existsAnyUrlParam,
   merge,
   pageLoaded,
 } from "./MetapageTools";
 import { JsonRpcRequest } from "./jsonrpc2";
-import { MetapageShared } from "./Shared";
+import { MetapageShared, MetapageHashParams } from "./Shared";
 import { MetapageEvents } from "./v0_4/events";
 
 /**
@@ -74,16 +73,13 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     // Add the custom URL params
     var urlBlob = new URL(this.url);
     if (debug) {
-      urlBlob.searchParams.set(URL_PARAM_DEBUG, "1");
+      urlBlob.searchParams.set(MetapageHashParams.mp_debug, "true");
     }
     this.url = urlBlob.href;
 
     this.id = iframeId;
 
-    this._debug = debug || existsAnyUrlParam([
-      "DEBUG_METAFRAMES", "debug_metaframes", "debug_" + this.id,
-      "DEBUG_" + this.id
-    ]);
+    this._debug = debug;
 
     this._parentId = parentId;
     this._color = stringToRgb(this.id);
@@ -420,7 +416,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     } else {
       s = JSON.stringify(o);
     }
-    MetapageToolsLog(`Metapage[${this._parentId}] Metaframe[$id] ${s}`, this._color, this._consoleBackgroundColor);
+    MetapageToolsLog(`Metapage[${this._parentId}] Metaframe[${this.id}] ${s}`, this._color, this._consoleBackgroundColor);
   }
 
   sendRpcInternal(method: string, params: any) {

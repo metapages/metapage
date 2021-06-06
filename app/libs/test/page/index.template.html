@@ -48,7 +48,7 @@ var VERSION = urlParams.get('VERSION');
     VERSION = VERSION == null ? 'latest' : VERSION;
 {{?}}
 
-const debug = ['DEBUG', 'debug', 'MP_DEBUG', 'mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag));
+const debug = ['debug', 'mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag));
 
 document.getElementById('version').innerText = `metapage v${VERSION}`;
 var head = document.getElementsByTagName('head').item(0);
@@ -85,17 +85,17 @@ head.appendChild(script);
 // metapage will verify that all metaframes added their versions
 // For this, we need all current supported library versions.
 // The versions data is created and commmited (../versions.json)
-const VERSIONS_METAFRAME = [];
+let VERSIONS_METAFRAME = [];
 {{~ it.versions :k}}
 VERSIONS_METAFRAME.push("{{=k}}");
 {{~}}
-
 
 {{? it.environment !== "production" }}
 // Test the current version inputs *and* outputs
 VERSIONS_METAFRAME.unshift('latestFirst');
 VERSIONS_METAFRAME.push('latest');
 {{?}}
+
 
 var PAGEURL = new URL(window.location.href);
 
@@ -122,7 +122,7 @@ const getStatusText = (err) => {
 };
 
 const setStatus = (err) => {
-    if (!err && (PAGEURL.searchParams.has('debug') || PAGEURL.searchParams.has('DEBUG'))) {
+    if (!err && (PAGEURL.searchParams.has('mp_debug') || PAGEURL.searchParams.has('mp_DEBUG'))) {
         console.log(TESTS.map((test) => test.description + ':' + test.getText()).join(""));
     }
     document.getElementById('status').innerHTML = getStatusText(err);
@@ -204,15 +204,22 @@ TESTS = [
         (metapage) => { // metapage instance
             return new Promise((resolve, reject) => {
                 const lastMetaframe = metapage.getMetaframe(VERSIONS_METAFRAME[VERSIONS_METAFRAME.length - 1]);
+                if (!lastMetaframe) {
+                    throw `metapage.getMetaframe(${VERSIONS_METAFRAME[VERSIONS_METAFRAME.length - 1]}) is undefined. VERSIONS_METAFRAME=${VERSIONS_METAFRAME}`;
+                }
+
                 let hasFinalOutputs = false;
                 let disposeListener;
                 disposeListener = lastMetaframe.onOutputs((outputs) => {
-                    if (outputs['output']) {
+
+                    if (outputs['output1'] && outputs['output2']) {
                         hasFinalOutputs = true;
-                        let finalVersions = outputs['output'].versions;
+                        const finalVersions1 = JSON.stringify(outputs['output1'].versions);
+                        const finalVersions2 = JSON.stringify(outputs['output2'].versions);
+                        const versionsTested = JSON.stringify(VERSIONS_METAFRAME)
                         // Correct for needing 'latest' twice but not using the key 'latest' twice
-                        const versionsTested = VERSIONS_METAFRAME;//.map(e => e.replace('latestFirst', 'latest'));
-                        if (JSON.stringify(versionsTested) == JSON.stringify(finalVersions)) {
+                        // const versionsTested = VERSIONS_METAFRAME;//.map(e => e.replace('latestFirst', 'latest'));
+                        if (versionsTested === finalVersions1 && versionsTested === finalVersions2) {
                             // don't allow calling resolve again
                             disposeListener();
                             // TEST_OK_INPUTS_PASS_THROUGH = true;
@@ -221,7 +228,7 @@ TESTS = [
                         } else {
                             // don't allow calling resolve again
                             disposeListener();
-                            reject(`versionsTested(${JSON.stringify(versionsTested)}) != finalVersions('${finalVersions})'`);
+                            reject(`versionsTested=${versionsTested}) but\nfinalVersions1=${finalVersions1}\nfinalVersions2=${finalVersions2}`);
                             setStatus();
                         }
                     }
@@ -229,7 +236,8 @@ TESTS = [
 
                 // Start the train. Metaframes will add their version to the
                 // array and pass it on
-                const inputs = {[VERSIONS_METAFRAME[0]] : {input: {versions:[]}} };
+                // The metapage inputs uses the metaframe id as the key, and here metaframe ids are versions
+                const inputs = {[VERSIONS_METAFRAME[0]] : {input1: {versions:[]}, input2: {versions:[]}} };
                 // metapage.once('state', () => {
                 //     console.log(`After setting initial inputs ${JSON.stringify(metapage.getState())}`);
                 // });
@@ -265,13 +273,13 @@ TESTS = [
                         const expectedOutputVersions = JSON.stringify(VERSIONS_METAFRAME.slice(0, i + 1));
 
                         return (inputs[metapageId]
-                                && inputs[metapageId]['input']
-                                && inputs[metapageId].input.versions
-                                && JSON.stringify(inputs[metapageId].input.versions) == expectedInputVersions
+                                && inputs[metapageId]['input1']
+                                && inputs[metapageId].input1.versions
+                                && JSON.stringify(inputs[metapageId].input1.versions) == expectedInputVersions
                                 && outputs[metapageId]
-                                && outputs[metapageId].output
-                                && outputs[metapageId].output.versions
-                                && JSON.stringify(outputs[metapageId].output.versions) === expectedOutputVersions);
+                                && outputs[metapageId].output1
+                                && outputs[metapageId].output1.versions
+                                && JSON.stringify(outputs[metapageId].output1.versions) === expectedOutputVersions);
                     });
 
                     passed = passed.reduce((current, testPassed) => current && testPassed, true);
@@ -402,12 +410,18 @@ window.onload = function() {
             metaframesBlob[versionMetaframe].inputs = [
                 {
                     metaframe: VERSIONS_METAFRAME[index - 1],
-                    source: 'output',
-                    target: 'input',
+                    source: 'output1',
+                    target: 'input1',
+                },
+                {
+                    metaframe: VERSIONS_METAFRAME[index - 1],
+                    source: 'output2',
+                    target: 'input2',
                 }
             ]
         }
     });
+
 
     // create a plugin for each version (the test metaframe is also a plugin)
     // the plugin metaframes themselve test plugin specific operations

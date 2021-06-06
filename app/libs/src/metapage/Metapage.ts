@@ -23,6 +23,7 @@ import {
   existsAnyUrlParam,
   convertToCurrentDefinition,
   pageLoaded,
+  isDebugFromUrlsParams,
 } from "./MetapageTools";
 import { MetapageShared } from "./Shared";
 import { MetapageEvents, MetapageEventDefinition, MetapageEventUrlHashUpdate } from "./v0_4/events";
@@ -112,8 +113,11 @@ export class Metapage extends MetapageShared {
   } = {}; // <Url, MetapageIFrameRpcClient>
   _pluginOrder: Url[] = [];
 
-  debug: boolean = false;
+  debug: boolean = isDebugFromUrlsParams();
   _consoleBackgroundColor: string;
+
+  // Useful for debugging duplicate messages
+  _internalReceivedMessageCounter: number = 0;
 
   // for caching input lookups
   _cachedInputLookupMap: {
@@ -781,6 +785,7 @@ export class Metapage extends MetapageShared {
     return val;
   }
 
+
   onMessage(e: MessageEvent) {
     // any other type of messages are ignored
     // maybe in the future we can pass around strings or ArrayBuffers
@@ -800,6 +805,13 @@ export class Metapage extends MetapageShared {
 
       const metaframeOrPlugin = this.getMetaframeOrPlugin(metaframeId);
       const isPlugin = this._plugins[metaframeId]!!;
+
+      // debugging: track messsages internally
+      (jsonrpc as any)['_messageCount'] = ++this._internalReceivedMessageCounter;
+
+      if (this.debug) {
+        this.log(`processing ${JSON.stringify(jsonrpc, null, '  ').substr(0, 500)}`);
+      }
 
       switch (method) {
         /**
@@ -825,9 +837,6 @@ export class Metapage extends MetapageShared {
         case JsonRpcMethodsFromChild.OutputsUpdate:
           const outputs: MetaframeInputMap = jsonrpc.params;
 
-          if (this.debug)
-            this.log(`outputs from ${metaframeId}: ${JSON.stringify(outputs, null, '  ').substr(0, 100)}`);
-
           if (this._metaframes[metaframeId]) {
             var iframe = this._metaframes[metaframeId];
 
@@ -839,20 +848,30 @@ export class Metapage extends MetapageShared {
             this.emit(MetapageEvents.State, this._state);
 
             // cached lookup of where those outputs are going
+            // Multiple outputs going to multiple inputs on the same metaframe must
+            // arrive as a single blob
             var modified = false;
-            Object.keys(outputs).forEach(outputKey => {
+            const outputKeys = Object.keys(outputs);
+            const collectedOutputs:{[key in string] : MetaframeInputMap} = {};
+            outputKeys.forEach((outputKey,i) => {
               const targets: MetaframeInputTargetsFromOutput[] = this.getInputsFromOutput(metaframeId!, outputKey);
               if (targets.length > 0) {
                 targets.forEach(target => {
-                  var inputBlob: MetaframeInputMap = {};
-                  inputBlob[target.pipe] = outputs[outputKey];
+                  if (!collectedOutputs[target.metaframe]) {
+                    collectedOutputs[target.metaframe] = {};
+                  }
+                  collectedOutputs[target.metaframe][target.pipe] = outputs[outputKey];
                   // update the metapage state first (no events)
                   this.setInputStateOnly(target.metaframe, target.pipe, outputs[outputKey]);
                   // setting the individual inputs sends an event
-                  this._metaframes[target.metaframe].setInputs(inputBlob);
                   modified = true;
+
                 });
               }
+            });
+            // then actually set the inputs once collected
+            Object.keys(collectedOutputs).forEach(metaframeId => {
+              this._metaframes[metaframeId].setInputs(collectedOutputs[metaframeId]);
             });
             // only send a state event if downstream inputs were modified
             if (modified) {

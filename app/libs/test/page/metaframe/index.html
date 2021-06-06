@@ -35,7 +35,7 @@ if (VERSION.startsWith('latest')) {
     VERSION = 'latest';
 }
 
-const debug = ['DEBUG', 'debug', 'MP_DEBUG', 'mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag));
+const debug = ['mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag));
 
 var head = document.getElementsByTagName('head').item(0);
 var script = document.createElement('script');
@@ -130,7 +130,7 @@ TESTS = [
         (mf) => { // metaframe instance
             return new Promise((resolve, reject) => {
                 let unbind;
-                unbind = mf.onInput('input', function(value) {
+                unbind = mf.onInput('input1', function(value) {
                     resolve(true);
                     unbind();
                 });
@@ -260,7 +260,7 @@ TESTS = [
 // dynamically, so wait for window.onload
 const runTests = async () => {
     // instantiate the metaframe object
-    if (VERSION == 'latest') {
+    if (VERSION === 'latest') {
         var mf = new metapage.Metaframe();
     } else if (window.compareVersions(VERSION, '0.5.2') > 0) {
         var mf = new metapage.Metaframe();
@@ -306,27 +306,40 @@ const runTests = async () => {
     //  when we get a input [input], we read the array from the "versions"
     // field (or create one) and append our version to the array, then
     // send the value to the output: { "output": { "versions": [...] } }
-    const onUpdate = (value) => {
-        if (value == null) {
+
+    // The metaframe is expecting an array of versions
+    const getOutputValueFromInputValue = (inputValue) => {
+        if (inputValue == null) {
             return;
         }
-        if (typeof(value) === 'object') {
-            value.versions = value.versions ? value.versions : [];
-            value.versions.push(DISPLAY_VERSION);
-            if (mf.getOutput('output') == null || JSON.stringify(mf.getOutput('output').versions) != JSON.stringify(value.versions)) {
-                mf.setOutput("output", value);
-            }
+
+        // When I get the input array, add my version to the list
+        // This will be passed around to all metaframe in the version list
+        if (typeof(inputValue) === 'object') {
+            const newValue = {...inputValue}
+            newValue.versions = inputValue.versions ? inputValue.versions : [];
+            newValue.versions.push(DISPLAY_VERSION);
+            return newValue;
         }
     }
 
-    // When I get the input array, add my version to the list
-    // This will be passed around to all metaframe in the version list
-    mf.onInput('input', function(value) {
-        onUpdate(value);
-    });
+    const inputsHandler = inputs => {
+        const newValue1 = getOutputValueFromInputValue(inputs['input1']);
+        const newValue2 = getOutputValueFromInputValue(inputs['input2']);
+        if (newValue1 || newValue2) {
+            const newOutputs = {};
+            if (newValue1) {
+                newOutputs['output1'] = newValue1;
+            }
+            if (newValue2) {
+                newOutputs['output2'] = newValue2;
+            }
+            mf.setOutputs(newOutputs);
+        }
+    };
 
-    // Update from the initial inputs
-    onUpdate(mf.getInput('input'));
+    // This calls the hanled immediately with the current value
+    mf.onInputs(inputsHandler);
 
     setStatus();
 

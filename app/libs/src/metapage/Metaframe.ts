@@ -13,7 +13,7 @@ import {
   MinimumClientMessage,
   VersionsMetapage
 } from "./v0_4";
-import { getUrlParamDEBUG, stringToRgb, log as MetapageToolsLog, merge, pageLoaded } from "./MetapageTools";
+import { isDebugFromUrlsParams, stringToRgb, log as MetapageToolsLog, merge, pageLoaded } from "./MetapageTools";
 import { isIframe } from "./Shared";
 import { MetapageEventUrlHashUpdate } from "./v0_4/events";
 
@@ -51,8 +51,9 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   _parentVersion: VersionsMetapage | undefined;
   _isIframe: boolean;
   _state: MetaframeLoadingState = MetaframeLoadingState.WaitingForPageLoad;
+  _messageSendCount = 0;
 
-  debug: boolean = false;
+  debug: boolean = isDebugFromUrlsParams();
   color: string | undefined;
   plugin: MetaframePlugin | undefined;
 
@@ -64,7 +65,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
 
   constructor(options?:MetaframeOptions) {
     super();
-    this.debug = getUrlParamDEBUG();
+    this.debug = isDebugFromUrlsParams();
     this._isIframe = isIframe();
 
 
@@ -136,6 +137,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
         : this._inputPipeValues;
 
       //Tell the parent we have registered.
+      this._state = MetaframeLoadingState.Ready;
       // TODO why do we need  Metaframe.version here? It was sent in the initial SetupIframeClientRequest
       this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, { version: Metaframe.version });
 
@@ -264,7 +266,8 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   }
 
   public onInputs(listener: (m: MetaframeInputMap) => void): () => void {
-    return this.addListenerReturnDisposer(MetaframeEvents.Inputs, listener);
+    const disposer = this.addListenerReturnDisposer(MetaframeEvents.Inputs, listener);
+    return disposer;
   }
 
   /**
@@ -361,11 +364,11 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
     if (this._isIframe) {
       const message: MinimumClientMessage<any> = {
         jsonrpc: "2.0",
-        id: undefined, // we don't use this part of the JSON-RPC spec.
+        id: ++this._messageSendCount, // just increment the counter for the id
         method: method,
         params: params,
         iframeId: this.id,
-        parentId: this._parentId // TODO this is likely not actually needed ? iframes cannot send to anyone but the parent?
+        parentId: this._parentId // TODO this is likely not actually needed ? iframes cannot send to anyone but the parent? But the parent does not automatically know where a message comes from
       };
       window.parent.postMessage(message, "*");
     } else {
@@ -389,7 +392,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
             this._resolveSetupIframeServerResponse(jsonrpc.params);
             break; //Handled elsewhere
           case JsonRpcMethodsFromParent.InputsUpdate:
-            if (this._state === MetaframeLoadingState.Ready) {
+            if (this._state !== MetaframeLoadingState.Ready) {
               throw 'Got InputsUpdate but metaframe is not MetaframeLoadingState.Ready';
             }
             this.setInternalInputsAndNotify(jsonrpc.params.inputs);

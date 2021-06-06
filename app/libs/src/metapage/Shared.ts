@@ -6,6 +6,10 @@ import {
 } from "./v0_4";
 import { MetapageEvents } from "./v0_4/events";
 
+export enum MetapageHashParams {
+  mp_debug = "mp_debug",
+}
+
 export const isIframe = (): boolean => {
   //http://stackoverflow.com/questions/326069/how-to-identify-if-a-webpage-is-being-loaded-inside-an-iframe-or-directly-into-t
   try {
