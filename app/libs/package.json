@@ -1,7 +1,7 @@
 {
     "name": "@metapages/metapage",
     "public": true,
-    "version": "0.6.0",
+    "version": "0.7.0",
     "description": "Connect web pages together",
     "repository": "https://github.com/metapages/metapage",
     "homepage": "https://metapages.org/",
@@ -17,8 +17,8 @@
         "minimatch": "^3.0.4"
     },
     "devDependencies": {
-        "fastify-static": "^2.6.0",
         "fastify": "^2.13.1",
+        "fastify-static": "^2.6.0",
         "json-diff": "^0.5.4",
         "parcel-bundler": "1.12.3",
         "puppeteer": "^8.0.0",

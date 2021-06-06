@@ -130,6 +130,7 @@ publish: _require_NPM_TOKEN
 unpublish version:
     @echo "❗ If this fails: you cannot use .npmrc or NPM_TOKEN, you must 'npm login' 🤷‍♀️"
     npm unpublish {{NPM_MODULE}}@{{version}}
+    just _versions-write-versions-to-jekyll
 
 # https://docs.npmjs.com/cli/v7/commands/npm-deprecate
 module_deprecate version +message:
@@ -148,9 +149,8 @@ _build_browser_modules outdir testing="":
     rm -rf {{outdir}}/metaframe
     rm -rf {{outdir}}/metapage
     # Should not need to do this because earlier steps compile check
-    # {{tsc}} --noEmit
-    # echo "✅ typescript check"
     {{tsc}} --noEmit
+    echo "✅ typescript check"
     if [ "{{testing}}" = "testing" ]; then
         echo "👉 development builds for test/page/js/"
         NODE_ENV=development {{parcel}} build --no-minify --target browser --global metapage ./src/metapage/Metaframe.ts --out-dir {{outdir}}/metaframe --out-file index.js
