@@ -376,7 +376,7 @@ const convertNpmToInternalVersion = (version) => {
 ////////////////////////////////////////////////////////////////////////
 // After the window loads the specific versiono of the metapage library
 // set the test machinery up and run the tests
-window.onload = function() {
+window.onload = async () => {
     console.log(`TEST-MP: Metapage ${convertNpmToInternalVersion(VERSION)}`);
 
     // Define the metapage definition dynamically
@@ -496,7 +496,8 @@ window.onload = function() {
     var metaframeIds = metapageInstance.metaframeIds();
     var pluginsIds = metaPageDefinition.plugins ? metaPageDefinition.plugins.concat([]) : [];
     // Add the metaframe (and plugin) iframes to the page
-    metaframeIds.forEach((metaframeId) => {
+
+    for (const metaframeId of metaframeIds) {
         var row = document.createElement("div");
         row.className += row.className ? ' row' : 'row';
 
@@ -509,16 +510,17 @@ window.onload = function() {
         row.appendChild(col1);
         row.appendChild(col2);
 
-
-        col1.appendChild(metapageInstance.getMetaframe(metaframeId).iframe);
+        const iframe = await metapageInstance.getMetaframe(metaframeId).iframe;
+        col1.appendChild(iframe);
 
         if (pluginsIds.length > 0) {
             const pluginId = pluginsIds.shift();
-            col2.appendChild(metapageInstance.getPlugin(pluginId).iframe);
+            const pluginIframe = await metapageInstance.getPlugin(pluginId).iframe;
+            col2.appendChild(pluginIframe);
         }
 
         document.getElementById("body").appendChild(row);
-    });
+    }
 
     Promise.all(promises)
         .then(() => {
