@@ -31,7 +31,8 @@ import { MetapageEvents } from "./v0_4/events";
  *     - this marks the iframe as ready
  */
 export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEvents> {
-  iframe: HTMLIFrameElement;
+  iframe: Promise<HTMLIFrameElement>;
+  _iframe: HTMLIFrameElement;
   id: MetaframeId;
   version: VersionsMetaframe | undefined;
   // Used for securing postMessage
@@ -85,21 +86,24 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     this._color = stringToRgb(this.id);
     this._consoleBackgroundColor = consoleBackgroundColor;
 
-    // I think just creating but not attaching to the dom is OK
-    this.iframe = document.createElement("iframe");
-    this.iframe.name = this.id;
-    // wait until the metapage page is loaded, otherwise
-    // communication errors will likely occur
+    // Create but do not attach to the dom until the src attribute is set https://github.com/metapages/metapage/issues/91
+    this._iframe = document.createElement("iframe");
+    this._iframe.name = this.id;
     const selfThis = this;
-    pageLoaded().then(async () => {
-      // parent page loaded, set the iframe src to start loading
-      // get the definition in case we need to set allow permissions
-      const metaframeDef = await selfThis.getDefinition();
-      // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
-      if (metaframeDef?.allow) {
-        selfThis.iframe.allow = metaframeDef.allow;
-      }
-      selfThis.iframe.src = this.url;
+    this.iframe = new Promise((resolve) => {
+      // wait until the metapage page is loaded, otherwise
+      // communication errors will likely occur
+      pageLoaded().then(async () => {
+        // parent page loaded, set the iframe src to start loading
+        // get the definition in case we need to set allow permissions
+        const metaframeDef = await selfThis.getDefinition();
+        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
+        if (metaframeDef?.allow) {
+          selfThis._iframe.allow = metaframeDef.allow;
+        }
+        selfThis._iframe.src = this.url;
+        resolve(selfThis._iframe);
+      });
     });
 
     this.ack = this.ack.bind(this);
@@ -224,7 +228,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     // if it's not registered, don't worry, inputs are merged,
     // and when the metaframe is registered, current inputs will
     // be sent
-    if (this.iframe.parentNode && this._loaded) {
+    if (this._iframe.parentNode && this._loaded) {
       this.sendInputs(maybeNewInputs);
     }
 
@@ -312,11 +316,11 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     // @ts-ignore
     this.outputs = undefined;
     // @ts-ignore
-    if (this.iframe && this.iframe.parentNode) {
-      this.iframe.parentNode.removeChild(this.iframe);
+    if (this._iframe && this._iframe.parentNode) {
+      this._iframe.parentNode.removeChild(this._iframe);
     }
     // @ts-ignore
-    this.iframe = undefined;
+    this._iframe = undefined;
     // @ts-ignore
     this._bufferMessages = undefined;
     if (this._bufferTimeout) {
@@ -376,7 +380,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
   }
 
   public sendRpc(method: string, params: any) {
-    if (this.iframe.parentNode && this._loaded) {
+    if (this._iframe.parentNode && this._loaded) {
       this.sendRpcInternal(method, params);
     } else {
       this._metapage.error("sending rpc later");
@@ -428,7 +432,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
       params: params,
       parentId: this._parentId
     };
-    if (this.iframe) {
+    if (this._iframe) {
       this.sendOrBufferPostMessage(messageJSON);
     } else {
       this._metapage.error(`Cannot send to child iframe messageJSON=${JSON.stringify(messageJSON).substr(0, 200)}`);
@@ -438,15 +442,15 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
   _bufferMessages: any[] | undefined;
   _bufferTimeout: number | undefined;
   sendOrBufferPostMessage(message: any) {
-    if (this.iframe && this.iframe.contentWindow) {
-      this.iframe.contentWindow.postMessage(message, this.url);
+    if (this._iframe && this._iframe.contentWindow) {
+      this._iframe.contentWindow.postMessage(message, this.url);
     } else {
       if (!this._bufferMessages) {
         this._bufferMessages = [message];
         const thing = this;
         this._bufferTimeout = window.setInterval(function () {
-          if (thing.iframe && thing.iframe.contentWindow) {
-            thing._bufferMessages!.forEach(m => thing.iframe!.contentWindow!.postMessage(m, thing.url));
+          if (thing._iframe && thing._iframe.contentWindow) {
+            thing._bufferMessages!.forEach(m => thing._iframe!.contentWindow!.postMessage(m, thing.url));
             window.clearInterval(thing._bufferTimeout);
             thing._bufferTimeout = undefined;
             thing._bufferMessages = undefined;

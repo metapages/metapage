@@ -5,7 +5,7 @@ permalink: /api/
 nav_order: 4
 ---
 
-# API Reference v0.4.3
+# API Reference v0.8.0
 {: .no_toc }
 
 ###### <a href="/versions">previous versions</a>
@@ -167,15 +167,6 @@ metapage.getMetaframe(metaframeId :String): MetaframeClient
 ```
 
 Get the MetaframeClient for the given id.
-
-### Metapage#getIframes
-
-```ts
-metapage.getIframes(): Map<String, IFrameElement>
-```
-
-Returns a plain Object with metaframe ids mapped to the underlying metaframe [iframes](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe).
-
 
 ### Metapage#getMetaframeIds
 
@@ -445,7 +436,9 @@ const url :string = metapage.getMetaframe(id).url;
 
 ### Metapage.MetaframeClient#iframe
 
-The concrete metaframe [iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) HTML element.
+A promise returning the metaframe [iframe](https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe) HTML element.
+
+This must be a promise because the `metaframe.json` file is downloaded and used to help construct the iframe (e.g. permissions)
 
 ### Metapage.MetaframeClient#dispose
 
