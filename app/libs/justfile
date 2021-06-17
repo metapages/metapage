@@ -20,17 +20,9 @@ _help:
 
 # Build the production npm distributions in dist/metaframe and dist/metapage
 build: clean _build
-_build:
+_build: _build_npm
     #!/usr/bin/env bash
     set -euo pipefail
-    # Compiles the entire codebase to typescript files in ./dist. Packaged into the npm module '{{NPM_MODULE}}'
-    # How to test installation of the build?
-    mkdir -p {{NPM_MODULE_OUTPUT}}
-    echo -e "🍳👉 {{bold}}Compiling typescript  => {{NPM_MODULE_OUTPUT}}/{{normal}}"
-    {{tsc}} --outDir {{NPM_MODULE_OUTPUT}}
-    cp package.json      {{NPM_MODULE_OUTPUT}}/package.json
-    cp README-PACKAGE.md {{NPM_MODULE_OUTPUT}}/README.md
-    cp LICENSE           {{NPM_MODULE_OUTPUT}}/
 
     echo -e "🍳👉 {{bold}}Building standalone browser downloads{{normal}}"
     just _build_browser_modules {{NPM_MODULE_OUTPUT}}/browser/
@@ -43,11 +35,22 @@ _build:
             cp -r {{NPM_MODULE_OUTPUT}}/browser/$meta $MODULES_TARGET/
         done
     done
-
-    echo "✅ {{NPM_MODULE_OUTPUT}}"
     echo "✅ {{NPM_MODULE_OUTPUT}}/browser/metapage"
     echo "✅ {{NPM_MODULE_OUTPUT}}/browser/metaframe"
     echo "✅ test/page/js/"
+
+_build_npm:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Compiles the entire codebase to typescript files in ./dist. Packaged into the npm module '{{NPM_MODULE}}'
+    # How to test installation of the build?
+    mkdir -p {{NPM_MODULE_OUTPUT}}
+    echo -e "🍳👉 {{bold}}Compiling typescript  => {{NPM_MODULE_OUTPUT}}/{{normal}}"
+    {{tsc}} --outDir {{NPM_MODULE_OUTPUT}}
+    cp package.json      {{NPM_MODULE_OUTPUT}}/package.json
+    cp README-PACKAGE.md {{NPM_MODULE_OUTPUT}}/README.md
+    cp LICENSE           {{NPM_MODULE_OUTPUT}}/
+    echo "✅ {{NPM_MODULE_OUTPUT}}"
 
 # Run tests
 test:
@@ -69,16 +72,22 @@ test:
 dev:
     just test/dev
 
-# watch for file changes, then build into ./dist
+# watch for file changes, then build ALL into ./dist
 @watch:
     # No clean operation because that might break symlinks
     echo "👀 watching and building into ./dist..."
     watchexec --watch src -- 'just _build'
 
+# watch for file changes, then build only the npm module into ./dist. Avoids additional browser only modules
+@watch_npm_only:
+    # No clean operation because that might break symlinks
+    echo "👀 watching and building npm module into ./dist..."
+    watchexec --watch src -- 'just _build_npm'
+
 # npm link the package in dist for local development. In the other project: 'npm link @metapages/metapage'
 @link: unlink build
     cd dist && npm link
-    echo -e "👉 in the other project: 'npm link {{NPM_MODULE}}'"
+    echo -e "👉 in the other project: npm link {{NPM_MODULE}}"
 
 # unlink the package in dist from local development. You probably don't ever need to do this
 @unlink:

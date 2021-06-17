@@ -217,7 +217,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     inputs: undefined
   };
   public setInputs(maybeNewInputs: MetaframeInputMap): MetapageIFrameRpcClient {
-    // this.log({m:'MetapageIFrameRpcClient', inputs:maybeNewInputs});
+    this.log({m:'MetapageIFrameRpcClient', inputs:maybeNewInputs});
     if (!merge(this.inputs, maybeNewInputs)) {
       return this;
     }
@@ -352,6 +352,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
   }
 
   public registered(version: VersionsMetaframe) {
+    console.log('MetapageIFrameRpcClient.registered, this.inputs', this.inputs)
     if (this._loaded) {
       return;
     }
