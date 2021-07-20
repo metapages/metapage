@@ -98,6 +98,9 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
         // get the definition in case we need to set allow permissions
         if (selfThis._iframe) { // possibly already disposed
           const metaframeDef = await selfThis.getDefinition();
+          if (!selfThis._iframe) { // possibly already disposed
+            return;
+          }
           // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
           if (metaframeDef?.allow) {
             selfThis._iframe.allow = metaframeDef.allow;
