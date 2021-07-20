@@ -96,13 +96,15 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
       pageLoaded().then(async () => {
         // parent page loaded, set the iframe src to start loading
         // get the definition in case we need to set allow permissions
-        const metaframeDef = await selfThis.getDefinition();
-        // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
-        if (metaframeDef?.allow) {
-          selfThis._iframe.allow = metaframeDef.allow;
+        if (selfThis._iframe) { // possibly already disposed
+          const metaframeDef = await selfThis.getDefinition();
+          // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
+          if (metaframeDef?.allow) {
+            selfThis._iframe.allow = metaframeDef.allow;
+          }
+          selfThis._iframe.src = this.url;
+          resolve(selfThis._iframe);
         }
-        selfThis._iframe.src = this.url;
-        resolve(selfThis._iframe);
       });
     });
 
