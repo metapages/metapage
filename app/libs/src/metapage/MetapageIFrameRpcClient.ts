@@ -354,7 +354,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
   }
 
   public registered(version: VersionsMetaframe) {
-    console.log('MetapageIFrameRpcClient.registered, this.inputs', this.inputs)
+    this.log({m:'MetapageIFrameRpcClient.registered', inputs:this.inputs});
     if (this._loaded) {
       return;
     }
