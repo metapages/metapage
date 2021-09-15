@@ -97,7 +97,7 @@ RUN apk add --virtual .download --no-cache curl ; \
 
 # USER chrome
 
-RUN npm install -g npm@7.6.0
+RUN npm install -g npm@7.23.0
 
 #################################################################
 # libs: setup
