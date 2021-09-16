@@ -1,5 +1,9 @@
 import { EventEmitter, ListenerFn } from "eventemitter3";
-import { VERSION_METAFRAME, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION } from "./Constants";
+import {
+  VERSION_METAFRAME,
+  METAPAGE_KEY_STATE,
+  METAPAGE_KEY_DEFINITION,
+} from "./Constants";
 import {
   MetaframeId,
   MetaframeInputMap,
@@ -11,9 +15,15 @@ import {
   JsonRpcMethodsFromChild,
   SetupIframeServerResponseData,
   MinimumClientMessage,
-  VersionsMetapage
+  VersionsMetapage,
 } from "./v0_4";
-import { isDebugFromUrlsParams, stringToRgb, log as MetapageToolsLog, merge, pageLoaded } from "./MetapageTools";
+import {
+  isDebugFromUrlsParams,
+  stringToRgb,
+  log as MetapageToolsLog,
+  merge,
+  pageLoaded,
+} from "./MetapageTools";
 import { isIframe } from "./Shared";
 import { MetapageEventUrlHashUpdate } from "./v0_4/events";
 
@@ -21,7 +31,7 @@ import { MetapageEventUrlHashUpdate } from "./v0_4/events";
 enum MetaframeLoadingState {
   WaitingForPageLoad = "WaitingForPageLoad",
   SentSetupIframeClientRequest = "SentSetupIframeClientRequest",
-  Ready = "Ready"
+  Ready = "Ready",
 }
 
 enum MetaframeEvents {
@@ -29,14 +39,16 @@ enum MetaframeEvents {
   Error = "error",
   Input = "input",
   Inputs = "inputs",
-  Message = "message"
+  Message = "message",
 }
 
 type MetaframeOptions = {
-  disableHashChangeEvent?:boolean;
-}
+  disableHashChangeEvent?: boolean;
+};
 
-export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFromChild> {
+export class Metaframe extends EventEmitter<
+  MetaframeEvents | JsonRpcMethodsFromChild
+> {
   public static readonly version = VERSION_METAFRAME;
 
   public static readonly ERROR = MetaframeEvents.Error;
@@ -63,11 +75,10 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
    */
   id: string = window.name;
 
-  constructor(options?:MetaframeOptions) {
+  constructor(options?: MetaframeOptions) {
     super();
     this.debug = isDebugFromUrlsParams();
     this._isIframe = isIframe();
-
 
     this.addListener = this.addListener.bind(this);
     this.dispose = this.dispose.bind(this);
@@ -84,14 +95,17 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
     this.sendRpc = this.sendRpc.bind(this);
     this.setInput = this.setInput.bind(this);
     this.setInputs = this.setInputs.bind(this);
-    this.setInternalInputsAndNotify = this.setInternalInputsAndNotify.bind(this);
+    this.setInternalInputsAndNotify =
+      this.setInternalInputsAndNotify.bind(this);
     this.setOutput = this.setOutput.bind(this);
     this.setOutputs = this.setOutputs.bind(this);
     this.warn = this.warn.bind(this);
-    this._resolveSetupIframeServerResponse = this._resolveSetupIframeServerResponse.bind(this);
+    this._resolveSetupIframeServerResponse =
+      this._resolveSetupIframeServerResponse.bind(this);
     this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
     this.connected = this.connected.bind(this);
-    this.disableNotifyOnHashUrlChange = this.disableNotifyOnHashUrlChange.bind(this);
+    this.disableNotifyOnHashUrlChange =
+      this.disableNotifyOnHashUrlChange.bind(this);
     this._onHashUrlChange = this._onHashUrlChange.bind(this);
 
     if (!this._isIframe) {
@@ -106,21 +120,23 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
     // Do no listen or send messages until the page is loaded
     // This iframe is not created UNTIL the parent page is loaded and listening to messages
     pageLoaded().then(() => {
-      this.log('pageLoaded')
+      this.log("pageLoaded");
       window.addEventListener("message", this.onMessage);
       // Now that we're listening, request to the parent to register us so we can talk
-      thisRef.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, { version: Metaframe.version });
+      thisRef.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {
+        version: Metaframe.version,
+      });
       thisRef._state = MetaframeLoadingState.SentSetupIframeClientRequest;
     });
 
-    if (!(options?.disableHashChangeEvent)) {
+    if (!options?.disableHashChangeEvent) {
       window.addEventListener("hashchange", this._onHashUrlChange);
     }
   }
 
   _resolveSetupIframeServerResponse(params: SetupIframeServerResponseData) {
     if (this._state === MetaframeLoadingState.WaitingForPageLoad) {
-      throw 'Got message but page has not finished loading, we should never get in this state';
+      throw "Got message but page has not finished loading, we should never get in this state";
     }
 
     if (!this._parentId) {
@@ -128,24 +144,37 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
       this.color = stringToRgb(this.id);
       this._parentId = params.parentId;
       this.log(
-        `metapage[${this._parentId}](v${this._parentVersion
-          ? this._parentVersion
-          : "unknown"}) registered`);
+        `metapage[${this._parentId}](v${
+          this._parentVersion ? this._parentVersion : "unknown"
+        }) registered`
+      );
 
-      this._inputPipeValues = params.state && params.state.inputs
-        ? params.state.inputs
-        : this._inputPipeValues;
+      this._inputPipeValues =
+        params.state && params.state.inputs
+          ? params.state.inputs
+          : this._inputPipeValues;
 
       //Tell the parent we have registered.
       this._state = MetaframeLoadingState.Ready;
       // TODO why do we need  Metaframe.version here? It was sent in the initial SetupIframeClientRequest
-      this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, { version: Metaframe.version });
+      this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {
+        version: Metaframe.version,
+      });
 
       //Send notifications of initial inputs (if non-null)
       //so you don't have to listen to the ready event if you don't want to
-      if (this._inputPipeValues && Object.keys(this._inputPipeValues).length > 0) {
+      if (
+        this._inputPipeValues &&
+        Object.keys(this._inputPipeValues).length > 0
+      ) {
         this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
-        Object.keys(this._inputPipeValues).forEach(pipeId => this.emit(MetaframeEvents.Input, pipeId, this._inputPipeValues[pipeId]));
+        Object.keys(this._inputPipeValues).forEach((pipeId) =>
+          this.emit(
+            MetaframeEvents.Input,
+            pipeId,
+            this._inputPipeValues[pipeId]
+          )
+        );
       }
 
       this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
@@ -163,7 +192,9 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
       //*** Does this distinction make sense?
       this.emit(MetaframeEvents.Connected);
     } else {
-      this.log("Got JsonRpcMethods.SetupIframeServerResponse but already resolved");
+      this.log(
+        "Got JsonRpcMethods.SetupIframeServerResponse but already resolved"
+      );
     }
   }
 
@@ -173,14 +204,20 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
     }
     return new Promise((resolve, _) => {
       let disposer: () => void;
-      disposer = this.addListenerReturnDisposer(MetaframeEvents.Connected, () => {
-        resolve();
-        disposer();
-      });
+      disposer = this.addListenerReturnDisposer(
+        MetaframeEvents.Connected,
+        () => {
+          resolve();
+          disposer();
+        }
+      );
     });
   }
 
-  addListenerReturnDisposer(event: MetaframeEvents | JsonRpcMethodsFromChild, listener: ListenerFn<any[]>): () => void {
+  addListenerReturnDisposer(
+    event: MetaframeEvents | JsonRpcMethodsFromChild,
+    listener: ListenerFn<any[]>
+  ): () => void {
     super.addListener(event, listener);
     const disposer = () => {
       super.removeListener(event, listener);
@@ -192,10 +229,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
     if (!this.debug) {
       return;
     }
-    this.logInternal(
-      o, color
-      ? color
-      : this.color);
+    this.logInternal(o, color ? color : this.color);
   }
 
   public warn(o: any) {
@@ -219,14 +253,9 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
       s = JSON.stringify(o);
     }
 
-    color = color
-      ? color + ""
-      : color;
+    color = color ? color + "" : color;
 
-    s = (
-      this.id
-        ? `Metaframe[${this.id}] `
-        : "") + `${s}`;
+    s = (this.id ? `Metaframe[${this.id}] ` : "") + `${s}`;
     MetapageToolsLog(s, color, backgroundColor);
   }
 
@@ -238,10 +267,12 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
     this._inputPipeValues = undefined;
     // @ts-ignore
     this._outputPipeValues = undefined;
-
   }
 
-  public addListener(event: MetaframeEvents | JsonRpcMethodsFromChild, listener: ListenerFn<any[]>) {
+  public addListener(
+    event: MetaframeEvents | JsonRpcMethodsFromChild,
+    listener: ListenerFn<any[]>
+  ) {
     super.addListener(event, listener);
 
     //If it is an input or output, set the current input/output values when
@@ -258,15 +289,21 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   }
 
   public onInput(pipeId: MetaframePipeId, listener: any): () => void {
-    return this.addListenerReturnDisposer(MetaframeEvents.Input, (pipe: MetaframePipeId, value: any) => {
-      if (pipeId === pipe) {
-        listener(value);
+    return this.addListenerReturnDisposer(
+      MetaframeEvents.Input,
+      (pipe: MetaframePipeId, value: any) => {
+        if (pipeId === pipe) {
+          listener(value);
+        }
       }
-    });
+    );
   }
 
   public onInputs(listener: (m: MetaframeInputMap) => void): () => void {
-    const disposer = this.addListenerReturnDisposer(MetaframeEvents.Inputs, listener);
+    const disposer = this.addListenerReturnDisposer(
+      MetaframeEvents.Inputs,
+      listener
+    );
     return disposer;
   }
 
@@ -298,12 +335,14 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
       return;
     }
 
-    Object.keys(inputs).forEach(pipeId => this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId]));
+    Object.keys(inputs).forEach((pipeId) =>
+      this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId])
+    );
     this.emit(MetaframeEvents.Inputs, inputs);
   }
 
   public getInput(pipeId: MetaframePipeId): any {
-    console.assert(pipeId);
+    console.assert(!!pipeId);
     return this._inputPipeValues[pipeId];
   }
 
@@ -312,7 +351,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   }
 
   public getOutput(pipeId: MetaframePipeId): any {
-    console.assert(pipeId);
+    console.assert(!!pipeId);
     return this._outputPipeValues[pipeId];
   }
 
@@ -322,8 +361,7 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
    * @param updateBlob :any        [description]
    */
   public setOutput(pipeId: MetaframePipeId, updateBlob: any): void {
-    console.assert(pipeId);
-    console.assert(updateBlob);
+    console.assert(!!pipeId);
 
     var outputs: MetaframeInputMap = {};
     outputs[pipeId] = updateBlob;
@@ -352,11 +390,11 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
   }
 
   /** Tell the parent metapage our hash params changed */
-  _onHashUrlChange(_: HashChangeEvent): void {
+  _onHashUrlChange(_: any): void {
     const payload: MetapageEventUrlHashUpdate = {
       hash: window.location.hash,
       metaframe: this.id as MetaframeId,
-    }
+    };
     this.sendRpc(JsonRpcMethodsFromChild.HashParamsUpdate, payload);
   }
 
@@ -368,11 +406,13 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
         method: method,
         params: params,
         iframeId: this.id,
-        parentId: this._parentId // TODO this is likely not actually needed ? iframes cannot send to anyone but the parent? But the parent does not automatically know where a message comes from
+        parentId: this._parentId, // TODO this is likely not actually needed ? iframes cannot send to anyone but the parent? But the parent does not automatically know where a message comes from
       };
       window.parent.postMessage(message, "*");
     } else {
-      this.log("Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe");
+      this.log(
+        "Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe"
+      );
     }
   }
 
@@ -382,8 +422,15 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
       if (jsonrpc.jsonrpc === "2.0") {
         //Make sure this is a jsonrpc object
         var method = jsonrpc.method as JsonRpcMethodsFromParent;
-        if (!(method == JsonRpcMethodsFromParent.SetupIframeServerResponse || (jsonrpc.parentId == this._parentId && jsonrpc.iframeId == this.id))) {
-          this.error(`window.message: received message but jsonrpc.parentId=${jsonrpc.parentId} _parentId=${this._parentId} jsonrpc.iframeId=${jsonrpc.iframeId} id=${this.id}`);
+        if (
+          !(
+            method == JsonRpcMethodsFromParent.SetupIframeServerResponse ||
+            (jsonrpc.parentId == this._parentId && jsonrpc.iframeId == this.id)
+          )
+        ) {
+          this.error(
+            `window.message: received message but jsonrpc.parentId=${jsonrpc.parentId} _parentId=${this._parentId} jsonrpc.iframeId=${jsonrpc.iframeId} id=${this.id}`
+          );
           return;
         }
 
@@ -393,17 +440,20 @@ export class Metaframe extends EventEmitter<MetaframeEvents | JsonRpcMethodsFrom
             break; //Handled elsewhere
           case JsonRpcMethodsFromParent.InputsUpdate:
             if (this._state !== MetaframeLoadingState.Ready) {
-              throw 'Got InputsUpdate but metaframe is not MetaframeLoadingState.Ready';
+              throw "Got InputsUpdate but metaframe is not MetaframeLoadingState.Ready";
             }
             this.setInternalInputsAndNotify(jsonrpc.params.inputs);
             break;
           case JsonRpcMethodsFromParent.MessageAck:
-            if (this.debug)
-              this.log(`ACK: ${JSON.stringify(jsonrpc)}`);
+            if (this.debug) this.log(`ACK: ${JSON.stringify(jsonrpc)}`);
             break;
           default:
             if (this.debug)
-              this.log(`window.message: unknown JSON-RPC method: ${JSON.stringify(jsonrpc)}`);
+              this.log(
+                `window.message: unknown JSON-RPC method: ${JSON.stringify(
+                  jsonrpc
+                )}`
+              );
             break;
         }
 
@@ -433,7 +483,7 @@ export class MetaframePlugin {
 
   requestState() {
     var payload: ApiPayloadPluginRequest = {
-      method: ApiPayloadPluginRequestMethod.State
+      method: ApiPayloadPluginRequestMethod.State,
     };
     this._metaframe.sendRpc(JsonRpcMethodsFromChild.PluginRequest, payload);
   }

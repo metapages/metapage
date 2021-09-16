@@ -25,6 +25,9 @@ RUN VERSION=0.8.4 ; \
     mkdir -p /usr/local/bin && mv /tmp/just/just /usr/local/bin/ && rm -rf /tmp/just
 # just tweak: unify the just binary location on host and container platforms because otherwise the shebang doesn't work properly due to no string token parsing (it gets one giant string)
 ENV PATH $PATH:/usr/local/bin
+# alias "j" to just, it's just right there index finger
+RUN echo -e '#!/bin/bash\njust "$@"' > /usr/bin/j && \
+    chmod +x /usr/bin/j
 
 # watchexec for live reloading in development https://github.com/watchexec/watchexec
 RUN VERSION=1.14.1 ; \
@@ -94,7 +97,7 @@ RUN apk add --virtual .download --no-cache curl ; \
 
 # USER chrome
 
-RUN npm install -g npm@7.6.0
+RUN npm install -g npm@7.23.0
 
 #################################################################
 # libs: setup
