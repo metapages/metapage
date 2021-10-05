@@ -18,7 +18,7 @@
     },
     "devDependencies": {
         "fastify": "^2.13.1",
-        "fastify-static": "^2.6.0",
+        "fastify-static": "^4.2.4",
         "json-diff": "^0.5.4",
         "parcel-bundler": "1.12.3",
         "puppeteer": "^8.0.0",
