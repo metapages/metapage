@@ -1,6 +1,13 @@
-# https://github.com/casey/just
+###########################################################################
 # Build the npm libraries: metapage, metaframe
-
+###########################################################################
+# just configuration
+###########################################################################
+set shell          := ["bash", "-c"]
+set dotenv-load    := true
+###########################################################################
+# library configuration
+###########################################################################
 ROOT               := `dirname $(dirname $PWD)`
 NPM_MODULE         := `cat package.json | jq -r .name`
 NPM_MODULE_OUTPUT  := "./dist"
