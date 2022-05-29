@@ -83,7 +83,6 @@ export class Metapage extends MetapageShared {
   public static readonly MESSAGE = MetapageEvents.Message;
   public static readonly OUTPUTS = MetapageEvents.Outputs;
   public static readonly STATE = MetapageEvents.State;
-  public static readonly URL_HASH_UPDATE = MetapageEvents.UrlHashUpdate;
 
   public static from(metaPageDef: any, inputs?: any): Metapage {
     if (metaPageDef == null) {
@@ -197,6 +196,7 @@ export class Metapage extends MetapageShared {
     this.setMetaframeClientInputAndSentClientEvent = this.setMetaframeClientInputAndSentClientEvent.bind(this);
     this.setOutputStateOnly = this.setOutputStateOnly.bind(this);
     this.setState = this.setState.bind(this);
+    this.isDisposed = this.isDisposed.bind(this);
     // TODO is updatePluginsWithDefinition necessary with the emitDefinitionEvent?
     this.updatePluginsWithDefinition = this.updatePluginsWithDefinition.bind(this);
     this._emitDefinitionEvent = this._emitDefinitionEvent.bind(this);
@@ -205,9 +205,16 @@ export class Metapage extends MetapageShared {
     // see ARCHITECTURE.md
     // when the page is loaded, only then start listening to messages from metaframes
     pageLoaded().then(() => {
+      if (this.isDisposed()) {
+        return;
+      }
       window.addEventListener("message", this.onMessage);
       this.log("Initialized");
     });
+  }
+
+  public isDisposed() {
+    return this._metaframes === undefined;
   }
 
   addListenerReturnDisposer(event: MetapageEvents, listener: ListenerFn<any[]>): () => void {
@@ -507,6 +514,7 @@ export class Metapage extends MetapageShared {
   }
 
   public dispose() {
+    this.log("disposing");
     super.removeAllListeners();
     window.removeEventListener("message", this.onMessage);
     if (this._metaframes) {
@@ -978,8 +986,6 @@ export class Metapage extends MetapageShared {
             metaframeOrPlugin.url = url.href;
             // Update the definition in place
             this._definition.metaframes[hashParamsUpdatePayload.metaframe].url = url.href;
-            // TODO needed?
-            this.emit(MetapageEvents.UrlHashUpdate, jsonrpc.params);
             this._emitDefinitionEvent();
           }
           break;

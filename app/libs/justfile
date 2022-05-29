@@ -19,8 +19,8 @@ _help:
     @just --list --unsorted --list-heading $'Commands:\n'
 
 # Build the production npm distributions in dist/metaframe and dist/metapage
-build: clean _build
-_build: _build_npm
+build: _build
+_build: _ensure_node_modules _build_npm
     #!/usr/bin/env bash
     set -euo pipefail
 
@@ -69,7 +69,7 @@ test:
 #   2. modify metapage/metaframe code
 #   3. refresh browser window
 # recompile metapage/metaframe src on change, and open a browser at the test page for the local metapage test
-dev:
+dev: _ensure_node_modules
     just test/dev
 
 # watch for file changes, then build ALL into ./dist
@@ -85,7 +85,8 @@ dev:
     watchexec --watch src -- 'just _build_npm'
 
 # npm link the package in dist for local development. In the other project: 'npm link @metapages/metapage'
-@link: unlink build
+@link:
+    if [ ! -d dist ]; then just build; fi
     cd dist && npm link
     echo -e "👉 in the other project: npm link {{NPM_MODULE}}"
 
@@ -111,7 +112,7 @@ _versions-write-versions-to-jekyll:
     npm view {{NPM_MODULE}} versions --json
 
 # If the version does not exist, publish the packages (metaframe+metapage)
-publish: _require_NPM_TOKEN
+publish: _require_NPM_TOKEN _ensure_node_modules
     #!/usr/bin/env bash
     set -euo pipefail
     if [ "$CI" != "true" ]; then
@@ -172,3 +173,6 @@ _build_browser_modules outdir testing="":
 
 @_require_NPM_TOKEN:
     if [ -z "$NPM_TOKEN" ]; then echo "Missing NPM_TOKEN"; exit 1; fi
+
+@_ensure_node_modules:
+    if [ ! -d node_modules ]; then npm i; fi
