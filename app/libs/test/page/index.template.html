@@ -298,6 +298,44 @@ TESTS = [
         }
     ),
 
+    new Test('metapage only sends definition event on updates (not the first setDefinition)',
+        (metapage) => { // metapage instance
+            return new Promise((resolve, reject) => {
+                try{
+                    const mp = new Metapage();
+                    let firstDefinition = true;
+                    mp.addListener(Metapage.DEFINITION, (def) => {
+                        if (firstDefinition) {
+                            reject("Metapage.DEFINITION but this is the first definition");
+                            return;
+                        }
+                        resolve(true);
+                    });
+                    mp.setDefinition({
+                        version: "0.3",
+                        metaframes: {},
+                        meta: {
+                            name: "fork"
+                        }
+                    });
+                    setTimeout(() => {
+                        firstDefinition = false;
+                        mp.setDefinition({
+                            version: "0.3",
+                            metaframes: {},
+                            meta: {
+                                name: "fork2"
+                            }
+                        });
+                    }, 20);
+                } catch(err) {
+                    console.error(err);
+                    reject(err);
+                }
+            });
+        }
+    ),
+
     new Test('all metaframe+plugins report tests pass',
         // check that all metaframe+plugins have
         // outputs["tests"] = "OK"
@@ -347,6 +385,7 @@ TESTS = [
             });
         }
     ),
+
 ];
 
 // version stabilized
@@ -435,8 +474,6 @@ window.onload = async () => {
             }
             return url;
         });
-
-    console.log(JSON.stringify(metaPageDefinition, null, '  '));
 
     // very old libraries:
     let Metapage = window.Metapage;

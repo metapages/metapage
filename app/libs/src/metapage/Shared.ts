@@ -2,7 +2,7 @@ import { EventEmitter } from "eventemitter3";
 import {
   JsonRpcMethodsFromParent,
   MetapageDefinition,
-  VersionsMetapage
+  MetapageVersionCurrent
 } from "./v0_4";
 import { MetapageEvents } from "./v0_4/events";
 
@@ -19,10 +19,12 @@ export const isIframe = (): boolean => {
   }
 };
 
+export const INITIAL_NULL_METAPAGE_DEFINITION: MetapageDefinition = { version: MetapageVersionCurrent, metaframes: {} };
+
 export class MetapageShared extends EventEmitter<MetapageEvents | JsonRpcMethodsFromParent> {
 
   // Easier to ensure this value is never null|undefined
-  _definition: MetapageDefinition = { version: VersionsMetapage.V0_3, metaframes: {} };
+  _definition: MetapageDefinition = INITIAL_NULL_METAPAGE_DEFINITION;
 
   constructor() {
     super();

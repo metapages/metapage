@@ -126,7 +126,7 @@ TESTS = [
     ),
 
     new Test('receive then send',
-        // verify that the metaframe got data from the pipe (confusingly named "input")
+        // verify that the metaframe got data from the pipe (confusingly named "input1")
         (mf) => { // metaframe instance
             return new Promise((resolve, reject) => {
                 let unbind;
@@ -147,6 +147,9 @@ TESTS = [
                 const metaKey = `PluginDefinitionCheck-${DISPLAY_VERSION}`;
                 let unbind;
                 const checkDefinition = (definition) => {
+
+                    definition = JSON.parse(JSON.stringify(definition));
+
                     if (!definition) {
                         return;
                     }
@@ -156,7 +159,7 @@ TESTS = [
                         definition.meta[metaKey] = true;
                         mf.plugin.setDefinition(definition);
                     } else {
-                        if (definition.meta && definition.meta[metaKey] == true) {
+                        if (definition?.meta?.[metaKey] === true) {
                             resolve(true);
                             unbind();
                         }
