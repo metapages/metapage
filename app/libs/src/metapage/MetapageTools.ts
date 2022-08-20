@@ -36,6 +36,7 @@ export const convertMetaframeJsonToCurrentVersion = (
             }
           : undefined,
       };
+      return metaframeDefV5;
     case VersionsMetaframe.V0_5:
       return m as MetaframeDefinitionV5;
     default:
