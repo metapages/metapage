@@ -1,8 +1,47 @@
 import { compare } from "compare-versions";
 import { MetapageHashParams } from "./Shared";
-import { MetapageDefinition, MetaframeInputMap, MetaframeId, MetapageId, VersionsMetapage, MetapageVersionCurrent } from "./v0_4";
+import {
+  MetapageDefinition,
+  MetaframeInputMap,
+  MetaframeId,
+  MetapageId,
+  VersionsMetapage,
+  MetapageVersionCurrent,
+  MetaframeDefinitionV5,
+  VersionsMetaframe,
+  MetaframeDefinitionV4,
+} from "./v0_4";
 import { MetapageDefinition as V0_2MetapageDefinition } from "./v0_2/all";
 import { MetapageDefinition as V0_3MetapageDefinition } from "./v0_3/all";
+
+export const convertMetaframeJsonToCurrentVersion = (
+  m: MetaframeDefinitionV5 | MetaframeDefinitionV4
+): MetaframeDefinitionV5 => {
+  switch (m.version) {
+    case VersionsMetaframe.V0_3:
+    case VersionsMetaframe.V0_4:
+      const source: MetaframeDefinitionV4 = m as MetaframeDefinitionV4;
+      const metaframeDefV5: MetaframeDefinitionV5 = {
+        version: VersionsMetaframe.V0_5,
+        inputs: source.inputs,
+        outputs: source.outputs,
+        allow: source.allow,
+        metadata: source.metadata
+          ? {
+              name: source.metadata.title,
+              author: source.metadata.author,
+              image: source.metadata.image,
+              description: source.metadata.descriptionUrl,
+              tags: source.metadata.keywords,
+            }
+          : undefined,
+      };
+    case VersionsMetaframe.V0_5:
+      return m as MetaframeDefinitionV5;
+    default:
+      throw `Unsupported metaframe version: ${m.version}. Please upgrade to a new version: npm i @metapages/metapage@latest`;
+  }
+};
 
 // metapages can convert any past version to the current version.
 export const convertToCurrentDefinition = (def: any): MetapageDefinition => {
@@ -25,25 +64,29 @@ export const convertToCurrentDefinition = (def: any): MetapageDefinition => {
   let updatedDefinition: MetapageDefinition;
 
   switch (getMatchingVersion(def.version)) {
-    case VersionsMetapage.V0_2:
-      {
-        updatedDefinition = convertToCurrentDefinition(definition_v0_2_to_v0_3(def as V0_2MetapageDefinition));
-        break;
-      }
-    case VersionsMetapage.V0_3:
-      {
-        updatedDefinition = def as MetapageDefinition; // Latest
-        break;
-      }
-    default:
-      console.warn(`Metapage definition version=${def.version} but we only know up to version ${MetapageVersionCurrent}. Assuming the definition is compatible, but it's the future!`);
+    case VersionsMetapage.V0_2: {
+      updatedDefinition = convertToCurrentDefinition(
+        definition_v0_2_to_v0_3(def as V0_2MetapageDefinition)
+      );
+      break;
+    }
+    case VersionsMetapage.V0_3: {
       updatedDefinition = def as MetapageDefinition; // Latest
+      break;
+    }
+    default: // Latest
+      console.warn(
+        `Metapage definition version=${def.version} but we only know up to version ${MetapageVersionCurrent}. Assuming the definition is compatible, but it's the future!`
+      );
+      updatedDefinition = def as MetapageDefinition;
       break;
   }
   return updatedDefinition;
 };
 
-const definition_v0_2_to_v0_3 = (old: V0_2MetapageDefinition): V0_3MetapageDefinition => {
+const definition_v0_2_to_v0_3 = (
+  old: V0_2MetapageDefinition
+): V0_3MetapageDefinition => {
   // Exactly the same except v0.3 has plugins
   old.version = VersionsMetapage.V0_3;
   return old;
@@ -57,7 +100,10 @@ const definition_v0_2_to_v0_3 = (old: V0_2MetapageDefinition): V0_3MetapageDefin
  * be passed in.
  * Returns true if the original map was modified.
  */
-export const merge = (current: MetaframeInputMap, newInputs: MetaframeInputMap): boolean => {
+export const merge = (
+  current: MetaframeInputMap,
+  newInputs: MetaframeInputMap
+): boolean => {
   if (!newInputs) {
     return false;
   }
@@ -80,13 +126,18 @@ export const getMatchingVersion = (version: string): VersionsMetapage => {
     return MetapageVersionCurrent;
   } else if (compare(version, "0.2", "<")) {
     throw `Unknown version: ${version}`;
-  } else if (compare(version, "0.2", ">=") && compare(version, VersionsMetapage.V0_3, "<")) {
+  } else if (
+    compare(version, "0.2", ">=") &&
+    compare(version, VersionsMetapage.V0_3, "<")
+  ) {
     return VersionsMetapage.V0_2;
   } else if (compare(version, "0.3", ">=")) {
     return VersionsMetapage.V0_3;
   } else {
     // Return something, assume latest
-    console.log(`Could not match version=${version} to any known version, assuming ${MetapageVersionCurrent}`);
+    console.log(
+      `Could not match version=${version} to any known version, assuming ${MetapageVersionCurrent}`
+    );
     return MetapageVersionCurrent;
   }
 };
@@ -99,11 +150,15 @@ export const getUrlParam = (key: MetapageHashParams): string | null => {
 };
 
 export const getUrlParamDebug = (): boolean => {
-  return new URLSearchParams(window.location.search).has(MetapageHashParams.mp_debug);
+  return new URLSearchParams(window.location.search).has(
+    MetapageHashParams.mp_debug
+  );
 };
 
 export const isDebugFromUrlsParams = (): boolean => {
-  const param = new URLSearchParams(window.location.search).get(MetapageHashParams.mp_debug);
+  const param = new URLSearchParams(window.location.search).get(
+    MetapageHashParams.mp_debug
+  );
   return param === "true" || param === "1";
 };
 
@@ -129,7 +184,8 @@ export const generateNonce = (length: number = 8): string => {
 const LETTERS = "abcdefghijklmnopqrstuvwxyz0123456789";
 export const generateId = (length: number = 8): string => {
   var result = "";
-  var characters = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  var characters =
+    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   var charactersLength = LETTERS.length;
   for (var i = 0; i < length; i++) {
     result += LETTERS.charAt(Math.floor(Math.random() * charactersLength));
@@ -138,9 +194,7 @@ export const generateId = (length: number = 8): string => {
 };
 
 export const log = (o: any, color?: string, backgroundColor?: string) => {
-  color = color
-    ? color
-    : "000";
+  color = color ? color : "000";
   if (color && color.trim() == "") {
     color = undefined;
   }
@@ -184,7 +238,9 @@ export const intToRGB = (i: number): string => {
 };
 
 export const isPageLoaded = (): boolean => {
-  return document.readyState == "complete" || document.readyState == "interactive";
+  return (
+    document.readyState == "complete" || document.readyState == "interactive"
+  );
   // https://stackoverflow.com/questions/13364613/how-to-know-if-window-load-event-was-fired-already/28093606
   // // TODO ugh casting here but I can't seem to get the right type with the loadEventEnd
   // return window.performance.getEntriesByType("navigation").every((e) => { return (e as PerformanceNavigationTiming).loadEventEnd > 0 });
@@ -200,7 +256,7 @@ export const pageLoaded = async (): Promise<void> => {
       return;
     }
     let loaded = false;
-    window.addEventListener('load', () => {
+    window.addEventListener("load", () => {
       if (loaded) {
         return;
       }
@@ -214,5 +270,5 @@ export const pageLoaded = async (): Promise<void> => {
         resolve();
       }
     }, 200);
-  })
+  });
 };

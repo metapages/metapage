@@ -1,11 +1,14 @@
 import { EventEmitter, ListenerFn } from "eventemitter3";
-import { VERSION_METAPAGE, METAPAGE_KEY_STATE, METAPAGE_KEY_DEFINITION } from "./Constants";
+import {
+  VERSION_METAPAGE,
+  METAPAGE_KEY_STATE,
+  METAPAGE_KEY_DEFINITION,
+} from "./Constants";
 import {
   JsonRpcMethodsFromParent,
   SetupIframeServerResponseData,
   MinimumClientMessage,
   ClientMessageRecievedAck,
-  MetaframeDefinition,
   MetaframeInputMap,
   MetaframePipeId,
   MetaframeId,
@@ -13,12 +16,14 @@ import {
   MetapageInstanceInputs,
   VersionsMetapage,
   VersionsMetaframe,
+  MetaframeDefinitionV5,
 } from "./v0_4";
 import {
   stringToRgb,
   log as MetapageToolsLog,
   merge,
   pageLoaded,
+  convertMetaframeJsonToCurrentVersion,
 } from "./MetapageTools";
 import { JsonRpcRequest } from "./jsonrpc2";
 import { MetapageShared, MetapageHashParams } from "./Shared";
@@ -30,7 +35,9 @@ import { MetapageEvents } from "./v0_4/events";
  *   2. the child iframe object sends SetupIframeClientRequest
  *     - this marks the iframe as ready
  */
-export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromParent | MetapageEvents> {
+export class MetapageIFrameRpcClient extends EventEmitter<
+  JsonRpcMethodsFromParent | MetapageEvents
+> {
   iframe: Promise<HTMLIFrameElement>;
   _iframe: HTMLIFrameElement;
   id: MetaframeId;
@@ -48,12 +55,19 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
   _parentId: MetapageId;
   _debug: boolean;
   _sendInputsAfterRegistration: boolean = false;
-  _definition: MetaframeDefinition | undefined;
+  _definition: MetaframeDefinitionV5 | undefined;
   _plugin: boolean = false;
 
   _metapage: MetapageShared;
 
-  constructor(metapage: MetapageShared, url: string, iframeId: MetaframeId, parentId: MetapageId, consoleBackgroundColor: string, debug: boolean = false) {
+  constructor(
+    metapage: MetapageShared,
+    url: string,
+    iframeId: MetaframeId,
+    parentId: MetapageId,
+    consoleBackgroundColor: string,
+    debug: boolean = false
+  ) {
     super();
     // Url sanitation
     // Urls can be relative paths, if so, turn them into absolute URLs
@@ -63,10 +77,15 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
       while (url.startsWith("/")) {
         url = url.substr(1);
       }
-      url = window.location.protocol + "//" + window.location.hostname + (
-        window.location.port && window.location.port != ""
+      url =
+        window.location.protocol +
+        "//" +
+        window.location.hostname +
+        (window.location.port && window.location.port != ""
           ? ":" + window.location.port
-          : "") + "/" + url;
+          : "") +
+        "/" +
+        url;
     }
     this.url = url;
     this._metapage = metapage;
@@ -96,9 +115,11 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
       pageLoaded().then(async () => {
         // parent page loaded, set the iframe src to start loading
         // get the definition in case we need to set allow permissions
-        if (selfThis._iframe) { // possibly already disposed
+        if (selfThis._iframe) {
+          // possibly already disposed
           const metaframeDef = await selfThis.getDefinition();
-          if (!selfThis._iframe) { // possibly already disposed
+          if (!selfThis._iframe) {
+            // possibly already disposed
             return;
           }
           // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
@@ -140,7 +161,10 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     this.isDisposed = this.isDisposed.bind(this);
   }
 
-  addListenerReturnDisposer(event: JsonRpcMethodsFromParent | MetapageEvents, listener: ListenerFn<any[]>): () => void {
+  addListenerReturnDisposer(
+    event: JsonRpcMethodsFromParent | MetapageEvents,
+    listener: ListenerFn<any[]>
+  ): () => void {
     super.addListener(event, listener);
     const disposer = () => {
       super.removeListener(event, listener);
@@ -162,19 +186,26 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
   }
 
   public hasPermissionsState(): boolean {
-    return (this._definition !== undefined && this._definition.inputs !== undefined && this._definition.inputs![METAPAGE_KEY_STATE] !== undefined);
+    return (
+      this._definition !== undefined &&
+      this._definition.inputs !== undefined &&
+      this._definition.inputs![METAPAGE_KEY_STATE] !== undefined
+    );
   }
 
   public hasPermissionsDefinition(): boolean {
-    return (this._definition !== undefined && this._definition.inputs !== undefined && this._definition.inputs![METAPAGE_KEY_DEFINITION] !== undefined);
+    return (
+      this._definition !== undefined &&
+      this._definition.inputs !== undefined &&
+      this._definition.inputs![METAPAGE_KEY_DEFINITION] !== undefined
+    );
   }
 
   public getDefinitionUrl(): string {
     var url = new URL(this.url);
-    url.pathname = url.pathname + (
-      url.pathname.endsWith("/")
-        ? "metaframe.json"
-        : "/metaframe.json");
+    url.pathname =
+      url.pathname +
+      (url.pathname.endsWith("/") ? "metaframe.json" : "/metaframe.json");
     return url.href;
   }
 
@@ -186,7 +217,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
    * but advanced features e.g. allow permissions won't work and
    * anything relying on metadata.
    */
-  public async getDefinition(): Promise<MetaframeDefinition|undefined> {
+  public async getDefinition(): Promise<MetaframeDefinitionV5 | undefined> {
     if (this._definition) {
       return this._definition;
     }
@@ -196,14 +227,23 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
       const response = await window.fetch(url);
       if (response.ok) {
         const metaframeDef = await response.json();
-        this._definition = metaframeDef;
+
+        const metaframeDefCurrent =
+          convertMetaframeJsonToCurrentVersion(metaframeDef);
+        this._definition = metaframeDefCurrent;
         return this._definition;
       } else {
-        this.emit(MetapageEvents.Error, `Failed to fetch: ${url}\nStatus: ${response.status}\nStatus text: ${response.statusText}`);
+        this.emit(
+          MetapageEvents.Error,
+          `Failed to fetch: ${url}\nStatus: ${response.status}\nStatus text: ${response.statusText}`
+        );
       }
-    } catch(err) {
+    } catch (err) {
       // hmm silent on failures to load the metaframe.json?
-      this.emit(MetapageEvents.Error, `Failed to fetch: ${url}\nError: ${err}`);
+      this.emit(
+        MetapageEvents.Error,
+        `Failed to fetch or convert: ${url}\nError: ${err}`
+      );
     }
   }
 
@@ -217,12 +257,15 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
   /**
    * Sends the updated inputs to the iframe
    */
-  _cachedEventInputsUpdate: { iframeId: string | undefined, inputs: MetaframeInputMap | undefined } = {
+  _cachedEventInputsUpdate: {
+    iframeId: string | undefined;
+    inputs: MetaframeInputMap | undefined;
+  } = {
     iframeId: undefined,
-    inputs: undefined
+    inputs: undefined,
   };
   public setInputs(maybeNewInputs: MetaframeInputMap): MetapageIFrameRpcClient {
-    this.log({m:'MetapageIFrameRpcClient', inputs:maybeNewInputs});
+    this.log({ m: "MetapageIFrameRpcClient", inputs: maybeNewInputs });
     if (!merge(this.inputs, maybeNewInputs)) {
       return this;
     }
@@ -261,7 +304,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
 
   _cachedEventOutputsUpdate = {
     iframeId: null,
-    inputs: null
+    inputs: null,
   };
   public setOutputs(maybeNewOutputs: MetaframeInputMap) {
     if (!merge(this.outputs, maybeNewOutputs)) {
@@ -349,20 +392,23 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
       parentId: this._parentId,
       plugin: this._plugin,
       state: {
-        inputs: this.inputs
+        inputs: this.inputs,
       },
-      version: VERSION_METAPAGE as VersionsMetapage
+      version: VERSION_METAPAGE as VersionsMetapage,
     };
-    this.sendRpcInternal(JsonRpcMethodsFromParent.SetupIframeServerResponse, response);
+    this.sendRpcInternal(
+      JsonRpcMethodsFromParent.SetupIframeServerResponse,
+      response
+    );
   }
 
   public registered(version: VersionsMetaframe) {
-    this.log({m:'MetapageIFrameRpcClient.registered', inputs:this.inputs});
+    this.log({ m: "MetapageIFrameRpcClient.registered", inputs: this.inputs });
     if (this._loaded) {
       return;
     }
     if (!version) {
-      throw 'Cannot register without a version';
+      throw "Cannot register without a version";
     }
     this.version = version;
     this._loaded = true;
@@ -381,7 +427,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
   sendInputs(inputs: MetaframeInputMap) {
     this.sendRpc(JsonRpcMethodsFromParent.InputsUpdate, {
       inputs: inputs,
-      parentId: this._parentId
+      parentId: this._parentId,
     });
   }
 
@@ -402,11 +448,13 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     if (this._debug) {
       this.log("⚒ ⚒ ⚒ sending ack from client to frame");
       var payload: ClientMessageRecievedAck<any> = {
-        message: message
+        message: message,
       };
       this.sendRpc(JsonRpcMethodsFromParent.MessageAck, payload);
     } else {
-      this.log("⚒ ⚒ ⚒ NOT sending ack from client to frame since not debug mode");
+      this.log(
+        "⚒ ⚒ ⚒ NOT sending ack from client to frame since not debug mode"
+      );
     }
   }
 
@@ -426,7 +474,11 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
     } else {
       s = JSON.stringify(o);
     }
-    MetapageToolsLog(`Metapage[${this._parentId}] Metaframe[${this.id}] ${s}`, this._color, this._consoleBackgroundColor);
+    MetapageToolsLog(
+      `Metapage[${this._parentId}] Metaframe[${this.id}] ${s}`,
+      this._color,
+      this._consoleBackgroundColor
+    );
   }
 
   sendRpcInternal(method: string, params: any) {
@@ -436,12 +488,16 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
       jsonrpc: "2.0",
       method: method,
       params: params,
-      parentId: this._parentId
+      parentId: this._parentId,
     };
     if (this._iframe) {
       this.sendOrBufferPostMessage(messageJSON);
     } else {
-      this._metapage.error(`Cannot send to child iframe messageJSON=${JSON.stringify(messageJSON).substr(0, 200)}`);
+      this._metapage.error(
+        `Cannot send to child iframe messageJSON=${JSON.stringify(
+          messageJSON
+        ).substr(0, 200)}`
+      );
     }
   }
 
@@ -456,7 +512,9 @@ export class MetapageIFrameRpcClient extends EventEmitter<JsonRpcMethodsFromPare
         const thing = this;
         this._bufferTimeout = window.setInterval(function () {
           if (thing._iframe && thing._iframe.contentWindow) {
-            thing._bufferMessages!.forEach(m => thing._iframe!.contentWindow!.postMessage(m, thing.url));
+            thing._bufferMessages!.forEach((m) =>
+              thing._iframe!.contentWindow!.postMessage(m, thing.url)
+            );
             window.clearInterval(thing._bufferTimeout);
             thing._bufferTimeout = undefined;
             thing._bufferMessages = undefined;
