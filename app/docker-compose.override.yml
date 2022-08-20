@@ -31,7 +31,14 @@ services:
   libs:
     command: just dev
     volumes:
-      - ./libs:/workspace/libs
+      - ./libs/etc:/workspace/libs/etc
+      - ./libs/src:/workspace/libs/src
+      - ./libs/test:/workspace/libs/test
+      - ./libs/justfile:/workspace/libs/justfile
+      - ./libs/package.json:/workspace/libs/package.json
+      - ./libs/package-lock.json:/workspace/libs/package-lock.json
+      - ./libs/tsconfig.json:/workspace/libs/tsconfig.json
+      - node_modules:/workspace/libs/node_modules
       # The compiled output is put there
       - ./docs:/workspace/docs
     environment:
@@ -58,3 +65,7 @@ services:
       # internal port is hard coded in _config.dev.yml
       # For debugging, normal traffic is routed though the ingress service to support HTTPS
       - "${PORT_DOCS:-4000}:4000"
+
+volumes:
+  node_modules:
+    driver: local

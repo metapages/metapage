@@ -1,0 +1,5 @@
+# https://kodiakhq.com/docs/
+# Automatically updates and re-runs checks on PRs, then merges if checks pass. Huge time saver.
+# Use github label "automerge"
+# Minimal config. version is the only required field.
+version = 1

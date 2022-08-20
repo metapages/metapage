@@ -75,5 +75,5 @@ jobs:
           # https://docs.github.com/en/free-pro-team@latest/actions/reference/authentication-in-a-workflow#about-the-github_token-secret
           GITHUB_TOKEN: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
         with:
-          command: "just test"
-          github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}
+          command: "echo $GITHUB_TOKEN | docker login -u USERNAME --password-stdin ghcr.io && just test"
+          # github_token: ${{ secrets.PERSONAL_ACCESS_TOKEN }}

@@ -1,17 +1,18 @@
 # just docs: https://github.com/casey/just
-set shell := ["bash", "-c"]
+set shell                          := ["bash", "-c"]
+set dotenv-load                    := true
 export ROOT                        := `git rev-parse --show-toplevel`
+# In CI environments, building images also involves pushing and pulling the cache
+export CI                          := env_var_or_default("CI", "")
 # Eg "ghcr.io". By default, the ci environment will set this.
 # Required for pulling/pushing images, not required for locally building and running.
 export DOCKER_REGISTRY             := env_var_or_default("DOCKER_REGISTRY", "")
 # Eg "yourname/yourrepo". By default, we'll try to get it whereever it might be available, no value means local development
 # This line is duplicated in ci/justfile
-export DOCKER_IMAGE_PREFIX         := env_var_or_default("DOCKER_IMAGE_PREFIX", "")
+export DOCKER_IMAGE_PREFIX         := env_var_or_default("DOCKER_IMAGE_PREFIX", `which deno >/dev/null && which git >/dev/null && GITHUB_ACTIONS=true deno run --unstable --allow-all https://deno.land/x/cloudseed@v0.0.21/cloudseed/docker_image_prefix.ts`)
 # By default, set by these scripts. Eg <git sha>, v1.2.3, or some other meaningful tag (cache|local)
 # For typical operations (outside of debugging), you won't need to set this yourself
-# This line is duplicated in ci/justfile
-# export DOCKER_TAG               := env_var_or_default("DOCKER_TAG", `(which git >/dev/null && git rev-parse --short HEAD) || echo local`)
-export DOCKER_TAG               := env_var_or_default("DOCKER_TAG", "local")
+export DOCKER_TAG                  := env_var_or_default("DOCKER_TAG", `(which git >/dev/null && git rev-parse --short HEAD) || echo local`)
 # Required for local https certificates, OAuth config, and the https URL
 # This line is duplicated in ci/justfile
 export APP_FQDN                    := env_var_or_default("APP_FQDN", "app1.dev")
@@ -56,11 +57,30 @@ _help:
     just _build {{args}}
 
 # 🌱 Test the application stack
-@test:
+test:
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    # Scope the compose stack
+    export DOCKER_COMPOSE_PROJECT_NAME=test
+    export DOCKER_COMPOSE_ARGS="-f docker-compose.yml"
+    export DOCKER_TAG={{DOCKER_TAG}}
+    export DOCKER_REGISTRY=ghcr.io/
+    export DOCKER_IMAGE_PREFIX={{DOCKER_IMAGE_PREFIX}}
+    export DOCKER_BUILDKIT=0
+
+    if [ "{{CI}}" = "true" ]; then
+        DOCKER_TAG=cache just _pull || true
+        echo -e "🚪 <app/> {{bold}}DOCKER_TAG=cache {{DOCKER_COMPOSE}} build test{{normal}} 🚪 "
+        DOCKER_TAG=cache {{DOCKER_COMPOSE}} build
+        DOCKER_TAG=cache just _push
+    fi
+
     echo -e "🚪 <app/> {{bold}}DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} build test{{normal}} 🚪 "
-    DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} build
+    {{DOCKER_COMPOSE}} build
+
     echo -e "🚪 <app/> {{bold}}DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} up --exit-code-from test test{{normal}} 🚪 "
-    DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} up --abort-on-container-exit --exit-code-from libs libs
+    {{DOCKER_COMPOSE}} up --abort-on-container-exit --remove-orphans --exit-code-from libs libs
 
 # build, up, open
 dev: _ensureDeno

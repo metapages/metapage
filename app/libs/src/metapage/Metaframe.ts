@@ -28,13 +28,13 @@ import { isIframe } from "./Shared";
 import { MetapageEventUrlHashUpdate } from "./v0_4/events";
 
 // TODO combine/unify MetaframeEvents and MetaframeLoadingState
-enum MetaframeLoadingState {
+export enum MetaframeLoadingState {
   WaitingForPageLoad = "WaitingForPageLoad",
   SentSetupIframeClientRequest = "SentSetupIframeClientRequest",
   Ready = "Ready",
 }
 
-enum MetaframeEvents {
+export enum MetaframeEvents {
   Connected = "connected",
   Error = "error",
   Input = "input",
@@ -42,7 +42,7 @@ enum MetaframeEvents {
   Message = "message",
 }
 
-type MetaframeOptions = {
+export type MetaframeOptions = {
   disableHashChangeEvent?: boolean;
 };
 
