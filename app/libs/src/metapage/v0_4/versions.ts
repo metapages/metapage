@@ -4,6 +4,7 @@
 export enum VersionsMetaframe {
 	V0_3 = "0.3",
 	V0_4 = "0.4",
+	V0_5 = "0.5",
 }
 
 export enum VersionsMetapage {
@@ -13,7 +14,7 @@ export enum VersionsMetapage {
 
 export const MetaframeVersionsAll = Object.keys(VersionsMetaframe);
 
-export const MetaframeVersionCurrent = VersionsMetaframe.V0_4;
+export const MetaframeVersionCurrent = VersionsMetaframe.V0_5;
 
 export const MetapageVersionsAll = Object.keys(VersionsMetapage);
 

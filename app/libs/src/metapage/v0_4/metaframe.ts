@@ -37,20 +37,29 @@ export type MetaframeEditTypeMetapage = {
   key?: string; // default is "edit"
 };
 
-export type MetaframeMetadata = {
+export type MetaframeMetadataV4 = {
   version?: string;
+  title?: string;
+  author?: string;
+  image?: string;
+  descriptionUrl?: string;
+  keywords?: string[];
+  iconUrl?: string;
+};
+
+export type MetaframeMetadataV5 = {
   name?: string;
   description?: string;
   author?: string;
   image?: string;
-  keywords?: string[];
-  edit: {
+  tags?: string[];
+  edit?: {
     type: MetaframeEditType;
     value: MetaframeEditTypeMetaframe | MetaframeEditTypeMetapage;
   };
 };
 
-export interface MetaframeDefinition {
+export interface MetaframeDefinitionV4 {
   version?: VersionsMetaframe;
   inputs?: {
     [key: string]: MetaframePipeDefinition;
@@ -58,7 +67,21 @@ export interface MetaframeDefinition {
   outputs?: {
     [key: string]: MetaframePipeDefinition;
   }; // <MetaframePipeId, MetaframePipeDefinition>
-  metadata: MetaframeMetadata;
+  metadata: MetaframeMetadataV4;
+  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
+  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Feature-Policy#directives
+  allow?: string;
+}
+
+export interface MetaframeDefinitionV5 {
+  version: VersionsMetaframe;
+  inputs?: {
+    [key: string]: MetaframePipeDefinition;
+  }; // <MetaframePipeId, MetaframePipeDefinition>
+  outputs?: {
+    [key: string]: MetaframePipeDefinition;
+  }; // <MetaframePipeId, MetaframePipeDefinition>
+  metadata?: MetaframeMetadataV5;
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Feature-Policy#directives
   allow?: string;
