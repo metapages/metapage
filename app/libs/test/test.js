@@ -30,7 +30,7 @@ const puppeteer = require("puppeteer");
 const lib = require("./lib");
 
 const isContainer = fs.existsSync("/.dockerenv");
-const timePerTest = 5000;
+const timePerTest = 10000;
 const serverPort = process.env.PORT ? parseInt(process.env.PORT) : 3000;
 
 async function runSingleMetapageTest(version, timeout) {
