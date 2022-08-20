@@ -27,15 +27,18 @@ FROM jekyll/jekyll:4.2.0 as jekyll
 RUN apk upgrade && apk --no-cache add curl bash
 
 # justfile https://github.com/casey/just
-RUN VERSION=0.8.4 ; \
-    SHA256SUM=c361b0df74dcd64f7a8aeb839dce5ae2bb0d14b8ceb2046b4828ee042ec7c98e ; \
-    curl -L -O https://github.com/casey/just/releases/download/v$VERSION/just-v$VERSION-x86_64-unknown-linux-musl.tar.gz && \
-    (echo "$SHA256SUM  just-v$VERSION-x86_64-unknown-linux-musl.tar.gz" | sha256sum  -c -) && \
-    mkdir -p /tmp/just && mv just-v$VERSION-x86_64-unknown-linux-musl.tar.gz /tmp/just && cd /tmp/just && \
-    tar -xzf just-v$VERSION-x86_64-unknown-linux-musl.tar.gz && \
-    mkdir -p /usr/local/bin && mv /tmp/just/just /usr/local/bin/ && rm -rf /tmp/just
-# just tweak: unify the just binary location on host and container platforms because otherwise the shebang doesn't work properly due to no string token parsing (it gets one giant string)
+RUN VERSION=1.0.0 ; \
+    SHA256SUM=342f8582d929b9212ffcbe9f7749e12908053cf215eb8d4a965c47ea2f24b0a4 ; \
+    curl -L -O https://github.com/casey/just/releases/download/$VERSION/just-$VERSION-x86_64-unknown-linux-musl.tar.gz && \
+    (echo "$SHA256SUM  just-$VERSION-x86_64-unknown-linux-musl.tar.gz" | sha256sum -c -) && \
+    mkdir -p /usr/local/bin && \
+    tar -xzf just-$VERSION-x86_64-unknown-linux-musl.tar.gz -C /usr/local/bin just && \
+    rm -rf just-$VERSION-x86_64-unknown-linux-musl.tar.gz
+# Unify the just binary location on host and container platforms because otherwise the shebang doesn't work properly due to no string token parsing (it gets one giant string)
 ENV PATH $PATH:/usr/local/bin
+# alias "j" to just, it's just right there index finger
+RUN echo -e '#!/bin/bash\njust "$@"' > /usr/bin/j && \
+    chmod +x /usr/bin/j
 
 # watchexec for live reloading in development https://github.com/watchexec/watchexec
 RUN VERSION=1.14.1 ; \

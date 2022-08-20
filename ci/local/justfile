@@ -2,10 +2,11 @@
 # Automates building, testing, and deployment
 #  - Commands beginning with "@" are (or will be) used for automation and are required to link to docs explaining further if needed
 
-set shell := ["bash", "-c"]
+set shell       := ["bash", "-c"]
+set dotenv-load := true
 # minimal formatting, bold is very useful
-bold     := '\033[1m'
-normal   := '\033[0m'
+bold            := '\033[1m'
+normal          := '\033[0m'
 
 @_help:
     echo "CI: automated build|test|deploy on your local machine"

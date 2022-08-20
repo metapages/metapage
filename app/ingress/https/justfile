@@ -1,4 +1,5 @@
-set shell := ["bash", "-c"]
+set shell       := ["bash", "-c"]
+set dotenv-load := true
 export APP_FQDN := env_var_or_default("APP_FQDN", "app1.dev")
 bold            := '\033[1m'
 normal          := '\033[0m'

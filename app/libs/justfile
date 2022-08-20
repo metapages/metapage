@@ -142,6 +142,8 @@ publish: _require_NPM_TOKEN _ensure_node_modules
     cd {{NPM_MODULE_OUTPUT}} && \
         echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc && \
         npm publish --access public .
+    git tag $VERSION
+    git push origin $VERSION
 
 # Unpublish version https://docs.npmjs.com/cli/v7/commands/npm-unpublish
 unpublish version:

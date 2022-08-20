@@ -7,7 +7,7 @@
 #################################################################
 
 # FROM us.gcr.io/zenika-hub/alpine-chrome:85-with-puppeteer as build
-FROM zenika/alpine-chrome:85-with-puppeteer as build
+FROM zenika/alpine-chrome:100-with-puppeteer as build
 
 USER root
 RUN apk update && apk upgrade && apk --no-cache add \
@@ -16,14 +16,14 @@ RUN apk update && apk upgrade && apk --no-cache add \
     jq
 
 # justfile https://github.com/casey/just
-RUN VERSION=0.8.4 ; \
-    SHA256SUM=c361b0df74dcd64f7a8aeb839dce5ae2bb0d14b8ceb2046b4828ee042ec7c98e ; \
-    curl -L -O https://github.com/casey/just/releases/download/v$VERSION/just-v$VERSION-x86_64-unknown-linux-musl.tar.gz && \
-    (echo "$SHA256SUM  just-v$VERSION-x86_64-unknown-linux-musl.tar.gz" | sha256sum  -c -) && \
-    mkdir -p /tmp/just && mv just-v$VERSION-x86_64-unknown-linux-musl.tar.gz /tmp/just && cd /tmp/just && \
-    tar -xzf just-v$VERSION-x86_64-unknown-linux-musl.tar.gz && \
-    mkdir -p /usr/local/bin && mv /tmp/just/just /usr/local/bin/ && rm -rf /tmp/just
-# just tweak: unify the just binary location on host and container platforms because otherwise the shebang doesn't work properly due to no string token parsing (it gets one giant string)
+RUN VERSION=1.0.0 ; \
+    SHA256SUM=342f8582d929b9212ffcbe9f7749e12908053cf215eb8d4a965c47ea2f24b0a4 ; \
+    curl -L -O https://github.com/casey/just/releases/download/$VERSION/just-$VERSION-x86_64-unknown-linux-musl.tar.gz && \
+    (echo "$SHA256SUM  just-$VERSION-x86_64-unknown-linux-musl.tar.gz" | sha256sum -c -) && \
+    mkdir -p /usr/local/bin && \
+    tar -xzf just-$VERSION-x86_64-unknown-linux-musl.tar.gz -C /usr/local/bin just && \
+    rm -rf just-$VERSION-x86_64-unknown-linux-musl.tar.gz
+# Unify the just binary location on host and container platforms because otherwise the shebang doesn't work properly due to no string token parsing (it gets one giant string)
 ENV PATH $PATH:/usr/local/bin
 # alias "j" to just, it's just right there index finger
 RUN echo -e '#!/bin/bash\njust "$@"' > /usr/bin/j && \
@@ -84,9 +84,9 @@ RUN ALPINE_GLIBC_BASE_URL="https://github.com/sgerrand/alpine-pkg-glibc/releases
         "$ALPINE_GLIBC_BASE_PACKAGE_FILENAME" \
         "$ALPINE_GLIBC_BIN_PACKAGE_FILENAME" \
         "$ALPINE_GLIBC_I18N_PACKAGE_FILENAME"
-ENV DENO_VERSION=1.5.3
+ENV DENO_VERSION=1.24.3
 RUN apk add --virtual .download --no-cache curl ; \
-    SHA256SUM=2452296818a057db9bf307bd72c5da15883108415c1f7bd4f86153e3bce5cd44 ; \
+    SHA256SUM=ed407e49f88b2763ce9d1a13b566dd87bfc6239960a13a575b8075929987b3e7 ; \
     curl -fsSL https://github.com/denoland/deno/releases/download/v${DENO_VERSION}/deno-x86_64-unknown-linux-gnu.zip --output deno.zip \
     && (echo "$SHA256SUM  deno.zip" | sha256sum -c) \
     && unzip deno.zip \
@@ -97,7 +97,7 @@ RUN apk add --virtual .download --no-cache curl ; \
 
 # USER chrome
 
-RUN npm install -g npm@7.23.0
+RUN npm install -g npm@8.17.0
 
 #################################################################
 # libs: setup

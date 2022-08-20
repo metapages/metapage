@@ -17,8 +17,13 @@ export const convertToCurrentDefinition = (def: any): MetapageDefinition => {
     }
   }
 
+  if (!def.version) {
+    throw 'Missing "version" key in metapage definition';
+  }
+
   // Recursively convert up the version
   let updatedDefinition: MetapageDefinition;
+
   switch (getMatchingVersion(def.version)) {
     case VersionsMetapage.V0_2:
       {
@@ -71,7 +76,7 @@ export const merge = (current: MetaframeInputMap, newInputs: MetaframeInputMap):
 };
 
 export const getMatchingVersion = (version: string): VersionsMetapage => {
-  if (version == "latest") {
+  if (version === "latest") {
     return MetapageVersionCurrent;
   } else if (compare(version, "0.2", "<")) {
     throw `Unknown version: ${version}`;

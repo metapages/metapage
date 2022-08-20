@@ -4,11 +4,12 @@
 # More specific commands are in deeper justfiles
 #  - Commands containing 🌱 in the docs are (or will be) used for automation and are required to link to docs explaining further if needed
 
-set shell := ["bash", "-c"]
+set shell       := ["bash", "-c"]
+set dotenv-load := true
 # TODO: bold doesn't work, and it used to. What happened?
-bold     := '\033[1m'
-normal   := '\033[0m'
-blue     := '\033[0;34m'
+bold            := '\033[1m'
+normal          := '\033[0m'
+blue            := '\033[0;34m'
 
 # Temporarily disabled attempting to automatically jump into docker for the ci ops, since they
 # rely on building docker images, and mounting host directories is rife with permissions problems:
@@ -35,7 +36,7 @@ _help:
 
 # Run all build/unit tests
 @test:
-    just ci/test
+    just app/test
 
 # Publish new npm modules and associated documentation
 @publish:

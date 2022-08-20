@@ -1,4 +1,5 @@
-set shell := ["bash", "-c"]
+set shell       := ["bash", "-c"]
+set dotenv-load := true
 
 @_help:
     just --list

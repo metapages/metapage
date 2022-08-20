@@ -4,7 +4,8 @@
 # More specific commands are in deeper justfiles
 #  - Commands containing 🌱 in the docs are (or will be) used for automation and are required to link to docs explaining further if needed
 
-set shell := ["bash", "-c"]
+set shell         := ["bash", "-c"]
+set dotenv-load   := true
 
 export APP_FQDN   := env_var_or_default("APP_FQDN", "app1.dev")
 export APP_PORT   := env_var_or_default("APP_PORT", "443")
