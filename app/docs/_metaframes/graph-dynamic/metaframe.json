@@ -1,8 +1,7 @@
 {
-	"version": "0.2",
+	"version": "0.5",
 	"metadata": {
-		"version": "1",
-		"title": "Example animated input graph",
+		"name": "Example animated input graph",
 		"author": "Dion Whitehead"
 	},
 	"inputs": {
@@ -12,6 +11,6 @@
         "y": {
 			"type": "number"
         }
-        
+
 	}
 }

@@ -1,9 +1,8 @@
 {
-	"version": "0.3",
+	"version": "0.5",
 	"metadata": {
-		"version": "1.0",
-		"title": "JSON Summary",
-		"author": "Dion Amago Whitehead",
+		"name": "JSON Summary",
+		"author": "Dion Whitehead",
 		"description": "https://andrewtburks.dev/json-summary/"
 	},
 	"inputs": {

@@ -1,8 +1,7 @@
 {
-  "version": "0.2",
+  "version": "0.5",
   "metadata": {
-    "version": "0.1",
-    "title": "PV Protein Viewer",
+    "name": "PV Protein Viewer",
     "image": "protein.png"
   },
   "inputs": {

@@ -1,7 +1,6 @@
 {
-	"version": "0.2",
+	"version": "0.5",
 	"metadata": {
-		"version": "1",
 		"title": "Random Data Generator",
 		"author": "Dion Whitehead"
 	},

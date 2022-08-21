@@ -1,9 +1,8 @@
 {
-	"version": "0.3",
+	"version": "0.5",
 	"metadata": {
-		"version": "1.0",
-		"title": "markdown-it",
-		"author": "Dion Amago Whitehead",
+		"name": "markdown-it",
+		"author": "Dion Whitehead",
 		"description": "https://www.npmjs.com/package/markdown-it"
 	},
 	"inputs": {

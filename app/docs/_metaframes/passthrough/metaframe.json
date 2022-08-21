@@ -1,7 +1,7 @@
 {
-	"version": "0.3",
+	"version": "0.5",
 	"metadata": {
-		"title": "Observe inputs/outputs",
+		"name": "Observe inputs/outputs",
 		"author": "Dion Amago Whitehead"
 	},
 	"inputs": {
