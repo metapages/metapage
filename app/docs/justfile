@@ -28,6 +28,7 @@ dev:
 # build docs website in <../docs/> for https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages
 publish: clean
     #!/usr/bin/env bash
+    set -euo pipefail
     CURRENT_BRANCH=$(git branch --show-current)
     # delete existing gh-pages branch
     git branch --delete -D gh-pages || true
