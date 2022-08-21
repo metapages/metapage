@@ -18,7 +18,7 @@ import {
   MetaframeId,
   MetapageId,
   MetapageInstanceInputs,
-  MetapageDefinition,
+  MetapageDefinitionV3,
   VersionsMetapage,
 } from "./v0_4";
 import {
@@ -26,9 +26,9 @@ import {
   getMatchingVersion,
   generateMetapageId,
   existsAnyUrlParam,
-  convertToCurrentDefinition,
   pageLoaded,
   isDebugFromUrlsParams,
+  convertMetapageDefinitionToCurrentVersion,
 } from "./MetapageTools";
 import { INITIAL_NULL_METAPAGE_DEFINITION, MetapageShared } from "./Shared";
 import {
@@ -269,7 +269,7 @@ export class Metapage extends MetapageShared {
     return this._state.metaframes;
   }
 
-  public getDefinition(): MetapageDefinition {
+  public getDefinition(): MetapageDefinitionV3 {
     return this._definition;
   }
 
@@ -281,7 +281,7 @@ export class Metapage extends MetapageShared {
       throw "Metapage definition must have a version";
     }
 
-    const newDefinition: MetapageDefinition = convertToCurrentDefinition(def);
+    const newDefinition: MetapageDefinitionV3 = convertMetapageDefinitionToCurrentVersion(def);
 
     if (newDefinition.metaframes) {
       Object.keys(newDefinition.metaframes).forEach((metaframeId) => {

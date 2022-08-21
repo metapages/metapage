@@ -22,7 +22,7 @@ export type MetapageMetadata = {
   // layout?: MetapageMetadataLayout;
 };
 
-export interface MetapageDefinition {
+export interface MetapageDefinitionV3 {
   id?: MetapageId;
   // Best to require this even if annoying to users. It's like the docker-compose.yml version. Human velocity changes (slow but steady)
   version: VersionsMetapage;
