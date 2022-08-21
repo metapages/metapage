@@ -1,7 +1,6 @@
 import { compare } from "compare-versions";
 import { MetapageHashParams } from "./Shared";
 import {
-  MetapageDefinition,
   MetaframeInputMap,
   MetaframeId,
   MetapageId,
@@ -10,9 +9,52 @@ import {
   MetaframeDefinitionV5,
   VersionsMetaframe,
   MetaframeDefinitionV4,
+  MetapageDefinitionV3,
 } from "./v0_4";
 import { MetapageDefinition as V0_2MetapageDefinition } from "./v0_2/all";
 import { MetapageDefinition as V0_3MetapageDefinition } from "./v0_3/all";
+
+export const convertMetapageDefinitionToCurrentVersion = (
+  def: any | MetapageDefinitionV3
+): MetapageDefinitionV3 => {
+  if (def === null) {
+    throw "Metapage definition cannot be null";
+  }
+  if (typeof def === "string") {
+    try {
+      def = JSON.parse(def);
+    } catch (err) {
+      throw `Cannot parse into JSON:\n${def}`;
+    }
+  }
+
+  if (!def.version) {
+    throw 'Missing "version" key in metapage definition';
+  }
+
+  // Recursively convert up the version
+  let updatedDefinition: MetapageDefinitionV3;
+
+  switch (getMatchingVersion(def.version)) {
+    case VersionsMetapage.V0_2: {
+      updatedDefinition = convertMetapageDefinitionToCurrentVersion(
+        definition_v0_2_to_v0_3(def as V0_2MetapageDefinition)
+      );
+      break;
+    }
+    case VersionsMetapage.V0_3: {
+      updatedDefinition = def as MetapageDefinitionV3; // Latest
+      break;
+    }
+    default: // Latest
+      console.warn(
+        `Metapage definition version=${def.version} but we only know up to version ${MetapageVersionCurrent}. Assuming the definition is compatible, but it's the future!`
+      );
+      updatedDefinition = def as MetapageDefinitionV3;
+      break;
+  }
+  return updatedDefinition;
+};
 
 export const convertMetaframeJsonToCurrentVersion = (
   m: MetaframeDefinitionV5 | MetaframeDefinitionV4
@@ -42,47 +84,6 @@ export const convertMetaframeJsonToCurrentVersion = (
     default:
       throw `Unsupported metaframe version: ${m.version}. Please upgrade to a new version: npm i @metapages/metapage@latest`;
   }
-};
-
-// metapages can convert any past version to the current version.
-export const convertToCurrentDefinition = (def: any): MetapageDefinition => {
-  if (def === null) {
-    throw "Metapage definition cannot be null";
-  }
-  if (typeof def === "string") {
-    try {
-      def = JSON.parse(def);
-    } catch (err) {
-      throw `Cannot parse into JSON:\n${def}`;
-    }
-  }
-
-  if (!def.version) {
-    throw 'Missing "version" key in metapage definition';
-  }
-
-  // Recursively convert up the version
-  let updatedDefinition: MetapageDefinition;
-
-  switch (getMatchingVersion(def.version)) {
-    case VersionsMetapage.V0_2: {
-      updatedDefinition = convertToCurrentDefinition(
-        definition_v0_2_to_v0_3(def as V0_2MetapageDefinition)
-      );
-      break;
-    }
-    case VersionsMetapage.V0_3: {
-      updatedDefinition = def as MetapageDefinition; // Latest
-      break;
-    }
-    default: // Latest
-      console.warn(
-        `Metapage definition version=${def.version} but we only know up to version ${MetapageVersionCurrent}. Assuming the definition is compatible, but it's the future!`
-      );
-      updatedDefinition = def as MetapageDefinition;
-      break;
-  }
-  return updatedDefinition;
 };
 
 const definition_v0_2_to_v0_3 = (

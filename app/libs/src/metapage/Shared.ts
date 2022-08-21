@@ -1,8 +1,8 @@
 import { EventEmitter } from "eventemitter3";
 import {
   JsonRpcMethodsFromParent,
-  MetapageDefinition,
-  MetapageVersionCurrent
+  MetapageDefinitionV3,
+  MetapageVersionCurrent,
 } from "./v0_4";
 import { MetapageEvents } from "./v0_4/events";
 
@@ -19,12 +19,16 @@ export const isIframe = (): boolean => {
   }
 };
 
-export const INITIAL_NULL_METAPAGE_DEFINITION: MetapageDefinition = { version: MetapageVersionCurrent, metaframes: {} };
+export const INITIAL_NULL_METAPAGE_DEFINITION: MetapageDefinitionV3 = {
+  version: MetapageVersionCurrent,
+  metaframes: {},
+};
 
-export class MetapageShared extends EventEmitter<MetapageEvents | JsonRpcMethodsFromParent> {
-
+export class MetapageShared extends EventEmitter<
+  MetapageEvents | JsonRpcMethodsFromParent
+> {
   // Easier to ensure this value is never null|undefined
-  _definition: MetapageDefinition = INITIAL_NULL_METAPAGE_DEFINITION;
+  _definition: MetapageDefinitionV3 = INITIAL_NULL_METAPAGE_DEFINITION;
 
   constructor() {
     super();
@@ -32,9 +36,9 @@ export class MetapageShared extends EventEmitter<MetapageEvents | JsonRpcMethods
   }
 
   public error(err: any) {
-    throw 'Subclass should implement';
+    throw "Subclass should implement";
   }
-  public getDefinition(): MetapageDefinition {
+  public getDefinition(): MetapageDefinitionV3 {
     return this._definition;
   }
-};
+}
