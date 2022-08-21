@@ -60,6 +60,7 @@ build:
             exit 2
         fi
         # No docker-compose build step because this only happens on the host so local volumes are mounted in
+        docker-compose build docs
         docker-compose run docs just build
     else
         rm -rf ../../docs/*
