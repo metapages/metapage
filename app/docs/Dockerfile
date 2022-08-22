@@ -56,6 +56,8 @@ ADD ./Gemfile.lock ./Gemfile.lock
 
 # `bundle update` updates Gemfile.lock with the latest allowed versions
 RUN mkdir -p /jekyll/gems && chmod 777 /jekyll/gems && bundle config set --local path '/jekyll/gems'
+RUN gem install bundler:2.2.2
+RUN bundle update --bundler
 RUN bundle install
 
 ADD . /workspace/docs
