@@ -1,13 +1,14 @@
 {
     "name": "@metapages/metapage",
     "public": true,
-    "version": "0.11.4",
+    "version": "0.11.5",
     "description": "Connect web pages together",
     "repository": "https://github.com/metapages/metapage",
     "homepage": "https://metapages.org/",
-    "main": "./index.js",
+    "main": "index.js",
     "exports": "./index.js",
-    "browser": "./browser/index.js",
+    "files": ["dist"],
+    "browser": "browser/index.js",
     "source": "src/index.ts",
     "types": "index.d.ts",
     "dependencies": {
