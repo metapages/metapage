@@ -99,7 +99,6 @@ const createMermaidFlowchartFromMetapage = (metapageDefinition) => {
 	});
 
 	graphDefinition += '\n';
-	console.log(graphDefinition)
 
 	const searchParams = new URL(window.location.href).searchParams;
 	if (!(searchParams.get('TITLE') == '0' || searchParams.get('TITLE') == 'false')) {
