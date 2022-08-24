@@ -76,22 +76,30 @@ const createMermaidFlowchartFromMetapage = (metapageDefinition) => {
 	}
 
 	let graphDefinition = "graph LR";
+	const metaframeKeys = Object.keys(metapageDefinition.metaframes);
+	const metaframeKeysToMermaidId = Object.fromEntries(
+    Object.entries(metapageDefinition.metaframes).map(
+      ([k, v], i) => [k, i + 1]
+    ));
+
 	const safe = (s) => { return s.replace(/-/g, '_') };
-	Object.keys(metapageDefinition.metaframes).forEach(function(metaframeId) {
+	metaframeKeys.forEach(function(metaframeId, index) {
+		graphDefinition += `\n\t${metaframeKeysToMermaidId[metaframeId]}["${metaframeId}"]`;
+	});
+	metaframeKeys.forEach(function(metaframeId, index) {
 		if (metapageDefinition.metaframes[metaframeId].inputs && Object.keys(metapageDefinition.metaframes[metaframeId].inputs).length > 0) {
 			metapageDefinition.metaframes[metaframeId].inputs.forEach((pipe) => {
 				if (pipe.target) {
-				    graphDefinition += `\n\t${safe(pipe.metaframe)}-- ${safe(pipe.source)}:${safe(pipe.target)} -->${safe(metaframeId)}`;
+				    graphDefinition += `\n\t${metaframeKeysToMermaidId[pipe.metaframe]}-- ${safe(pipe.source)}:${safe(pipe.target)} -->${metaframeKeysToMermaidId[metaframeId]}`;
 				} else {
-					graphDefinition += `\n\t${safe(pipe.metaframe)}-- ${safe(pipe.source)} -->${safe(metaframeId)}`;
+					graphDefinition += `\n\t${metaframeKeysToMermaidId[pipe.metaframe]}-- ${safe(pipe.source)} -->${metaframeKeysToMermaidId[metaframeId]}`;
 				}
 			});
-		} else {
-			graphDefinition += `\n\t${safe(metaframeId)}`;
 		}
 	});
 
 	graphDefinition += '\n';
+	console.log(graphDefinition)
 
 	const searchParams = new URL(window.location.href).searchParams;
 	if (!(searchParams.get('TITLE') == '0' || searchParams.get('TITLE') == 'false')) {
