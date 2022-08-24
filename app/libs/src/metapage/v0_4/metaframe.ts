@@ -26,8 +26,8 @@ export type MetaframeEditTypeMetaframe = {
   // might map to path or search elements on the target metaframe
   params?: {
     from: string; // this is a hash param, it's the only param we can get from a metaframe
-    to: string;
-    toType: "search" | "hash" | "path";
+    to?: string; // default (same as from)
+    toType?: "search" | "hash" | "path"; // default is hash
   }[];
 };
 
