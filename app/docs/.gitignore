@@ -4,6 +4,7 @@ _site
 .jekyll-cache
 assets/js/metaframe
 assets/js/metapage
+_data/versions.yml
 # pages/test is copied from ../libs/test/page
 pages/test
 # generated from _config.dev.template.yml
