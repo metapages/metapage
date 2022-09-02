@@ -58,7 +58,11 @@ let metapageSourceUrl;
 if (VERSION == 'latest') {
     metapageSourceUrl = 'js/metapage/index.js';
 } else {
-    if (window.compareVersions(VERSION, '0.5.5') === 0) {
+    if (window.compareVersions(VERSION, '0.11.0') >= 0) {
+        metapageSourceUrl = `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/dist/browser/metapage/index.js`;
+    } else if (window.compareVersions(VERSION, '0.8.0') >= 0) {
+        metapageSourceUrl = `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metapage/index.js`;
+    } else if (window.compareVersions(VERSION, '0.5.5') === 0) {
         script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage-backup@${VERSION}/browser/metaframe/index.js`);
     } else if (window.compareVersions(VERSION, '0.5.2') > 0) {
         metapageSourceUrl = `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metapage/index.js`;
@@ -84,7 +88,7 @@ head.appendChild(script);
 // each will pass the next a data blob {versions:[]}. At the end the
 // metapage will verify that all metaframes added their versions
 // For this, we need all current supported library versions.
-// The versions data is created and commmited (../versions.json)
+// The versions data is created and commmited (app/docs/_data/versions.yml)
 let VERSIONS_METAFRAME = [];
 {{~ it.versions :k}}
 VERSIONS_METAFRAME.push("{{=k}}");

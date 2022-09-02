@@ -43,7 +43,11 @@ script.setAttribute('type', 'text/javascript');
 if (VERSION == 'latest') {
     script.setAttribute('src', `/js/metaframe/index.js`);
 } else {
-    if (window.compareVersions(VERSION, '0.5.5') === 0) {
+    if (window.compareVersions(VERSION, '0.11.0') >= 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/dist/browser/metaframe/index.js`);
+    } else if (window.compareVersions(VERSION, '0.8.0') >= 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metaframe/index.js`);
+    } else if (window.compareVersions(VERSION, '0.5.5') === 0) {
         script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage-backup@${VERSION}/browser/metaframe/index.js`);
     } else if (window.compareVersions(VERSION, '0.5.0') >= 0) {
         script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metaframe/index.js`);

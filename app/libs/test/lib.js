@@ -30,6 +30,27 @@ const getMetapageVersions = async (args) => {
   //   return compareVersions(v, "0.3.2") >= 0 && v !== '0.4.101';
   // });
 
+  for (const version of [...versions]) {
+    let deprecated = false;
+    const deprecatedMarkerFileBecauseSlowOp = `/tmp/_deprecated_${(package + "@" + version).replaceAll("/", "-")}`
+    if (fs.existsSync(deprecatedMarkerFileBecauseSlowOp)) {
+      deprecated = true;
+    } else {
+      const { stdout  } = await exec(`npm --silent show ${package}@${version} --json`);
+      let versionsBlob = JSON.parse(stdout);
+      deprecated = !!versionsBlob.deprecated;
+      if (deprecated) {
+        fs.writeFileSync(deprecatedMarkerFileBecauseSlowOp, "true");
+      }
+    }
+    if (deprecated) {
+      const index = versions.indexOf(version);
+      if (index >= 0) {
+        versions.splice(index, 1);
+      }
+    }
+  }
+
   // Include the new version in package.json, because we're publishing
   if (includeLocal) {
     var packageJson = fs.readFileSync(path.join(__dirname, '../package.json')).toString();

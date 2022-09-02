@@ -116,7 +116,7 @@ ENV PARCEL_WORKERS=1
 
 ADD tsconfig.json ./tsconfig.json
 ADD justfile ./justfile
-ADD README-PACKAGE.md ./
+ADD README.md ./
 ADD LICENSE ./
 ADD src ./src
 ADD test ./test

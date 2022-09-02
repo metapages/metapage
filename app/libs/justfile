@@ -54,9 +54,9 @@ _build_npm:
     mkdir -p {{NPM_MODULE_OUTPUT}}
     echo -e "🍳👉 {{bold}}Compiling typescript  => {{NPM_MODULE_OUTPUT}}/{{normal}}"
     {{tsc}} --outDir {{NPM_MODULE_OUTPUT}}
-    cp package.json      {{NPM_MODULE_OUTPUT}}/package.json
-    cp README-PACKAGE.md {{NPM_MODULE_OUTPUT}}/README.md
-    cp LICENSE           {{NPM_MODULE_OUTPUT}}/
+    # cp package.json      {{NPM_MODULE_OUTPUT}}/package.json
+    # cp README-PACKAGE.md {{NPM_MODULE_OUTPUT}}/README.md
+    # cp LICENSE           {{NPM_MODULE_OUTPUT}}/
     echo "✅ {{NPM_MODULE_OUTPUT}}"
 
 # Run tests
@@ -139,11 +139,11 @@ publish: _require_NPM_TOKEN _ensure_node_modules
     fi
     just build
     echo "PUBLISHING npm version $VERSION"
-    cd {{NPM_MODULE_OUTPUT}} && \
-        echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc && \
-        npm publish --access public .
-    git tag $VERSION
-    git push origin $VERSION
+    # cd {{NPM_MODULE_OUTPUT}}
+    echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc && \
+    npm publish --access public .
+    # git tag $VERSION
+    # git push origin $VERSION
 
 # Unpublish version https://docs.npmjs.com/cli/v7/commands/npm-unpublish
 unpublish version:

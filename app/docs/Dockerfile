@@ -53,10 +53,14 @@ RUN mkdir -p /workspace/docs && chmod 777 /workspace/docs
 WORKDIR /workspace/docs
 ADD ./Gemfile ./Gemfile
 ADD ./Gemfile.lock ./Gemfile.lock
+RUN chmod a+w Gemfile.lock
 
 # `bundle update` updates Gemfile.lock with the latest allowed versions
 RUN mkdir -p /jekyll/gems && chmod 777 /jekyll/gems && bundle config set --local path '/jekyll/gems'
 RUN gem install bundler:2.2.2
+# bullshit:
+# https://stackoverflow.com/questions/17519090/gemfile-lock-write-error-permissions
+# RUN chown -R $(whoami):$(whoami) .
 RUN bundle update --bundler
 RUN bundle install
 
