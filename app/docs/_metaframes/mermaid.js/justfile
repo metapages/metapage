@@ -1,0 +1,9 @@
+set shell       := ["bash", "-c"]
+set dotenv-load := true
+
+@_help:
+    just --list --unsorted --list-heading $'Mermain maintenance commands:\n\n'
+
+# Production uses latest, but development uses a pinned version.
+upgrade-local-mermaid-js:
+    curl 'https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js' -o ../../assets/js/mermaid.min.js

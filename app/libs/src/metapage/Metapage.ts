@@ -1,5 +1,4 @@
 import { ListenerFn } from "eventemitter3";
-import minimatch from "minimatch";
 import * as objectHash from "object-hash";
 import {
   VERSION_METAPAGE,
@@ -72,6 +71,29 @@ export const getLibraryVersionMatching = (
   version: string
 ): VersionsMetapage => {
   return getMatchingVersion(version);
+};
+
+export const matchPipe = (
+  outputPipeName: string,
+  inputPipeName?: string
+): boolean => {
+  if (!inputPipeName || inputPipeName === "*") {
+    return true;
+  }
+
+  if (outputPipeName === inputPipeName) {
+    return true;
+  }
+
+  if (inputPipeName.endsWith("*")) {
+    return outputPipeName.startsWith(inputPipeName.slice(0, -1));
+  }
+
+  if (inputPipeName.startsWith("*")) {
+    return outputPipeName.endsWith(inputPipeName.slice(1));
+  }
+
+  return false;
 };
 
 type MetaframeInputTargetsFromOutput = {
@@ -281,7 +303,8 @@ export class Metapage extends MetapageShared {
       throw "Metapage definition must have a version";
     }
 
-    const newDefinition: MetapageDefinitionV3 = convertMetapageDefinitionToCurrentVersion(def);
+    const newDefinition: MetapageDefinitionV3 =
+      convertMetapageDefinitionToCurrentVersion(def);
 
     if (newDefinition.metaframes) {
       Object.keys(newDefinition.metaframes).forEach((metaframeId) => {
@@ -643,7 +666,7 @@ export class Metapage extends MetapageShared {
           if (inputPipe.metaframe == source) {
             // Check the kind of source string
             // it could be a basic string, or a glob?
-            if (minimatch(outputPipeId, inputPipe.source)) {
+            if (matchPipe(outputPipeId, inputPipe.source)) {
               // A match, now figure out the actual input pipe name
               // since it might be * or absent meaning that the input
               // field name is the same as the incoming
@@ -1187,11 +1210,17 @@ const bindPlugin = async (
           var disposer = plugin.onOutput(
             METAPAGE_KEY_DEFINITION,
             (definition) => {
-              if (objectHash.sha1(definition) !== objectHash.sha1(currentMetapageDef)) {
+              if (
+                objectHash.sha1(definition) !==
+                objectHash.sha1(currentMetapageDef)
+              ) {
                 // It's a REQUEST to update the metapage definition, it cannot force it
                 // because that would open up an interesting ability that could be hidden
                 // from users (third party site modifying the definition)
-                metapage.emit(MetapageEvents.DefinitionUpdateRequest, definition);
+                metapage.emit(
+                  MetapageEvents.DefinitionUpdateRequest,
+                  definition
+                );
               }
             }
           );

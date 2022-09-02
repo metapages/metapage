@@ -5,19 +5,21 @@
 <head>
 <meta http-equiv="content-type" content="text/html; charset=UTF-8" />
 {% if jekyll.environment == "production" %}
-<script src="https://unpkg.com/mermaid@8.0.0/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
 {% else %}
 <script src="{{site.baseurl}}/assets/js/mermaid.min.js"></script>
 {% endif %}
 <script>
-	mermaid.initialize(
-		{
-			startOnLoad: false,
-			flowchart:{
-				htmlLabels: false,
-				useMaxWidth: true,
-			}
-		});
+    let config = {
+    	startOnLoad: true,
+    	flowchart:{
+    		useMaxWidth: false,
+    		htmlLabels: false,
+    	},
+    	securityLevel:'loose',
+    };
+    mermaid.mermaidAPI.initialize(config);
+
 </script>
 {% include metaframe_lib_script.html %}
 </head>
@@ -25,6 +27,12 @@
 <div id="title"></div>
 
 <script>
+
+const metaframe = new metapage.Metaframe();
+
+window.handleClick = (nodeClickText) => {
+	metaframe.setOutput("click", nodeClickText)
+}
 
 const setGraphFromString = (graphString) => {
 	let element = document.querySelector(`#graph`);
@@ -45,13 +53,18 @@ const setGraphFromString = (graphString) => {
 
 	var insertSvg = function(svgCode, bindFunctions){
 		element.innerHTML = svgCode;
+		if (typeof callback !== 'undefined') {
+			callback(element.id);
+		}
+		bindFunctions(element);
 	};
 	var graph = mermaid.render('svgId', graphString, insertSvg);
+	// mermaid.contentLoaded()
 }
 
-const setGraphTitle = (titleString) => {
-	document.getElementById('title').innerText = titleString;
-}
+// const setGraphTitle = (titleString) => {
+// 	document.getElementById('title').innerText = titleString;
+// }
 
 const createMermaidFlowchartFromMetapage = (metapageDefinition) => {
 	if (!metapageDefinition) {
@@ -85,6 +98,7 @@ const createMermaidFlowchartFromMetapage = (metapageDefinition) => {
 	const safe = (s) => { return s.replace(/-/g, '_') };
 	metaframeKeys.forEach(function(metaframeId, index) {
 		graphDefinition += `\n\t${metaframeKeysToMermaidId[metaframeId]}["${metaframeId}"]`;
+		graphDefinition += `\n\tclick ${metaframeKeysToMermaidId[metaframeId]} handleClick`;
 	});
 	metaframeKeys.forEach(function(metaframeId, index) {
 		if (metapageDefinition.metaframes[metaframeId].inputs && Object.keys(metapageDefinition.metaframes[metaframeId].inputs).length > 0) {
@@ -101,24 +115,23 @@ const createMermaidFlowchartFromMetapage = (metapageDefinition) => {
 	graphDefinition += '\n';
 
 	const searchParams = new URL(window.location.href).searchParams;
-	if (!(searchParams.get('TITLE') == '0' || searchParams.get('TITLE') == 'false')) {
-		setGraphTitle('metapage/definition');
-	}
+	// if (!(searchParams.get('TITLE') == '0' || searchParams.get('TITLE') == 'false')) {
+	// 	setGraphTitle('metapage/definition');
+	// }
 	setGraphFromString(graphDefinition);
 };
 
-const metaframe = new metapage.Metaframe();
+
 
 metaframe.onInputs((inputs) => {
 	var oneKey = Object.keys(inputs)[0];
 	if (!oneKey) {
 		return;
 	}
-
 	if (oneKey == 'metapage/definition') {
 		createMermaidFlowchartFromMetapage(inputs[oneKey]);
 	} else {
-		setGraphTitle(oneKey);
+		// setGraphTitle(oneKey);
 		setGraphFromString(inputs[oneKey]);
 	}
 });
