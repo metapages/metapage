@@ -5,6 +5,8 @@ export enum VersionsMetaframe {
 	V0_3 = "0.3",
 	V0_4 = "0.4",
 	V0_5 = "0.5",
+	// Mostly just metadata changes for viewing and editing
+	V0_6 = "0.6",
 }
 
 export enum VersionsMetapage {
@@ -14,7 +16,7 @@ export enum VersionsMetapage {
 
 export const MetaframeVersionsAll = Object.keys(VersionsMetaframe);
 
-export const MetaframeVersionCurrent = VersionsMetaframe.V0_5;
+export const MetaframeVersionCurrent = VersionsMetaframe.V0_6;
 
 export const MetapageVersionsAll = Object.keys(VersionsMetapage);
 

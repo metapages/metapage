@@ -428,7 +428,7 @@ export class Metaframe extends EventEmitter<
             (jsonrpc.parentId == this._parentId && jsonrpc.iframeId == this.id)
           )
         ) {
-          this.error(
+          this.log(
             `window.message: received message but jsonrpc.parentId=${jsonrpc.parentId} _parentId=${this._parentId} jsonrpc.iframeId=${jsonrpc.iframeId} id=${this.id}`
           );
           return;

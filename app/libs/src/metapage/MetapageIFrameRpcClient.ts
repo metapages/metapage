@@ -16,7 +16,7 @@ import {
   MetapageInstanceInputs,
   VersionsMetapage,
   VersionsMetaframe,
-  MetaframeDefinitionV5,
+  MetaframeDefinitionV6,
 } from "./v0_4";
 import {
   stringToRgb,
@@ -55,7 +55,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   _parentId: MetapageId;
   _debug: boolean;
   _sendInputsAfterRegistration: boolean = false;
-  _definition: MetaframeDefinitionV5 | undefined;
+  _definition: MetaframeDefinitionV6 | undefined;
   _plugin: boolean = false;
 
   _metapage: MetapageShared;
@@ -75,7 +75,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     // on so the origin is valid
     if (!url.startsWith("http")) {
       while (url.startsWith("/")) {
-        url = url.substr(1);
+        url = url.substring(1);
       }
       url =
         window.location.protocol +
@@ -217,7 +217,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
    * but advanced features e.g. allow permissions won't work and
    * anything relying on metadata.
    */
-  public async getDefinition(): Promise<MetaframeDefinitionV5 | undefined> {
+  public async getDefinition(): Promise<MetaframeDefinitionV6 | undefined> {
     if (this._definition) {
       return this._definition;
     }
@@ -496,7 +496,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
       this._metapage.error(
         `Cannot send to child iframe messageJSON=${JSON.stringify(
           messageJSON
-        ).substr(0, 200)}`
+        ).substring(0, 200)}`
       );
     }
   }

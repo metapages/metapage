@@ -10,6 +10,14 @@ import {
   VersionsMetaframe,
   MetaframeDefinitionV4,
   MetapageDefinitionV3,
+  MetaframeDefinitionV6,
+  MetaframeMetadataV6,
+  MetaframeEditTypeMetapage,
+  MetaframeEditTypeMetaframe,
+  MetaframeEditTypeMetapageV6,
+  MetaframeEditTypeUrlV6,
+  MetaframeMetadataV4,
+  MetaframeMetadataV5,
 } from "./v0_4";
 import { MetapageDefinition as V0_2MetapageDefinition } from "./v0_2/all";
 import { MetapageDefinition as V0_3MetapageDefinition } from "./v0_3/all";
@@ -57,33 +65,134 @@ export const convertMetapageDefinitionToCurrentVersion = (
 };
 
 export const convertMetaframeJsonToCurrentVersion = (
-  m: MetaframeDefinitionV5 | MetaframeDefinitionV4
-): MetaframeDefinitionV5 => {
+  m:
+    | MetaframeDefinitionV5
+    | MetaframeDefinitionV4
+    | MetaframeDefinitionV5
+    | MetaframeDefinitionV6
+    | undefined
+): MetaframeDefinitionV6 | undefined => {
+  if (!m) {
+    return undefined;
+  }
   switch (m.version) {
+    case undefined:
     case VersionsMetaframe.V0_3:
     case VersionsMetaframe.V0_4:
-      const source: MetaframeDefinitionV4 = m as MetaframeDefinitionV4;
-      const metaframeDefV5: MetaframeDefinitionV5 = {
-        version: VersionsMetaframe.V0_5,
-        inputs: source.inputs,
-        outputs: source.outputs,
-        allow: source.allow,
-        metadata: source.metadata
-          ? {
-              name: source.metadata.title,
-              author: source.metadata.author,
-              image: source.metadata.image,
-              description: source.metadata.descriptionUrl,
-              tags: source.metadata.keywords,
-            }
-          : undefined,
-      };
-      return metaframeDefV5;
+      return convertMetaframeJsonToCurrentVersion(
+        convertMetaframeJsonV4ToV5(m as MetaframeDefinitionV4)
+      );
     case VersionsMetaframe.V0_5:
-      return m as MetaframeDefinitionV5;
+      return convertMetaframeJsonV5ToV6(m as MetaframeDefinitionV5);
+    case "6":
+      return m as MetaframeDefinitionV6;
     default:
-      throw `Unsupported metaframe version: ${m.version}. Please upgrade to a new version: npm i @metapages/metapage@latest`;
+      throw `Unsupported metaframe version. Please upgrade to a new version: npm i @metapages/metapage@latest\n ${JSON.stringify(
+        m
+      )}`;
   }
+};
+
+const convertMetaframeJsonV4ToV5 = (source: MetaframeDefinitionV4) => {
+  const {
+    version,
+    inputs,
+    outputs,
+    allow,
+    metadata,
+    ...restOfDefinitionProps
+  } = source;
+  const metadataV4: MetaframeMetadataV4 = metadata;
+  const {
+    title,
+    author,
+    image,
+    descriptionUrl,
+    keywords,
+    iconUrl,
+    ...restOfMetadataProps
+  } = metadataV4;
+
+  const metadataV5: MetaframeMetadataV5 = {
+    name: title,
+    author,
+    description: descriptionUrl,
+    image,
+    tags: keywords,
+    ...restOfMetadataProps,
+  };
+
+  const metaframeDefV5: MetaframeDefinitionV5 = {
+    version: VersionsMetaframe.V0_5,
+    inputs: inputs,
+    outputs: outputs,
+    allow: allow,
+    metadata: metadataV5,
+    ...restOfDefinitionProps,
+  };
+  return metaframeDefV5;
+};
+
+// The only difference between v5 and v6 is the metadata operations field
+const convertMetaframeJsonV5ToV6 = (source: MetaframeDefinitionV5) => {
+  // Process the metadata separately
+  const { metadata, ...restOfDefinitionProps } = source;
+
+  // apart from metadata, the rest of the definition is the same as v5
+  const metaframeDefV6: MetaframeDefinitionV6 = {
+    ...restOfDefinitionProps,
+    version: "6",
+  };
+
+  if (metadata) {
+    const { edit, ...restOfMetadataProps } = metadata;
+    const metaframeMetaV6: MetaframeMetadataV6 = { ...restOfMetadataProps };
+    metaframeDefV6.metadata = metaframeMetaV6;
+
+    if (edit && !metaframeMetaV6?.operations?.edit) {
+      if (!metaframeMetaV6.operations) {
+        metaframeMetaV6.operations = {};
+      }
+
+      switch (edit.type) {
+        case "metapage":
+          const metaPageEditPreviousMetapage =
+            edit.value as MetaframeEditTypeMetapage;
+          const editOperationMetapage: MetaframeEditTypeMetapageV6 = {
+            type: "metapage",
+            metapage: metaPageEditPreviousMetapage.definition,
+            metaframe: metaPageEditPreviousMetapage.key || "edit",
+          };
+
+          metaframeMetaV6.operations.edit = editOperationMetapage;
+          break;
+
+        case "metaframe":
+          const metaPageEditPreviousMetaframe =
+            edit.value as MetaframeEditTypeMetaframe;
+          const editOperationMetaframe: MetaframeEditTypeUrlV6 = {
+            type: "url",
+            url: metaPageEditPreviousMetaframe.url,
+            params: metaPageEditPreviousMetaframe.params
+              ? metaPageEditPreviousMetaframe.params.map((p) => ({
+                  to: p.to,
+                  from: p.from,
+                  // path doesn't work, how can we know where to put the path token?
+                  toType: p.toType === "path" ? undefined : p.toType,
+                }))
+              : undefined,
+          };
+          metaframeMetaV6.operations.edit = editOperationMetaframe;
+          break;
+        default:
+          throw `Unsupported edit type: ${
+            edit.type
+          } in metadata for metaframe ${JSON.stringify(metadata)}`;
+      }
+    }
+  }
+
+  return metaframeDefV6;
 };
 
 const definition_v0_2_to_v0_3 = (
