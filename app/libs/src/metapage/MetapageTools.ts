@@ -84,7 +84,7 @@ export const convertMetaframeJsonToCurrentVersion = (
       );
     case VersionsMetaframe.V0_5:
       return convertMetaframeJsonV5ToV6(m as MetaframeDefinitionV5);
-    case "6":
+    case VersionsMetaframe.V0_6:
       return m as MetaframeDefinitionV6;
     default:
       throw `Unsupported metaframe version. Please upgrade to a new version: npm i @metapages/metapage@latest\n ${JSON.stringify(
@@ -141,7 +141,7 @@ const convertMetaframeJsonV5ToV6 = (source: MetaframeDefinitionV5) => {
   // apart from metadata, the rest of the definition is the same as v5
   const metaframeDefV6: MetaframeDefinitionV6 = {
     ...restOfDefinitionProps,
-    version: "6",
+    version: VersionsMetaframe.V0_6,
   };
 
   if (metadata) {

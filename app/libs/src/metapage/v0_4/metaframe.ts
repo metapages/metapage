@@ -104,19 +104,8 @@ export interface MetaframeInstance {
   inputs?: PipeInput[];
 }
 
-
-
-
-
-
-
-
-
-
-
-
 export interface MetaframeDefinitionV6 {
-  version: VersionsMetaframe | "6";
+  version: VersionsMetaframe;
   inputs?: {
     [key: string]: MetaframePipeDefinition;
   }; // <MetaframePipeId, MetaframePipeDefinition>
