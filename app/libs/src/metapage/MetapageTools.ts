@@ -70,7 +70,8 @@ export const convertMetaframeJsonToCurrentVersion = (
     | MetaframeDefinitionV4
     | MetaframeDefinitionV5
     | MetaframeDefinitionV6
-    | undefined
+    | undefined,
+  opts?: { errorIfUnknownVersion?: boolean }
 ): MetaframeDefinitionV6 | undefined => {
   if (!m) {
     return undefined;
@@ -87,9 +88,18 @@ export const convertMetaframeJsonToCurrentVersion = (
     case VersionsMetaframe.V0_6:
       return m as MetaframeDefinitionV6;
     default:
-      throw `Unsupported metaframe version. Please upgrade to a new version: npm i @metapages/metapage@latest\n ${JSON.stringify(
-        m
-      )}`;
+      if (opts?.errorIfUnknownVersion) {
+        throw `Unsupported metaframe version. Please upgrade to a new version: npm i @metapages/metapage@latest\n ${JSON.stringify(
+          m
+        )}\n${window.location.href}`;
+      } else {
+        console.error(
+          `Unsupported metaframe version. Not throwing an error because you might not be able to upgrade. Please upgrade to a new version: npm i @metapages/metapage@latest\n ${JSON.stringify(
+            m
+          )}\n${window.location.href}`
+        );
+        return m as MetaframeDefinitionV6;
+      }
   }
 };
 
