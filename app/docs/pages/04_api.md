@@ -62,7 +62,7 @@ Defined by:
 		"{{site.url}}/metaframes/mermaid.js/?TITLE=0",
     "{{site.url}}/metaframes/passthrough/",
 {% if jekyll.environment == "production" %}
-		"https://metapages.github.io/metaframe-editor-json/"
+		"https://editor.mtfm.io/"
 {% else %}
 		"{{site.data.urls.metaframe-editor-json-local}}"
 {% endif %}

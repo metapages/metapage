@@ -94,6 +94,6 @@
   },
   "plugins": [
     "{{site.url}}{{site.baseurl}}/metaframes/mermaid.js/?TITLE=0",
-    "https://metapages.github.io/metaframe-editor/"
+    "https://editor.mtfm.io/"
 	]
 }

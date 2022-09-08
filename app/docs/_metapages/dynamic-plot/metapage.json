@@ -30,7 +30,7 @@
 	"plugins": [
 		"{{site.url}}{{site.baseurl}}/metaframes/mermaid.js/?TITLE=0",
 {% if jekyll.environment == "production" %}
-    "https://metapages.github.io/metaframe-editor/"
+    "https://editor.mtfm.io/"
 {% else %}
 		"{{site.data.urls.metaframe-editor-json-local}}"
 {% endif %}
