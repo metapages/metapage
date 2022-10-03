@@ -2,14 +2,14 @@ var connection = new metapage.Metaframe();
 
 //Initialize the viewer
 // override the default options with something less restrictive.
-var width = 300;
-var height = 300;
+var width = 600;
+var height = 500;
 var options = {
   width: width,
   height: height,
   antialias: true,
   quality : 'medium',
-  background: 'grey'
+  background: 'white'
 };
 
 // insert the viewer under the Dom element with id 'gl'.
