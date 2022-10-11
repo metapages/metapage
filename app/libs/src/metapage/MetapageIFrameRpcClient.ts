@@ -28,6 +28,7 @@ import {
 import { JsonRpcRequest } from "./jsonrpc2";
 import { MetapageShared, MetapageHashParams } from "./Shared";
 import { MetapageEvents } from "./v0_4/events";
+import { serializeInputs } from "./data";
 
 /**
  * Initialization sequence:
@@ -424,7 +425,8 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     }
   }
 
-  sendInputs(inputs: MetaframeInputMap) {
+  async sendInputs(inputs: MetaframeInputMap) {
+    inputs = await serializeInputs(inputs);
     this.sendRpc(JsonRpcMethodsFromParent.InputsUpdate, {
       inputs: inputs,
       parentId: this._parentId,

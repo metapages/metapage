@@ -26,6 +26,7 @@ import {
 } from "./MetapageTools";
 import { isIframe } from "./Shared";
 import { MetapageEventUrlHashUpdate } from "./v0_4/events";
+import { deserializeInputs, serializeInputs } from "./data";
 
 // TODO combine/unify MetaframeEvents and MetaframeLoadingState
 export enum MetaframeLoadingState {
@@ -57,6 +58,9 @@ export class Metaframe extends EventEmitter<
   public static readonly INPUTS = MetaframeEvents.Inputs;
   public static readonly MESSAGE = MetaframeEvents.Message;
 
+  public static deserializeInputs = deserializeInputs;
+  public static serializeInputs = serializeInputs;
+
   _inputPipeValues: MetaframeInputMap = {};
   _outputPipeValues: MetaframeInputMap = {};
   _parentId: MetapageId | undefined;
@@ -68,6 +72,11 @@ export class Metaframe extends EventEmitter<
   debug: boolean = isDebugFromUrlsParams();
   color: string | undefined;
   plugin: MetaframePlugin | undefined;
+  /**
+   * If this is false, Files and Blobs will not be automatically serialized and deserialized
+   * This is useful to avoid the overhead of serialization/deserialization if you know you won't be using it
+   */
+  isInputOutputBlobSerialization: boolean = true;
 
   /**
    * This is the (locally) unique id that the parent metapage
@@ -85,8 +94,6 @@ export class Metaframe extends EventEmitter<
     this.error = this.error.bind(this);
     this.getInput = this.getInput.bind(this);
     this.getInputs = this.getInputs.bind(this);
-    this.getOutput = this.getOutput.bind(this);
-    this.getOutputs = this.getOutputs.bind(this);
     this.log = this.log.bind(this);
     this.logInternal = this.logInternal.bind(this);
     this.onInput = this.onInput.bind(this);
@@ -139,63 +146,77 @@ export class Metaframe extends EventEmitter<
       throw "Got message but page has not finished loading, we should never get in this state";
     }
 
-    if (!this._parentId) {
-      this._parentVersion = params.version;
-      this.color = stringToRgb(this.id);
-      this._parentId = params.parentId;
-      this.log(
-        `metapage[${this._parentId}](v${
-          this._parentVersion ? this._parentVersion : "unknown"
-        }) registered`
-      );
+    (async () => {
 
-      this._inputPipeValues =
-        params.state && params.state.inputs
-          ? params.state.inputs
-          : this._inputPipeValues;
+      if (!this._parentId) {
+        this._parentVersion = params.version;
+        this.color = stringToRgb(this.id);
+        this._parentId = params.parentId;
+        this.log(
+          `metapage[${this._parentId}](v${
+            this._parentVersion ? this._parentVersion : "unknown"
+          }) registered`
+        );
 
-      //Tell the parent we have registered.
-      this._state = MetaframeLoadingState.Ready;
-      // TODO why do we need  Metaframe.version here? It was sent in the initial SetupIframeClientRequest
-      this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {
-        version: Metaframe.version,
-      });
 
-      //Send notifications of initial inputs (if non-null)
-      //so you don't have to listen to the ready event if you don't want to
-      if (
-        this._inputPipeValues &&
-        Object.keys(this._inputPipeValues).length > 0
-      ) {
+        if (params.state && params.state.inputs) {
+          if (this.isInputOutputBlobSerialization) {
+            this._inputPipeValues = await deserializeInputs(params.state.inputs);
+          } else {
+            this._inputPipeValues = params.state.inputs;
+          }
+        }
+
+        // this._inputPipeValues =
+        //   params.state && params.state.inputs
+        //     ? this.isInputOutputBlobSerialization
+        //       ? deserializeInputs(params.state.inputs)
+        //       : params.state.inputs
+        //     : this._inputPipeValues;
+
+        //Tell the parent we have registered.
+        this._state = MetaframeLoadingState.Ready;
+        // TODO why do we need  Metaframe.version here? It was sent in the initial SetupIframeClientRequest
+        this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {
+          version: Metaframe.version,
+        });
+
+        //Send notifications of initial inputs (if non-null)
+        //so you don't have to listen to the ready event if you don't want to
+        if (
+          this._inputPipeValues &&
+          Object.keys(this._inputPipeValues).length > 0
+        ) {
+          this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
+          Object.keys(this._inputPipeValues).forEach((pipeId) =>
+            this.emit(
+              MetaframeEvents.Input,
+              pipeId,
+              this._inputPipeValues[pipeId]
+            )
+          );
+        }
+
         this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
-        Object.keys(this._inputPipeValues).forEach((pipeId) =>
-          this.emit(
-            MetaframeEvents.Input,
-            pipeId,
-            this._inputPipeValues[pipeId]
-          )
+
+        // if this is a plugin, initialize the plugin object
+        if (params.plugin) {
+          this.plugin = new MetaframePlugin(this);
+        }
+
+        //Resolve AFTER sending inputs. This way consumers can either:
+        //1) Just listen to inputs updates. The first will be when the metaframe is ready
+        //2) Listen to the ready event, get the inputs if desired, and listen to subsequent
+        //   inputs updates. You may not wish to respond to the first updates but you might
+        //   want to know when the metaframe is ready
+        //*** Does this distinction make sense?
+        this.emit(MetaframeEvents.Connected);
+      } else {
+        this.log(
+          "Got JsonRpcMethods.SetupIframeServerResponse but already resolved"
         );
       }
-
-      this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
-
-      // if this is a plugin, initialize the plugin object
-      if (params.plugin) {
-        this.plugin = new MetaframePlugin(this);
-      }
-
-      //Resolve AFTER sending inputs. This way consumers can either:
-      //1) Just listen to inputs updates. The first will be when the metaframe is ready
-      //2) Listen to the ready event, get the inputs if desired, and listen to subsequent
-      //   inputs updates. You may not wish to respond to the first updates but you might
-      //   want to know when the metaframe is ready
-      //*** Does this distinction make sense?
-      this.emit(MetaframeEvents.Connected);
-    } else {
-      this.log(
-        "Got JsonRpcMethods.SetupIframeServerResponse but already resolved"
-      );
-    }
+    })();
   }
 
   async connected(): Promise<void> {
@@ -326,11 +347,20 @@ export class Metaframe extends EventEmitter<
    *
    * @param inputs
    */
-  public setInputs(inputs: MetaframeInputMap) {
+  public async setInputs(inputs: MetaframeInputMap) {
+    if (this.isInputOutputBlobSerialization) {
+      inputs = await deserializeInputs(inputs);
+    }
     this.sendRpc(JsonRpcMethodsFromChild.InputsUpdate, inputs);
   }
 
-  setInternalInputsAndNotify(inputs: MetaframeInputMap) {
+  async setInternalInputsAndNotify(inputs: MetaframeInputMap) {
+    // this is where we deserialize the inputs
+
+    if (this.isInputOutputBlobSerialization) {
+      inputs = await deserializeInputs(inputs);
+    }
+
     if (!merge(this._inputPipeValues, inputs)) {
       return;
     }
@@ -339,6 +369,7 @@ export class Metaframe extends EventEmitter<
       this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId])
     );
     this.emit(MetaframeEvents.Inputs, inputs);
+
   }
 
   public getInput(pipeId: MetaframePipeId): any {
@@ -348,11 +379,6 @@ export class Metaframe extends EventEmitter<
 
   public getInputs(): MetaframeInputMap {
     return this._inputPipeValues;
-  }
-
-  public getOutput(pipeId: MetaframePipeId): any {
-    console.assert(!!pipeId);
-    return this._outputPipeValues[pipeId];
   }
 
   /**
@@ -369,15 +395,14 @@ export class Metaframe extends EventEmitter<
     this.setOutputs(outputs);
   }
 
-  public setOutputs(outputs: MetaframeInputMap): void {
+  public async setOutputs(outputs: MetaframeInputMap): Promise<void> {
+    if (this.isInputOutputBlobSerialization) {
+      outputs = await serializeInputs(outputs);
+    }
     if (!merge(this._outputPipeValues, outputs)) {
       return;
     }
     this.sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
-  }
-
-  public getOutputs(): MetaframeInputMap {
-    return this._outputPipeValues;
   }
 
   /**

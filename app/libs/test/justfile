@@ -1,6 +1,5 @@
 ROOT               := `dirname $(dirname $(dirname $PWD))`
 TEST_SERVER_PORT   := env_var_or_default("TEST_SERVER_PORT", "3000")
-DENO_SOURCE        := ROOT + "/.cloudseed/deno"
 # Needed because local execution of node scripts actually creates a script far away from the local node_modules
 export NODE_PATH   := `pwd`+ "/../node_modules"
 export JEKYLL_ENV  := env_var_or_default("JEKYLL_ENV", "production")
@@ -21,10 +20,16 @@ _help:
 @dev:
     if [ ! -f /.dockerenv ]; then \
         just _ensureDeno ; \
-        deno run --unstable --allow-all {{DENO_SOURCE}}/exec/open_url.ts http://localhost:{{TEST_SERVER_PORT}}/?VERSION=latest; \
+        deno run --unstable --allow-all https://deno.land/x/metapages@v0.0.17/exec/open_url.ts http://localhost:{{TEST_SERVER_PORT}}/?VERSION=latest; \
     fi
-    # @watchexec --restart --watch ../src --watch ./page --ignore ./page/index.html -- 'JEKYLL_ENV=$JEKYLL_ENV just build testing'
-    @watchexec --restart --watch ../src --watch ../justfile --watch justfile -- 'JEKYLL_ENV=$JEKYLL_ENV just build testing && just serve'
+    @watchexec --restart \
+        --watch ../src \
+        --watch ./page/index.template.html \
+        --watch ./page/metaframe \
+        --watch ./page/css \
+        --watch ../justfile \
+        --watch justfile \
+        -- 'JEKYLL_ENV=$JEKYLL_ENV just build testing  && just serve'
 
 # watch all files and rebuild the tests and run them, on every change. Does NOT automatically build meta(page+frame) modules
 watch testing="": (build testing) _watch
