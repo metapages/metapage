@@ -1,8 +1,26 @@
-// run with deno run --allow-env --allow-net=localhost <script>
-try {
-    const PORT :number = Deno.env.get("PORT") ? parseInt(Deno.env.get("PORT")!) : 3000;
-    const response = await fetch(`http://localhost:${PORT}`);
-    Deno.exit(response.status === 200 ? 0 : 1);
-} catch(err) {
-    Deno.exit(1);
-}
+const http = require('http');
+
+const PORT = process.env["PORT"] ? parseInt(process.env["PORT"]!) : 3000;
+
+const options = {
+    host: '0.0.0.0',
+    port: PORT,
+    timeout: 2000
+};
+
+const healthCheck = http.request(options, (res) => {
+    console.log(`HEALTHCHECK STATUS: ${res.statusCode}`);
+    if (res.statusCode == 200) {
+        process.exit(0);
+    }
+    else {
+        process.exit(1);
+    }
+});
+
+healthCheck.on('error', function (err) {
+    console.error('ERROR');
+    process.exit(1);
+});
+
+healthCheck.end();

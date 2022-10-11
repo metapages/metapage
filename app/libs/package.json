@@ -1,7 +1,7 @@
 {
     "name": "@metapages/metapage",
     "public": true,
-    "version": "0.12.3",
+    "version": "0.13.6",
     "description": "Connect web pages together",
     "repository": "https://github.com/metapages/metapage",
     "homepage": "https://metapages.org/",
@@ -17,7 +17,8 @@
         "compare-versions": "^4.1.4",
         "dot": "^1.1.3",
         "eventemitter3": "^4.0.0",
-        "object-hash": "^3.0.0"
+        "object-hash": "^3.0.0",
+        "unibabel": "^2.1.8"
     },
     "devDependencies": {
         "@types/object-hash": "^2.2.1",

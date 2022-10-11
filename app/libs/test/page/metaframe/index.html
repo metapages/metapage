@@ -20,11 +20,11 @@
 var urlParams = new URLSearchParams(window.location.search);
 // Allow specifying the metaframe version tested
 var VERSION = urlParams.get('VERSION');
-VERSION = VERSION == null ? 'latest' : VERSION;
+VERSION = VERSION ? VERSION : 'latest';
 
-// the URL param VERSION=latestFirst is a way of having
+// the URL param VERSION=latest-begin is a way of having
 // the same metaframe/plugin in multiple places without
-// id/key collisions. The actual version of 'latestFirst'
+// id/key collisions. The actual version of 'latest-begin'
 // is 'latest' which we check below, but we want to display
 // the version given
 const DISPLAY_VERSION = VERSION;
@@ -40,21 +40,25 @@ const debug = ['mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag
 var head = document.getElementsByTagName('head').item(0);
 var script = document.createElement('script');
 script.setAttribute('type', 'text/javascript');
-if (VERSION == 'latest') {
+if (VERSION === 'latest') {
     script.setAttribute('src', `/js/metaframe/index.js`);
 } else {
-    if (window.compareVersions(VERSION, '0.11.0') >= 0) {
-        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/dist/browser/metaframe/index.js`);
-    } else if (window.compareVersions(VERSION, '0.8.0') >= 0) {
-        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metaframe/index.js`);
-    } else if (window.compareVersions(VERSION, '0.5.5') === 0) {
-        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage-backup@${VERSION}/browser/metaframe/index.js`);
-    } else if (window.compareVersions(VERSION, '0.5.0') >= 0) {
-        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}/browser/metaframe/index.js`);
-    } else if (window.compareVersions(VERSION, '0.4.100') >= 0) {
-        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/browser/index.js`);
+    // The passed in semver version string can be appended with "-<stuff>"
+    //
+    const versionForUrl = VERSION.split("-")[0];
+    console.log('versionForUrl', versionForUrl);
+    if (window.compareVersions(versionForUrl, '0.11.0') >= 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${versionForUrl}/dist/browser/metaframe/index.js`);
+    } else if (window.compareVersions(versionForUrl, '0.8.0') >= 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${versionForUrl}/browser/metaframe/index.js`);
+    } else if (window.compareVersions(versionForUrl, '0.5.5') === 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage-backup@${versionForUrl}/browser/metaframe/index.js`);
+    } else if (window.compareVersions(versionForUrl, '0.5.0') >= 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/@metapages/metapage@${versionForUrl}/browser/metaframe/index.js`);
+    } else if (window.compareVersions(versionForUrl, '0.4.100') >= 0) {
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${versionForUrl}/browser/index.js`);
     } else {
-        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${VERSION}/browser${debug ? '' : '.min'}.js`);
+        script.setAttribute('src', `https://cdn.jsdelivr.net/npm/metaframe@${versionForUrl}/browser${debug ? '' : '.min'}.js`);
     }
 }
 head.appendChild(script);
@@ -70,6 +74,10 @@ const getStatusText = () => {
 const setStatus = () => {
     document.getElementById('status').innerHTML = getStatusText();
 };
+
+// Use for (de)serialization tests
+// removed , "ArrayBuffer"
+const BlobTypes = ["File", "Blob", "ArrayBuffer", "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array", "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"];
 
 class Test {
     constructor(description, testFunc) {
@@ -107,6 +115,8 @@ class Test {
         return `<br/> ${this.success ? "✓" : "⌛"}: ${this.description}`;
     }
 }
+
+const BlobSerializationCompatible = VERSION === "latest" || window.compareVersions(VERSION, '0.13.1') > 0;
 
 TESTS = [
     new Test('save inputs to metapage',
@@ -171,6 +181,111 @@ TESTS = [
                 };
                 unbind = mf.plugin.onDefinition(checkDefinition);
             });
+        }
+    ),
+
+
+    new Test(BlobSerializationCompatible ? 'File, TypedArray etc (de)serialization' + (DISPLAY_VERSION.includes("-begin") ? " (just sending)" : ""): 'IGNORED BECAUSE TOO OLD: File, TypedArray etc (de)serialization',
+        // verify that when setting inputs, they are sent to the metapage
+        // then sent back, which we listen to here
+        (mf) => { // metaframe instance
+            // the sample test data
+            // const numbers = ["1", "10", "100"];
+            const numbers = [1, 5, 10];
+            const sampleInputs = {
+                "File": new File(["foo"], "foo.txt", {type: "text/plain;charset=utf-8"}),
+                "Blob": new Blob(["foo"], {type: "text/plain;charset=utf-8"}),
+                "ArrayBuffer": new ArrayBuffer(8),
+                "Int8Array": Int8Array.from(numbers),
+                "Uint8Array": Uint8Array.from(numbers),
+                "Uint8ClampedArray": Uint8ClampedArray.from(numbers),
+                "Int16Array": Int16Array.from(numbers),
+                "Uint16Array": Uint16Array.from(numbers),
+                "Int32Array": Int32Array.from(numbers),
+                "Uint32Array": Uint32Array.from(numbers),
+                "Float32Array": Float32Array.from(numbers),
+                "Float64Array": Float64Array.from([]),
+                "BigInt64Array": BigInt64Array.from([]),
+                "BigUint64Array": BigUint64Array.from([]),
+            };
+
+            // metaframes pass downstream directly all the blob types
+            const inputsFileBlobHandler = inputs => {
+
+                const keys = Object.keys(inputs);
+                const newOutputs = {};
+                keys.forEach(key => {
+                    if (BlobTypes.includes(key)) {
+                        newOutputs[key] = inputs[key];
+                    }
+                });
+                mf.setOutputs(newOutputs);
+            };
+            // This calls the handled immediately with the current value
+            mf.onInputs(inputsFileBlobHandler);
+
+            if (DISPLAY_VERSION.includes("-begin")) {
+                // First metaframe in the chain just sends the blobs
+                if (BlobSerializationCompatible) {
+                    mf.setOutputs(sampleInputs);
+                } else {
+                    throw "A metaframe where BlobSerializationCompatible=false cannot be the first metaframe in the chain";
+                    mf.setOutputs(Object.fromEntries(Object.keys(sampleInputs).map(key => [key, "UNSUPPORTED"])));
+                }
+                // the later metaframe will actually check the blobs
+                return Promise.resolve(true);
+            } else {
+                // All other metaframes just pass the blobs, but Blob serialization capable
+                // metaframes check the types of the blobs
+
+                const localBlobTypesRemaining = [...BlobTypes];
+                return new Promise((resolve, reject) => {
+                    // The actual test but only for newer versions
+                    let unbind;
+                    unbind = mf.onInputs(function(inputs) {
+                        // if we get a blob type, remove it from the list
+                        // and resolve when all done
+                        Object.keys(inputs).forEach(async (key) => {
+                            // ignore non-blob types
+                            if (!BlobTypes.includes(key)) {
+                                return;
+                            }
+
+
+                            if (BlobSerializationCompatible) {
+                                // Do actual test of the type
+                                console.log('inputs[key] instanceof sampleInputs[key].constructor', inputs[key] instanceof sampleInputs[key].constructor);
+                                console.log('inputs[key]', inputs[key]);
+                                console.log('sampleInputs[key].constructor', sampleInputs[key].constructor);
+                                if (!(inputs[key] instanceof sampleInputs[key].constructor)) {
+                                    reject(`'${key}'=>${inputs[key]} is not an instance of ${sampleInputs[key].constructor.name}`);
+                                }
+
+                                if (key === Blob.name) {
+                                    const blob = inputs[key];
+                                    console.log('blob', blob);
+                                    const text = await blob.text();
+                                    if (text !== "foo") {
+                                        reject(`lob '${key}' text is not 'foo'`);
+                                    }
+                                }
+                            }
+
+                            if (localBlobTypesRemaining.includes(key)) {
+                                const index = localBlobTypesRemaining.indexOf(key);
+                                localBlobTypesRemaining.splice(index, 1);
+                            }
+
+                            if (localBlobTypesRemaining.length === 0) {
+                                resolve(true);
+                                unbind();
+                            }
+                        });
+
+
+                    });
+                });
+            }
         }
     ),
 
@@ -330,7 +445,7 @@ const runTests = async () => {
         }
     }
 
-    const inputsHandler = inputs => {
+    const inputs1Handler = inputs => {
         const newValue1 = getOutputValueFromInputValue(inputs['input1']);
         const newValue2 = getOutputValueFromInputValue(inputs['input2']);
         if (newValue1 || newValue2) {
@@ -345,8 +460,8 @@ const runTests = async () => {
         }
     };
 
-    // This calls the hanled immediately with the current value
-    mf.onInputs(inputsHandler);
+    // This calls the handled immediately with the current value
+    mf.onInputs(inputs1Handler);
 
     setStatus();
 

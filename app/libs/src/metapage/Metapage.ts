@@ -36,6 +36,7 @@ import {
   MetapageEventUrlHashUpdate,
 } from "./v0_4/events";
 import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
+import { deserializeInputs, serializeInputs } from "./data";
 
 export enum MetapageEventStateType {
   all = "all",
@@ -117,6 +118,9 @@ export class Metapage extends MetapageShared {
   public static readonly MESSAGE = MetapageEvents.Message;
   public static readonly OUTPUTS = MetapageEvents.Outputs;
   public static readonly STATE = MetapageEvents.State;
+
+  public static deserializeInputs = deserializeInputs;
+  public static serializeInputs = serializeInputs;
 
   public static from(metaPageDef: any, inputs?: any): Metapage {
     if (metaPageDef == null) {
