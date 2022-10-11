@@ -17,7 +17,6 @@ export CI          := env_var_or_default("CI", "")
 export JEKYLL_ENV  := env_var_or_default("JEKYLL_ENV", "production")
 parcel             := "./node_modules/parcel-bundler/bin/cli.js"
 tsc                := "./node_modules/typescript/bin/tsc"
-# DENO_SOURCE        := ROOT + "/.cloudseed/deno"
 # minimal formatting, bold is very useful
 bold               := '\033[1m'
 normal             := '\033[0m'
@@ -108,7 +107,7 @@ _versions-write-versions-to-jekyll:
     var fs = require('fs');
     // async in a sync scipt (this is not deno)
     (async () => {
-        const versions = await lib.getMetapageVersions({includeLocal:true});
+        const versions = await lib.getMetapageVersions({includeLocal:false});
         const out = 'versions: ' + JSON.stringify(versions);
         console.log('./docs/_data/versions.yml:\n' + out + '\n');
         fs.writeFileSync('../docs/_data/versions.yml', out + '\n');

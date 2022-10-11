@@ -7,7 +7,7 @@ app-metapage-local: https://app.metapages.org/
 # When using the local app.metapage
 # app-metapage-local: https://metapage-app.dev:4405/
 
-# When using the deployed https://metapages.github.io/metaframe-editor-json/
-metaframe-editor-json-local: https://metapages.github.io/metaframe-editor/
+# When using the deployed https://editor.mtfm.io/
+metaframe-editor-json-local: https://editor.mtfm.io/
 # When using the local app.metapage
 # metaframe-editor-json-local: http://localhost:1234/

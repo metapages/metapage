@@ -42,10 +42,13 @@
 // to make it easier to test all versions against all
 var urlParams = new URLSearchParams(window.location.search);
 var VERSION = urlParams.get('VERSION');
-{{? it.environment == "production" }}
+const SKIP_LATEST = VERSION !== "latest";
+{{? it.environment === "production" }}
 	VERSION = VERSION == null ? '{{= it.versions[it.versions.length - 1]}}' : VERSION;
 {{?? true }}
-    VERSION = VERSION == null ? 'latest' : VERSION;
+    if (!SKIP_LATEST) {
+        VERSION = VERSION == null ? 'latest' : VERSION;
+    }
 {{?}}
 
 const debug = ['debug', 'mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag));
@@ -55,7 +58,7 @@ var head = document.getElementsByTagName('head').item(0);
 var script = document.createElement('script');
 script.setAttribute('type', 'text/javascript');
 let metapageSourceUrl;
-if (VERSION == 'latest') {
+if (VERSION === 'latest') {
     metapageSourceUrl = 'js/metapage/index.js';
 } else {
     if (window.compareVersions(VERSION, '0.11.0') >= 0) {
@@ -94,16 +97,24 @@ let VERSIONS_METAFRAME = [];
 VERSIONS_METAFRAME.push("{{=k}}");
 {{~}}
 
+// Put the last also first because some later tests require features not in the
+// earlier versions, so those tests will fail. There is no downside to having
+// extra versions in the test.
+VERSIONS_METAFRAME.unshift(VERSIONS_METAFRAME[VERSIONS_METAFRAME.length - 1] + "-begin");
+
 {{? it.environment !== "production" }}
 // Test the current version inputs *and* outputs
-VERSIONS_METAFRAME.unshift('latestFirst');
-VERSIONS_METAFRAME.push('latest');
+if (!SKIP_LATEST) {
+    VERSIONS_METAFRAME.unshift('latest-begin');
+    VERSIONS_METAFRAME.push('latest');
+}
 {{?}}
 
+console.log(`VERSIONS_METAFRAME [${VERSIONS_METAFRAME.join(", ")}]`);
 
 var PAGEURL = new URL(window.location.href);
 
-console.log(`VERSIONS_METAFRAME [${VERSIONS_METAFRAME.join(", ")}]`);
+
 
 ////////////////////////////////////////////////////////////////////////
 // Define all the functional tests
@@ -131,6 +142,10 @@ const setStatus = (err) => {
     }
     document.getElementById('status').innerHTML = getStatusText(err);
 };
+
+// Use for (de)serialization tests
+// removed "ArrayBuffer",
+const BlobTypes = ["File", "Blob", "ArrayBuffer", "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array", "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"];
 
 class Test {
     constructor(description, testFunc) {
@@ -161,6 +176,7 @@ class Test {
     }
 }
 
+const BlobSerializationCompatible = VERSION === "latest" || window.compareVersions(VERSION, '0.13.0') >= 0;
 
 TESTS = [
     new Test('metaframe internal sent inputs saved in state',
@@ -222,7 +238,7 @@ TESTS = [
                         const finalVersions2 = JSON.stringify(outputs['output2'].versions);
                         const versionsTested = JSON.stringify(VERSIONS_METAFRAME)
                         // Correct for needing 'latest' twice but not using the key 'latest' twice
-                        // const versionsTested = VERSIONS_METAFRAME;//.map(e => e.replace('latestFirst', 'latest'));
+                        // const versionsTested = VERSIONS_METAFRAME;//.map(e => e.replace('latest-begin', 'latest'));
                         if (versionsTested === finalVersions1 && versionsTested === finalVersions2) {
                             // don't allow calling resolve again
                             disposeListener();
@@ -242,9 +258,6 @@ TESTS = [
                 // array and pass it on
                 // The metapage inputs uses the metaframe id as the key, and here metaframe ids are versions
                 const inputs = {[VERSIONS_METAFRAME[0]] : {input1: {versions:[]}, input2: {versions:[]}} };
-                // metapage.once('state', () => {
-                //     console.log(`After setting initial inputs ${JSON.stringify(metapage.getState())}`);
-                // });
                 metapage.setInput(inputs);
             });
         }
@@ -263,7 +276,7 @@ TESTS = [
 
                     let found = {};
                     var VERSIONS_EXPECTED = VERSIONS_METAFRAME.slice();
-                    if (VERSIONS_EXPECTED[0] == 'latestFirst') {
+                    if (VERSIONS_EXPECTED[0] === 'latest-begin') {
                         VERSIONS_EXPECTED[0] = 'latest';
                         VERSIONS_EXPECTED.pop(); // the other 'latest'
                     }
@@ -344,6 +357,56 @@ TESTS = [
                     console.error(err);
                     reject(err);
                 }
+            });
+        }
+    ),
+
+    new Test((!BlobSerializationCompatible ? "SKIPPED BECAUSE INCOMPATIBLE: " : "") + '[File|Blob|TypedArray|ArrayBuffer] (de)serialization',
+        // Send a value of each type to the first metaframe, and verify that the
+        // last metaframe receives the same (typed) values
+        (metapage) => { // metapage instance
+
+
+            if (!BlobSerializationCompatible) {
+                console.log(`❗ 👀 Metapage version ${VERSION} does not support this test: [File|Blob|TypedArray|ArrayBuffer] (de)serialization`);
+                // setTimeout(() => {
+                //     setStatus();
+                // }, 1);
+                return Promise.resolve(true);
+            }
+
+            return new Promise(async (resolve, reject) => {
+                const lastMetaframe = metapage.getMetaframe(VERSIONS_METAFRAME[VERSIONS_METAFRAME.length - 1]);
+                if (!lastMetaframe) {
+                    throw `metapage.getMetaframe(${VERSIONS_METAFRAME[VERSIONS_METAFRAME.length - 1]}) is undefined. VERSIONS_METAFRAME=${VERSIONS_METAFRAME}`;
+                }
+
+                let hasFinalOutputs = false;
+                let disposeListener;
+                disposeListener = lastMetaframe.onOutputs(async (outputs) => {
+
+                    if (outputs['Float32Array']) {
+                        hasFinalOutputs = true;
+                        // typo on v0.13.0, uppercase converted to lowercase
+                        if (VERSION === "latest" || window.compareVersions(VERSION, '0.13.0') > 0) {
+                            outputs = await Metapage.deserializeInputs(outputs);
+                        } else {
+                            outputs = Metapage.DeserializeInputs(outputs);
+                        }
+
+                        if (outputs['Float32Array'] instanceof Float32Array) {
+                            disposeListener();
+                            resolve(true);
+                            setStatus();
+                        } else {
+                            disposeListener();
+                            reject(`outputs['Float32Array']=${outputs['Float32Array']} is not a Float32Array`);
+                            setStatus();
+                        }
+
+                    }
+                });
+
             });
         }
     ),
@@ -438,7 +501,7 @@ window.onload = async () => {
     const metaframesBlob = {};
 
     // AHHH version differences
-    if (VERSION != 'latest' && window.compareVersions(VERSION, '0.2') < 0) {
+    if (VERSION !== 'latest' && window.compareVersions(VERSION, '0.2') < 0) {
         // old
         metaPageDefinition.iframes = metaframesBlob;
     } else {
@@ -450,7 +513,7 @@ window.onload = async () => {
     // if developing, the latest goes at the beginning AND end, to test getting
     // and sending to the parent metapage
     VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
-        versionMetaframe = versionMetaframe == 'latest' && index == 0 && VERSIONS_METAFRAME.length > 1? 'latestFirst' : versionMetaframe;
+        versionMetaframe = versionMetaframe == 'latest' && index == 0 && VERSIONS_METAFRAME.length > 1? 'latest-begin' : versionMetaframe;
         let url = `/metaframe/?VERSION=${versionMetaframe}`;
         if (urlParams.has('MP_DEBUG') || urlParams.has('DEBUG') || urlParams.has('MF_DEBUG')) {
             url += '&MP_DEBUG';
@@ -469,7 +532,15 @@ window.onload = async () => {
                     source: 'output2',
                     target: 'input2',
                 }
-            ]
+            ];
+
+            // add the pipes for the blob types
+            BlobTypes.forEach(blobType => {
+                metaframesBlob[versionMetaframe].inputs.push({
+                    metaframe: VERSIONS_METAFRAME[index - 1],
+                    source: blobType,
+                });
+            });
         }
     });
 

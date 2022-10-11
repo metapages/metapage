@@ -41,11 +41,11 @@ nav_order: 5
 |  [{{ token }}]({{site.baseurl}}{{ index }}) | [Inspect]({{ inspect }})  | [JSON Definition]({{ urlJson }}) |
 	{%- endif -%}
 {% endfor %}
-{%- assign externalMetaframes = "https://metapages.github.io/metaframe-editor-json/" | split: "," -%}
+{%- assign externalMetaframes = "https://editor.mtfm.io/" | split: "," -%}
 {%- for metaframeUrl in externalMetaframes -%}
 
 	{%- if jekyll.environment != "production" -%}
-		{%- assign metaframeUrl = "https://metapages.github.io/metaframe-editor-json/" | prepend: "http://localhost:3000/" -%}
+		{%- assign metaframeUrl = "https://editor.mtfm.io/" | prepend: "http://localhost:3000/" -%}
 	{%- endif -%}
 	{%- assign urlJson = site.baseurl | metaframeUrl | append: "metaframe.json" -%}
 	{%- assign inspect = site.url | append: site.baseurl | append: "/tools/metaframeview?url=" | append: metaframeUrl %}

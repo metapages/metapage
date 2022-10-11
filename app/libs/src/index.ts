@@ -4,3 +4,4 @@ export * from "./metapage/MetapageTools";
 export * from "./metapage/Shared";
 export * from "./metapage/MetapageIFrameRpcClient";
 export * from "./metapage/v0_4";
+export * from "./metapage/data";
