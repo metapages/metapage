@@ -16,6 +16,7 @@ SERVER_PORT        := env_var_or_default("SERVER_PORT", "3000")
 export CI          := env_var_or_default("CI", "")
 export JEKYLL_ENV  := env_var_or_default("JEKYLL_ENV", "production")
 parcel             := "./node_modules/parcel-bundler/bin/cli.js"
+vite               := "NODE_OPTIONS='--max_old_space_size=16384' ./node_modules/vite/bin/vite.js"
 tsc                := "./node_modules/typescript/bin/tsc"
 # minimal formatting, bold is very useful
 bold               := '\033[1m'
@@ -48,8 +49,9 @@ _build: _ensure_node_modules _build_npm
 _build_npm:
     #!/usr/bin/env bash
     set -euo pipefail
-    # Compiles the entire codebase to typescript files in ./dist. Packaged into the npm module '{{NPM_MODULE}}'
-    # How to test installation of the build?
+    # {{vite}} build
+    # # Compiles the entire codebase to typescript files in ./dist. Packaged into the npm module '{{NPM_MODULE}}'
+    # # How to test installation of the build?
     mkdir -p {{NPM_MODULE_OUTPUT}}
     echo -e "🍳👉 {{bold}}Compiling typescript  => {{NPM_MODULE_OUTPUT}}/{{normal}}"
     {{tsc}} --outDir {{NPM_MODULE_OUTPUT}}
@@ -57,6 +59,9 @@ _build_npm:
     # cp README-PACKAGE.md {{NPM_MODULE_OUTPUT}}/README.md
     # cp LICENSE           {{NPM_MODULE_OUTPUT}}/
     echo "✅ {{NPM_MODULE_OUTPUT}}"
+
+_tsc +args="":
+    {{tsc}} {{args}}
 
 # Run tests
 test:

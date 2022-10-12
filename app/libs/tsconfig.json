@@ -3,17 +3,19 @@
         "baseUrl": "src",
         "declaration": true,
         "declarationMap": true,
-        "lib": ["dom", "ES2017"],
-        "module": "es2015",
+        "lib": ["DOM", "es6"],
+        "module": "esnext",
         "moduleResolution": "node",
-        "removeComments": true,
-        "strict": true,
-        "sourceMap": true,
-        "target": "es6",
-        "typeRoots": ["node_modules/@types", "src/metapage/types"],
+        "outDir": "dist",
         "paths": {
-            "~*": ["./*"]
-        }
+            // avoid ../../../../foo type import paths
+            "/@/*": ["./*"],
+        },
+        "removeComments": true,
+        "sourceMap": true,
+        "strict": true,
+        "target": "ES2021",
+        "typeRoots": ["node_modules/@types", "src/metapage/types"],
     },
     "include": ["src/**/*.ts"]
 }
