@@ -136,7 +136,7 @@ export class Metaframe extends EventEmitter<
       thisRef._state = MetaframeLoadingState.SentSetupIframeClientRequest;
     });
 
-    if (!options?.disableHashChangeEvent) {
+    if (!(options && options.disableHashChangeEvent)) {
       window.addEventListener("hashchange", this._onHashUrlChange);
     }
   }

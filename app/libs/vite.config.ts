@@ -31,7 +31,7 @@ export default defineConfig(({ command, mode }) => ({
   plugins: [],
   build: {
     // outDir: DEPLOY_TARGET === "lib" ? "dist" : OUTDIR,
-    target: "esnext",
+    target: "es2020",
     sourcemap: true,
     minify: mode === "development" ? false : "esbuild",
     // emptyOutDir: DEPLOY_TARGET === "glitch" || DEPLOY_TARGET === "lib",

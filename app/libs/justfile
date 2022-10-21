@@ -180,6 +180,7 @@ _build_browser_modules outdir testing="":
         NODE_ENV=development {{parcel}} build --no-minify --target browser --global metapage ./src/metapage/Metapage.ts  --out-dir {{outdir}}/metapage  --out-file index.js
     else
         echo "👉 production builds for test/page/js/"
+        # {{vite}} build
         {{parcel}} build --target browser --global metapage ./src/metapage/Metaframe.ts --out-dir {{outdir}}/metaframe --out-file index.js
         {{parcel}} build --target browser --global metapage  ./src/metapage/Metapage.ts --out-dir {{outdir}}/metapage  --out-file index.js
     fi
