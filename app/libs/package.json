@@ -8,10 +8,11 @@
     "main": "dist/index.js",
     "exports": "./dist/index.js",
     "files": [
-        "dist"
+        "dist",
+        "src"
     ],
     "type": "module",
-    "browser": "dist/browser/index.js",
+    "browser": "dist/index.js",
     "source": "src/index.ts",
     "types": "dist/index.d.ts",
     "dependencies": {
