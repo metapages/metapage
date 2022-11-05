@@ -124,7 +124,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
             return;
           }
           // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
-          if (metaframeDef?.allow) {
+          if (metaframeDef && metaframeDef.allow) {
             selfThis._iframe.allow = metaframeDef.allow;
           }
           selfThis._iframe.src = this.url;

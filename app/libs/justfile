@@ -58,6 +58,9 @@ _build_npm:
     # cp LICENSE           {{NPM_MODULE_OUTPUT}}/
     echo "✅ {{NPM_MODULE_OUTPUT}}"
 
+_tsc +args="":
+    {{tsc}} {{args}}
+
 # Run tests
 test:
     #!/usr/bin/env bash

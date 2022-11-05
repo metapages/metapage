@@ -88,7 +88,7 @@ export const convertMetaframeJsonToCurrentVersion = (
     case VersionsMetaframe.V0_6:
       return m as MetaframeDefinitionV6;
     default:
-      if (opts?.errorIfUnknownVersion) {
+      if (opts && opts.errorIfUnknownVersion) {
         throw `Unsupported metaframe version. Please upgrade to a new version: npm i @metapages/metapage@latest\n ${JSON.stringify(
           m
         )}\n${window.location.href}`;
@@ -159,7 +159,7 @@ const convertMetaframeJsonV5ToV6 = (source: MetaframeDefinitionV5) => {
     const metaframeMetaV6: MetaframeMetadataV6 = { ...restOfMetadataProps };
     metaframeDefV6.metadata = metaframeMetaV6;
 
-    if (edit && !metaframeMetaV6?.operations?.edit) {
+    if (edit && !(metaframeMetaV6 && metaframeMetaV6.operations && metaframeMetaV6.operations.edit)) {
       if (!metaframeMetaV6.operations) {
         metaframeMetaV6.operations = {};
       }
