@@ -14,7 +14,7 @@
         "removeComments": true,
         "sourceMap": true,
         "strict": true,
-        "target": "ES2021",
+        "target": "es2020",
         "typeRoots": ["node_modules/@types", "src/metapage/types"],
     },
     "include": ["src/**/*.ts"]

@@ -37,7 +37,7 @@ RUN VERSION=1.14.1 ; \
 RUN apk update && apk upgrade && apk --no-cache add \
 	npm
 
-RUN npm install -g npm@8.17.0
+RUN npm install -g npm@8.19.3
 
 RUN mkdir -p /workspace/libs
 RUN chown -R chrome:chrome /workspace/libs
