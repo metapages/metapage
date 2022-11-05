@@ -97,18 +97,22 @@ let VERSIONS_METAFRAME = [];
 VERSIONS_METAFRAME.push("{{=k}}");
 {{~}}
 
-// Put the last also first because some later tests require features not in the
-// earlier versions, so those tests will fail. There is no downside to having
-// extra versions in the test.
-VERSIONS_METAFRAME.unshift(VERSIONS_METAFRAME[VERSIONS_METAFRAME.length - 1] + "-begin");
-
+let latestAdded = false;
 {{? it.environment !== "production" }}
 // Test the current version inputs *and* outputs
 if (!SKIP_LATEST) {
     VERSIONS_METAFRAME.unshift('latest-begin');
     VERSIONS_METAFRAME.push('latest');
+    latestAdded = true;
 }
 {{?}}
+
+if (!latestAdded) {
+    // Put the last also first because some later tests require features not in the
+    // earlier versions, so those tests will fail. There is no downside to having
+    // extra versions in the test.
+    VERSIONS_METAFRAME.unshift(VERSIONS_METAFRAME[VERSIONS_METAFRAME.length - 1] + "-begin");
+}
 
 console.log(`VERSIONS_METAFRAME [${VERSIONS_METAFRAME.join(", ")}]`);
 

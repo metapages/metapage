@@ -20,7 +20,7 @@ _help:
 @dev:
     if [ ! -f /.dockerenv ]; then \
         just _ensureDeno ; \
-        deno run --unstable --allow-all https://deno.land/x/metapages@v0.0.17/exec/open_url.ts http://localhost:{{TEST_SERVER_PORT}}/?VERSION=latest; \
+        deno run --unstable --allow-all https://deno.land/x/metapages@v0.0.17/exec/open_url.ts 'http://localhost:{{TEST_SERVER_PORT}}/?VERSION=latest' ; \
     fi
     @watchexec --restart \
         --watch ../src \
@@ -29,7 +29,7 @@ _help:
         --watch ./page/css \
         --watch ../justfile \
         --watch justfile \
-        -- 'JEKYLL_ENV=$JEKYLL_ENV just build testing  && just serve'
+        -- 'JEKYLL_ENV=$JEKYLL_ENV just build testing && just serve'
 
 # watch all files and rebuild the tests and run them, on every change. Does NOT automatically build meta(page+frame) modules
 watch testing="": (build testing) _watch

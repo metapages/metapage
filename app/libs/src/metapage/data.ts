@@ -1,5 +1,5 @@
 import { MetaframeInputMap } from "./v0_4";
-import { Unibabel } from "unibabel";
+import { encode, decode } from "base64-arraybuffer";
 
 /**
  * Modifies in place!!!
@@ -77,7 +77,7 @@ export const possiblySerializeValueToDataref = async <T>(
     const replacement: DataRefSerializedTypedArray = {
       _s: true,
       _c: value.constructor.name,
-      value: Unibabel.bufferToBase64(new Uint8Array(typedValue.buffer)),
+      value: encode(typedValue.buffer),
       byteLength: typedValue.byteLength,
       byteOffset: typedValue.byteOffset,
       size: typedValue.byteLength,
@@ -89,7 +89,7 @@ export const possiblySerializeValueToDataref = async <T>(
     const replacement: DataRefSerializedFile = {
       _s: true,
       _c: File.name,
-      value: Unibabel.bufferToBase64(new Uint8Array(arrayBuffer)),
+      value: encode(arrayBuffer),
       name: typedValue.name,
       fileType: typedValue.type,
       lastModified: typedValue.lastModified,
@@ -102,7 +102,7 @@ export const possiblySerializeValueToDataref = async <T>(
     const replacement: DataRefSerializedBlob = {
       _s: true,
       _c: Blob.name,
-      value: Unibabel.bufferToBase64(new Uint8Array(arrayBuffer)),
+      value: encode(arrayBuffer),
       fileType: typedValue.type,
       size: arrayBuffer.byteLength,
     };
@@ -112,7 +112,7 @@ export const possiblySerializeValueToDataref = async <T>(
     const replacement: DataRefSerialized = {
       _s: true,
       _c: ArrayBuffer.name,
-      value: Unibabel.bufferToBase64(new Uint8Array(typedValue)),
+      value: encode(typedValue),
       size: typedValue.byteLength,
     };
     return Promise.resolve(replacement);
@@ -135,7 +135,7 @@ export const possiblyDeserializeDatarefToValue = (value: any): any => {
   if (_c === Blob.name) {
     const serializedRefBlob = value as DataRefSerializedBlob;
     const blob = new Blob(
-      [Unibabel.base64ToBuffer(serializedRef.value) as Uint8Array],
+      [decode(serializedRef.value)],
       {
         type: serializedRefBlob.fileType,
       }
@@ -144,7 +144,7 @@ export const possiblyDeserializeDatarefToValue = (value: any): any => {
   } else if (_c === File.name) {
     const serializedRefFile = value as DataRefSerializedFile;
     const file = new File(
-      [Unibabel.base64ToBuffer(serializedRef.value) as Uint8Array],
+      [decode(serializedRef.value)],
       serializedRefFile.name,
       {
         type: serializedRefFile.fileType,
@@ -153,25 +153,23 @@ export const possiblyDeserializeDatarefToValue = (value: any): any => {
     );
     return file;
   } else if (_c === ArrayBuffer.name) {
-    const arrayBuffer: ArrayBuffer = (
-      Unibabel.base64ToBuffer(serializedRef.value) as Uint8Array
-    ).buffer;
+    const arrayBuffer: ArrayBuffer = decode(serializedRef.value);
     return arrayBuffer;
   }
   // Assume typed array
   const serializedRefTypedArray = value as DataRefSerializedTypedArray;
 
-  const arrayBuffer: ArrayBuffer = Unibabel.base64ToBuffer(
+  const arrayBuffer: ArrayBuffer = decode(
     serializedRefTypedArray.value
-  ) as Uint8Array;
+  );
   const constructorName: string = serializedRefTypedArray._c;
 
   try {
     // @ts-ignore
     const typedArray: ArrayBufferView = new globalThis[constructorName](
       arrayBuffer,
-      serializedRefTypedArray.byteOffset,
-      serializedRefTypedArray.byteLength
+      // serializedRefTypedArray.byteOffset,
+      // serializedRefTypedArray.byteLength
     );
     return typedArray;
   } catch (e) {}

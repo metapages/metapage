@@ -1,33 +1,35 @@
 {
     "name": "@metapages/metapage",
     "public": true,
-    "version": "0.13.6",
+    "version": "0.13.9",
     "description": "Connect web pages together",
     "repository": "https://github.com/metapages/metapage",
     "homepage": "https://metapages.org/",
     "main": "dist/index.js",
     "exports": "./dist/index.js",
     "files": [
-        "dist"
+        "dist",
+        "src"
     ],
-    "browser": "dist/browser/index.js",
+    "browser": "dist/index.js",
     "source": "src/index.ts",
     "types": "dist/index.d.ts",
     "dependencies": {
+        "base64-arraybuffer": "^1.0.2",
         "compare-versions": "^4.1.4",
         "dot": "^1.1.3",
         "eventemitter3": "^4.0.0",
-        "object-hash": "^3.0.0",
-        "unibabel": "^2.1.8"
+        "object-hash": "^3.0.0"
     },
     "devDependencies": {
+        "@types/base64-arraybuffer": "^0.2.0",
         "@types/object-hash": "^2.2.1",
         "fastify": "^2.13.1",
         "fastify-static": "^2.6.0",
         "json-diff": "^0.5.4",
         "parcel-bundler": "1.12.3",
         "puppeteer": "^8.0.0",
-        "typescript": "4.2.3"
+        "typescript": "^4.8.4"
     },
     "keywords": [
         "iframe",
@@ -36,16 +38,12 @@
         "postmessage",
         "workflow"
     ],
-    "author": "Dion Amago Whitehead <dion@transition9.com>",
+    "author": "Dion Whitehead <dion@transition9.com>",
     "scripts": {
         "test": "node test/test.js"
     },
     "license": "Apache-2.0",
     "browserslist": [
         "Chrome 78"
-    ],
-    "targetsDISABLED": {
-        "browser": {},
-        "module": {}
-    }
+    ]
 }

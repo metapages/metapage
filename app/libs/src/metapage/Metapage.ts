@@ -441,7 +441,7 @@ export class Metapage extends MetapageShared {
       const inputPipes = this._inputMap[otherMetaframeId];
       let index = 0;
       while (index <= inputPipes.length) {
-        if (inputPipes[index]?.metaframe === metaframeId) {
+        if (inputPipes[index] && inputPipes[index].metaframe === metaframeId) {
           inputPipes.splice(index, 1);
         } else {
           index++;
