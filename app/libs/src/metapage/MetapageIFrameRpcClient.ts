@@ -1,34 +1,41 @@
-import { EventEmitter, ListenerFn } from "eventemitter3";
 import {
-  VERSION_METAPAGE,
-  METAPAGE_KEY_STATE,
+  EventEmitter,
+  ListenerFn,
+} from 'eventemitter3';
+
+import {
   METAPAGE_KEY_DEFINITION,
-} from "./Constants";
+  METAPAGE_KEY_STATE,
+  VERSION_METAPAGE,
+} from './Constants';
+import { serializeInputs } from './data';
+import { JsonRpcRequest } from './jsonrpc2';
 import {
-  JsonRpcMethodsFromParent,
-  SetupIframeServerResponseData,
-  MinimumClientMessage,
-  ClientMessageRecievedAck,
-  MetaframeInputMap,
-  MetaframePipeId,
-  MetaframeId,
-  MetapageId,
-  MetapageInstanceInputs,
-  VersionsMetapage,
-  VersionsMetaframe,
-  MetaframeDefinitionV6,
-} from "./v0_4";
-import {
-  stringToRgb,
+  convertMetaframeJsonToCurrentVersion,
   log as MetapageToolsLog,
   merge,
   pageLoaded,
-  convertMetaframeJsonToCurrentVersion,
-} from "./MetapageTools";
-import { JsonRpcRequest } from "./jsonrpc2";
-import { MetapageShared, MetapageHashParams } from "./Shared";
-import { MetapageEvents } from "./v0_4/events";
-import { serializeInputs } from "./data";
+  stringToRgb,
+} from './MetapageTools';
+import {
+  MetapageHashParams,
+  MetapageShared,
+} from './Shared';
+import {
+  ClientMessageRecievedAck,
+  JsonRpcMethodsFromParent,
+  MetaframeDefinitionV6,
+  MetaframeId,
+  MetaframeInputMap,
+  MetaframePipeId,
+  MetapageId,
+  MetapageInstanceInputs,
+  MinimumClientMessage,
+  SetupIframeServerResponseData,
+  VersionsMetaframe,
+  VersionsMetapage,
+} from './v0_4';
+import { MetapageEvents } from './v0_4/events';
 
 /**
  * Initialization sequence:
@@ -434,12 +441,12 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   }
 
   public sendRpc(method: string, params: any) {
-    if (this._iframe.parentNode && this._loaded) {
+    if (this?._iframe?.parentNode && this._loaded) {
       this.sendRpcInternal(method, params);
     } else {
-      this._metapage.error("sending rpc later");
+      this?._metapage?.error("sending rpc later");
       const thing = this;
-      this._onLoaded.push(() => {
+      this?._onLoaded.push(() => {
         thing.sendRpcInternal(method, params);
       });
     }
@@ -495,11 +502,20 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     if (this._iframe) {
       this.sendOrBufferPostMessage(messageJSON);
     } else {
-      this._metapage.error(
-        `Cannot send to child iframe messageJSON=${JSON.stringify(
-          messageJSON
-        ).substring(0, 200)}`
-      );
+      if (this._metapage) {
+        this._metapage.error(
+          `Cannot send to child iframe messageJSON=${JSON.stringify(
+            messageJSON
+          ).substring(0, 200)}`
+        );
+
+      } else {
+        console.error(
+          `Cannot send to child iframe messageJSON=${JSON.stringify(
+            messageJSON
+          ).substring(0, 200)}`
+        );
+      }
     }
   }
 

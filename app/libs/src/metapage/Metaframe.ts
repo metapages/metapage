@@ -1,32 +1,39 @@
-import { EventEmitter, ListenerFn } from "eventemitter3";
 import {
-  VERSION_METAFRAME,
-  METAPAGE_KEY_STATE,
+  EventEmitter,
+  ListenerFn,
+} from 'eventemitter3';
+
+import {
   METAPAGE_KEY_DEFINITION,
-} from "./Constants";
+  METAPAGE_KEY_STATE,
+  VERSION_METAFRAME,
+} from './Constants';
 import {
+  deserializeInputs,
+  serializeInputs,
+} from './data';
+import {
+  isDebugFromUrlsParams,
+  log as MetapageToolsLog,
+  merge,
+  pageLoaded,
+  stringToRgb,
+} from './MetapageTools';
+import { isIframe } from './Shared';
+import {
+  ApiPayloadPluginRequest,
+  ApiPayloadPluginRequestMethod,
+  JsonRpcMethodsFromChild,
+  JsonRpcMethodsFromParent,
   MetaframeId,
   MetaframeInputMap,
   MetaframePipeId,
   MetapageId,
-  ApiPayloadPluginRequest,
-  ApiPayloadPluginRequestMethod,
-  JsonRpcMethodsFromParent,
-  JsonRpcMethodsFromChild,
-  SetupIframeServerResponseData,
   MinimumClientMessage,
+  SetupIframeServerResponseData,
   VersionsMetapage,
-} from "./v0_4";
-import {
-  isDebugFromUrlsParams,
-  stringToRgb,
-  log as MetapageToolsLog,
-  merge,
-  pageLoaded,
-} from "./MetapageTools";
-import { isIframe } from "./Shared";
-import { MetapageEventUrlHashUpdate } from "./v0_4/events";
-import { deserializeInputs, serializeInputs } from "./data";
+} from './v0_4';
+import { MetapageEventUrlHashUpdate } from './v0_4/events';
 
 // TODO combine/unify MetaframeEvents and MetaframeLoadingState
 export enum MetaframeLoadingState {
@@ -433,7 +440,9 @@ export class Metaframe extends EventEmitter<
         iframeId: this.id,
         parentId: this._parentId, // TODO this is likely not actually needed ? iframes cannot send to anyone but the parent? But the parent does not automatically know where a message comes from
       };
-      window.parent.postMessage(message, "*");
+      if (window.parent) {
+        window.parent.postMessage(message, "*");
+      }
     } else {
       this.log(
         "Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe"
