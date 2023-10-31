@@ -1,16 +1,18 @@
-# [Metapages](https://metapages.org/)
+# [Metapages](https://docs.metapage.io/docs)
 
 A *metapage* is a set of connected webpages (*metaframes*).
 
-The [metaframe npm library](https://www.npmjs.com/package/metaframe) runs in the metaframed website (as an iframe), sending and recieving data on named pipes.
+Examples/documentation:
 
-The [metapage npm library](https://www.npmjs.com/package/metapage) runs on the parent website, controlling the data streams between metaframes.
+- [turning your site into a metaframe](https://docs.metapage.io/docs/your-app-metaframe)
+- [using metaframes in your react app](https://docs.metapage.io/docs/embed-metaframe)
+- [embed an entire metapage application in your app](https://docs.metapage.io/docs/embed-metapage)
 
-[Tests](https://metapages.org/tests/): All (non-deprecated) library version pairs are tested against every other before any changes are merged. We will make every effort to preserve backwards compatibility forever.
+<!-- [Tests](https://metapages.org/tests/): All (non-deprecated) library version pairs are tested against every other before any changes are merged. We will make every effort to preserve backwards compatibility forever. -->
 
-Documentation and examples: [https://metapages.org/](https://metapages.org/)
+More documentation and examples: [https://docs.metapage.io/docs](https://docs.metapage.io/docs)
 
 Simple example (two connected metaframes):
 
-[https://app.metapages.org/#?url=https://metapages.org/metapages/dynamic-plot/](https://app.metapages.org/#?url=https://metapages.org/metapages/dynamic-plot/)
-  <iframe src="https://app.metapages.org/#?url=https://metapages.org/metapages/dynamic-plot/" frameBorder="0" style="width:600px;height:400px"></iframe>
+[Hello world metapage](https://app.metapages.org/#?definition=JTdCJTIybWV0YSUyMiUzQSU3QiUyMmxheW91dHMlMjIlM0ElN0IlMjJyZWFjdC1ncmlkLWxheW91dCUyMiUzQSU3QiUyMmRvY3MlMjIlM0ElMjJodHRwcyUzQSUyRiUyRnd3dy5ucG1qcy5jb20lMkZwYWNrYWdlJTJGcmVhY3QtZ3JpZC1sYXlvdXQlMjIlMkMlMjJsYXlvdXQlMjIlM0ElNUIlN0IlMjJoJTIyJTNBMyUyQyUyMmklMjIlM0ElMjJncmFwaC1keW5hbWljJTIyJTJDJTIybW92ZWQlMjIlM0FmYWxzZSUyQyUyMnN0YXRpYyUyMiUzQWZhbHNlJTJDJTIydyUyMiUzQTYlMkMlMjJ4JTIyJTNBNiUyQyUyMnklMjIlM0EwJTdEJTJDJTdCJTIyaCUyMiUzQTMlMkMlMjJpJTIyJTNBJTIycmFuZG9tLWRhdGEtZ2VuZXJhdG9yJTIyJTJDJTIybW92ZWQlMjIlM0FmYWxzZSUyQyUyMnN0YXRpYyUyMiUzQWZhbHNlJTJDJTIydyUyMiUzQTYlMkMlMjJ4JTIyJTNBMCUyQyUyMnklMjIlM0EwJTdEJTVEJTJDJTIycHJvcHMlMjIlM0ElN0IlMjJjb2xzJTIyJTNBMTIlMkMlMjJjb250YWluZXJQYWRkaW5nJTIyJTNBJTVCNSUyQzUlNUQlMkMlMjJtYXJnaW4lMjIlM0ElNUIxMCUyQzIwJTVEJTJDJTIycm93SGVpZ2h0JTIyJTNBMTAwJTdEJTdEJTdEJTJDJTIybmFtZSUyMiUzQSUyMlNpbXBsZXN0JTIwbWV0YXBhZ2UlMjIlN0QlMkMlMjJtZXRhZnJhbWVzJTIyJTNBJTdCJTIyZ3JhcGgtZHluYW1pYyUyMiUzQSU3QiUyMmlucHV0cyUyMiUzQSU1QiU3QiUyMm1ldGFmcmFtZSUyMiUzQSUyMnJhbmRvbS1kYXRhLWdlbmVyYXRvciUyMiUyQyUyMnNvdXJjZSUyMiUzQSUyMnklMjIlN0QlNUQlMkMlMjJ1cmwlMjIlM0ElMjJodHRwcyUzQSUyRiUyRm1ldGFwYWdlcy5vcmclMkZtZXRhZnJhbWVzJTJGZ3JhcGgtZHluYW1pYyUyRiUyMiU3RCUyQyUyMnJhbmRvbS1kYXRhLWdlbmVyYXRvciUyMiUzQSU3QiUyMnVybCUyMiUzQSUyMmh0dHBzJTNBJTJGJTJGbWV0YXBhZ2VzLm9yZyUyRm1ldGFmcmFtZXMlMkZyYW5kb20tZGF0YS1nZW5lcmF0b3IlMkYlM0ZmcmVxdWVuY3klM0QxMDAwJTIyJTdEJTdEJTJDJTIycGx1Z2lucyUyMiUzQSU1QiUyMmh0dHBzJTNBJTJGJTJGbWVybWFpZC5tdGZtLmlvJTJGJTIzJTNGaG0lM0RkaXNhYmxlZCUyMiUyQyUyMmh0dHBzJTNBJTJGJTJGZWRpdG9yLm10Zm0uaW8lMkYlMjMlM0ZobSUzRGRpc2FibGVkJTI2b3B0aW9ucyUzREpUZENKVEl5Ylc5a1pTVXlNaVV6UVNVeU1tcHpiMjRsTWpJbE1rTWxNakp6WVhabGJHOWhaR2x1YUdGemFDVXlNaVV6UVdaaGJITmxKVEpESlRJeWRHaGxiV1VsTWpJbE0wRWxNakpzYVdkb2RDVXlNaVUzUkElM0QlM0QlMjIlNUQlMkMlMjJ2ZXJzaW9uJTIyJTNBJTIyMC4zJTIyJTdE)
+

@@ -1,17 +1,17 @@
 {
     "name": "@metapages/metapage",
     "public": true,
-    "version": "0.13.9",
+    "version": "0.13.10-alpha1",
     "description": "Connect web pages together",
     "repository": "https://github.com/metapages/metapage",
     "homepage": "https://metapages.org/",
-    "main": "dist/index.js",
-    "exports": "./dist/index.js",
+    "main": "dist/index.mjs",
+    "exports": "./dist/index.mjs",
     "files": [
         "dist",
         "src"
     ],
-    "browser": "dist/index.js",
+    "browser": "dist/index.mjs",
     "source": "src/index.ts",
     "types": "dist/index.d.ts",
     "dependencies": {
@@ -22,6 +22,7 @@
         "object-hash": "^3.0.0"
     },
     "devDependencies": {
+        "@rollup/plugin-typescript": "^11.1.5",
         "@types/base64-arraybuffer": "^0.2.0",
         "@types/object-hash": "^2.2.1",
         "fastify": "^2.13.1",
@@ -29,7 +30,9 @@
         "json-diff": "^0.5.4",
         "parcel-bundler": "1.12.3",
         "puppeteer": "^21.3.8",
-        "typescript": "^4.8.4"
+        "rollup-plugin-typescript-paths": "^1.4.0",
+        "typescript": "^4.8.4",
+        "vite": "^4.4.11"
     },
     "keywords": [
         "iframe",
