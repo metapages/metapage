@@ -1,42 +1,49 @@
-import { ListenerFn } from "eventemitter3";
-import * as objectHash from "object-hash";
+import { ListenerFn } from 'eventemitter3';
+import * as objectHash from 'object-hash';
+
 import {
-  VERSION_METAPAGE,
-  METAPAGE_KEY_STATE,
   METAPAGE_KEY_DEFINITION,
-} from "./Constants";
+  METAPAGE_KEY_STATE,
+  VERSION_METAPAGE,
+} from './Constants';
+import {
+  deserializeInputs,
+  serializeInputs,
+} from './data';
+import { MetapageIFrameRpcClient } from './MetapageIFrameRpcClient';
+import {
+  convertMetapageDefinitionToCurrentVersion,
+  existsAnyUrlParam,
+  generateMetapageId,
+  getMatchingVersion,
+  isDebugFromUrlsParams,
+  log as MetapageToolsLog,
+  pageLoaded,
+} from './MetapageTools';
+import {
+  INITIAL_NULL_METAPAGE_DEFINITION,
+  MetapageShared,
+} from './Shared';
 import {
   JsonRpcMethodsFromChild,
-  MinimumClientMessage,
-  SetupIframeClientAckData,
-  MetaframeInstance,
-  PipeInput,
-  MetapageOptions,
-  MetaframeInputMap,
-  MetaframePipeId,
   MetaframeId,
+  MetaframeInputMap,
+  MetaframeInstance,
+  MetaframePipeId,
+  MetapageDefinitionV3,
   MetapageId,
   MetapageInstanceInputs,
-  MetapageDefinitionV3,
+  MetapageOptions,
+  MinimumClientMessage,
+  PipeInput,
+  SetupIframeClientAckData,
   VersionsMetapage,
-} from "./v0_4";
+} from './v0_4';
 import {
-  log as MetapageToolsLog,
-  getMatchingVersion,
-  generateMetapageId,
-  existsAnyUrlParam,
-  pageLoaded,
-  isDebugFromUrlsParams,
-  convertMetapageDefinitionToCurrentVersion,
-} from "./MetapageTools";
-import { INITIAL_NULL_METAPAGE_DEFINITION, MetapageShared } from "./Shared";
-import {
-  MetapageEvents,
   MetapageEventDefinition,
+  MetapageEvents,
   MetapageEventUrlHashUpdate,
-} from "./v0_4/events";
-import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
-import { deserializeInputs, serializeInputs } from "./data";
+} from './v0_4/events';
 
 export enum MetapageEventStateType {
   all = "all",
@@ -515,11 +522,11 @@ export class Metapage extends MetapageShared {
   }
 
   public getMetaframe(id: MetaframeId): MetapageIFrameRpcClient {
-    return this._metaframes[id];
+    return this?._metaframes[id];
   }
 
   public getPlugin(url: string): MetapageIFrameRpcClient {
-    return this._plugins[url];
+    return this?._plugins?.[url];
   }
 
   // do not expose, change definition instead
