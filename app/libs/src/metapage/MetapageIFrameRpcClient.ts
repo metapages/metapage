@@ -232,7 +232,9 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     var url = this.getDefinitionUrl();
     try {
       // this should be retried?
-      const response = await window.fetch(url);
+      const response = await window.fetch(url, {
+        signal: AbortSignal.timeout(6000),
+      });
       if (response.ok) {
         const metaframeDef = await response.json();
 
@@ -508,7 +510,6 @@ export class MetapageIFrameRpcClient extends EventEmitter<
             messageJSON
           ).substring(0, 200)}`
         );
-
       } else {
         console.error(
           `Cannot send to child iframe messageJSON=${JSON.stringify(
