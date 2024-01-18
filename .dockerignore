@@ -1,6 +1,4 @@
-# These ignores are for .cloudseed/cloud/Dockerfile
 
-/app
 .git
 **/.deno_dir
 
