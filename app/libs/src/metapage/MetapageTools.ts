@@ -1,26 +1,28 @@
-import { compare } from "compare-versions";
-import { MetapageHashParams } from "./Shared";
+import { compare } from 'compare-versions';
+import stringify from 'fast-json-stable-stringify';
+
+import { MetapageHashParams } from './Shared';
+import { MetapageDefinition as V0_2MetapageDefinition } from './v0_2/all';
+import { MetapageDefinition as V0_3MetapageDefinition } from './v0_3/all';
 import {
-  MetaframeInputMap,
-  MetaframeId,
-  MetapageId,
-  VersionsMetapage,
-  MetapageVersionCurrent,
-  MetaframeDefinitionV5,
-  VersionsMetaframe,
   MetaframeDefinitionV4,
-  MetapageDefinitionV3,
+  MetaframeDefinitionV5,
   MetaframeDefinitionV6,
-  MetaframeMetadataV6,
-  MetaframeEditTypeMetapage,
   MetaframeEditTypeMetaframe,
+  MetaframeEditTypeMetapage,
   MetaframeEditTypeMetapageV6,
   MetaframeEditTypeUrlV6,
+  MetaframeId,
+  MetaframeInputMap,
   MetaframeMetadataV4,
   MetaframeMetadataV5,
-} from "./v0_4";
-import { MetapageDefinition as V0_2MetapageDefinition } from "./v0_2/all";
-import { MetapageDefinition as V0_3MetapageDefinition } from "./v0_3/all";
+  MetaframeMetadataV6,
+  MetapageDefinitionV3,
+  MetapageId,
+  MetapageVersionCurrent,
+  VersionsMetaframe,
+  VersionsMetapage,
+} from './v0_4';
 
 export const convertMetapageDefinitionToCurrentVersion = (
   def: any | MetapageDefinitionV3
@@ -393,3 +395,27 @@ export const pageLoaded = async (): Promise<void> => {
     }, 200);
   });
 };
+
+export const metapageSha256AllHash = async (metapage:MetapageDefinitionV3) => {
+  const metapageStr = stringify(metapage);
+  return await sha256ToBase64(metapageStr);
+}
+
+export const metapageSha256OnlyMetaframesHash = async (metapage:MetapageDefinitionV3) => {
+  const metapageStr = stringify({metaframes: {...metapage.metaframes}});
+  return await sha256ToBase64(metapageStr);
+}
+
+export const metapageSha256AllExceptMetaHash = async (metapage:MetapageDefinitionV3) => {
+  const copyLessMeta = {...metapage};
+  delete copyLessMeta.meta;
+  const metapageStr = stringify(copyLessMeta);
+  return await sha256ToBase64(metapageStr);
+}
+
+async function sha256ToBase64(str:string) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hash = await crypto.subtle.digest('SHA-256', data);
+  return btoa(String.fromCharCode(...new Uint8Array(hash)));
+}

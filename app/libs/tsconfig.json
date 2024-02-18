@@ -1,6 +1,7 @@
 {
     "compilerOptions": {
         "baseUrl": "src",
+        "allowSyntheticDefaultImports": true,
         "declaration": true,
         "declarationMap": true,
         "lib": ["DOM", "es6"],
