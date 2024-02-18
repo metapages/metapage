@@ -1,0 +1,13 @@
+{
+	"version": "0.5",
+	"metadata": {
+		"name": "markdown-it",
+		"author": "Dion Whitehead",
+		"description": "https://www.npmjs.com/package/markdown-it"
+	},
+	"inputs": {
+		"*": {
+			"type": "text/markdown; charset=UTF-8"
+		}
+	}
+}

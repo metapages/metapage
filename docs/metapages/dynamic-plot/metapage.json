@@ -1,0 +1,34 @@
+{
+  "version": "0.3",
+  "meta": {
+    "name":"Simple example: plot random data",
+    "layouts": {
+      "flexboxgrid" : {
+        "docs": "http://flexboxgrid.com/",
+        "layout": [
+          [ {"name":"random-data-generator", "width":"col-xs-4", "style": {"maxHeight":"600px"}}, {"url":"https://metapages.org/metaframes/passthrough-arrow/?rotation=90", "width":"col-xs-1"}, {"name":"graph-dynamic", "width":"col-xs-7"}  ]
+        ]
+      }
+    }
+  },
+  "metaframes": {
+    "random-data-generator": {
+      "url": "https://metapages.org/metaframes/random-data-generator/?frequency=1000"
+    },
+    "graph-dynamic": {
+      "url": "https://metapages.org/metaframes/graph-dynamic/",
+      "inputs": [
+        {
+          "metaframe": "random-data-generator",
+          "source": "y"
+        }
+      ]
+    }
+  },
+	"plugins": [
+		"https://metapages.org/metaframes/mermaid.js/?TITLE=0",
+
+    "https://editor.mtfm.io/"
+
+	]
+}

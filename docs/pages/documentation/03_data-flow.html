@@ -1,0 +1,55 @@
+<h1 id="metapage-data-flow">Metapage Data flow</h1>
+
+<hr />
+
+<p>metapage sends <em>inputs</em> to metaframe</p>
+
+<p>metaframe setup</p>
+
+<div class="mermaid" style="width: 100%;">
+sequenceDiagram
+    participant P as metapage
+    participant F as metaframe
+    P-&gt;&gt;F: creation
+    F--&gt;&gt;P: register request
+    Note right of P: unknown origin
+    Note right of P: sent to all
+    P-&gt;&gt;F: {state, iframeId, parentId}
+    Note right of F: registered (once)
+    Note right of F: initial inputs set
+    Note right of F: send update events
+
+</div>
+
+<hr />
+
+<p>metaframe sets inputs</p>
+
+<div class="mermaid" style="width: 100%;">
+sequenceDiagram
+    participant P as metapage
+    participant F as metaframe
+    Note right of F: sets inputs
+    F--&gt;&gt;P: new inputs
+    Note right of P: stores updates only
+    Note right of F: send update events
+
+</div>
+
+<hr />
+
+<p>metaframe sets outputs</p>
+
+<div class="mermaid" style="width: 100%;">
+sequenceDiagram
+    participant P as metapage
+    participant F as metaframe
+    Note right of F: sets outputs
+    F--&gt;&gt;P: new outputs
+    Note right of P: stores updates
+    Note right of P: send downstream
+    Note right of F: this is a different
+    Note right of F: child metaframe
+    P--&gt;&gt;F: new inputs
+
+</div>

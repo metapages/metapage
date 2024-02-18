@@ -1,0 +1,96 @@
+{
+  "version": "0.2",
+  "meta": {
+    "name": "Linked molecule viewers",
+    "description": "Demonstrates interactive bioinformatics tools and selective replication and forwarding of data streams",
+    "layouts": {
+      "flexboxgrid" : {
+        "version": 1,
+        "docs": "http://flexboxgrid.com/",
+        "layout": [
+          [ {"name":"input-button", "width":"col-xs-4", "style": {"maxHeight":"400px"}}, {"url":"https://metapages.org/metaframes/passthrough-arrow/?rotation=90", "width":"col-xs-2"}, {"name":"viewer1", "width":"col-xs-6"} ],
+          [ {"name":"passthrough2", "width":"col-xs-6"}, {"name":"passthrough1", "width":"col-xs-6", "style": {"maxHeight":"100px"}} ],
+          [ {"name":"viewer2", "width":"col-xs-6", "style": {"maxHeight":"400px"}} , {"name":"viewer3", "width":"col-xs-6"} ]
+        ],
+        "options": {
+          "arrows": true
+        }
+      }
+    }
+  },
+  "metaframes": {
+    "input-button": {
+      "url": "https://metapages.org/metaframes/pdb-input-button/"
+    },
+    "input-button": {
+      "url": "https://metapages.org/metaframes/pdb-input-button/"
+    },
+    "viewer1": {
+      "url": "https://metapages.org/metaframes/molviewer-pv/",
+      "inputs": [
+        {
+          "metaframe": "input-button",
+          "source": "pdb_data"
+        }
+      ]
+    },
+    "viewer2": {
+      "url": "https://metapages.org/metaframes/molviewer-pv/",
+      "inputs": [
+        {
+          "metaframe": "input-button",
+          "source": "pdb_data"
+        },
+        {
+          "metaframe": "viewer1",
+          "source": "camera_out",
+          "target": "camera_in"
+        },
+        {
+          "metaframe": "passthrough2",
+          "source": "zoom"
+        }
+      ]
+    },
+    "viewer3": {
+      "url": "https://metapages.org/metaframes/molviewer-pv/",
+      "inputs": [
+        {
+          "metaframe": "input-button",
+          "source": "pdb_data"
+        },
+        {
+          "metaframe": "viewer1",
+          "source": "camera_out",
+          "target": "camera_in"
+        },
+        {
+          "metaframe": "passthrough1",
+          "source": "rotation"
+        }
+      ]
+    },
+    "passthrough1": {
+      "url": "https://metapages.org/metaframes/passthrough/",
+      "inputs": [
+        {
+          "metaframe": "viewer1",
+          "source": "rotation"
+        }
+      ]
+    },
+    "passthrough2": {
+      "url": "https://metapages.org/metaframes/passthrough/",
+      "inputs": [
+        {
+          "metaframe": "viewer1",
+          "source": "zoom"
+        }
+      ]
+    }
+  },
+  "plugins": [
+    "https://metapages.org/metaframes/mermaid.js/?TITLE=0",
+    "https://editor.mtfm.io/"
+	]
+}

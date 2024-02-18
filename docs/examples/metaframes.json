@@ -1,0 +1,18 @@
+[
+            "/metaframes/button-demo/index"
+            ,"/metaframes/graph-demo/index"
+            ,"/metaframes/graph-dynamic/index"
+            ,"/metaframes/json-test/index"
+            ,"/metaframes/mermaid.js/index"
+            ,"/metaframes/metaframe-json-summary/index"
+            ,"/metaframes/metaframe-markdown-it/index"
+            ,"/metaframes/molviewer-pv/index"
+            ,"/metaframes/passthrough-arrow/index"
+            ,"/metaframes/passthrough/index"
+            ,"/metaframes/pdb-input-button/index"
+            ,"/metaframes/pdb-to-uniprot/index"
+            ,"/metaframes/plugin-graph/index"
+            ,"/metaframes/preact-test/index"
+            ,"/metaframes/protvista/index"
+            ,"/metaframes/random-data-generator/index"
+]

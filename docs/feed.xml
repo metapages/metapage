@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Metapages</title>
+    <description></description>
+    <link>https://metapages.org/</link>
+    <atom:link href="https://metapages.org/feed.xml" rel="self" type="application/rss+xml"/>
+    <pubDate>Sun, 18 Feb 2024 15:03:25 -0600</pubDate>
+    <lastBuildDate>Sun, 18 Feb 2024 15:03:25 -0600</lastBuildDate>
+    <generator>Jekyll v4.2.0</generator>
+    
+      <item>
+        <title>My page title</title>
+        <description>&lt;p&gt;By piping data in between embedded webpages, you can:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Create wep applications that consist of multiple distinct websites.&lt;/li&gt;
+  &lt;li&gt;Create plugins for existing webpage applications without having to embed or run any third party code.&lt;/li&gt;
+  &lt;li&gt;Separate server code from client-only code.&lt;/li&gt;
+  &lt;li&gt;Blur the distinction between server and client code.&lt;/li&gt;
+  &lt;li&gt;Blur the distinction between plugins and applications.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Adding metaframe functionality to an existing webpage is very easy (see examples). The metaframe javascript library simply listens for pipe messages between pages/tabs/windows. It’s up to your webpage to decide what to do with the piped inputs.&lt;/p&gt;
+
+&lt;h3 id=&quot;concepts&quot;&gt;Concepts&lt;/h3&gt;
+
+&lt;h4 id=&quot;iframe-communication&quot;&gt;Iframe communication&lt;/h4&gt;
+
+&lt;p&gt;The parent page that is running the app runs the iframe-app javascript code that communicates takes an application definition and returns a set of iframes connected together with window message events. The connection object establishes data pipes and API methods that the parent window creates.&lt;/p&gt;
+
+&lt;p&gt;Sequence of events:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1) The parent window creates the child iframe.
+2) The iframe loads the client connection library. This sends a SetupIframeClientRequest to the parent.
+3) 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;metapage&quot;&gt;Metapage&lt;/h4&gt;
+
+&lt;p&gt;Example yaml file&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;metapage:
+  version: &quot;0.1-alpha&quot;
+  iframes:
+    name1:
+      url: someurl
+      in:
+        input1:
+          type: inline
+          value: some value
+        input2:
+          type: url
+          value: relative_url/value.txt
+      out:
+        out1: {}
+        out2: {}
+    name2:
+      url: someurl
+      in:
+        input1:
+          type: inline
+          value: some value
+        input2:
+          type: url
+          value: relative_url/value.txt
+  pipes:
+    - from:
+        id: name1
+        pipe: out1
+      to:
+        id: name2
+        pipe: input
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h1 id=&quot;metaframes-building-blocks&quot;&gt;Metaframes: building blocks&lt;/h1&gt;
+
+&lt;p&gt;Metaframes (embedded websites) become input/output pipes.&lt;/p&gt;
+
+&lt;h1 id=&quot;examples&quot;&gt;Examples&lt;/h1&gt;
+
+&lt;p&gt;The site:&lt;/p&gt;
+
+&lt;h1 id=&quot;use-cases&quot;&gt;Use cases:&lt;/h1&gt;
+
+&lt;p&gt;To run the examples, you’ll need to &lt;a href=&quot;https://docs.docker.com/engine/installation/&quot;&gt;install docker&lt;/a&gt;.&lt;/p&gt;
+
+&lt;p&gt;After you have installed docker:&lt;/p&gt;
+
+&lt;p&gt;docker-compose up&lt;/p&gt;
+
+&lt;p&gt;Then go to http://localhost:4000/test to browse the examples.&lt;/p&gt;
+
+&lt;h2 id=&quot;technical&quot;&gt;Technical&lt;/h2&gt;
+
+&lt;p&gt;By piping data in between embedded webpages, you can:&lt;/p&gt;
+
+&lt;ul&gt;
+  &lt;li&gt;Create wep applications that consist of multiple distinct websites.&lt;/li&gt;
+  &lt;li&gt;Create plugins for existing webpage applications without having to embed or run any third party code.&lt;/li&gt;
+  &lt;li&gt;Separate server code from client-only code.&lt;/li&gt;
+  &lt;li&gt;Blur the distinction between server and client code.&lt;/li&gt;
+  &lt;li&gt;Blur the distinction between plugins and applications.&lt;/li&gt;
+&lt;/ul&gt;
+
+&lt;p&gt;Adding metaframe functionality to an existing webpage is very easy (see examples). The metaframe javascript library simply listens for pipe messages between pages/tabs/windows. It’s up to your webpage to decide what to do with the piped inputs.&lt;/p&gt;
+
+&lt;h1 id=&quot;connect-iframes&quot;&gt;Connect iframes&lt;/h1&gt;
+
+&lt;h2 id=&quot;definition-in-a-github-repo&quot;&gt;Definition in a github repo&lt;/h2&gt;
+
+&lt;h3 id=&quot;concepts-1&quot;&gt;Concepts&lt;/h3&gt;
+
+&lt;h4 id=&quot;iframe-communication-1&quot;&gt;Iframe communication&lt;/h4&gt;
+
+&lt;p&gt;The parent page that is running the app runs the iframe-app javascript code that communicates takes an application definition and returns a set of iframes connected together with window message events. The connection object establishes data pipes and API methods that the parent window creates.&lt;/p&gt;
+
+&lt;p&gt;Sequence of events:&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;1) The parent window creates the child iframe.
+2) The iframe loads the client connection library. This sends a SetupIframeClientRequest to the parent.
+3) 
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+
+&lt;h4 id=&quot;metapage-1&quot;&gt;Metapage&lt;/h4&gt;
+
+&lt;p&gt;Example yaml file&lt;/p&gt;
+
+&lt;div class=&quot;language-plaintext highlighter-rouge&quot;&gt;&lt;div class=&quot;highlight&quot;&gt;&lt;pre class=&quot;highlight&quot;&gt;&lt;code&gt;metapage:
+  version: &quot;0.1-alpha&quot;
+  iframes:
+    name1:
+      url: someurl
+      in:
+        input1:
+          type: inline
+          value: some value
+        input2:
+          type: url
+          value: relative_url/value.txt
+      out:
+        out1: {}
+        out2: {}
+    name2:
+      url: someurl
+      in:
+        input1:
+          type: inline
+          value: some value
+        input2:
+          type: url
+          value: relative_url/value.txt
+  pipes:
+    - from:
+        id: name1
+        pipe: out1
+      to:
+        id: name2
+        pipe: input
+&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/div&gt;
+</description>
+        <pubDate>Tue, 24 Jan 2017 00:00:00 -0600</pubDate>
+        <link>https://metapages.org/trying-out-docs</link>
+        <guid isPermaLink="true">https://metapages.org/trying-out-docs</guid>
+        
+        
+      </item>
+    
+  </channel>
+</rss>

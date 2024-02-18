@@ -1,0 +1,15 @@
+{
+	"version": "0.5",
+	"metadata": {
+		"name": "Observe inputs/outputs",
+		"author": "Dion Amago Whitehead"
+	},
+	"inputs": {
+		"metapage/definition": {
+			"type": "metapage/definition"
+		},
+		"metapage/state": {
+			"type": "metapage/state"
+		}
+	}
+}

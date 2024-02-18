@@ -1,0 +1,79 @@
+# just docs: https://github.com/casey/just
+
+# Very high-level root-repository operations
+# More specific commands are in deeper justfiles
+#  - Commands containing 🌱 in the docs are (or will be) used for automation and are required to link to docs explaining further if needed
+
+set shell         := ["bash", "-c"]
+set dotenv-load   := true
+
+export APP_FQDN   := env_var_or_default("APP_FQDN", "app1.dev")
+export APP_PORT   := env_var_or_default("APP_PORT", "443")
+export JEKYLL_ENV := env_var_or_default("JEKYLL_ENV", "production")
+
+@_help:
+    just --list --unsorted --list-heading $'📚 Commands for jekyll (static site generator for metapage docs):\n\n'
+    echo -e ""
+    echo -e "🗒️ Notes:"
+    echo -e "      The framework layouts location: /jekyll/gems/ruby/2.7.0/gems/just-the-docs-0.3.3/_includes"
+    echo -e ""
+
+# Develop with autoloading, including on config changes
+dev:
+    cp _config.dev.template.yml _config.dev.yml
+    sed -i'' 's#^url: .*#url: "https://{{APP_FQDN}}:{{APP_PORT}}"#g' _config.dev.yml
+    watchexec -w _config.yml -w _config.dev.template.yml --restart --force-poll 2000 -- JEKYLL_ENV=$JEKYLL_ENV bundle exec jekyll serve --strict_front_matter --trace --watch --force_polling --host 0.0.0.0 --port $APP_PORT --config _config.yml,_config.dev.yml
+
+# Expects ../libs to already be published (just app/libs/(build or publish) )
+# build docs website in <../docs/> for https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages
+publish: clean
+    #!/usr/bin/env bash
+    set -euo pipefail
+    CURRENT_BRANCH=$(git branch --show-current)
+    # delete existing gh-pages branch
+    git branch --delete -D gh-pages || true
+    # create new gh-pages branch this commit
+    git checkout -b gh-pages
+    # build dependencies from ../libs
+    just ../libs/build
+    just ../libs/_versions-write-versions-to-jekyll
+    # build the docs in ../../docs (<root/docs) https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages
+    just build
+    # commit everything in ../../docs
+    cd ../.. && \
+        git add --force docs && \
+        git commit -m 'ready to publish'
+    echo "git force push"
+    git push -f origin gh-pages
+    git checkout $CURRENT_BRANCH
+
+# Build production documentation into <root/docs> for consumption by github pages
+build:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    if [ ! -f /.dockerenv ]; then
+        # This check is here to prevent publishing if there are uncommitted changes, but this check does not work in CI environments
+        # because it starts as a clean checkout and git is not installed and it is not a full checkout, just the tip
+        if [[ $(git status --short) != '' ]]; then
+            git status
+            echo -e '💥 Cannot publish with uncommitted changes'
+            exit 2
+        fi
+        # No docker-compose build step because this only happens on the host so local volumes are mounted in
+        docker-compose build docs
+        docker-compose run docs just build
+    else
+        rm -rf ../../docs/*
+        JEKYLL_ENV=production bundle exec jekyll build --disable-disk-cache --strict_front_matter --trace --config _config.yml --destination ../../docs
+    fi
+
+# https://metapage-npm.dev:4440/docs/
+
+# Updates Gemfile.lock (if you see errors about permissions writing to Gemfile.lock)
+@update-install:
+    docker run --rm -ti -v $PWD:/workspace/docs -w /workspace/docs jekyll/jekyll:4.2.0 bundle install
+
+clean:
+    rm -rf _config.dev.yml
+    rm -rf _site
+    rm -rf .jekyll-cache

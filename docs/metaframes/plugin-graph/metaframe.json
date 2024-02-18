@@ -1,0 +1,12 @@
+{
+	"version": "0.5",
+	"metadata": {
+		"name": "Metapage Graph",
+		"author": "Dion Whitehead"
+	},
+	"inputs": {
+		"definition": {
+			"type": "metapage/definition"
+		}
+	}
+}

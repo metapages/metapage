@@ -1,0 +1,11 @@
+{
+	"version": "0.5",
+	"metadata": {
+		"name": "Mermaid.js flowchart generator",
+		"author": "Dion Whitehead",
+		"description": "Display mermaid.js graphs and diagrams. Plugin: display the metapage definition using mermaid.js"
+	},
+	"inputs": {
+		"metapage/definition": {}
+	}
+}
