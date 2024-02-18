@@ -372,11 +372,20 @@ export class Metaframe extends EventEmitter<
       return;
     }
 
-    Object.keys(inputs).forEach((pipeId) =>
-      this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId])
-    );
-    this.emit(MetaframeEvents.Inputs, inputs);
-
+    Object.keys(inputs).forEach((pipeId) => {
+      try {
+        this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId])
+      } catch(err) {
+        console.error(`Error emitting input ${pipeId}: ${err}`)
+        this.emit(MetaframeEvents.Error, `Error emitting input ${pipeId}: ${err}`);
+      }
+    });
+    try {
+      this.emit(MetaframeEvents.Inputs, inputs);
+    } catch(err) {
+      console.error(`Error emitting inputs: ${err}`)
+      this.emit(MetaframeEvents.Error, `Error emitting inputs: ${err}`);
+    }
   }
 
   public getInput(pipeId: MetaframePipeId): any {

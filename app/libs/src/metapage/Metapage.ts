@@ -1,4 +1,5 @@
 import { ListenerFn } from 'eventemitter3';
+import { produce } from 'immer';
 import * as objectHash from 'object-hash';
 
 import {
@@ -295,7 +296,11 @@ export class Metapage extends MetapageShared {
         this._state.plugins.outputs[pluginId]
       );
     });
-    this.emit(MetapageEvents.State, this._state);
+
+    if (this.listenerCount(MetapageEvents.State) > 0) {
+      const stateImmutable = produce<MetapageState>(this._state, (draft) => {});
+      this.emit(MetapageEvents.State, stateImmutable);
+    }
   }
 
   public getStateMetaframes(): MetapageStatePartial {
@@ -403,8 +408,12 @@ export class Metapage extends MetapageShared {
       window.setTimeout(() => {
         if (!this.isDisposed() && newDefinition === this._definition) {
           this._emitDefinitionEvent();
-          if (state) {
-            this.emit(MetapageEvents.State, this._state);
+          if (state && this.listenerCount(MetapageEvents.State) > 0) {
+            const stateImmutable = produce<MetapageState>(
+              this._state,
+              (draft) => {}
+            );
+            this.emit(MetapageEvents.State, stateImmutable);
           }
         }
       }, 0);
@@ -415,12 +424,25 @@ export class Metapage extends MetapageShared {
 
   // Convenience method
   _emitDefinitionEvent() {
-    const event: MetapageEventDefinition = {
-      definition: this._definition,
-      metaframes: this._metaframes,
-      plugins: this._plugins,
-    };
-    this.emit(MetapageEvents.Definition, event);
+    if (this.listenerCount(MetapageEvents.Definition) > 0) {
+      const definitionImmutable = produce<MetapageDefinitionV3>(
+        this._definition,
+        (draft) => {}
+      );
+      const metaframesImmutable = produce<{
+        [key: string]: MetapageIFrameRpcClient;
+      }>(this._metaframes, (draft) => {});
+      const pluginsImmutable = produce<{
+        [key: string]: MetapageIFrameRpcClient;
+      }>(this._plugins, (draft) => {});
+
+      const event: MetapageEventDefinition = {
+        definition: definitionImmutable,
+        metaframes: metaframesImmutable,
+        plugins: pluginsImmutable,
+      };
+      this.emit(MetapageEvents.Definition, event);
+    }
   }
 
   // do not expose, change definition instead
@@ -745,8 +767,14 @@ export class Metapage extends MetapageShared {
       value
     );
     // finally send the main events
-    this.emit(MetapageEvents.State, this._state);
-    this.emit(MetapageEvents.Inputs, this._state);
+    if (
+      this.listenerCount(MetapageEvents.State) > 0 ||
+      this.listenerCount(MetapageEvents.Inputs) > 0
+    ) {
+      const stateImmutable = produce<MetapageState>(this._state, (draft) => {});
+      this.emit(MetapageEvents.State, stateImmutable);
+      this.emit(MetapageEvents.Inputs, stateImmutable);
+    }
   }
 
   // this is
@@ -950,6 +978,8 @@ export class Metapage extends MetapageShared {
         );
       }
 
+      let stateImmutable: MetapageState | undefined = undefined;
+
       switch (method) {
         /**
          * An iframe is sending a connection request.
@@ -982,7 +1012,16 @@ export class Metapage extends MetapageShared {
             // iframe outputs, metaframe only event sent
             iframe.setOutputs(outputs);
             // now sent metapage event
-            this.emit(MetapageEvents.State, this._state);
+
+            if (this.listenerCount(MetapageEvents.State) > 0) {
+              if (!stateImmutable) {
+                stateImmutable = produce<MetapageState>(
+                  this._state,
+                  (draft) => {}
+                );
+              }
+              this.emit(MetapageEvents.State, stateImmutable);
+            }
 
             // cached lookup of where those outputs are going
             // Multiple outputs going to multiple inputs on the same metaframe must
@@ -1019,10 +1058,24 @@ export class Metapage extends MetapageShared {
             });
             // only send a state event if downstream inputs were modified
             if (modified) {
-              this.emit(MetapageEvents.State, this._state);
+              if (this.listenerCount(MetapageEvents.State) > 0) {
+                if (!stateImmutable) {
+                  stateImmutable = produce<MetapageState>(
+                    this._state,
+                    (draft) => {}
+                  );
+                }
+                this.emit(MetapageEvents.State, stateImmutable);
+              }
             }
             if (this.debug) {
-              iframe.ack({ jsonrpc: jsonrpc, state: this._state });
+              if (!stateImmutable) {
+                stateImmutable = produce<MetapageState>(
+                  this._state,
+                  (draft) => {}
+                );
+              }
+              iframe.ack({ jsonrpc: jsonrpc, state: stateImmutable });
             }
           } else if (this._plugins[metaframeId]) {
             // the metapage state special pipes (definition and global state)
@@ -1041,12 +1094,26 @@ export class Metapage extends MetapageShared {
             // I'm not sure if plugin outputs should trigger a state event, since it's not
             // metaframe state.
             if (outputPersistanceAllowed) {
-              this.emit(MetapageEvents.State, this._state);
+              if (this.listenerCount(MetapageEvents.State) > 0) {
+                if (!stateImmutable) {
+                  stateImmutable = produce<MetapageState>(
+                    this._state,
+                    (draft) => {}
+                  );
+                }
+                this.emit(MetapageEvents.State, stateImmutable);
+              }
             }
             if (this.debug) {
+              if (!stateImmutable) {
+                stateImmutable = produce<MetapageState>(
+                  this._state,
+                  (draft) => {}
+                );
+              }
               this._plugins[metaframeId].ack({
                 jsonrpc: jsonrpc,
-                state: this._state,
+                state: stateImmutable,
               });
             }
           } else {
@@ -1069,11 +1136,26 @@ export class Metapage extends MetapageShared {
             // Currently on for setting metaframe inputs that haven't loaded yet
             this.setInputStateOnly(metaframeId, inputs);
             this._metaframes[metaframeId].setInputs(inputs);
-            this.emit(MetapageEvents.State, this._state);
+            if (this.listenerCount(MetapageEvents.State) > 0) {
+              if (!stateImmutable) {
+                stateImmutable = produce<MetapageState>(
+                  this._state,
+                  (draft) => {}
+                );
+              }
+              this.emit(MetapageEvents.State, stateImmutable);
+            }
+
             if (this.debug) {
+              if (!stateImmutable) {
+                stateImmutable = produce<MetapageState>(
+                  this._state,
+                  (draft) => {}
+                );
+              }
               this._metaframes[metaframeId].ack({
                 jsonrpc: jsonrpc,
-                state: this._state,
+                state: stateImmutable,
               });
             }
           } else if (this._plugins[metaframeId]) {
@@ -1086,12 +1168,26 @@ export class Metapage extends MetapageShared {
             }
             this._plugins[metaframeId].setInputs(inputs);
             if (inputPersistanceAllowed) {
-              this.emit(MetapageEvents.State, this._state);
+              if (this.listenerCount(MetapageEvents.State) > 0) {
+                if (!stateImmutable) {
+                  stateImmutable = produce<MetapageState>(
+                    this._state,
+                    (draft) => {}
+                  );
+                }
+                this.emit(MetapageEvents.State, stateImmutable);
+              }
             }
             if (this.debug) {
+              if (!stateImmutable) {
+                stateImmutable = produce<MetapageState>(
+                  this._state,
+                  (draft) => {}
+                );
+              }
               this._plugins[metaframeId].ack({
                 jsonrpc: jsonrpc,
-                state: this._state,
+                state: stateImmutable,
               });
             }
           } else {
@@ -1143,7 +1239,9 @@ export class Metapage extends MetapageShared {
             this.log(`Unknown RPC method: "${method}"`);
           }
       }
-      this.emit(MetapageEvents.Message, jsonrpc);
+      if (this.listenerCount(MetapageEvents.Message) > 0) {
+        this.emit(MetapageEvents.Message, jsonrpc);
+      }
     }
   }
 
@@ -1222,16 +1320,21 @@ const bindPlugin = async (
             METAPAGE_KEY_DEFINITION,
             (definition) => {
               if (
-                objectHash.sha1(definition) !==
-                objectHash.sha1(currentMetapageDef)
+                metapage.listenerCount(MetapageEvents.DefinitionUpdateRequest) >
+                0
               ) {
-                // It's a REQUEST to update the metapage definition, it cannot force it
-                // because that would open up an interesting ability that could be hidden
-                // from users (third party site modifying the definition)
-                metapage.emit(
-                  MetapageEvents.DefinitionUpdateRequest,
-                  definition
-                );
+                if (
+                  objectHash.sha1(definition) !==
+                  objectHash.sha1(currentMetapageDef)
+                ) {
+                  // It's a REQUEST to update the metapage definition, it cannot force it
+                  // because that would open up an interesting ability that could be hidden
+                  // from users (third party site modifying the definition)
+                  metapage.emit(
+                    MetapageEvents.DefinitionUpdateRequest,
+                    definition
+                  );
+                }
               }
             }
           );
