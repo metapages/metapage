@@ -396,20 +396,17 @@ export const pageLoaded = async (): Promise<void> => {
   });
 };
 
-export const metapageSha256AllHash = async (metapage:MetapageDefinitionV3) => {
+export const metapageAllSha256Hash = async (metapage:MetapageDefinitionV3) => {
   const metapageStr = stringify(metapage);
   return await sha256ToBase64(metapageStr);
 }
 
-export const metapageSha256OnlyMetaframesHash = async (metapage:MetapageDefinitionV3) => {
-  const metapageStr = stringify({metaframes: {...metapage.metaframes}});
-  return await sha256ToBase64(metapageStr);
-}
-
-export const metapageSha256AllExceptMetaHash = async (metapage:MetapageDefinitionV3) => {
-  const copyLessMeta = {...metapage};
-  delete copyLessMeta.meta;
-  const metapageStr = stringify(copyLessMeta);
+export const metapageOnlyEssentailSha256Hash = async (metapage:Pick<MetapageDefinitionV3, "metaframes" | "version" | "plugins">) => {
+  const metapageStr = stringify({
+    version: metapage.version,
+    metaframes: metapage.metaframes,
+    plugins: metapage.plugins,
+  });
   return await sha256ToBase64(metapageStr);
 }
 
