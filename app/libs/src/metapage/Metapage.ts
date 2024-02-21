@@ -1229,8 +1229,13 @@ export class Metapage extends MetapageShared {
             // Update the local metaframe client reference
             metaframeOrPlugin.url = url.href;
             // Update the definition in place
-            this._definition.metaframes[hashParamsUpdatePayload.metaframe].url =
-              url.href;
+            this._definition = produce<MetapageDefinitionV3>(
+              this._definition,
+              (draft) => {
+                draft.metaframes[hashParamsUpdatePayload.metaframe].url = url.href;
+              }
+            );
+            
             this._emitDefinitionEvent();
           }
           break;
