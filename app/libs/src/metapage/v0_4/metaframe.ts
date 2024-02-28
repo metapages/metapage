@@ -1,6 +1,9 @@
-import { MetaframeId, MetaframePipeId } from "./core";
-import { VersionsMetaframe } from "./versions";
-import { MetapageDefinitionV3 } from "./metapage";
+import {
+  MetaframeId,
+  MetaframePipeId,
+} from './core';
+import { MetapageDefinitionV3 } from './metapage';
+import { VersionsMetaframe } from './versions';
 
 export interface PipeInput {
   metaframe: MetaframeId;
@@ -102,6 +105,10 @@ export interface MetaframeInstance {
   url: string;
   // Defines the inputs pipes from other metaframes
   inputs?: PipeInput[];
+  // Set or override allowed features for the iframe
+  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
+  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Feature-Policy#directives
+  allow?: string;
 }
 
 export interface MetaframeDefinitionV6 {

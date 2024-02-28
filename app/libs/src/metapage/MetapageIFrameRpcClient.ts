@@ -99,16 +99,14 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     this._metapage = metapage;
 
     // Add the custom URL params
-    var urlBlob = new URL(this.url);
     if (debug) {
+      this._debug = debug;
+      var urlBlob = new URL(this.url);
       urlBlob.searchParams.set(MetapageHashParams.mp_debug, "true");
+      this.url = urlBlob.href;
     }
-    this.url = urlBlob.href;
 
     this.id = iframeId;
-
-    this._debug = debug;
-
     this._parentId = parentId;
     this._color = stringToRgb(this.id);
     this._consoleBackgroundColor = consoleBackgroundColor;
@@ -123,17 +121,24 @@ export class MetapageIFrameRpcClient extends EventEmitter<
       pageLoaded().then(async () => {
         // parent page loaded, set the iframe src to start loading
         // get the definition in case we need to set allow permissions
-        if (selfThis._iframe) {
-          // possibly already disposed
-          const metaframeDef = await selfThis.getDefinition();
-          if (!selfThis._iframe) {
-            // possibly already disposed
-            return;
-          }
+        if (selfThis._iframe) { // check because possibly already disposed
+        
+          // iframe permissions (the "allow" attribute)
           // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
-          if (metaframeDef && metaframeDef.allow) {
-            selfThis._iframe.allow = metaframeDef.allow;
+          // If there is an "allow" field in the frame definition in the metapage use that first
+          if (this._metapage?._definition?.metaframes?.[this.id]?.allow) {
+            selfThis._iframe.allow = this._metapage._definition.metaframes[this.id].allow!;
+          } else { // Otherwise use whatever is in the metaframe.json 
+            const metaframeDef = await selfThis.getDefinition();
+            if (!selfThis._iframe) {
+              // possibly already disposed
+              return;
+            }
+            if (metaframeDef && metaframeDef.allow) {
+              selfThis._iframe.allow = metaframeDef.allow;
+            }
           }
+          // set the src after the allow attribute is set
           selfThis._iframe.src = this.url;
           resolve(selfThis._iframe);
         }

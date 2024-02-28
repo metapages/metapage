@@ -427,7 +427,14 @@ export class Metapage extends MetapageShared {
     if (this.listenerCount(MetapageEvents.Definition) > 0) {
       const definitionImmutable = produce<MetapageDefinitionV3>(
         this._definition,
-        (draft) => {}
+        (draft) => {
+          if (draft.meta) {
+            // remove the hash from the definition
+            // since this is based on the incoming definition
+            // This tells listeners that they must recompute the hash
+            delete draft.meta.sha256;
+          }
+        }
       );
       const metaframesImmutable = produce<{
         [key: string]: MetapageIFrameRpcClient;
@@ -1251,7 +1258,6 @@ export class Metapage extends MetapageShared {
   }
 
   updatePluginsWithDefinition() {
-    const currentMetapageDef = this.getDefinition();
     Object.values(this._plugins).forEach((plugin) => {
       if (plugin.hasPermissionsDefinition()) {
         updatePluginWithDefinition(plugin);
