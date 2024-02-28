@@ -97,10 +97,9 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     }
     this.url = url;
     this._metapage = metapage;
-
+    this._debug = debug;
     // Add the custom URL params
     if (debug) {
-      this._debug = debug;
       var urlBlob = new URL(this.url);
       urlBlob.searchParams.set(MetapageHashParams.mp_debug, "true");
       this.url = urlBlob.href;
