@@ -20,7 +20,6 @@ import {
   MetapageDefinitionV3,
   MetapageId,
   MetapageVersionCurrent,
-  VersionsMetaframe,
   VersionsMetapage,
 } from './v0_4';
 
@@ -46,13 +45,13 @@ export const convertMetapageDefinitionToCurrentVersion = (
   let updatedDefinition: MetapageDefinitionV3;
 
   switch (getMatchingVersion(def.version)) {
-    case VersionsMetapage.V0_2: {
+    case "0.2": {
       updatedDefinition = convertMetapageDefinitionToCurrentVersion(
         definition_v0_2_to_v0_3(def as V0_2MetapageDefinition)
       );
       break;
     }
-    case VersionsMetapage.V0_3: {
+    case "0.3": {
       updatedDefinition = def as MetapageDefinitionV3; // Latest
       break;
     }
@@ -80,14 +79,14 @@ export const convertMetaframeJsonToCurrentVersion = (
   }
   switch (m.version) {
     case undefined:
-    case VersionsMetaframe.V0_3:
-    case VersionsMetaframe.V0_4:
+    case "0.3":
+    case "0.4":
       return convertMetaframeJsonToCurrentVersion(
         convertMetaframeJsonV4ToV5(m as MetaframeDefinitionV4)
       );
-    case VersionsMetaframe.V0_5:
+    case "0.5":
       return convertMetaframeJsonV5ToV6(m as MetaframeDefinitionV5);
-    case VersionsMetaframe.V0_6:
+    case "0.6":
       return m as MetaframeDefinitionV6;
     default:
       if (opts && opts.errorIfUnknownVersion) {
@@ -135,7 +134,7 @@ const convertMetaframeJsonV4ToV5 = (source: MetaframeDefinitionV4) => {
   };
 
   const metaframeDefV5: MetaframeDefinitionV5 = {
-    version: VersionsMetaframe.V0_5,
+    version: "0.5",
     inputs: inputs,
     outputs: outputs,
     allow: allow,
@@ -153,7 +152,7 @@ const convertMetaframeJsonV5ToV6 = (source: MetaframeDefinitionV5) => {
   // apart from metadata, the rest of the definition is the same as v5
   const metaframeDefV6: MetaframeDefinitionV6 = {
     ...restOfDefinitionProps,
-    version: VersionsMetaframe.V0_6,
+    version: "0.6",
   };
 
   if (metadata) {
@@ -211,7 +210,7 @@ const definition_v0_2_to_v0_3 = (
   old: V0_2MetapageDefinition
 ): V0_3MetapageDefinition => {
   // Exactly the same except v0.3 has plugins
-  old.version = VersionsMetapage.V0_3;
+  old.version = "0.3";
   return old;
 };
 
@@ -251,11 +250,11 @@ export const getMatchingVersion = (version: string): VersionsMetapage => {
     throw `Unknown version: ${version}`;
   } else if (
     compare(version, "0.2", ">=") &&
-    compare(version, VersionsMetapage.V0_3, "<")
+    compare(version, "0.3", "<")
   ) {
-    return VersionsMetapage.V0_2;
+    return "0.2";
   } else if (compare(version, "0.3", ">=")) {
-    return VersionsMetapage.V0_3;
+    return "0.3";
   } else {
     // Return something, assume latest
     console.log(

@@ -4,7 +4,7 @@
 # and for running functional tests (requires puppeteer/chromium)
 #################################################################
 
-FROM zenika/alpine-chrome:100-with-puppeteer as build
+FROM zenika/alpine-chrome:124-with-puppeteer as build
 
 USER root
 RUN apk update && apk upgrade && apk --no-cache add \
