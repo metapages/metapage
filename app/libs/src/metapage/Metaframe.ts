@@ -430,6 +430,12 @@ export class Metaframe extends EventEmitter<
     window.removeEventListener("hashchange", this._onHashUrlChange);
   }
 
+  // public getHashParam(key:string): string {
+  //   window.removeEventListener("hashchange", this._onHashUrlChange);
+  // }
+
+
+
   /** Tell the parent metapage our hash params changed */
   _onHashUrlChange(_: any): void {
     const payload: MetapageEventUrlHashUpdate = {

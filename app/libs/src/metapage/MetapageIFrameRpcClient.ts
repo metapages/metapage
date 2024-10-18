@@ -123,7 +123,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
         if (selfThis._iframe) { // check because possibly already disposed
         
           // iframe permissions (the "allow" attribute)
-          // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
+          // https://developer.mozilla.org/en-US/docs/Web/API/HTMLIFrameElement/allow
           // If there is an "allow" field in the frame definition in the metapage use that first
           if (this._metapage?._definition?.metaframes?.[this.id]?.allow) {
             selfThis._iframe.allow = this._metapage._definition.metaframes[this.id].allow!;

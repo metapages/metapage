@@ -896,7 +896,7 @@ export class Metapage extends MetapageShared {
       if (!isMetaframe && !this._plugins.hasOwnProperty(metaframeId)) {
         throw `No metaframe or plugin: ${metaframeId}`;
       }
-      const inputOrOutputState = isMetaframe
+      let inputOrOutputState = isMetaframe
         ? isInputs
           ? this._state.metaframes.inputs
           : this._state.metaframes.outputs
@@ -906,6 +906,7 @@ export class Metapage extends MetapageShared {
 
       if (typeof inputPipeId === "string") {
         // Ensure a map
+        inputOrOutputState = {...inputOrOutputState};
         inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId]
           ? inputOrOutputState[metaframeId]
           : ({} as MetaframeInstance);

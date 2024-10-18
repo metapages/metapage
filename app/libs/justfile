@@ -19,8 +19,13 @@ parcel             := "./node_modules/parcel-bundler/bin/cli.js"
 tsc                := "./node_modules/typescript/bin/tsc"
 vite               := "NODE_OPTIONS='--max_old_space_size=16384' ./node_modules/vite/bin/vite.js"
 # minimal formatting, bold is very useful
-bold               := '\033[1m'
-normal             := '\033[0m'
+bold                        := '\033[1m'
+normal                      := '\033[0m'
+green                       := "\\e[32m"
+yellow                      := "\\e[33m"
+blue                        := "\\e[34m"
+magenta                     := "\\e[35m"
+grey                        := "\\e[90m"
 
 _help:
     @just --list --unsorted --list-heading $'Commands:\n'
@@ -74,7 +79,7 @@ test:
     if [ ! -f /.dockerenv ]; then
         echo -e "Not in a docker container, assuming running on the host"
         cd ..
-        docker-compose build libs && docker-compose run libs just test
+        docker compose build libs && docker compose run libs just test
     else
         just test/test
     fi
@@ -98,6 +103,11 @@ dev: _ensure_node_modules
     # No clean operation because that might break symlinks
     echo "👀 watching and building npm module into ./dist..."
     watchexec --watch src -- 'just _build_npm'
+
+# typescript check 
+@check: (_tsc "--build")
+    echo -e "✅ {{green}}TypeScript{{normal}} check passed"
+
 
 # npm link the package in dist for local development. In the other project: 'npm link @metapages/metapage'
 @link:

@@ -1,4 +1,4 @@
-# Template docker-compose application
+# Template docker compose application
 version: "2.4"
 services:
 

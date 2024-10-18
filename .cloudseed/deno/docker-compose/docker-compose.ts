@@ -10,7 +10,7 @@ export const isInsideDocker = (): boolean => {
 };
 
 export const getNearestComposeFile = (): string | undefined => {
-  return getNearestFileWithPrefix("docker-compose.yml");
+  return getNearestFileWithPrefix("docker compose.yml");
 };
 
 // the name of the parent directory which is used as the stack prefix
@@ -19,7 +19,7 @@ export const getComposeProject = (composeFile? : string): string | undefined => 
     ? composeFile
     : getNearestComposeFile();
   if (!composeFile) {
-    throw "No compose file found, cannot guess docker-compose project";
+    throw "No compose file found, cannot guess docker compose project";
   }
   return parse(parse(composeFile).dir).name;
 };
@@ -30,7 +30,7 @@ export const guessDockerComposeNetworkName = (composeFile? : string): string | u
   }
 
   if (!composeFile) {
-    throw "No compose file found, cannot guess docker-compose network";
+    throw "No compose file found, cannot guess docker compose network";
   }
 
   // get first network name
@@ -45,9 +45,9 @@ export const guessDockerComposeNetworkName = (composeFile? : string): string | u
 };
 
 /**
- * Make sure we're inside a named docker-compose service
+ * Make sure we're inside a named docker compose service
  * defaulting to a sh shell
- * @param args service: docker-compose service name
+ * @param args service: docker compose service name
  */
 export const ensureInsideService = async (args : {
   service: string;
@@ -67,23 +67,23 @@ export const ensureInsideService = async (args : {
   // inside docker, assume it's the desired service
   if (existsSync("/.dockerenv")) {
     if (debug) {
-      console.log("/.dockerenv found, assuming already inside docker-compose stack");
+      console.log("/.dockerenv found, assuming already inside docker compose stack");
     }
     return true;
   }
 
   const composeFile = getNearestComposeFile();
   if (!composeFile) {
-    throw "No compose file found, cannot guess docker-compose network prefix";
+    throw "No compose file found, cannot guess docker compose network prefix";
   }
 
   const composeProject = getComposeProject(composeFile);
 
   if (debug) {
-    console.log(`Found docker-compose project: ${composeProject}`);
+    console.log(`Found docker compose project: ${composeProject}`);
   }
 
-  let cmd = ["docker-compose", "run"];
+  let cmd = ["docker compose", "run"];
   cmd = runArgs
     ? cmd.concat(runArgs)
     : cmd;

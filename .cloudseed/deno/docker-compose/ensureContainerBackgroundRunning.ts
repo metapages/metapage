@@ -1,7 +1,7 @@
 /**
  * Ensures a docker container is running detached.
  * env vars:
- *  DOCKER_COMPOSE: docker-compose command to override
+ *  DOCKER_COMPOSE: docker compose command to override
  * args:
  *  <docker componse service>
  * example:

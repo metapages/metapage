@@ -115,7 +115,7 @@ Optional host requirements:
     - `deno`: https://deno.land/manual/getting_started/installation
   - restart any process after edits:
     - `watchexec`: https://github.com/watchexec/watchexec
-  - console dashboard with good easy operations of docker-compose (restart, logs)
+  - console dashboard with good easy operations of docker compose (restart, logs)
     - `lazydocker`: https://github.com/jesseduffield/lazydocker
 - repo scripting:
   - `deno`: https://deno.land/manual/getting_started/installation

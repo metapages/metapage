@@ -40,11 +40,14 @@ _help:
 
 # Publish new npm modules and associated documentation
 @publish:
-    DOCKER_COMPOSE="docker-compose -f docker-compose.yml" just app/publish
+    DOCKER_COMPOSE="docker compose -f docker-compose.yml" just app/publish
 
 # Develop: run the stack with docker-compose, open a browser window. 'just app/down' to stop.
 @dev:
     just app/dev
+
+@check:
+    just app/libs/check
 
 ###################################################
 # Internal utilies

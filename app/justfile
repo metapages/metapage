@@ -16,9 +16,9 @@ export DOCKER_TAG                  := env_var_or_default("DOCKER_TAG", `(which g
 # Required for local https certificates, OAuth config, and the https URL
 # This line is duplicated in ci/justfile
 export APP_FQDN                    := env_var_or_default("APP_FQDN", "app1.dev")
-# Default to the local development stack, publishing typically is only DOCKER_COMPOSE="docker-compose -f docker-compose.yml"
-export DOCKER_COMPOSE              := env_var_or_default("DOCKER_COMPOSE", "docker-compose -f docker-compose.yml")
-export DOCKER_COMPOSE_DEV          := DOCKER_COMPOSE + " -f docker-compose.override.yml"
+# Default to the local development stack, publishing typically is only DOCKER_COMPOSE="docker compose -f docker compose.yml"
+export DOCKER_COMPOSE              := env_var_or_default("DOCKER_COMPOSE", "docker compose -f docker-compose.yml")
+export DOCKER_COMPOSE_DEV          := DOCKER_COMPOSE + " -f docker compose.override.yml"
 # App level env vars for ports etc
 # This line is duplicated in ci/justfile
 export APP_PORT                    := env_var_or_default("APP_PORT", "443")
@@ -63,7 +63,7 @@ test:
 
     # Scope the compose stack
     export DOCKER_COMPOSE_PROJECT_NAME=test
-    export DOCKER_COMPOSE_ARGS="-f docker-compose.yml"
+    export DOCKER_COMPOSE_ARGS="-f docker compose.yml"
     export DOCKER_TAG={{DOCKER_TAG}}
     export DOCKER_REGISTRY=ghcr.io/
     export DOCKER_IMAGE_PREFIX={{DOCKER_IMAGE_PREFIX}}
@@ -133,18 +133,18 @@ images command="list" +images="":
         exit 1
     fi
 
-# 'docker-compose up' to run the stack (with correct env vars)
+# 'docker compose up' to run the stack (with correct env vars)
 @up +args="": _init
     just _up {{args}}
 
 @_up +args="":
     {{DOCKER_COMPOSE_DEV}} up --remove-orphans {{args}}
 
-# 'docker-compose down' (with correct env vars)
+# 'docker compose down' (with correct env vars)
 down +args="":
     {{DOCKER_COMPOSE_DEV}} down {{args}}
 
-# 'docker-compose {{args}}' (with correct env vars)
+# 'docker compose {{args}}' (with correct env vars)
 dc +args="":
     DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE_DEV}} {{args}}
 
@@ -169,13 +169,13 @@ dc +args="":
 @_init:
     just ingress/init
 
-# Internal docker-compose build command with env vars documented
+# Internal docker compose build command with env vars documented
 @_build +args="":
     echo "_build args={{args}}"
     echo -e "🚪 {{bold}}DOCKER_TAG=$DOCKER_TAG DOCKER_REGISTRY=$DOCKER_REGISTRY DOCKER_IMAGE_PREFIX=$DOCKER_IMAGE_PREFIX {{DOCKER_COMPOSE}} build --build-arg BUILDKIT_INLINE_CACHE=1 {{args}}{{normal}} 🚪 " && \
     DOCKER_TAG=$DOCKER_TAG {{DOCKER_COMPOSE}} build --build-arg BUILDKIT_INLINE_CACHE=1 {{args}}
 
-# docker-compose push the images
+# docker compose push the images
 _push +images="":
     #!/usr/bin/env bash
     set -euo pipefail
@@ -198,7 +198,7 @@ _push +images="":
 @_pull +images="":
     echo -e "🚪 <app/> {{bold}}DOCKER_REGISTRY=$DOCKER_REGISTRY DOCKER_IMAGE_PREFIX=$DOCKER_IMAGE_PREFIX DOCKER_TAG=cache {{DOCKER_COMPOSE}} pull --ignore-pull-failures {{images}}{{normal}} 🚪"
     if [[ -z "${DOCKER_REGISTRY}" ]]; then \
-        echo "docker-compose pull: skipping because DOCKER_REGISTRY is missing. Either 1) just ci/pull, or 2) set e.g. 'DOCKER_REGISTRY=ghcr.io/' in .env. ‼ NOTE THE TRAILING SLASH"; \
+        echo "docker compose pull: skipping because DOCKER_REGISTRY is missing. Either 1) just ci/pull, or 2) set e.g. 'DOCKER_REGISTRY=ghcr.io/' in .env. ‼ NOTE THE TRAILING SLASH"; \
         exit 0; \
     fi
     DOCKER_TAG=cache {{DOCKER_COMPOSE}} pull --ignore-pull-failures {{images}}

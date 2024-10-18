@@ -35,7 +35,7 @@ These tools are only required if you are compiling code on your host machine (if
 
 First
 
-    `just run`  OR `docker-compose up jekyll proxy shell-haxe test`: starts the jekyll dev server
+    `just run`  OR `docker compose up jekyll proxy shell-haxe test`: starts the jekyll dev server
 
 Then:
 

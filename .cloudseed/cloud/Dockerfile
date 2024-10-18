@@ -4,7 +4,7 @@
 #  - deploy via terraform/terragrunt
 #
 # Tools:
-#  - docker + docker-compose
+#  - docker + docker compose
 #  - just
 #  - watchexec
 #  - deno
