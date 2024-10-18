@@ -21,18 +21,25 @@ export default defineConfig(({ mode }) => ({
 
   build: {
     outDir: "./dist",
-    // target: "modules",
-    target: "esnext",
-    
+    target: "modules",
+    emptyOutDir: true,
     sourcemap: true,
-    // minify: "esbuild",
+    minify: "esbuild",
     reportCompressedSize: true,
     lib: {
       entry: path.resolve(__dirname, "src/index.ts"),
-      fileName: "index",
       formats: ["es"],
+      fileName: (format) => `index.${format === 'es' ? 'js' : format}`,
     },
     rollupOptions: {
+      output: {
+        entryFileNames: '[name].js',
+        chunkFileNames: '[name].js',
+        // Make sure to keep separate files for imports
+        // entryFileNames: '[name].js',
+        // chunkFileNames: '[name]-[hash].js',
+        // assetFileNames: '[name]-[hash][extname]',
+      },
       external: [],
       plugins: [
         typescriptPaths({

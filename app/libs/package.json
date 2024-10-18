@@ -4,14 +4,14 @@
     "version": "0.16.0",
     "description": "Connect web pages together",
     "repository": "https://github.com/metapages/metapage",
-    "homepage": "https://metapages.org/",
-    "main": "dist/index.mjs",
-    "exports": "./dist/index.mjs",
+    "homepage": "https://metapage.io/",
+    "main": "dist/index.js",
+    "exports": "./dist/index.js",
     "files": [
         "dist",
         "src"
     ],
-    "browser": "dist/index.mjs",
+    "browser": "dist/index.js",
     "source": "src/index.ts",
     "types": "dist/index.d.ts",
     "dependencies": {
@@ -44,7 +44,7 @@
         "postmessage",
         "workflow"
     ],
-    "author": "Dion Whitehead <dion@transition9.com>",
+    "author": "Dion Whitehead <dion@metapage.io>",
     "scripts": {
         "test": "node test/test.js"
     },
