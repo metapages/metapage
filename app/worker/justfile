@@ -15,6 +15,7 @@ grey                               := "\\e[90m"
 
 @_help:
     just --list --unsorted
+    echo -e "APP_FQDN={{APP_FQDN}}"
 
 # open
 # Run the server in development mode
@@ -22,14 +23,22 @@ grey                               := "\\e[90m"
   deno task start
 
 # DEV: generate TLS certs for HTTPS over localhost https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
-@_mkcert:
-  if [ ! -f .certs/local-key.pem ]; then \
-      mkdir -p .certs ; \
-      mkcert -cert-file .certs/local-cert.pem -key-file .certs/local-key.pem {{APP_FQDN}} localhost ; \
+_mkcert:
+  #!/usr/bin/env bash
+  if [ ! -f .certs/local-key.pem ]; then
+    mkdir -p .certs ;
+    mkcert -cert-file .certs/local-cert.pem -key-file .certs/local-key.pem {{APP_FQDN}} localhost ;
+  fi
+  if grep -q "{{APP_FQDN}}" /etc/hosts; then
+    echo -e "✅ Hostname {{APP_FQDN}} found in /etc/hosts"
+  else
+    echo -e "💥 Hostname {{APP_FQDN}} not found in /etc/hosts"
+    echo -e "👉 Add: '127.0.0.1   {{APP_FQDN}}' to /etc/hosts"
+    exit 1
   fi
 
 open:
-  deno run --allow-all --unstable https://deno.land/x/metapages@v0.0.17/exec/open_url.ts 'https://metapages.github.io/load-page-when-available/?url=https://{{APP_FQDN}}:{{APP_PORT}}'
+  deno run --allow-all --unstable https://deno.land/x/metapages@v0.0.27/exec/open_url.ts 'https://metapages.github.io/load-page-when-available/?url=https://{{APP_FQDN}}:{{APP_PORT}}'
 
 publish: _ensure_deployctl
   #!/usr/bin/env bash
