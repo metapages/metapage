@@ -1,0 +1,11 @@
+{
+  "files.exclude": {
+    "**/.cache": true,
+    "**/node_modules": true
+  },
+  "deno.enable": true,
+  "deno.config": "app/worker/deno.json",
+  "deno.enablePaths": [
+    "app/worker"
+  ]
+}

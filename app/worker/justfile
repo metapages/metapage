@@ -17,7 +17,6 @@ grey                               := "\\e[90m"
     just --list --unsorted
     echo -e "APP_FQDN={{APP_FQDN}}"
 
-# open
 # Run the server in development mode
 @dev +args="": _mkcert open
   deno task start

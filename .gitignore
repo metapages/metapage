@@ -9,7 +9,7 @@
 /.env
 
 # I would love to commit this, but it's probably not a good idea
-/.vscode
+# /.vscode
 
 # by default, do not commit the build documentation
 /docs
