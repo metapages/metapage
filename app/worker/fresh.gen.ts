@@ -7,6 +7,9 @@ import * as $_app from "./routes/_app.tsx";
 import * as $api_joke from "./routes/api/joke.ts";
 import * as $greet_name_ from "./routes/greet/[name].tsx";
 import * as $index from "./routes/index.tsx";
+import * as $test_metaframe_version_index from "./routes/test/metaframe/[version]/index.tsx";
+import * as $test_metaframe_version_script_js from "./routes/test/metaframe/[version]/script.js.tsx";
+import * as $test_versions_index from "./routes/test/versions/index.tsx";
 import * as $Counter from "./islands/Counter.tsx";
 import type { Manifest } from "$fresh/server.ts";
 
@@ -17,6 +20,11 @@ const manifest = {
     "./routes/api/joke.ts": $api_joke,
     "./routes/greet/[name].tsx": $greet_name_,
     "./routes/index.tsx": $index,
+    "./routes/test/metaframe/[version]/index.tsx":
+      $test_metaframe_version_index,
+    "./routes/test/metaframe/[version]/script.js.tsx":
+      $test_metaframe_version_script_js,
+    "./routes/test/versions/index.tsx": $test_versions_index,
   },
   islands: {
     "./islands/Counter.tsx": $Counter,

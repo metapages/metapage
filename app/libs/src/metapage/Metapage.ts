@@ -1,5 +1,5 @@
 import { ListenerFn } from 'eventemitter3';
-import { produce } from 'immer';
+import { create } from 'mutative';
 import * as objectHash from 'object-hash';
 
 import {
@@ -298,7 +298,7 @@ export class Metapage extends MetapageShared {
     });
 
     if (this.listenerCount(MetapageEvents.State) > 0) {
-      const stateImmutable = produce<MetapageState>(this._state, (draft) => {});
+      const stateImmutable = create<MetapageState>(this._state, (draft) => {});
       this.emit(MetapageEvents.State, stateImmutable);
     }
   }
@@ -409,7 +409,7 @@ export class Metapage extends MetapageShared {
         if (!this.isDisposed() && newDefinition === this._definition) {
           this._emitDefinitionEvent();
           if (state && this.listenerCount(MetapageEvents.State) > 0) {
-            const stateImmutable = produce<MetapageState>(
+            const stateImmutable = create<MetapageState>(
               this._state,
               (draft) => {}
             );
@@ -425,7 +425,7 @@ export class Metapage extends MetapageShared {
   // Convenience method
   _emitDefinitionEvent() {
     if (this.listenerCount(MetapageEvents.Definition) > 0) {
-      const definitionImmutable = produce<MetapageDefinitionV3>(
+      const definitionImmutable = create<MetapageDefinitionV3>(
         this._definition,
         (draft) => {
           if (draft.meta) {
@@ -436,10 +436,10 @@ export class Metapage extends MetapageShared {
           }
         }
       );
-      const metaframesImmutable = produce<{
+      const metaframesImmutable = create<{
         [key: string]: MetapageIFrameRpcClient;
       }>(this._metaframes, (draft) => {});
-      const pluginsImmutable = produce<{
+      const pluginsImmutable = create<{
         [key: string]: MetapageIFrameRpcClient;
       }>(this._plugins, (draft) => {});
 
@@ -778,7 +778,7 @@ export class Metapage extends MetapageShared {
       this.listenerCount(MetapageEvents.State) > 0 ||
       this.listenerCount(MetapageEvents.Inputs) > 0
     ) {
-      const stateImmutable = produce<MetapageState>(this._state, (draft) => {});
+      const stateImmutable = create<MetapageState>(this._state, (draft) => {});
       this.emit(MetapageEvents.State, stateImmutable);
       this.emit(MetapageEvents.Inputs, stateImmutable);
     }
@@ -1023,7 +1023,7 @@ export class Metapage extends MetapageShared {
 
             if (this.listenerCount(MetapageEvents.State) > 0) {
               if (!stateImmutable) {
-                stateImmutable = produce<MetapageState>(
+                stateImmutable = create<MetapageState>(
                   this._state,
                   (draft) => {}
                 );
@@ -1068,7 +1068,7 @@ export class Metapage extends MetapageShared {
             if (modified) {
               if (this.listenerCount(MetapageEvents.State) > 0) {
                 if (!stateImmutable) {
-                  stateImmutable = produce<MetapageState>(
+                  stateImmutable = create<MetapageState>(
                     this._state,
                     (draft) => {}
                   );
@@ -1078,7 +1078,7 @@ export class Metapage extends MetapageShared {
             }
             if (this.debug) {
               if (!stateImmutable) {
-                stateImmutable = produce<MetapageState>(
+                stateImmutable = create<MetapageState>(
                   this._state,
                   (draft) => {}
                 );
@@ -1104,7 +1104,7 @@ export class Metapage extends MetapageShared {
             if (outputPersistanceAllowed) {
               if (this.listenerCount(MetapageEvents.State) > 0) {
                 if (!stateImmutable) {
-                  stateImmutable = produce<MetapageState>(
+                  stateImmutable = create<MetapageState>(
                     this._state,
                     (draft) => {}
                   );
@@ -1114,7 +1114,7 @@ export class Metapage extends MetapageShared {
             }
             if (this.debug) {
               if (!stateImmutable) {
-                stateImmutable = produce<MetapageState>(
+                stateImmutable = create<MetapageState>(
                   this._state,
                   (draft) => {}
                 );
@@ -1146,7 +1146,7 @@ export class Metapage extends MetapageShared {
             this._metaframes[metaframeId].setInputs(inputs);
             if (this.listenerCount(MetapageEvents.State) > 0) {
               if (!stateImmutable) {
-                stateImmutable = produce<MetapageState>(
+                stateImmutable = create<MetapageState>(
                   this._state,
                   (draft) => {}
                 );
@@ -1156,7 +1156,7 @@ export class Metapage extends MetapageShared {
 
             if (this.debug) {
               if (!stateImmutable) {
-                stateImmutable = produce<MetapageState>(
+                stateImmutable = create<MetapageState>(
                   this._state,
                   (draft) => {}
                 );
@@ -1178,7 +1178,7 @@ export class Metapage extends MetapageShared {
             if (inputPersistanceAllowed) {
               if (this.listenerCount(MetapageEvents.State) > 0) {
                 if (!stateImmutable) {
-                  stateImmutable = produce<MetapageState>(
+                  stateImmutable = create<MetapageState>(
                     this._state,
                     (draft) => {}
                   );
@@ -1188,7 +1188,7 @@ export class Metapage extends MetapageShared {
             }
             if (this.debug) {
               if (!stateImmutable) {
-                stateImmutable = produce<MetapageState>(
+                stateImmutable = create<MetapageState>(
                   this._state,
                   (draft) => {}
                 );
@@ -1237,7 +1237,7 @@ export class Metapage extends MetapageShared {
             // Update the local metaframe client reference
             metaframeOrPlugin.url = url.href;
             // Update the definition in place
-            this._definition = produce<MetapageDefinitionV3>(
+            this._definition = create<MetapageDefinitionV3>(
               this._definition,
               (draft) => {
                 draft.metaframes[hashParamsUpdatePayload.metaframe].url = url.href;
