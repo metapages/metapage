@@ -14,10 +14,11 @@ import * as $index from "./routes/index.tsx";
 import * as $test_types from "./routes/test/_types.ts";
 import * as $test_metaframe_compatibility_version_index from "./routes/test/metaframe/compatibility/[version]/index.tsx";
 import * as $test_metaframe_compatibility_version_metaframe_json from "./routes/test/metaframe/compatibility/[version]/metaframe.json.ts";
-import * as $test_metapage_compatibility_version_ from "./routes/test/metapage/compatibility/[version].tsx";
-import * as $test_metapage_compatibility_index from "./routes/test/metapage/compatibility/index.tsx";
+import * as $test_metapage_testname_version_ from "./routes/test/metapage/[testname]/[version].tsx";
+import * as $test_metapage_testname_index from "./routes/test/metapage/[testname]/index.tsx";
+import * as $test_metapage_compatibility_index from "./routes/test/metapage/_compatibility/index.tsx";
+import * as $test_metapage_timing_index from "./routes/test/metapage/_timing/index.tsx";
 import * as $test_metapage_index from "./routes/test/metapage/index.tsx";
-import * as $test_metapage_timing_index from "./routes/test/metapage/timing/index.tsx";
 import * as $versions_index from "./routes/versions/index.tsx";
 import * as $versions_metapages_metapage from "./routes/versions/metapages/metapage.ts";
 import * as $Counter from "./islands/Counter.tsx";
@@ -40,12 +41,14 @@ const manifest = {
       $test_metaframe_compatibility_version_index,
     "./routes/test/metaframe/compatibility/[version]/metaframe.json.ts":
       $test_metaframe_compatibility_version_metaframe_json,
-    "./routes/test/metapage/compatibility/[version].tsx":
-      $test_metapage_compatibility_version_,
-    "./routes/test/metapage/compatibility/index.tsx":
+    "./routes/test/metapage/[testname]/[version].tsx":
+      $test_metapage_testname_version_,
+    "./routes/test/metapage/[testname]/index.tsx":
+      $test_metapage_testname_index,
+    "./routes/test/metapage/_compatibility/index.tsx":
       $test_metapage_compatibility_index,
+    "./routes/test/metapage/_timing/index.tsx": $test_metapage_timing_index,
     "./routes/test/metapage/index.tsx": $test_metapage_index,
-    "./routes/test/metapage/timing/index.tsx": $test_metapage_timing_index,
     "./routes/versions/index.tsx": $versions_index,
     "./routes/versions/metapages/metapage.ts": $versions_metapages_metapage,
   },

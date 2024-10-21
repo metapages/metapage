@@ -31,7 +31,6 @@
         "fastify": "^2.13.1",
         "fastify-static": "^2.6.0",
         "json-diff": "^0.5.4",
-        "parcel-bundler": "1.12.3",
         "puppeteer": "^21.3.8",
         "rollup-plugin-typescript-paths": "^1.4.0",
         "typescript": "^5.3.3",
