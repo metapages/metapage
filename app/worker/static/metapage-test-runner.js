@@ -398,7 +398,7 @@ TESTS = [
     // and sending to the parent metapage
     VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
         versionMetaframe = versionMetaframe == 'latest' && index == 0 && VERSIONS_METAFRAME.length > 1? 'latest-begin' : versionMetaframe;
-        let url = `/test/metaframe/${versionMetaframe}/${testset}`;
+        let url = `/test/metaframe/${testset}/${versionMetaframe}`;
         if (debug) {
             url += '?debug=true';
         }
@@ -435,7 +435,7 @@ TESTS = [
     metaPageDefinition.plugins = VERSIONS_METAFRAME
         .filter((v) => v.startsWith('latest') || window.compareVersions(v, '0.3') >= 0)
         .map((versionMetaframe) => {
-            let url = `/test/metaframe/${versionMetaframe}/${testset}`;
+            let url = `/test/metaframe/${testset}/${versionMetaframe}`;
             if (debug) {
                 url += '?debug=true';
             }

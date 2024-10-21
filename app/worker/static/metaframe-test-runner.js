@@ -1,6 +1,6 @@
 // Download the specific metaframe library version
 // to make it easier to test all versions against all
-var version = window.location.pathname.split('/').filter(e => e !== '')[2] || "latest"; 
+var version = window.location.pathname.split('/').filter(e => e !== '')[3] || "latest"; 
 const importURl = `${version === "latest" ? "/metapage/index.js" : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + version.split("-")[0]}`;
 const { Metaframe } = await import(importURl);
 

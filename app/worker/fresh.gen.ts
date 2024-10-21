@@ -11,8 +11,8 @@ import * as $convert_index from "./routes/convert/index.tsx";
 import * as $convert_metapage_version_index from "./routes/convert/metapage/[version]/index.tsx";
 import * as $greet_name_ from "./routes/greet/[name].tsx";
 import * as $index from "./routes/index.tsx";
-import * as $test_metaframe_version_compatibility_index from "./routes/test/metaframe/[version]/compatibility/index.tsx";
-import * as $test_metaframe_version_compatibility_metaframe_json from "./routes/test/metaframe/[version]/compatibility/metaframe.json.ts";
+import * as $test_metaframe_compatibility_version_index from "./routes/test/metaframe/compatibility/[version]/index.tsx";
+import * as $test_metaframe_compatibility_version_metaframe_json from "./routes/test/metaframe/compatibility/[version]/metaframe.json.ts";
 import * as $test_metapage_version_compatibility_index from "./routes/test/metapage/[version]/compatibility/index.tsx";
 import * as $test_metapage_version_index from "./routes/test/metapage/[version]/index.tsx";
 import * as $test_metapage_version_timing_index from "./routes/test/metapage/[version]/timing/index.tsx";
@@ -36,10 +36,10 @@ const manifest = {
       $convert_metapage_version_index,
     "./routes/greet/[name].tsx": $greet_name_,
     "./routes/index.tsx": $index,
-    "./routes/test/metaframe/[version]/compatibility/index.tsx":
-      $test_metaframe_version_compatibility_index,
-    "./routes/test/metaframe/[version]/compatibility/metaframe.json.ts":
-      $test_metaframe_version_compatibility_metaframe_json,
+    "./routes/test/metaframe/compatibility/[version]/index.tsx":
+      $test_metaframe_compatibility_version_index,
+    "./routes/test/metaframe/compatibility/[version]/metaframe.json.ts":
+      $test_metaframe_compatibility_version_metaframe_json,
     "./routes/test/metapage/[version]/compatibility/index.tsx":
       $test_metapage_version_compatibility_index,
     "./routes/test/metapage/[version]/index.tsx": $test_metapage_version_index,
