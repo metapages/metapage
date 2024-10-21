@@ -1,11 +1,10 @@
 
 import { PageProps, type Handlers } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
-import { getAllMetapageVersions } from "../../_util/versions.ts";
+import { getAllMetapageVersions } from "../../../_util/versions.ts";
+import type { MetapageVersionsProps } from "../../_types.ts";
 
-interface MetapageVersionsProps {
-  versions: string[];
-}
+
 
 export const handler: Handlers<MetapageVersionsProps> = {
   async GET(_req, ctx) {
@@ -36,7 +35,7 @@ export default function MetaframePage(props: PageProps<MetapageVersionsProps>) {
         {
           props.data.versions.map((version) => (
             <>
-              <a href={`/test/metapage/${version}`}>{version}</a>
+              <a href={`./${version}`}>{version}</a>
               <br />
             </>
           ))
