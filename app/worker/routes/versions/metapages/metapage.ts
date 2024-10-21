@@ -1,4 +1,3 @@
-
 import { type Handlers } from "$fresh/server.ts";
 import { getAllMetapageVersions } from "../../_util/versions.ts";
 

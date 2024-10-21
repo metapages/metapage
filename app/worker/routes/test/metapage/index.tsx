@@ -1,49 +1,39 @@
-
-import { PageProps, type Handlers } from "$fresh/server.ts";
+import { PageProps } from "$fresh/server.ts";
+import {
+  compare,
+  parse
+} from "@std/semver";
 import { Head } from "$fresh/runtime.ts";
-import { getAllMetapageVersions } from "../../_util/versions.ts";
 
-interface MetapageVersionsProps {
-  versions: string[];
-}
+export default function MetaframePage(props: PageProps) {
+  // let { version } = props.params;
+  // // the URL param version=latest-begin is a way of having
+  // // the same metaframe/plugin in multiple places without
+  // // id/key collisions. The actual version of 'latest-begin'
+  // // is 'latest' which we check below, but we want to display
+  // // the version given
+  // const displayVersion = version;
 
-export const handler: Handlers<MetapageVersionsProps> = {
-  async GET(_req, ctx) {
-    const versions = await getAllMetapageVersions();
-    versions.unshift('latest');
-    if (!versions) {
-      return ctx.renderNotFound({
-        versions: [],
-      });
-    }
-    return ctx.render({ versions });
-  },
-};
+  // if (version.startsWith('latest')) {
+  //     // it can be versionLatest in the URL header but the internal VERSION must then be 'latest';
+  //     version = 'latest';
+  // }
 
-export default function MetaframePage(props: PageProps<MetapageVersionsProps>) {
   return (
     <>
       <Head>
         <meta charset="UTF-8" />
-        <title>Metapage published versions</title>
-        <meta
-          name="description"
-          content="List metapage versions"
-        />
+        <title>Metapage tests</title>
+        {/* <script type="module" src={metapageScriptSrc}></script> */}
       </Head>
-      <main>
-        <h2>Metapage published versions</h2>
-        {
-          props.data.versions.map((version) => (
-            <>
-              <a href={`/test/metapage/${version}`}>{version}</a>
-              <br />
-            </>
-          ))
-        }
-      </main>
+    <main>
+      <h1>Metapage tests:</h1>
+      <br/>
+      <ul>
+        <li><a href={`./compatibility`}>Test all (non-deprecated) metaframe versions with this metapage version</a></li>
+        <li><a href={`./timing`}>Test timing and internal APIs</a></li>
+      </ul>
+    </main>
     </>
   );
 }
-
-
