@@ -1,5 +1,9 @@
-import { PageProps } from "$fresh/server.ts";
+import { PageProps, RouteConfig } from "$fresh/server.ts";
 import { Head } from "$fresh/runtime.ts";
+
+// export const config: RouteConfig = {
+//   skipAppWrapper: true, // Skip the app wrapper during rendering
+// };
 
 export default function MetaframePage(props: PageProps) {
   let { version } = props.params;
@@ -28,8 +32,8 @@ export default function MetaframePage(props: PageProps) {
       </Head>
     <main>
       <p>Test metapage version: {displayVersion}</p>
-      <div id='body'></div>
       <div id='status'>status</div>
+      <div id='body'></div>
       <script type="module" src={`/metapage-test-runner.js`}></script>
     </main>
     </>

@@ -1,7 +1,7 @@
 // Download the specific metaframe library version
 // to make it easier to test all versions against all
 var version = window.location.pathname.split('/').filter(e => e !== '')[2] || "latest"; 
-const importURl = `${version === "latest" ? "/metapage/index.js" : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + version}`;
+const importURl = `${version === "latest" ? "/metapage/index.js" : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + version.split("-")[0]}`;
 const { Metaframe } = await import(importURl);
 
 // the URL param VERSION=latest-begin is a way of having
@@ -204,16 +204,16 @@ TESTS = [
 
                             if (BlobSerializationCompatible) {
                                 // Do actual test of the type
-                                console.log('inputs[key] instanceof sampleInputs[key].constructor', inputs[key] instanceof sampleInputs[key].constructor);
-                                console.log('inputs[key]', inputs[key]);
-                                console.log('sampleInputs[key].constructor', sampleInputs[key].constructor);
+                                // console.log('inputs[key] instanceof sampleInputs[key].constructor', inputs[key] instanceof sampleInputs[key].constructor);
+                                // console.log('inputs[key]', inputs[key]);
+                                // console.log('sampleInputs[key].constructor', sampleInputs[key].constructor);
                                 if (!(inputs[key] instanceof sampleInputs[key].constructor)) {
                                     reject(`'${key}'=>${inputs[key]} is not an instance of ${sampleInputs[key].constructor.name}`);
                                 }
 
                                 if (key === Blob.name) {
                                     const blob = inputs[key];
-                                    console.log('blob', blob);
+                                    // console.log('blob', blob);
                                     const text = await blob.text();
                                     if (text !== "foo") {
                                         reject(`lob '${key}' text is not 'foo'`);
@@ -328,107 +328,80 @@ TESTS = [
     // ];
 
 
-// start the test, async because we loaded the versioned metapage library
-// dynamically, so wait for globalThis.onload
-const runTests = async () => {
-    // instantiate the metaframe object
-    // if (VERSION === 'latest') {
-    //     var mf = new Metaframe();
-    // } else if (globalThis.compareVersions(VERSION, '0.5.2') > 0) {
-    //     var mf = new metapage.Metaframe();
-    // } else if (globalThis.compareVersions(VERSION, '0.4.9999') >= 0) {
-    //     var mf = new metaframe.Metaframe();
-    // } else if (globalThis.compareVersions(VERSION, '0.1.35') <= 0 || globalThis.compareVersions(VERSION, '0.4.100') >= 0) {
-    //     // earlier versions have the annoying package name (since removed)
-    //     var mf = new metaframe.Metaframe();
-    // } else {
-    //     var mf = new metaframe.Metaframe();
-    // }
-    var mf = new Metaframe();
+// start the tests
+// instantiate the metaframe object
+var mf = new Metaframe();
+// current implementation is Metaframe.connected
+await mf.connected();
 
-    // current implementation is Metaframe.connected
-    if (mf.connected) {
-        await mf.connected();
-    } else {
-        // old versions <= 0.5.2
-        if (mf.ready) {
-            await mf.ready;
-        }
-    }
-
-    if (!mf.id) {
-        throw 'Metaframe claims ready but missing .id';
-    }
-
-    if (mf.plugin) {
-        // if (VERSION !== 'latest' && globalThis.compareVersions(VERSION, '0.3') < 0) {
-        //     // plugins not supported
-        //     document.getElementById('body').innerText = `no plugin support v${DISPLAY_VERSION} (${VERSION})`;
-        //     document.body.style.backgroundColor = "green";
-        //     return;
-        // }
-
-        document.getElementById('body').innerText = `plugin v${DISPLAY_VERSION}`;
-    }
-
-    document.body.style.backgroundColor = mf._color || mf.color;
-
-    const promises = TESTS.map((test) => test.run(mf));
-
-    // This is our part of the metaframe daisy chain.
-    //  when we get a input [input], we read the array from the "versions"
-    // field (or create one) and append our version to the array, then
-    // send the value to the output: { "output": { "versions": [...] } }
-
-    // The metaframe is expecting an array of versions
-    const getOutputValueFromInputValue = (inputValue) => {
-        if (inputValue == null) {
-            return;
-        }
-
-        // When I get the input array, add my version to the list
-        // This will be passed around to all metaframe in the version list
-        if (typeof(inputValue) === 'object') {
-            const newValue = {...inputValue}
-            newValue.versions = inputValue.versions ? inputValue.versions : [];
-            newValue.versions.push(DISPLAY_VERSION);
-            return newValue;
-        }
-    }
-
-    const inputs1Handler = inputs => {
-        const newValue1 = getOutputValueFromInputValue(inputs['input1']);
-        const newValue2 = getOutputValueFromInputValue(inputs['input2']);
-        if (newValue1 || newValue2) {
-            const newOutputs = {};
-            if (newValue1) {
-                newOutputs['output1'] = newValue1;
-            }
-            if (newValue2) {
-                newOutputs['output2'] = newValue2;
-            }
-            mf.setOutputs(newOutputs);
-        }
-    };
-
-    // This calls the handled immediately with the current value
-    mf.onInputs(inputs1Handler);
-
-    setStatus();
-
-    Promise.all(promises)
-        .then(() => {
-            document.body.style.backgroundColor = "green";
-            setStatus();
-            // the metapage can listen for this change
-            mf.setOutput('tests', 'pass');
-        })
-        .catch((err) => {
-            console.error(err);
-            document.body.style.backgroundColor = "red";
-            setStatus();
-        });
+if (!mf.id) {
+    throw 'Metaframe claims ready but missing .id';
 }
 
-// Run the test only when the metaframe library is loaded
-globalThis.onload = runTests;
+if (mf.plugin) {
+    // if (VERSION !== 'latest' && globalThis.compareVersions(VERSION, '0.3') < 0) {
+    //     // plugins not supported
+    //     document.getElementById('body').innerText = `no plugin support v${DISPLAY_VERSION} (${VERSION})`;
+    //     document.body.style.backgroundColor = "green";
+    //     return;
+    // }
+
+    document.getElementById('body').innerText = `plugin v${DISPLAY_VERSION}`;
+}
+
+document.body.style.backgroundColor = mf._color || mf.color;
+
+const promises = TESTS.map((test) => test.run(mf));
+
+// This is our part of the metaframe daisy chain.
+//  when we get a input [input], we read the array from the "versions"
+// field (or create one) and append our version to the array, then
+// send the value to the output: { "output": { "versions": [...] } }
+
+// The metaframe is expecting an array of versions
+const getOutputValueFromInputValue = (inputValue) => {
+    if (inputValue == null) {
+        return;
+    }
+
+    // When I get the input array, add my version to the list
+    // This will be passed around to all metaframe in the version list
+    if (typeof(inputValue) === 'object') {
+        const newValue = {...inputValue}
+        newValue.versions = inputValue.versions ? inputValue.versions : [];
+        newValue.versions.push(DISPLAY_VERSION);
+        return newValue;
+    }
+}
+
+const inputs1Handler = inputs => {
+    const newValue1 = getOutputValueFromInputValue(inputs['input1']);
+    const newValue2 = getOutputValueFromInputValue(inputs['input2']);
+    if (newValue1 || newValue2) {
+        const newOutputs = {};
+        if (newValue1) {
+            newOutputs['output1'] = newValue1;
+        }
+        if (newValue2) {
+            newOutputs['output2'] = newValue2;
+        }
+        mf.setOutputs(newOutputs);
+    }
+};
+
+// This calls the handled immediately with the current value
+mf.onInputs(inputs1Handler);
+
+setStatus();
+
+try {
+    await Promise.all(promises);
+    document.body.style.backgroundColor = "green";
+    setStatus();
+    // the metapage can listen for this change
+    mf.setOutput('tests', 'pass');
+} catch (err) {
+    console.error(err);
+    document.body.style.backgroundColor = "red";
+    setStatus();
+}

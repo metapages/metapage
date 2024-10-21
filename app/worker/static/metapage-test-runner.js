@@ -1,10 +1,14 @@
 // Download the specific metaPAGE library version
 // to make it easier to test all versions against all
-var version = window.location.pathname.split('/').filter(e => e !== '')[2] || "latest"; 
-const importURl = `${version === "latest" ? "/metapage/index.js" : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + version}`;
+const urlPathElements = window.location.pathname.split('/').filter(e => e !== '');
+var version = urlPathElements[2] || "latest";
+var testset = urlPathElements[3];
+
+console.log(`🍉🍉🍉 version: ${version}`);
+const importURl = `${version === "latest" ? "/metapage/index.js" : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + version.split("-")[0]}`;
 const { Metapage } = await import(importURl);
 
-const SKIP_LATEST = version !== "latest";
+// const SKIP_LATEST = version !== "latest";
 
 const debug = ['debug', 'mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag));
 
@@ -19,6 +23,9 @@ const debug = ['debug', 'mp_debug'].reduce((exists, flag) => exists || urlParams
 
 const resp = await fetch(`/versions/metapages/metapage`);
 const VERSIONS_METAFRAME = await resp.json();
+if (version === "latest") {
+    VERSIONS_METAFRAME.push("latest");
+}
 
 let latestAdded = false;
 
@@ -111,7 +118,7 @@ TESTS = [
                         inputs = metapage._inputsState;
                     }
 
-                    let ids = VERSIONS_METAFRAME.slice(); // copy
+                    let ids = [...VERSIONS_METAFRAME]; // copy
                     let i = 0;
                     while (i < ids.length) {
                         const metaframeId = ids[i];
@@ -189,15 +196,19 @@ TESTS = [
             return new Promise((resolve, reject) => {
                 let disposeListener;
                 const onStateChange = (e) => {
+                    // console.log(`🍉🍉🍉 onStateChange: ${JSON.stringify(e)}`);
                     const inputs = metapage.getState().metaframes.inputs;
                     const outputs = metapage.getState().metaframes.outputs;
 
                     let found = {};
-                    var VERSIONS_EXPECTED = VERSIONS_METAFRAME.slice();
+                    var VERSIONS_EXPECTED = [...VERSIONS_METAFRAME];
                     if (VERSIONS_EXPECTED[0] === 'latest-begin') {
                         VERSIONS_EXPECTED[0] = 'latest';
                         VERSIONS_EXPECTED.pop(); // the other 'latest'
                     }
+                    // console.log(`🍉🍉🍉 onStateChange VERSIONS_METAFRAME: ${JSON.stringify(VERSIONS_METAFRAME)}`);
+                    // console.log(`🍉🍉🍉 onStateChange VERSIONS_EXPECTED: ${JSON.stringify(VERSIONS_EXPECTED)}`);
+                    
                     // check all the inputs of all the metaframes, they should
                     // have a specific order of metaframe versions depending on
                     // where they are in the chain.
@@ -289,13 +300,7 @@ TESTS = [
 
                     if (outputs['Float32Array']) {
                         hasFinalOutputs = true;
-                        // typo on v0.13.0, uppercase converted to lowercase
-                        if (VERSION === "latest" || window.compareVersions(VERSION, '0.13.0') > 0) {
-                            outputs = await Metapage.deserializeInputs(outputs);
-                        } else {
-                            outputs = Metapage.DeserializeInputs(outputs);
-                        }
-
+                        outputs = await Metapage.deserializeInputs(outputs);
                         if (outputs['Float32Array'] instanceof Float32Array) {
                             disposeListener();
                             resolve(true);
@@ -365,30 +370,6 @@ TESTS = [
 
 ];
 
-// version stabilized
-const convertNpmToInternalVersion = (version) => {
-    let getLibraryVersionMatching = window.getLibraryVersionMatching;
-    if (!getLibraryVersionMatching) {
-        getLibraryVersionMatching = window.Metapage && window.Metapage.getLibraryVersionMatching;
-    }
-    if (!getLibraryVersionMatching) {
-        getLibraryVersionMatching = window.metapage && window.metapage.getLibraryVersionMatching;
-    }
-    if (!getLibraryVersionMatching) {
-        getLibraryVersionMatching = window.metapage && window.metapage.Metapage && window.metapage.Metapage.getLibraryVersionMatching;
-    }
-    if (getLibraryVersionMatching) {
-        // use the internal version matching code
-        // This file gets updated when the version is bumped
-        return getLibraryVersionMatching(version);
-    // otherwise the above logic wasn't yet implemented, so we have to do it here (versioning lessons)
-    } else if (window.compareVersions(version, '0.2') >= 0) {
-        return '0.2';
-    } else {
-        return '0.1.0';
-    }
-}
-
 ////////////////////////////////////////////////////////////////////////
 // After the window loads the specific version of the metapage library
 // set the test machinery up and run the tests
@@ -417,7 +398,7 @@ const convertNpmToInternalVersion = (version) => {
     // and sending to the parent metapage
     VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
         versionMetaframe = versionMetaframe == 'latest' && index == 0 && VERSIONS_METAFRAME.length > 1? 'latest-begin' : versionMetaframe;
-        let url = `/test/metaframe/${versionMetaframe}`;
+        let url = `/test/metaframe/${versionMetaframe}/${testset}`;
         if (debug) {
             url += '?debug=true';
         }
@@ -454,7 +435,7 @@ const convertNpmToInternalVersion = (version) => {
     metaPageDefinition.plugins = VERSIONS_METAFRAME
         .filter((v) => v.startsWith('latest') || window.compareVersions(v, '0.3') >= 0)
         .map((versionMetaframe) => {
-            let url = `/test/metaframe/${versionMetaframe}`;
+            let url = `/test/metaframe/${versionMetaframe}/${testset}`;
             if (debug) {
                 url += '?debug=true';
             }

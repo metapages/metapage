@@ -11,8 +11,8 @@ export default function Error404() {
           <img
             class="my-6"
             src="/logo.svg"
-            width="128"
-            height="128"
+            width="28"
+            height="28"
             alt="the Fresh logo: a sliced lemon dripping with juice"
           />
           <h1 class="text-4xl font-bold">404 - Page not found</h1>

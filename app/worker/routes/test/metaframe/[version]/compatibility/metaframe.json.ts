@@ -1,11 +1,8 @@
 
 import { type Handlers } from "$fresh/server.ts";
+import type { VersionProps } from "../../../types.ts";
 
-interface MetaframeVersionProps {
-	version: string;
-}
-
-export const handler: Handlers<MetaframeVersionProps> = {
+export const handler: Handlers<VersionProps> = {
 	async GET(_req, ctx) {
 
 		return new Response(JSON.stringify(MetaframeDefinition), {

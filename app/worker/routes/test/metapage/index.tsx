@@ -21,8 +21,6 @@ export const handler: Handlers<MetapageVersionsProps> = {
 };
 
 export default function MetaframePage(props: PageProps<MetapageVersionsProps>) {
-  console.log("props", props);
-
   return (
     <>
       <Head>
