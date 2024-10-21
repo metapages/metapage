@@ -1,22 +1,19 @@
-import { Metaframe } from "/metapage/index.js";
-// import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@0.16.0"
 // Download the specific metaframe library version
 // to make it easier to test all versions against all
-var urlParams = new URLSearchParams(globalThis.location.search);
-// Allow specifying the metaframe version tested
-var VERSION = urlParams.has('version') ? urlParams.get('version') : 'latest';
-VERSION = VERSION ? VERSION : 'latest';
+var version = window.location.pathname.split('/').filter(e => e !== '')[2] || "latest"; 
+const importURl = `${version === "latest" ? "/metapage/index.js" : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + version}`;
+const { Metaframe } = await import(importURl);
 
 // the URL param VERSION=latest-begin is a way of having
 // the same metaframe/plugin in multiple places without
 // id/key collisions. The actual version of 'latest-begin'
 // is 'latest' which we check below, but we want to display
 // the version given
-const DISPLAY_VERSION = VERSION;
+const DISPLAY_VERSION = version;
 
-if (VERSION.startsWith('latest')) {
+if (version.startsWith('latest')) {
     // it can be versionLatest in the URL header but the internal VERSION must then be 'latest';
-    VERSION = 'latest';
+    version = 'latest';
 }
 
 let TESTS;
@@ -70,7 +67,7 @@ class Test {
     }
 }
 
-const BlobSerializationCompatible = VERSION === "latest" || globalThis.compareVersions(VERSION, '0.13.1') > 0;
+const BlobSerializationCompatible = true;//version === "latest" || globalThis.compareVersions(VERSION, '0.13.1') > 0;
 
 TESTS = [
     new Test('save inputs to metapage',
@@ -335,18 +332,19 @@ TESTS = [
 // dynamically, so wait for globalThis.onload
 const runTests = async () => {
     // instantiate the metaframe object
-    if (VERSION === 'latest') {
-        var mf = new Metaframe();
-    } else if (globalThis.compareVersions(VERSION, '0.5.2') > 0) {
-        var mf = new metapage.Metaframe();
-    } else if (globalThis.compareVersions(VERSION, '0.4.9999') >= 0) {
-        var mf = new metaframe.Metaframe();
-    } else if (globalThis.compareVersions(VERSION, '0.1.35') <= 0 || globalThis.compareVersions(VERSION, '0.4.100') >= 0) {
-        // earlier versions have the annoying package name (since removed)
-        var mf = new metaframe.Metaframe();
-    } else {
-        var mf = new metaframe.Metaframe();
-    }
+    // if (VERSION === 'latest') {
+    //     var mf = new Metaframe();
+    // } else if (globalThis.compareVersions(VERSION, '0.5.2') > 0) {
+    //     var mf = new metapage.Metaframe();
+    // } else if (globalThis.compareVersions(VERSION, '0.4.9999') >= 0) {
+    //     var mf = new metaframe.Metaframe();
+    // } else if (globalThis.compareVersions(VERSION, '0.1.35') <= 0 || globalThis.compareVersions(VERSION, '0.4.100') >= 0) {
+    //     // earlier versions have the annoying package name (since removed)
+    //     var mf = new metaframe.Metaframe();
+    // } else {
+    //     var mf = new metaframe.Metaframe();
+    // }
+    var mf = new Metaframe();
 
     // current implementation is Metaframe.connected
     if (mf.connected) {
@@ -363,12 +361,12 @@ const runTests = async () => {
     }
 
     if (mf.plugin) {
-        if (VERSION !== 'latest' && globalThis.compareVersions(VERSION, '0.3') < 0) {
-            // plugins not supported
-            document.getElementById('body').innerText = `no plugin support v${DISPLAY_VERSION} (${VERSION})`;
-            document.body.style.backgroundColor = "green";
-            return;
-        }
+        // if (VERSION !== 'latest' && globalThis.compareVersions(VERSION, '0.3') < 0) {
+        //     // plugins not supported
+        //     document.getElementById('body').innerText = `no plugin support v${DISPLAY_VERSION} (${VERSION})`;
+        //     document.body.style.backgroundColor = "green";
+        //     return;
+        // }
 
         document.getElementById('body').innerText = `plugin v${DISPLAY_VERSION}`;
     }

@@ -26,7 +26,9 @@ export default function MetaframePage(props: PageProps) {
     // The passed in semver version string can be appended with "-<stuff>"
     const versionForUrl = version.split("-")[0];
     console.log('versionForUrl', versionForUrl);
-    if (compare(parse(versionForUrl), parse('0.11.0')) >= 0) {
+    if (compare(parse(versionForUrl), parse('0.16.0')) >= 0) {
+        metapageScriptSrc = `https://cdn.jsdelivr.net/npm/@metapages/metapage@${versionForUrl}`;
+    } else if (compare(parse(versionForUrl), parse('0.11.0')) >= 0) {
         metapageScriptSrc = `https://cdn.jsdelivr.net/npm/@metapages/metapage@${versionForUrl}/dist/browser/metaframe/index.js`;
     } else if (compare(parse(versionForUrl), parse('0.8.0')) >= 0) {
         metapageScriptSrc = `https://cdn.jsdelivr.net/npm/@metapages/metapage@${versionForUrl}/browser/metaframe/index.js`;
@@ -45,19 +47,18 @@ export default function MetaframePage(props: PageProps) {
     <>
       <Head>
         <meta charset="UTF-8" />
-        <title>Metaframe v{displayVersion} for testing</title>
+        <title>Metapage v{displayVersion} for testing</title>
         <meta
           name="description"
           content="This is a metaframe built for testing"
         />
-        <script src="/compare-versions-3.4.0.js"></script>
-        <script type="module" src={metapageScriptSrc}></script>
+        {/* <script type="module" src={metapageScriptSrc}></script> */}
       </Head>
     <main>
-      <p>metaframe v{displayVersion}!</p>
+      <p>metapage v{displayVersion} / {version}!</p>
       <div id='body'></div>
       <div id='status'></div>
-      <script type="module" src={`/metaframe-test-runner.js`}></script>
+      <script type="module" src={`/metapage-test-runner.js`}></script>
     </main>
     </>
   );

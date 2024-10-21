@@ -7,6 +7,9 @@ export default function App({ Component }: PageProps) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>worker</title>
         <link rel="stylesheet" href="/styles.css" />
+        <link rel="stylesheet" href="/mpg.css" />
+        <link rel="stylesheet" href="/bulma-0.7.1.css" />
+        
       </head>
       <body>
         <Component />
