@@ -15,8 +15,10 @@ import * as $index from "./routes/index.tsx";
 import * as $test_types from "./routes/test/_types.ts";
 import * as $test_metaframe_compatibility_version_index from "./routes/test/metaframe/compatibility/[version]/index.tsx";
 import * as $test_metaframe_compatibility_version_metaframe_json from "./routes/test/metaframe/compatibility/[version]/metaframe.json.ts";
+import * as $test_metaframe_compatibility_metaframe_test_compatibility_js from "./routes/test/metaframe/compatibility/metaframe-test-compatibility.js.ts";
 import * as $test_metapage_compatibility_version_ from "./routes/test/metapage/compatibility/[version].tsx";
 import * as $test_metapage_compatibility_index from "./routes/test/metapage/compatibility/index.tsx";
+import * as $test_metapage_compatibility_metapage_test_compatibility_js from "./routes/test/metapage/compatibility/metapage-test-compatibility.js.ts";
 import * as $test_metapage_index from "./routes/test/metapage/index.tsx";
 import * as $test_metapage_timing_version_ from "./routes/test/metapage/timing/[version].tsx";
 import * as $test_metapage_timing_index from "./routes/test/metapage/timing/index.tsx";
@@ -42,10 +44,14 @@ const manifest = {
       $test_metaframe_compatibility_version_index,
     "./routes/test/metaframe/compatibility/[version]/metaframe.json.ts":
       $test_metaframe_compatibility_version_metaframe_json,
+    "./routes/test/metaframe/compatibility/metaframe-test-compatibility.js.ts":
+      $test_metaframe_compatibility_metaframe_test_compatibility_js,
     "./routes/test/metapage/compatibility/[version].tsx":
       $test_metapage_compatibility_version_,
     "./routes/test/metapage/compatibility/index.tsx":
       $test_metapage_compatibility_index,
+    "./routes/test/metapage/compatibility/metapage-test-compatibility.js.ts":
+      $test_metapage_compatibility_metapage_test_compatibility_js,
     "./routes/test/metapage/index.tsx": $test_metapage_index,
     "./routes/test/metapage/timing/[version].tsx":
       $test_metapage_timing_version_,

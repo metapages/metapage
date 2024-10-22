@@ -30,7 +30,7 @@ export default function MetaframePage(props: PageProps<VersionProps>) {
       <p>Metapage test {testname} @ version: {displayVersion}</p>
       <div id='status'>status</div>
       <div id='body'></div>
-      <script type="module" src={`/metapage-test-${testname}.js`}></script>
+      <script type="module" src={`/test/metapage/${testname}/metapage-test-${testname}.js`}></script>
     </main>
     </>
   );

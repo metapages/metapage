@@ -8,6 +8,7 @@ export const config: RouteConfig = {
   skipAppWrapper: true, // Skip the app wrapper during rendering
 };
 
+const testname = 'compatibility';
 
 export default function MetaframePage(props: PageProps<>) {
   let { version } = props.params;
@@ -31,7 +32,7 @@ export default function MetaframePage(props: PageProps<>) {
       <p>metaframe v{version}!</p>
       <div id='body'></div>
       <div id='status'></div>
-      <script type="module" src={`/metaframe-test-compatibility.js`}></script>
+      <script type="module" src={`/test/metaframe/${testname}/metaframe-test-compatibility.js`}></script>
     </main>
     </>
   );
