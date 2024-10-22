@@ -1,0 +1,1 @@
+{"version":3,"file":"RootMetapageError.d.ts","sourceRoot":"","sources":["../../../src/metapage/errors/RootMetapageError.ts"],"names":[],"mappings":"AAAA,KAAK,uBAAuB,GAAG;IAC3B,OAAO,EAAE,MAAM,CAAC;IAIhB,iBAAiB,CAAC,EAAE,MAAM,CAAC;CAC9B,CAAA;AAED,qBAAa,iBAAkB,SAAQ,KAAK;IAExC,iBAAiB,EAAE,MAAM,GAAG,SAAS,CAAC;gBAE1B,MAAM,EAAE,uBAAuB;CAI9C"}

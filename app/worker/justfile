@@ -44,11 +44,10 @@ publish: _ensure_deployctl
   set -euo pipefail
   rm -rf deploy
   mkdir -p deploy
-  cp -r editor/dist deploy/editor
-  cp -r worker/server.ts deploy/
-  cp -r worker/index.html deploy/
+  cp -r src deploy/
+  cp -r deno.json deploy/
   cd deploy
-  deployctl deploy --project=metapage-lib-server --prod main.ts
+  deployctl deploy --project=metapage-module --prod --entrypoint src/main.ts
 
 # Delete all cached and generated files, and docker volumes
 clean:
