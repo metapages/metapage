@@ -12,7 +12,10 @@ export const handler: Handlers<VersionsProps> = {
     const urlPathElements = new URL(_req.url).pathname.split('/').filter(e => e !== '');
     var testname = urlPathElements[2];
     const versions = await getAllMetapageVersions();
-    versions.unshift('latest');
+    const isDevelopment = Deno.env.get("DENO_ENV") !== "production";
+    if (isDevelopment) {
+      versions.unshift('latest');
+    }
     if (!versions) {
       return ctx.renderNotFound({
         versions: [],

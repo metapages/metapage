@@ -47,6 +47,8 @@ publish: _ensure_deployctl
   mkdir -p deploy
   cp -r src deploy/
   cp -r deno.json deploy/
+  # Remove dev files
+  rm -rf deploy/src/static/metapage
   cd deploy
   deno task build
   deployctl deploy --project=metapage-module --prod --entrypoint src/main.ts
