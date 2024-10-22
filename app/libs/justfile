@@ -60,8 +60,8 @@ _build_npm:
     echo "✅ typescript check"
     {{vite}} build
     echo "✅ vite build"
-    rm -rf ../worker/static/metapage
-    cp -r dist ../worker/static/metapage
+    rm -rf ../worker/src/static/metapage
+    cp -r dist ../worker/src/static/metapage
 
     # mkdir -p {{NPM_MODULE_OUTPUT}}
     # echo -e "🍳👉 {{bold}}Compiling typescript  => {{NPM_MODULE_OUTPUT}}/{{normal}}"

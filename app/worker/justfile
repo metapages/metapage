@@ -19,6 +19,7 @@ grey                               := "\\e[90m"
 
 # Run the server in development mode
 @dev +args="": _mkcert open
+  just ../libs/build
   deno task start
 
 # DEV: generate TLS certs for HTTPS over localhost https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
