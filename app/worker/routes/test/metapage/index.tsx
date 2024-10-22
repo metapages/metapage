@@ -10,11 +10,11 @@ export default function MetaframePage(props: PageProps) {
         <title>Metapage tests</title>
       </Head>
     <main>
-      <h1>Metapage tests:</h1>
+      <h2>Metapage tests:</h2>
       <br/>
       <ul>
-        <li><a href={`./metapage/compatibility`}>Test all (non-deprecated) metaframe versions with this metapage version</a></li>
-        <li><a href={`./metapage/timing`}>Test timing and internal APIs</a></li>
+        <li><a href={`./metapage/compatibility`}>Test a metapage@version with all existing metaframe versions</a></li>
+        {/* <li><a href={`./metapage/timing`}>Test timing and internal APIs</a></li> */}
       </ul>
     </main>
     </>

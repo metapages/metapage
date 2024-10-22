@@ -1,10 +1,10 @@
 import { Head } from '$fresh/runtime.ts';
 
-export default function Error404() {
+export default function ComingSoon() {
   return (
     <>
       <Head>
-        <title>404 - Page not found</title>
+        <title>Coming soon</title>
       </Head>
       <div class="px-4 py-8 mx-auto bg-[#86efac]">
         <div class="max-w-screen-md mx-auto flex flex-col items-center justify-center">
@@ -15,9 +15,9 @@ export default function Error404() {
             height="28"
             alt="the Fresh logo: a sliced lemon dripping with juice"
           />
-          <h1 class="text-4xl font-bold">404 - Page not found</h1>
+          <h1 class="text-4xl font-bold">Coming soon</h1>
           <p class="my-4">
-            The page you were looking for doesn't exist.
+            This is on the roadmap, but not yet implemented.
           </p>
           <a href="/" class="underline">Go back home</a>
         </div>

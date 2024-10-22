@@ -9,20 +9,22 @@ import type { VersionsProps } from '../../_types.ts';
 
 export const handler: Handlers<VersionsProps> = {
   async GET(_req, ctx) {
+    const urlPathElements = new URL(_req.url).pathname.split('/').filter(e => e !== '');
+    var testname = urlPathElements[2];
     const versions = await getAllMetapageVersions();
     versions.unshift('latest');
     if (!versions) {
       return ctx.renderNotFound({
         versions: [],
-        testname: ctx.params.testname,
+        testname,
       });
     }
-    return ctx.render({ versions, testname: ctx.params.testname, });
+    return ctx.render({ versions, testname, });
   },
 };
 
 export default function MetaframePage(props: PageProps<VersionsProps>) {
-  console.log('props', props.data);
+  
   return (
     <>
       <Head>

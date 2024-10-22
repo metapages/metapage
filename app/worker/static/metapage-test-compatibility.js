@@ -4,11 +4,8 @@ const urlPathElements = window.location.pathname.split('/').filter(e => e !== ''
 var version = urlPathElements[3] || "latest";
 var testname = urlPathElements[2];
 
-console.log(`🍉🍉🍉 version: ${version}`);
 const importURl = `${version === "latest" ? "/metapage/index.js" : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + version.split("-")[0]}`;
 const { Metapage } = await import(importURl);
-
-// const SKIP_LATEST = version !== "latest";
 
 const debug = ['debug', 'mp_debug'].reduce((exists, flag) => exists || urlParams.has(flag));
 
@@ -18,8 +15,6 @@ const debug = ['debug', 'mp_debug'].reduce((exists, flag) => exists || urlParams
 // each will pass the next a data blob {versions:[]}. At the end the
 // metapage will verify that all metaframes added their versions
 // For this, we need all current supported library versions.
-// The versions data is created and commmited (app/docs/_data/versions.yml)
-// let VERSIONS_METAFRAME = [];
 
 const resp = await fetch(`/versions/metapages/metapage`);
 const VERSIONS_METAFRAME = await resp.json();
@@ -37,11 +32,7 @@ if (!latestAdded) {
     VERSIONS_METAFRAME.unshift(VERSIONS_METAFRAME[VERSIONS_METAFRAME.length - 1] + "-begin");
 }
 
-console.log(`VERSIONS_METAFRAME [${VERSIONS_METAFRAME.join(", ")}]`);
-
 var PAGEURL = new URL(window.location.href);
-
-
 
 ////////////////////////////////////////////////////////////////////////
 // Define all the functional tests
@@ -64,14 +55,13 @@ const getStatusText = (err) => {
 };
 
 const setStatus = (err) => {
-    if (!err && (PAGEURL.searchParams.has('mp_debug') || PAGEURL.searchParams.has('mp_DEBUG'))) {
+    if (!err && (PAGEURL.searchParams.has('debug') || PAGEURL.searchParams.has('mp_debug') || PAGEURL.searchParams.has('mp_DEBUG'))) {
         console.log(TESTS.map((test) => test.description + ':' + test.getText()).join(""));
     }
     document.getElementById('status').innerHTML = getStatusText(err);
 };
 
 // Use for (de)serialization tests
-// removed "ArrayBuffer",
 const BlobTypes = ["File", "Blob", "ArrayBuffer", "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array", "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"];
 
 class Test {
@@ -370,157 +360,156 @@ TESTS = [
 
 ];
 
-////////////////////////////////////////////////////////////////////////
-// After the window loads the specific version of the metapage library
-// set the test machinery up and run the tests
 
-    // console.log(`TEST-MP: Metapage ${convertNpmToInternalVersion(VERSION)}`);
+// Define the metapage definition dynamically
+const metaPageDefinition = {
+    version: "03", //convertNpmToInternalVersion(VERSION),
+};
 
-    // Define the metapage definition dynamically
-    const metaPageDefinition = {
-        version: "03", //convertNpmToInternalVersion(VERSION),
-    };
+const metaframesBlob = {};
 
-    const metaframesBlob = {};
+metaPageDefinition.metaframes = metaframesBlob;
 
-    // AHHH version differences
-    // if (VERSION !== 'latest' && window.compareVersions(VERSION, '0.2') < 0) {
-    //     // old
-    //     metaPageDefinition.iframes = metaframesBlob;
-    // } else {
-    //     // current
-    //     metaPageDefinition.metaframes = metaframesBlob;
-    // }
-    metaPageDefinition.metaframes = metaframesBlob;
+// create a metaframe for each version, plus the latest if we're developing
+// if developing, the latest goes at the beginning AND end, to test getting
+// and sending to the parent metapage
+VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
+    versionMetaframe = versionMetaframe == 'latest' && index == 0 && VERSIONS_METAFRAME.length > 1? 'latest-begin' : versionMetaframe;
+    let url = `/test/metaframe/${testname}/${versionMetaframe}`;
+    if (debug) {
+        url += '?debug=true';
+    }
 
-    // create a metaframe for each version, plus the latest if we're developing
-    // if developing, the latest goes at the beginning AND end, to test getting
-    // and sending to the parent metapage
-    VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
-        versionMetaframe = versionMetaframe == 'latest' && index == 0 && VERSIONS_METAFRAME.length > 1? 'latest-begin' : versionMetaframe;
+    metaframesBlob[versionMetaframe] = {"url": url};
+    if (index > 0) {
+        metaframesBlob[versionMetaframe].inputs = [
+            {
+                metaframe: VERSIONS_METAFRAME[index - 1],
+                source: 'output1',
+                target: 'input1',
+            },
+            {
+                metaframe: VERSIONS_METAFRAME[index - 1],
+                source: 'output2',
+                target: 'input2',
+            }
+        ];
+
+        // add the pipes for the blob types
+        BlobTypes.forEach(blobType => {
+            metaframesBlob[versionMetaframe].inputs.push({
+                metaframe: VERSIONS_METAFRAME[index - 1],
+                source: blobType,
+            });
+        });
+    }
+});
+
+
+// create a plugin for each version (the test metaframe is also a plugin)
+// the plugin metaframes themselve test plugin specific operations
+// only metaframe lib >= 0.3 supports plugins
+metaPageDefinition.plugins = VERSIONS_METAFRAME
+    .filter((v) => v.startsWith('latest') || window.compareVersions(v, '0.3') >= 0)
+    .map((versionMetaframe) => {
         let url = `/test/metaframe/${testname}/${versionMetaframe}`;
         if (debug) {
             url += '?debug=true';
         }
+        return url;
+    });
+// set the Metapage class into the window object for easier manipulation later
+window.Metapage = Metapage;
 
-        metaframesBlob[versionMetaframe] = {"url": url};
-        if (index > 0) {
-            metaframesBlob[versionMetaframe].inputs = [
-                {
-                    metaframe: VERSIONS_METAFRAME[index - 1],
-                    source: 'output1',
-                    target: 'input1',
-                },
-                {
-                    metaframe: VERSIONS_METAFRAME[index - 1],
-                    source: 'output2',
-                    target: 'input2',
-                }
-            ];
+const metapageInstance = Metapage.from(metaPageDefinition);
+window.metapageInstance = metapageInstance;
 
-            // add the pipes for the blob types
-            BlobTypes.forEach(blobType => {
-                metaframesBlob[versionMetaframe].inputs.push({
-                    metaframe: VERSIONS_METAFRAME[index - 1],
-                    source: blobType,
-                });
-            });
-        }
+// New as of >=0.5.12
+if (Metapage.DEFINITION_UPDATE_REQUEST) {
+    metapageInstance.addListener(Metapage.DEFINITION_UPDATE_REQUEST, (newDefinition) => {
+        metapageInstance.setDefinition(newDefinition);
+    });
+}
+
+if (metapageInstance.setDebugFromUrlParams) {
+    metapageInstance.setDebugFromUrlParams();
+}
+
+// There was a refactor addEventListener -> addListener
+if (!metapageInstance.addListener) {
+    metapageInstance.addListener = metapageInstance.addEventListener;
+    metapageInstance.removeListener = metapageInstance.removeEventListener;
+}
+
+window.metaPageDefinition = metaPageDefinition;
+
+// This is just for debugging
+// metapage.addListener(Metapage.INPUTS, (e) => {
+//     const metaframeId = Object.keys(e)[0];
+//     console.log(`METAPAGE inputs event [${metaframeId}][${Object.keys(e[metaframeId]).join(", ")}]`, e);
+//     console.log('METAPAGE inputs total', metapage._inputsState);
+// });
+
+const promises = TESTS.map((test) => test.run(metapageInstance));
+
+// add the metaframe and plugin iframes to the page
+var metaframeIds = metapageInstance.metaframeIds();
+var pluginsIds = metaPageDefinition.plugins ? metaPageDefinition.plugins.concat([]) : [];
+// Add the metaframe (and plugin) iframes to the page
+
+const column1 = document.createElement("div");
+column1.style = "display: flex; flex-direction: column;";
+const title1 = document.createElement("h3");
+title1.textContent = "Metaframes";
+column1.appendChild(title1);
+
+const column2 = document.createElement("div");
+column2.style = "display: flex; flex-direction: column;";
+const title2 = document.createElement("h3");
+title2.textContent = "Plugins";
+column2.appendChild(title2);
+
+const row = document.createElement("div");
+row.style = "display: flex; flex-direction: row; gap: 10px;";
+
+row.appendChild(column1);
+row.appendChild(column2);
+document.getElementById("body").appendChild(row);
+
+for (const metaframeId of metaframeIds) {
+    // var row = document.createElement("div");
+    // row.className += row.className ? ' row' : 'row';
+
+    // var col1 = document.createElement("div");
+    // col1.className += col1.className ? ' col-md-6' : 'col-md-6';
+
+    // var col2 = document.createElement("div");
+    // col2.className += col2.className ? ' col-md-6' : 'col-md-6';
+
+    // row.appendChild(col1);
+    // row.appendChild(col2);
+
+    const iframe = await metapageInstance.getMetaframe(metaframeId).iframe;
+    column1.appendChild(iframe);
+
+    if (pluginsIds.length > 0) {
+        const pluginId = pluginsIds.shift();
+        const pluginIframe = await metapageInstance.getPlugin(pluginId).iframe;
+        column2.appendChild(pluginIframe);
+    }
+
+    // document.getElementById("body").appendChild(row);
+}
+
+Promise.all(promises)
+    .then(() => {
+        document.body.style.backgroundColor = "green";
+        setStatus();
+    })
+    .catch((err) => {
+        document.body.style.backgroundColor = "red";
+        setStatus(err);
     });
 
-
-    // create a plugin for each version (the test metaframe is also a plugin)
-    // the plugin metaframes themselve test plugin specific operations
-    // only metaframe lib >= 0.3 supports plugins
-    metaPageDefinition.plugins = VERSIONS_METAFRAME
-        .filter((v) => v.startsWith('latest') || window.compareVersions(v, '0.3') >= 0)
-        .map((versionMetaframe) => {
-            let url = `/test/metaframe/${testname}/${versionMetaframe}`;
-            if (debug) {
-                url += '?debug=true';
-            }
-            return url;
-        });
-    // set the Metapage class into the window object for easier manipulation later
-    window.Metapage = Metapage;
-
-    console.log("metaPageDefinition", metaPageDefinition)
-
-    const metapageInstance = Metapage.from(metaPageDefinition);
-    window.metapageInstance = metapageInstance;
-
-    // New as of >=0.5.12
-    if (Metapage.DEFINITION_UPDATE_REQUEST) {
-        metapageInstance.addListener(Metapage.DEFINITION_UPDATE_REQUEST, (newDefinition) => {
-            metapageInstance.setDefinition(newDefinition);
-        });
-    }
-
-    // window.metapageInstance = Metapage.from(metaPageDefinition);
-    // metapageInstance = Metapage.from(metaPageDefinition);
-    // window.metapageInstance = metapageInstance
-    // window.metapageInstance = metapageInstance;
-    // >= 0.3.5
-    if (metapageInstance.setDebugFromUrlParams) {
-        metapageInstance.setDebugFromUrlParams();
-    }
-
-    // There was a refactor addEventListener -> addListener
-    if (!metapageInstance.addListener) {
-        metapageInstance.addListener = metapageInstance.addEventListener;
-        metapageInstance.removeListener = metapageInstance.removeEventListener;
-    }
-
-    window.metaPageDefinition = metaPageDefinition;
-
-    // This is just for debugging
-    // metapage.addListener(Metapage.INPUTS, (e) => {
-    //     const metaframeId = Object.keys(e)[0];
-    //     console.log(`METAPAGE inputs event [${metaframeId}][${Object.keys(e[metaframeId]).join(", ")}]`, e);
-    //     console.log('METAPAGE inputs total', metapage._inputsState);
-    // });
-
-    const promises = TESTS.map((test) => test.run(metapageInstance));
-
-    // add the metaframe and plugin iframes to the page
-    var metaframeIds = metapageInstance.metaframeIds();
-    var pluginsIds = metaPageDefinition.plugins ? metaPageDefinition.plugins.concat([]) : [];
-    // Add the metaframe (and plugin) iframes to the page
-
-    for (const metaframeId of metaframeIds) {
-        var row = document.createElement("div");
-        row.className += row.className ? ' row' : 'row';
-
-        var col1 = document.createElement("div");
-        col1.className += col1.className ? ' col-md-6' : 'col-md-6';
-
-        var col2 = document.createElement("div");
-        col2.className += col2.className ? ' col-md-6' : 'col-md-6';
-
-        row.appendChild(col1);
-        row.appendChild(col2);
-
-        const iframe = await metapageInstance.getMetaframe(metaframeId).iframe;
-        col1.appendChild(iframe);
-
-        if (pluginsIds.length > 0) {
-            const pluginId = pluginsIds.shift();
-            const pluginIframe = await metapageInstance.getPlugin(pluginId).iframe;
-            col2.appendChild(pluginIframe);
-        }
-
-        document.getElementById("body").appendChild(row);
-    }
-
-    Promise.all(promises)
-        .then(() => {
-            document.body.style.backgroundColor = "green";
-            setStatus();
-        })
-        .catch((err) => {
-            document.body.style.backgroundColor = "red";
-            setStatus(err);
-        });
-
-    setStatus();
+setStatus();
 

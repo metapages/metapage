@@ -4,21 +4,22 @@
 
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
+import * as $_coming_soon from "./routes/_coming_soon.tsx";
 import * as $_util_versions from "./routes/_util/versions.ts";
 import * as $_util_web from "./routes/_util/web.ts";
 import * as $api_joke from "./routes/api/joke.ts";
 import * as $convert_index from "./routes/convert/index.tsx";
-import * as $convert_metapage_version_index from "./routes/convert/metapage/[version]/index.tsx";
-import * as $greet_name_ from "./routes/greet/[name].tsx";
+import * as $convert_metaframe from "./routes/convert/metaframe.tsx";
+import * as $convert_metapage from "./routes/convert/metapage.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $test_types from "./routes/test/_types.ts";
 import * as $test_metaframe_compatibility_version_index from "./routes/test/metaframe/compatibility/[version]/index.tsx";
 import * as $test_metaframe_compatibility_version_metaframe_json from "./routes/test/metaframe/compatibility/[version]/metaframe.json.ts";
-import * as $test_metapage_testname_version_ from "./routes/test/metapage/[testname]/[version].tsx";
-import * as $test_metapage_testname_index from "./routes/test/metapage/[testname]/index.tsx";
-import * as $test_metapage_compatibility_index from "./routes/test/metapage/_compatibility/index.tsx";
-import * as $test_metapage_timing_index from "./routes/test/metapage/_timing/index.tsx";
+import * as $test_metapage_compatibility_version_ from "./routes/test/metapage/compatibility/[version].tsx";
+import * as $test_metapage_compatibility_index from "./routes/test/metapage/compatibility/index.tsx";
 import * as $test_metapage_index from "./routes/test/metapage/index.tsx";
+import * as $test_metapage_timing_version_ from "./routes/test/metapage/timing/[version].tsx";
+import * as $test_metapage_timing_index from "./routes/test/metapage/timing/index.tsx";
 import * as $versions_index from "./routes/versions/index.tsx";
 import * as $versions_metapages_metapage from "./routes/versions/metapages/metapage.ts";
 import * as $Counter from "./islands/Counter.tsx";
@@ -28,27 +29,27 @@ const manifest = {
   routes: {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
+    "./routes/_coming_soon.tsx": $_coming_soon,
     "./routes/_util/versions.ts": $_util_versions,
     "./routes/_util/web.ts": $_util_web,
     "./routes/api/joke.ts": $api_joke,
     "./routes/convert/index.tsx": $convert_index,
-    "./routes/convert/metapage/[version]/index.tsx":
-      $convert_metapage_version_index,
-    "./routes/greet/[name].tsx": $greet_name_,
+    "./routes/convert/metaframe.tsx": $convert_metaframe,
+    "./routes/convert/metapage.tsx": $convert_metapage,
     "./routes/index.tsx": $index,
     "./routes/test/_types.ts": $test_types,
     "./routes/test/metaframe/compatibility/[version]/index.tsx":
       $test_metaframe_compatibility_version_index,
     "./routes/test/metaframe/compatibility/[version]/metaframe.json.ts":
       $test_metaframe_compatibility_version_metaframe_json,
-    "./routes/test/metapage/[testname]/[version].tsx":
-      $test_metapage_testname_version_,
-    "./routes/test/metapage/[testname]/index.tsx":
-      $test_metapage_testname_index,
-    "./routes/test/metapage/_compatibility/index.tsx":
+    "./routes/test/metapage/compatibility/[version].tsx":
+      $test_metapage_compatibility_version_,
+    "./routes/test/metapage/compatibility/index.tsx":
       $test_metapage_compatibility_index,
-    "./routes/test/metapage/_timing/index.tsx": $test_metapage_timing_index,
     "./routes/test/metapage/index.tsx": $test_metapage_index,
+    "./routes/test/metapage/timing/[version].tsx":
+      $test_metapage_timing_version_,
+    "./routes/test/metapage/timing/index.tsx": $test_metapage_timing_index,
     "./routes/versions/index.tsx": $versions_index,
     "./routes/versions/metapages/metapage.ts": $versions_metapages_metapage,
   },

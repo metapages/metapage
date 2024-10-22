@@ -1,4 +1,4 @@
-import { Head } from "$fresh/runtime.ts";
+import { Head } from '$fresh/runtime.ts';
 
 export default function Home() {
   return (
@@ -11,12 +11,11 @@ export default function Home() {
           content="Versions of the libraries and objects"
         />
       </Head>
-      <div class="p-4 mx-auto max-w-screen-md">
-        <h1>Versions</h1>
+        <h2>Versions</h2>
+        <br/>
         <ul>
           <li><a href="/versions/metapages/metapage">@metapages/metapage</a></li>
         </ul>
-      </div>
     </>
   );
 }

@@ -3,12 +3,10 @@ import { PageProps } from '$fresh/server.ts';
 
 import type { VersionProps } from '../../_types.ts';
 
-// export const config: RouteConfig = {
-//   skipAppWrapper: true, // Skip the app wrapper during rendering
-// };
+const testname = 'compatibility';
 
 export default function MetaframePage(props: PageProps<VersionProps>) {
-  let { version, testname } = props.params;
+  let { version } = props.params;
   // the URL param version=latest-begin is a way of having
   // the same metaframe/plugin in multiple places without
   // id/key collisions. The actual version of 'latest-begin'

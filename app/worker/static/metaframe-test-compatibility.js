@@ -27,7 +27,6 @@ const setStatus = () => {
 };
 
 // Use for (de)serialization tests
-// removed , "ArrayBuffer"
 const BlobTypes = ["File", "Blob", "ArrayBuffer", "Int8Array", "Uint8Array", "Uint8ClampedArray", "Int16Array", "Uint16Array", "Int32Array", "Uint32Array", "Float32Array", "Float64Array", "BigInt64Array", "BigUint64Array"];
 
 class Test {
@@ -200,7 +199,6 @@ TESTS = [
                             if (!BlobTypes.includes(key)) {
                                 return;
                             }
-
 
                             if (BlobSerializationCompatible) {
                                 // Do actual test of the type
