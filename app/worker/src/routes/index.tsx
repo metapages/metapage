@@ -12,7 +12,6 @@ export default function Home() {
           <li>and other services, such as <a href="/versions/metapages/metapage">listing supported versions</a></li>
         </ul>
         <br/>
-        <p>The source code for this service is available <a href="https://github.com/metapages/metapage">on GitHub</a>.</p>
       </div>
     </div>
   );

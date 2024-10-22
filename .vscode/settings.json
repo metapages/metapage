@@ -1,6 +1,8 @@
 {
   "files.exclude": {
     "**/.cache": true,
+    "**/.certs": true,
+    "**/deploy": true,
     "**/node_modules": true
   },
   "deno.enable": true,
