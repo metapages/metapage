@@ -37,15 +37,16 @@ export default function MetaframePage(props: PageProps<VersionsProps>) {
       </Head>
       <main>
         <h2>Metapage test: {props.data.testname}</h2>
+        <br/>
         <p>Choose version:</p>
+        <br/>
+        <ul>
         {
           props.data.versions.map((version) => (
-            <>
-              <a href={`./${props.data.testname}/${version}`}>{version}</a>
-              <br />
-            </>
+            <li><a href={`./${props.data.testname}/${version}`}>{version}</a></li>   
           ))
         }
+        </ul>
       </main>
     </>
   );

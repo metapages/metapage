@@ -7,9 +7,9 @@ export default function Home() {
         <br/>
         <p>This service supports the <a href="https://github.com/metapages/metapage">core metapage framework</a>:</p>
         <ul>
-          <li><a href="/test/metapage">test the core modules</a></li>
-          <li><a href="/convert">provide a durable version translation service</a></li>
-          <li><a href="/versions/metapages/metapage">and other services, such as listing supported versions</a></li>
+          <li><a href="/test/metapage">test</a> the core modules</li>
+          <li>provide a durable <a href="/convert">version translation service</a></li>
+          <li>and other services, such as <a href="/versions/metapages/metapage">listing supported versions</a></li>
         </ul>
         <br/>
         <p>The source code for this service is available <a href="https://github.com/metapages/metapage">on GitHub</a>.</p>

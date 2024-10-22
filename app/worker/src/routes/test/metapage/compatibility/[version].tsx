@@ -24,10 +24,6 @@ export default function MetaframePage(props: PageProps<VersionProps>) {
       <Head>
         <meta charset="UTF-8" />
         <title>Metapage test {testname} @ version: {displayVersion}</title>
-        <meta
-          name="description"
-          content="This is a metapage built for testing"
-        />
         <script src="/compare-versions-3.4.0.js"></script>
       </Head>
     <main>

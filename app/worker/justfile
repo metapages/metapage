@@ -47,6 +47,7 @@ publish: _ensure_deployctl
   cp -r src deploy/
   cp -r deno.json deploy/
   cd deploy
+  deno task build
   deployctl deploy --project=metapage-module --prod --entrypoint src/main.ts
 
 # Delete all cached and generated files, and docker volumes
