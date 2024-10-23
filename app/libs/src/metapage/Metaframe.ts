@@ -374,6 +374,7 @@ export class Metaframe extends EventEmitter<
 
     Object.keys(inputs).forEach((pipeId) => {
       try {
+        // if we don't actually need this event, we should remove it
         this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId])
       } catch(err) {
         console.error(`Error emitting input ${pipeId}: ${err}`)
@@ -381,6 +382,7 @@ export class Metaframe extends EventEmitter<
       }
     });
     try {
+      console.log(`metaframe emitting inputs: ${JSON.stringify(inputs)}`)
       this.emit(MetaframeEvents.Inputs, inputs);
     } catch(err) {
       console.error(`Error emitting inputs: ${err}`)

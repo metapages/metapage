@@ -3,7 +3,9 @@
     "**/.cache": true,
     "**/.certs": true,
     "**/deploy": true,
-    "**/node_modules": true
+    "**/dist": true,
+    "**/node_modules": true,
+    "**/static/metapage": true
   },
   "deno.enable": true,
   "deno.config": "app/worker/deno.json",

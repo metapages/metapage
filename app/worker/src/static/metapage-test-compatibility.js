@@ -1,6 +1,7 @@
 // Download the specific metaPAGE library version
 // to make it easier to test all versions against all
-const urlPathElements = globalThis.location.pathname.split("/").filter((e) =>
+const url = new URL(window.location.href);
+const urlPathElements = url.pathname.split("/").filter((e) =>
     e !== ""
 );
 var version = urlPathElements[3] || "latest";
@@ -15,7 +16,7 @@ const importURl = `${
 const { Metapage } = await import(importURl);
 
 const debug = ["debug", "mp_debug"].reduce((exists, flag) =>
-    exists || urlParams.has(flag)
+    exists || url.searchParams.has(flag)
 );
 const enablePluginTests = false;
 
@@ -31,17 +32,12 @@ const VERSIONS_METAFRAME = await resp.json();
 if (version === "latest") {
     VERSIONS_METAFRAME.push("latest");
 }
-
-let latestAdded = false;
-
-if (!latestAdded) {
-    // Put the last also first because some later tests require features not in the
-    // earlier versions, so those tests will fail. There is no downside to having
-    // extra versions in the test.
-    VERSIONS_METAFRAME.unshift(
-        VERSIONS_METAFRAME[VERSIONS_METAFRAME.length - 1] + "-begin",
-    );
-}
+// Put the last also first because some later tests require features not in the
+// earlier versions, so those tests will fail. There is no downside to having
+// extra versions in the test.
+VERSIONS_METAFRAME.unshift(
+    VERSIONS_METAFRAME[VERSIONS_METAFRAME.length - 1] + "-begin",
+);
 
 var PAGEURL = new URL(globalThis.location.href);
 
@@ -480,7 +476,7 @@ VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
             : versionMetaframe;
     let url = `/test/metaframe/${testname}/${versionMetaframe}`;
     if (debug) {
-        url += "?debug=true";
+        url += "?debug=true&mp_debug=true";
     }
 
     metaframesBlob[versionMetaframe] = { "url": url };
@@ -519,7 +515,7 @@ if (enablePluginTests) {
         .map((versionMetaframe) => {
             let url = `/test/metaframe/${testname}/${versionMetaframe}`;
             if (debug) {
-                url += "?debug=true";
+                url += "?debug=true&mp_debug=true";
             }
             return url;
         });

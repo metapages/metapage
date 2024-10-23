@@ -1,8 +1,13 @@
 // Download the specific metaframe library version
 // to make it easier to test all versions against all
-var version = window.location.pathname.split('/').filter(e => e !== '')[3] || "latest"; 
+const url = new URL(window.location.href);
+var version = url.pathname.split('/').filter(e => e !== '')[3] || "latest"; 
 const importURl = `${version === "latest" ? "/metapage/index.js" : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + version.split("-")[0]}`;
 const { Metaframe } = await import(importURl);
+
+const debug = ["debug", "mp_debug"].reduce((exists, flag) =>
+    exists || url.searchParams.has(flag)
+);
 
 // the URL param VERSION=latest-begin is a way of having
 // the same metaframe/plugin in multiple places without
@@ -66,8 +71,6 @@ class Test {
     }
 }
 
-const BlobSerializationCompatible = true;//version === "latest" || globalThis.compareVersions(VERSION, '0.13.1') > 0;
-
 TESTS = [
     new Test('save inputs to metapage',
         // verify that when setting inputs, they are sent to the metapage
@@ -102,140 +105,151 @@ TESTS = [
         }
     ),
 
-    new Test('plugin: definition get/modify/set',
-        // we get a `metapage/definition`, modify it (add a metadata tag) and
-        // send it to the same output pipe. The test script will check if it gets the
-        // modified definition. We also test here.
-        (mf) => { // metaframe instance
-            return new Promise((resolve, reject) => {
-                const metaKey = `PluginDefinitionCheck-${DISPLAY_VERSION}`;
-                let unbind;
-                const checkDefinition = (definition) => {
+    // new Test('plugin: definition get/modify/set',
+    //     // we get a `metapage/definition`, modify it (add a metadata tag) and
+    //     // send it to the same output pipe. The test script will check if it gets the
+    //     // modified definition. We also test here.
+    //     (mf) => { // metaframe instance
+    //         return new Promise((resolve, reject) => {
+    //             const metaKey = `PluginDefinitionCheck-${DISPLAY_VERSION}`;
+    //             let unbind;
+    //             const checkDefinition = (definition) => {
 
-                    definition = JSON.parse(JSON.stringify(definition));
+    //                 definition = JSON.parse(JSON.stringify(definition));
 
-                    if (!definition) {
-                        return;
-                    }
-                    if (!definition.meta || !definition.meta[metaKey]) {
-                        // If we change the 'meta' keyword check versions here
-                        definition.meta = definition.meta ? definition.meta : {};
-                        definition.meta[metaKey] = true;
-                        mf.plugin.setDefinition(definition);
-                    } else {
-                        if (definition?.meta?.[metaKey] === true) {
-                            resolve(true);
-                            unbind();
-                        }
-                    }
-                };
-                unbind = mf.plugin.onDefinition(checkDefinition);
-            });
-        }
-    ),
-
-
-    new Test(BlobSerializationCompatible ? 'File, TypedArray etc (de)serialization' + (DISPLAY_VERSION.includes("-begin") ? " (just sending)" : ""): 'IGNORED BECAUSE TOO OLD: File, TypedArray etc (de)serialization',
-        // verify that when setting inputs, they are sent to the metapage
-        // then sent back, which we listen to here
-        (mf) => { // metaframe instance
-            // the sample test data
-            const numbers = [1, 5, 10, 8, 1, 5, 10, 8];
-            const sampleInputs = {
-                "File": new File(["foo"], "foo.txt", {type: "text/plain;charset=utf-8"}),
-                "Blob": new Blob(["foo"], {type: "text/plain;charset=utf-8"}),
-                "ArrayBuffer": new ArrayBuffer(8),
-                "Int8Array": Int8Array.from(numbers),
-                "Uint8Array": Uint8Array.from(numbers),
-                "Uint8ClampedArray": Uint8ClampedArray.from(numbers),
-                "Int16Array": Int16Array.from(numbers),
-                "Uint16Array": Uint16Array.from(numbers),
-                "Int32Array": Int32Array.from(numbers),
-                "Uint32Array": Uint32Array.from(numbers),
-                "Float32Array": Float32Array.from(numbers),
-                "Float64Array": Float64Array.from([]),
-                "BigInt64Array": BigInt64Array.from([]),
-                "BigUint64Array": BigUint64Array.from([]),
-            };
-
-            // metaframes pass downstream directly all the blob types
-            const inputsFileBlobHandler = inputs => {
-
-                const keys = Object.keys(inputs);
-                const newOutputs = {};
-                keys.forEach(key => {
-                    if (BlobTypes.includes(key)) {
-                        newOutputs[key] = inputs[key];
-                    }
-                });
-                mf.setOutputs(newOutputs);
-            };
-            // This calls the handled immediately with the current value
-            mf.onInputs(inputsFileBlobHandler);
-
-            if (DISPLAY_VERSION.includes("-begin")) {
-                // First metaframe in the chain just sends the blobs
-                if (BlobSerializationCompatible) {
-                    mf.setOutputs(sampleInputs);
-                } else {
-                    throw "A metaframe where BlobSerializationCompatible=false cannot be the first metaframe in the chain";
-                    mf.setOutputs(Object.fromEntries(Object.keys(sampleInputs).map(key => [key, "UNSUPPORTED"])));
-                }
-                // the later metaframe will actually check the blobs
-                return Promise.resolve(true);
-            } else {
-                // All other metaframes just pass the blobs, but Blob serialization capable
-                // metaframes check the types of the blobs
-
-                const localBlobTypesRemaining = [...BlobTypes];
-                return new Promise((resolve, reject) => {
-                    // The actual test but only for newer versions
-                    let unbind;
-                    unbind = mf.onInputs(function(inputs) {
-                        // if we get a blob type, remove it from the list
-                        // and resolve when all done
-                        Object.keys(inputs).forEach(async (key) => {
-                            // ignore non-blob types
-                            if (!BlobTypes.includes(key)) {
-                                return;
-                            }
-
-                            if (BlobSerializationCompatible) {
-                                // Do actual test of the type
-                                // console.log('inputs[key] instanceof sampleInputs[key].constructor', inputs[key] instanceof sampleInputs[key].constructor);
-                                // console.log('inputs[key]', inputs[key]);
-                                // console.log('sampleInputs[key].constructor', sampleInputs[key].constructor);
-                                if (!(inputs[key] instanceof sampleInputs[key].constructor)) {
-                                    reject(`'${key}'=>${inputs[key]} is not an instance of ${sampleInputs[key].constructor.name}`);
-                                }
-
-                                if (key === Blob.name) {
-                                    const blob = inputs[key];
-                                    // console.log('blob', blob);
-                                    const text = await blob.text();
-                                    if (text !== "foo") {
-                                        reject(`lob '${key}' text is not 'foo'`);
-                                    }
-                                }
-                            }
-
-                            if (localBlobTypesRemaining.includes(key)) {
-                                const index = localBlobTypesRemaining.indexOf(key);
-                                localBlobTypesRemaining.splice(index, 1);
-                            }
-
-                            if (localBlobTypesRemaining.length === 0) {
-                                resolve(true);
-                                unbind();
-                            }
-                        });
+    //                 if (!definition) {
+    //                     return;
+    //                 }
+    //                 if (!definition.meta || !definition.meta[metaKey]) {
+    //                     // If we change the 'meta' keyword check versions here
+    //                     definition.meta = definition.meta ? definition.meta : {};
+    //                     definition.meta[metaKey] = true;
+    //                     mf.plugin.setDefinition(definition);
+    //                 } else {
+    //                     if (definition?.meta?.[metaKey] === true) {
+    //                         resolve(true);
+    //                         unbind();
+    //                     }
+    //                 }
+    //             };
+    //             unbind = mf.plugin.onDefinition(checkDefinition);
+    //         });
+    //     }
+    // ),
 
 
-                    });
-                });
-            }
-        }
-    ),
+    // new Test(BlobSerializationCompatible ? 'File, TypedArray etc (de)serialization' + (DISPLAY_VERSION.includes("-begin") ? " (just sending)" : ""): 'IGNORED BECAUSE TOO OLD: File, TypedArray etc (de)serialization',
+    //     // verify that when setting inputs, they are sent to the metapage
+    //     // then sent back, which we listen to here
+    //     (mf) => { // metaframe instance
+    //         // the sample test data
+    //         const numbers = [1, 5, 10, 8, 1, 5, 10, 8];
+    //         const sampleInputs = {
+    //             "File": new File(["foo"], "foo.txt", {type: "text/plain;charset=utf-8"}),
+    //             "Blob": new Blob(["foo"], {type: "text/plain;charset=utf-8"}),
+    //             "ArrayBuffer": new ArrayBuffer(8),
+    //             "Int8Array": Int8Array.from(numbers),
+    //             "Uint8Array": Uint8Array.from(numbers),
+    //             "Uint8ClampedArray": Uint8ClampedArray.from(numbers),
+    //             "Int16Array": Int16Array.from(numbers),
+    //             "Uint16Array": Uint16Array.from(numbers),
+    //             "Int32Array": Int32Array.from(numbers),
+    //             "Uint32Array": Uint32Array.from(numbers),
+    //             "Float32Array": Float32Array.from(numbers),
+    //             "Float64Array": Float64Array.from([]),
+    //             "BigInt64Array": BigInt64Array.from([]),
+    //             "BigUint64Array": BigUint64Array.from([]),
+    //         };
+
+    //         // metaframes pass downstream directly all the blob types
+    //         const inputsFileBlobHandler = inputs => {
+
+    //             const keys = Object.keys(inputs);
+    //             const newOutputs = {};
+    //             keys.forEach(key => {
+    //                 if (BlobTypes.includes(key)) {
+    //                     newOutputs[key] = inputs[key];
+    //                 }
+    //             });
+    //             mf.setOutputs(newOutputs);
+    //         };
+    //         // This calls the handled immediately with the current value
+    //         mf.onInputs(inputsFileBlobHandler);
+
+    //         if (DISPLAY_VERSION.includes("-begin")) {
+    //             // First metaframe in the chain just sends the blobs
+    //             if (BlobSerializationCompatible) {
+    //                 mf.setOutputs(sampleInputs);
+    //             } else {
+    //                 throw "A metaframe where BlobSerializationCompatible=false cannot be the first metaframe in the chain";
+    //                 mf.setOutputs(Object.fromEntries(Object.keys(sampleInputs).map(key => [key, "UNSUPPORTED"])));
+    //             }
+    //             // the later metaframe will actually check the blobs
+    //             return Promise.resolve(true);
+    //         } else {
+    //             // All other metaframes just pass the blobs, but Blob serialization capable
+    //             // metaframes check the types of the blobs
+
+    //             const localBlobTypesRemaining = [...BlobTypes];
+    //             return new Promise((resolve, reject) => {
+    //                 // The actual test but only for newer versions
+    //                 let unbind;
+    //                 unbind = mf.onInputs(function(inputs) {
+    //                     // if we get a blob type, remove it from the list
+    //                     // and resolve when all done
+    //                     Object.keys(inputs).forEach(async (key) => {
+    //                         // ignore non-blob types
+    //                         if (!BlobTypes.includes(key)) {
+    //                             return;
+    //                         }
+
+    //                         if (BlobSerializationCompatible) {
+    //                             // Do actual test of the type
+    //                             // console.log('inputs[key] instanceof sampleInputs[key].constructor', inputs[key] instanceof sampleInputs[key].constructor);
+    //                             // console.log('inputs[key]', inputs[key]);
+    //                             // console.log('sampleInputs[key].constructor', sampleInputs[key].constructor);
+    //                             if (!(inputs[key] instanceof sampleInputs[key].constructor)) {
+    //                                 reject(`'${key}'=>${inputs[key]} is not an instance of ${sampleInputs[key].constructor.name}`);
+    //                             }
+
+    //                             if (key === Blob.name) {
+    //                                 const blob = inputs[key];
+    //                                 // console.log('blob', blob);
+    //                                 const text = await blob.text();
+    //                                 if (text !== "foo") {
+    //                                     reject(`lob '${key}' text is not 'foo'`);
+    //                                 }
+    //                             }
+    //                         }
+
+    //                         if (localBlobTypesRemaining.includes(key)) {
+    //                             const index = localBlobTypesRemaining.indexOf(key);
+    //                             localBlobTypesRemaining.splice(index, 1);
+    //                         }
+
+    //                         if (localBlobTypesRemaining.length === 0) {
+    //                             resolve(true);
+    //                             unbind();
+    //                         }
+    //                     });
+
+
+    //                 });
+    //             });
+    //         }
+    //     }
+    // ),
+
+
+
+
+
+
+
+
+
+
+
 
     // TODO: re-enable this test once we figure out when or how to run it without
     // messing up concurrently running tests.
@@ -329,6 +343,9 @@ TESTS = [
 // start the tests
 // instantiate the metaframe object
 var mf = new Metaframe();
+if (debug) {
+    mf.debug = true;
+}
 // current implementation is Metaframe.connected
 await mf.connected();
 
@@ -337,13 +354,6 @@ if (!mf.id) {
 }
 
 if (mf.plugin) {
-    // if (VERSION !== 'latest' && globalThis.compareVersions(VERSION, '0.3') < 0) {
-    //     // plugins not supported
-    //     document.getElementById('body').innerText = `no plugin support v${DISPLAY_VERSION} (${VERSION})`;
-    //     document.body.style.backgroundColor = "green";
-    //     return;
-    // }
-
     document.getElementById('body').innerText = `plugin v${DISPLAY_VERSION}`;
 }
 
@@ -352,7 +362,7 @@ document.body.style.backgroundColor = mf._color || mf.color;
 const promises = TESTS.map((test) => test.run(mf));
 
 // This is our part of the metaframe daisy chain.
-//  when we get a input [input], we read the array from the "versions"
+// When we get a input [input], we read the array from the "versions"
 // field (or create one) and append our version to the array, then
 // send the value to the output: { "output": { "versions": [...] } }
 
