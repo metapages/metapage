@@ -30,7 +30,7 @@ deploy: _ensure_deployctl
   rm -rf deploy
   mkdir -p deploy
   cp -r src deploy/
-  cp -r deno.json deploy/b
+  cp -r deno.json deploy/
   cd deploy
   deno task build
   deployctl deploy --project=metapage-module --prod --entrypoint src/main.ts
