@@ -1,0 +1,25 @@
+# https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
+name: Test
+
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+on:
+  push:
+    branches:
+      - "**"
+      - "!main"
+      - "!master"
+
+jobs:
+  test:
+    # Can switch to ubuntu-latest but self-hosted is safer and faster
+    name: Test
+    runs-on: self-hosted
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      - name: run tests
+        run: just test
+

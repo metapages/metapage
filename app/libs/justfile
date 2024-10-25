@@ -8,19 +8,18 @@ set dotenv-load    := true
 ###########################################################################
 # library configuration
 ###########################################################################
-ROOT               := `dirname $(dirname $PWD)`
 NPM_MODULE         := `cat package.json | jq -r .name`
-NPM_MODULE_OUTPUT  := "./dist"
 NPM_TOKEN          := env_var_or_default("NPM_TOKEN", "")
-SERVER_PORT        := env_var_or_default("SERVER_PORT", "3000")
-export CI          := env_var_or_default("CI", "")
-export JEKYLL_ENV  := env_var_or_default("JEKYLL_ENV", "production")
-parcel             := "./node_modules/parcel-bundler/bin/cli.js"
 tsc                := "./node_modules/typescript/bin/tsc"
 vite               := "NODE_OPTIONS='--max_old_space_size=16384' ./node_modules/vite/bin/vite.js"
 # minimal formatting, bold is very useful
 bold               := '\033[1m'
 normal             := '\033[0m'
+green              := "\\e[32m"
+yellow             := "\\e[33m"
+blue               := "\\e[34m"
+magenta            := "\\e[35m"
+grey               := "\\e[90m"
 
 _help:
     @just --list --unsorted --list-heading $'Commands:\n'
@@ -28,23 +27,6 @@ _help:
 # Build the production npm distributions in dist/metaframe and dist/metapage
 build: _build
 _build: _ensure_node_modules _build_npm
-    #!/usr/bin/env bash
-    set -euo pipefail
-
-    # echo -e "🍳👉 {{bold}}Building standalone browser downloads{{normal}}"
-    # just _build_browser_modules {{NPM_MODULE_OUTPUT}}/browser/
-
-    # # copy production builds to the (dev+docs+test) dir
-    # for MODULES_TARGET in "test/page/js"; do
-    #     mkdir -p $MODULES_TARGET
-    #     for meta in "metapage" "metaframe"; do
-    #         rm -rf $MODULES_TARGET/$meta
-    #         cp -r {{NPM_MODULE_OUTPUT}}/browser/$meta $MODULES_TARGET/
-    #     done
-    # done
-    # echo "✅ {{NPM_MODULE_OUTPUT}}/browser/metapage"
-    # echo "✅ {{NPM_MODULE_OUTPUT}}/browser/metaframe"
-    # echo "✅ test/page/js/"
 
 _build_npm:
     #!/usr/bin/env bash
@@ -56,48 +38,32 @@ _build_npm:
     {{vite}} build
     echo "✅ vite build"
 
-    # mkdir -p {{NPM_MODULE_OUTPUT}}
-    # echo -e "🍳👉 {{bold}}Compiling typescript  => {{NPM_MODULE_OUTPUT}}/{{normal}}"
-    # {{tsc}} --outDir {{NPM_MODULE_OUTPUT}}
-    # # cp package.json      {{NPM_MODULE_OUTPUT}}/package.json
-    # # cp README-PACKAGE.md {{NPM_MODULE_OUTPUT}}/README.md
-    # # cp LICENSE           {{NPM_MODULE_OUTPUT}}/
-    # echo "✅ {{NPM_MODULE_OUTPUT}}"
+# watch for file changes, then build ALL into ./dist
+watch: _ensure_node_modules
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "👀 watching and building into ./dist..."
+    {{tsc}} --noEmit
+    echo "✅ typescript check"
+    {{vite}} --watch build
 
 _tsc +args="":
     {{tsc}} {{args}}
 
 # Run tests
 test:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    if [ ! -f /.dockerenv ]; then
-        echo -e "Not in a docker container, assuming running on the host"
-        cd ..
-        docker-compose build libs && docker-compose run libs just test
-    else
-        just test/test
-    fi
+    just ../worker/test
 
 # Develop:
 #   1. just dev
 #   2. modify metapage/metaframe code
 #   3. refresh browser window
 # recompile metapage/metaframe src on change, and open a browser at the test page for the local metapage test
-dev: _ensure_node_modules
-    just test/dev
+dev: _ensure_node_modules watch
 
-# watch for file changes, then build ALL into ./dist
-@watch:
-    # No clean operation because that might break symlinks
-    echo "👀 watching and building into ./dist..."
-    watchexec --watch src -- 'just _build'
-
-# watch for file changes, then build only the npm module into ./dist. Avoids additional browser only modules
-@watch_npm_only:
-    # No clean operation because that might break symlinks
-    echo "👀 watching and building npm module into ./dist..."
-    watchexec --watch src -- 'just _build_npm'
+# typescript check 
+@check: (_tsc "--build")
+    echo -e "✅ {{green}}TypeScript{{normal}} check passed"
 
 # npm link the package in dist for local development. In the other project: 'npm link @metapages/metapage'
 @link:
@@ -109,19 +75,6 @@ dev: _ensure_node_modules
 @unlink:
     cd dist && npm unlink
 
-# Write library versions to the place where jekyll can consume: docs/_data/versions.yml
-_versions-write-versions-to-jekyll:
-    #!/usr/bin/env node
-    var lib = require(process.cwd() + '/test/lib.js');
-    var fs = require('fs');
-    // async in a sync scipt (this is not deno)
-    (async () => {
-        const versions = await lib.getMetapageVersions({includeLocal:false});
-        const out = 'versions: ' + JSON.stringify(versions);
-        console.log('./docs/_data/versions.yml:\n' + out + '\n');
-        fs.writeFileSync('../docs/_data/versions.yml', out + '\n');
-    })()
-
 # List all published versions
 @list:
     npm view {{NPM_MODULE}} versions --json
@@ -130,15 +83,6 @@ _versions-write-versions-to-jekyll:
 publish: _require_NPM_TOKEN _ensure_node_modules
     #!/usr/bin/env bash
     set -euo pipefail
-    # if [ "$CI" != "true" ]; then
-    #     # This check is here to prevent publishing if there are uncommitted changes, but this check does not work in CI environments
-    #     # because it starts as a clean checkout and git is not installed and it is not a full checkout, just the tip
-    #     if [[ $(git status --short) != '' ]]; then
-    #         git status
-    #         echo -e '💥 Cannot publish with uncommitted changes'
-    #         exit 2
-    #     fi
-    # fi
     VERSION=`cat package.json | jq -r '.version'`
     INDEX=`npm view {{NPM_MODULE}} versions --json | jq "index( \"$VERSION\" )"`
     if [ "$INDEX" != "null" ]; then
@@ -147,7 +91,6 @@ publish: _require_NPM_TOKEN _ensure_node_modules
     fi
     just build
     echo "PUBLISHING npm version $VERSION"
-    # cd {{NPM_MODULE_OUTPUT}}
     echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc && \
     npm publish --access public .
     # git tag $VERSION
@@ -157,7 +100,6 @@ publish: _require_NPM_TOKEN _ensure_node_modules
 unpublish version:
     @echo "❗ If this fails: you cannot use .npmrc or NPM_TOKEN, you must 'npm login' 🤷‍♀️"
     npm unpublish {{NPM_MODULE}}@{{version}}
-    just _versions-write-versions-to-jekyll
 
 # https://docs.npmjs.com/cli/v7/commands/npm-deprecate
 module_deprecate version +message:
@@ -168,35 +110,6 @@ clean:
     @mkdir -p dist
     rm -rf dist/*
     just test/clean
-
-# build meta(page/frame) browser modules for testing
-_build_browser_modules:
-    #!/usr/bin/env bash
-    set -euo pipefail
-    # Should not need to do this because earlier steps compile check
-    {{tsc}} --noEmit
-    echo "✅ typescript check"
-    {{vite}} build
-    echo "✅ vite build"
-
-
-_build_browser_modules-OLD outdir testing="":
-    #!/usr/bin/env bash
-    set -euo pipefail
-    rm -rf {{outdir}}/metaframe
-    rm -rf {{outdir}}/metapage
-    # Should not need to do this because earlier steps compile check
-    {{tsc}} --noEmit
-    echo "✅ typescript check"
-    if [ "{{testing}}" = "testing" ]; then
-        echo "👉 development builds for test/page/js/"
-        NODE_ENV=development {{parcel}} build --no-minify --target browser --global metapage ./src/metapage/Metaframe.ts --out-dir {{outdir}}/metaframe --out-file index.js
-        NODE_ENV=development {{parcel}} build --no-minify --target browser --global metapage ./src/metapage/Metapage.ts ./src/metapage/Metaframe.ts --out-dir {{outdir}}/metapage  --out-file index.js
-    else
-        echo "👉 production builds for test/page/js/"
-        {{parcel}} build --target browser --global metapage ./src/metapage/Metaframe.ts --out-dir {{outdir}}/metaframe --out-file index.js
-        {{parcel}} build --target browser --global metapage  ./src/metapage/Metapage.ts ./src/metapage/Metaframe.ts --out-dir {{outdir}}/metapage  --out-file index.js
-    fi
 
 @_require_NPM_TOKEN:
     if [ -z "$NPM_TOKEN" ]; then echo "Missing NPM_TOKEN"; exit 1; fi

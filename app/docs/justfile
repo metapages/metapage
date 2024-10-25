@@ -59,9 +59,9 @@ build:
             echo -e '💥 Cannot publish with uncommitted changes'
             exit 2
         fi
-        # No docker-compose build step because this only happens on the host so local volumes are mounted in
-        docker-compose build docs
-        docker-compose run docs just build
+        # No docker compose build step because this only happens on the host so local volumes are mounted in
+        docker compose build docs
+        docker compose run docs just build
     else
         rm -rf ../../docs/*
         JEKYLL_ENV=production bundle exec jekyll build --disable-disk-cache --strict_front_matter --trace --config _config.yml --destination ../../docs

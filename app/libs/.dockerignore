@@ -1,8 +1,0 @@
-.DS_Store
-.haxelib
-.cache
-node_modules/
-tmp/
-site
-dist
-build

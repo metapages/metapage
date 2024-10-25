@@ -1,4 +1,4 @@
-import {VersionsMetapage as Versions} from "../v0_4/versions";
+import {VersionsMetapage as Versions} from "../versions";
 
 export type MetaframePipeId = string;
 export type MetaframeId = string;

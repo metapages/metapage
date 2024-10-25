@@ -1,9 +1,9 @@
 import { compare } from 'compare-versions';
 import stringify from 'fast-json-stable-stringify';
-
+import { create } from 'mutative';
 import { MetapageHashParams } from './Shared';
-import { MetapageDefinition as V0_2MetapageDefinition } from './v0_2/all';
-import { MetapageDefinition as V0_3MetapageDefinition } from './v0_3/all';
+import { MetapageDefinition as MetapageDefinitionV02 } from './v0_2/all';
+import { MetapageDefinition as MetapageDefinitionV03 } from './v0_3/all';
 import {
   MetaframeDefinitionV4,
   MetaframeDefinitionV5,
@@ -12,20 +12,23 @@ import {
   MetaframeEditTypeMetapage,
   MetaframeEditTypeMetapageV6,
   MetaframeEditTypeUrlV6,
-  MetaframeId,
-  MetaframeInputMap,
   MetaframeMetadataV4,
   MetaframeMetadataV5,
   MetaframeMetadataV6,
-  MetapageDefinitionV3,
+} from './v0_4';
+import {
+  MetaframeDefinitionV1,
+  MetaframeId,
+  MetaframeInputMap,
+  MetapageDefinitionV1,
   MetapageId,
   MetapageVersionCurrent,
   VersionsMetapage,
-} from './v0_4';
+} from './v1';
 
 export const convertMetapageDefinitionToCurrentVersion = (
-  def: any | MetapageDefinitionV3
-): MetapageDefinitionV3 => {
+  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1
+): MetapageDefinitionV1 => {
   if (def === null) {
     throw "Metapage definition cannot be null";
   }
@@ -42,38 +45,44 @@ export const convertMetapageDefinitionToCurrentVersion = (
   }
 
   // Recursively convert up the version
-  let updatedDefinition: MetapageDefinitionV3;
+  let updatedDefinition: MetapageDefinitionV1;
 
   switch (getMatchingVersion(def.version)) {
     case "0.2": {
       updatedDefinition = convertMetapageDefinitionToCurrentVersion(
-        definition_v0_2_to_v0_3(def as V0_2MetapageDefinition)
+        definition_v0_2_to_v0_3(def as MetapageDefinitionV02)
       );
       break;
     }
     case "0.3": {
-      updatedDefinition = def as MetapageDefinitionV3; // Latest
+      updatedDefinition = convertMetapageDefinitionToCurrentVersion(
+        definition_v0_3_to_v1(def as MetapageDefinitionV03)
+      );
+      break;
+    }
+    case "1": {
+      updatedDefinition = def as MetapageDefinitionV1; // Latest
       break;
     }
     default: // Latest
       console.warn(
         `Metapage definition version=${def.version} but we only know up to version ${MetapageVersionCurrent}. Assuming the definition is compatible, but it's the future!`
       );
-      updatedDefinition = def as MetapageDefinitionV3;
+      updatedDefinition = def as MetapageDefinitionV1;
       break;
   }
-  return updatedDefinition;
+  return create(updatedDefinition, (draft) => draft);
 };
 
 export const convertMetaframeJsonToCurrentVersion = (
   m:
-    | MetaframeDefinitionV5
     | MetaframeDefinitionV4
     | MetaframeDefinitionV5
     | MetaframeDefinitionV6
+    | MetaframeDefinitionV1
     | undefined,
   opts?: { errorIfUnknownVersion?: boolean }
-): MetaframeDefinitionV6 | undefined => {
+): MetaframeDefinitionV1 | undefined => {
   if (!m) {
     return undefined;
   }
@@ -82,12 +91,14 @@ export const convertMetaframeJsonToCurrentVersion = (
     case "0.3":
     case "0.4":
       return convertMetaframeJsonToCurrentVersion(
-        convertMetaframeJsonV4ToV5(m as MetaframeDefinitionV4)
+        convertMetaframeJsonV5ToV1(convertMetaframeJsonV4ToV5(m as MetaframeDefinitionV4))
       );
     case "0.5":
-      return convertMetaframeJsonV5ToV6(m as MetaframeDefinitionV5);
+      return convertMetaframeJsonV5ToV1(m as MetaframeDefinitionV5);
     case "0.6":
-      return m as MetaframeDefinitionV6;
+      return convertMetaframeJsonV6ToV1(m as MetaframeDefinitionV6);
+    case "1":
+      return m as MetaframeDefinitionV1;
     default:
       if (opts && opts.errorIfUnknownVersion) {
         throw `Unsupported metaframe version. Please upgrade to a new version: npm i @metapages/metapage@latest\n ${JSON.stringify(
@@ -99,7 +110,7 @@ export const convertMetaframeJsonToCurrentVersion = (
             m
           )}\n${window.location.href}`
         );
-        return m as MetaframeDefinitionV6;
+        return m as MetaframeDefinitionV1;
       }
   }
 };
@@ -145,74 +156,98 @@ const convertMetaframeJsonV4ToV5 = (source: MetaframeDefinitionV4) => {
 };
 
 // The only difference between v5 and v6 is the metadata operations field
+const convertMetaframeJsonV6ToV1 = (source: MetaframeDefinitionV6) => {
+  return source as MetaframeDefinitionV1;
+}
+
+// The only difference between v5 and v6 is the metadata operations field
+const convertMetaframeJsonV5ToV1 = (source: MetaframeDefinitionV5) => {
+  return convertMetaframeJsonV6ToV1(convertMetaframeJsonV5ToV6(source));
+}
+// The only difference between v5 and v6 is the metadata operations field
 const convertMetaframeJsonV5ToV6 = (source: MetaframeDefinitionV5) => {
   // Process the metadata separately
-  const { metadata, ...restOfDefinitionProps } = source;
+  return create<MetaframeDefinitionV6>(source, (draft: MetaframeDefinitionV5) => {
 
-  // apart from metadata, the rest of the definition is the same as v5
-  const metaframeDefV6: MetaframeDefinitionV6 = {
-    ...restOfDefinitionProps,
-    version: "0.6",
-  };
+    const { metadata, ...restOfDefinitionProps } = draft;
 
-  if (metadata) {
-    const { edit, ...restOfMetadataProps } = metadata;
-    const metaframeMetaV6: MetaframeMetadataV6 = { ...restOfMetadataProps };
-    metaframeDefV6.metadata = metaframeMetaV6;
+    // apart from metadata, the rest of the definition is the same as v5
+    const metaframeDefV6: MetaframeDefinitionV6 = {
+      ...restOfDefinitionProps,
+      version: "0.6",
+    };
 
-    if (edit && !(metaframeMetaV6 && metaframeMetaV6.operations && metaframeMetaV6.operations.edit)) {
-      if (!metaframeMetaV6.operations) {
-        metaframeMetaV6.operations = {};
-      }
+    if (metadata) {
+      const { edit, ...restOfMetadataProps } = metadata;
+      const metaframeMetaV6: MetaframeMetadataV6 = { ...restOfMetadataProps };
+      metaframeDefV6.metadata = metaframeMetaV6;
 
-      switch (edit.type) {
-        case "metapage":
-          const metaPageEditPreviousMetapage =
-            edit.value as MetaframeEditTypeMetapage;
-          const editOperationMetapage: MetaframeEditTypeMetapageV6 = {
-            type: "metapage",
-            metapage: metaPageEditPreviousMetapage.definition,
-            metaframe: metaPageEditPreviousMetapage.key || "edit",
-          };
+      if (edit && !(metaframeMetaV6 && metaframeMetaV6.operations && metaframeMetaV6.operations.edit)) {
+        if (!metaframeMetaV6.operations) {
+          metaframeMetaV6.operations = {};
+        }
 
-          metaframeMetaV6.operations.edit = editOperationMetapage;
-          break;
+        switch (edit.type) {
+          case "metapage":
+            const metaPageEditPreviousMetapage =
+              edit.value as MetaframeEditTypeMetapage;
+            const editOperationMetapage: MetaframeEditTypeMetapageV6 = {
+              type: "metapage",
+              metapage: metaPageEditPreviousMetapage.definition,
+              metaframe: metaPageEditPreviousMetapage.key || "edit",
+            };
 
-        case "metaframe":
-          const metaPageEditPreviousMetaframe =
-            edit.value as MetaframeEditTypeMetaframe;
-          const editOperationMetaframe: MetaframeEditTypeUrlV6 = {
-            type: "url",
-            url: metaPageEditPreviousMetaframe.url,
-            params: metaPageEditPreviousMetaframe.params
-              ? metaPageEditPreviousMetaframe.params.map((p) => ({
+            metaframeMetaV6.operations.edit = editOperationMetapage;
+            break;
+
+          case "metaframe":
+            const metaPageEditPreviousMetaframe =
+              edit.value as MetaframeEditTypeMetaframe;
+            const editOperationMetaframe: MetaframeEditTypeUrlV6 = {
+              type: "url",
+              url: metaPageEditPreviousMetaframe.url,
+              params: metaPageEditPreviousMetaframe.params
+                ? metaPageEditPreviousMetaframe.params.map((p) => ({
                   to: p.to,
                   from: p.from,
                   // path doesn't work, how can we know where to put the path token?
                   toType: p.toType === "path" ? undefined : p.toType,
                 }))
-              : undefined,
-          };
-          metaframeMetaV6.operations.edit = editOperationMetaframe;
-          break;
-        default:
-          throw `Unsupported edit type: ${
-            edit.type
-          } in metadata for metaframe ${JSON.stringify(metadata)}`;
+                : undefined,
+            };
+            metaframeMetaV6.operations.edit = editOperationMetaframe;
+            break;
+          default:
+            throw `Unsupported edit type: ${edit.type
+            } in metadata for metaframe ${JSON.stringify(metadata)}`;
+        }
       }
     }
-  }
 
-  return metaframeDefV6;
+    return metaframeDefV6;
+  });
 };
 
 const definition_v0_2_to_v0_3 = (
-  old: V0_2MetapageDefinition
-): V0_3MetapageDefinition => {
-  // Exactly the same except v0.3 has plugins
-  old.version = "0.3";
-  return old;
+  old: MetapageDefinitionV02
+): MetapageDefinitionV03 => {
+  return create<MetapageDefinitionV03>(old, (draft: MetapageDefinitionV02) => {
+    // Exactly the same except v0.3 has plugins
+    draft.version = "0.3";
+  });
 };
+
+const definition_v0_3_to_v1 = (
+  old: MetapageDefinitionV03
+): MetapageDefinitionV1 => {
+
+  return create<MetapageDefinitionV1>(old, (draft) => {
+    // We removed plugins in v1
+    const castV1 = draft as MetapageDefinitionV03;
+    delete castV1.plugins;
+  });
+};
+
 
 /**
  * Merges new values into the current object.
@@ -253,8 +288,10 @@ export const getMatchingVersion = (version: string): VersionsMetapage => {
     compare(version, "0.3", "<")
   ) {
     return "0.2";
-  } else if (compare(version, "0.3", ">=")) {
+  } else if (compare(version, "0.3", "<=")) {
     return "0.3";
+  } else if (version === "1") {
+    return "1";
   } else {
     // Return something, assume latest
     console.log(
@@ -284,13 +321,6 @@ export const isDebugFromUrlsParams = (): boolean => {
   return param === "true" || param === "1";
 };
 
-export const existsAnyUrlParam = (k: string[]): boolean => {
-  const members = k.filter((param: string) => {
-    return new URLSearchParams(window.location.search).has(param);
-  });
-  return members.length > 0;
-};
-
 export const generateMetaframeId = (length: number = 8): MetaframeId => {
   return generateId(length);
 };
@@ -306,8 +336,6 @@ export const generateNonce = (length: number = 8): string => {
 const LETTERS = "abcdefghijklmnopqrstuvwxyz0123456789";
 export const generateId = (length: number = 8): string => {
   var result = "";
-  var characters =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
   var charactersLength = LETTERS.length;
   for (var i = 0; i < length; i++) {
     result += LETTERS.charAt(Math.floor(Math.random() * charactersLength));
@@ -395,21 +423,20 @@ export const pageLoaded = async (): Promise<void> => {
   });
 };
 
-export const metapageAllSha256Hash = async (metapage:MetapageDefinitionV3) => {
+export const metapageAllSha256Hash = async (metapage: MetapageDefinitionV1) => {
   const metapageStr = stringify(metapage);
   return await sha256ToBase64(metapageStr);
 }
 
-export const metapageOnlyEssentailSha256Hash = async (metapage:Pick<MetapageDefinitionV3, "metaframes" | "version" | "plugins">) => {
+export const metapageOnlyEssentailSha256Hash = async (metapage: Pick<MetapageDefinitionV1, "metaframes" | "version">) => {
   const metapageStr = stringify({
     version: metapage.version,
     metaframes: metapage.metaframes,
-    plugins: metapage.plugins,
   });
   return await sha256ToBase64(metapageStr);
 }
 
-async function sha256ToBase64(str:string) {
+async function sha256ToBase64(str: string) {
   const encoder = new TextEncoder();
   const data = encoder.encode(str);
   const hash = await crypto.subtle.digest('SHA-256', data);

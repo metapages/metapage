@@ -1,3 +1,0 @@
-# The docker build context 'app/' is used for some services (rather than 'app/<service>')
-# and .dockerfiles are not checked recursively
-/ingress

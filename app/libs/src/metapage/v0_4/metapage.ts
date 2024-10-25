@@ -3,7 +3,7 @@ import {
   Url,
 } from './core';
 import { MetaframeInstance } from './metaframe';
-import { VersionsMetapage } from './versions';
+import { VersionsMetapage } from '../versions';
 
 export interface MetapageOptions {
   id?: MetapageId;

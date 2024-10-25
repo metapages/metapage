@@ -3,11 +3,7 @@ import {
   ListenerFn,
 } from 'eventemitter3';
 
-import {
-  METAPAGE_KEY_DEFINITION,
-  METAPAGE_KEY_STATE,
-  VERSION_METAPAGE,
-} from './Constants';
+import { VERSION_METAPAGE } from './Constants';
 import { serializeInputs } from './data';
 import { JsonRpcRequest } from './jsonrpc2';
 import {
@@ -24,20 +20,23 @@ import {
 import {
   ClientMessageRecievedAck,
   JsonRpcMethodsFromParent,
-  MetaframeDefinitionV6,
+  MetaframeDefinitionV1,
   MetaframeId,
   MetaframeInputMap,
   MetaframePipeId,
+  MetapageEvents,
   MetapageId,
   MetapageInstanceInputs,
   MinimumClientMessage,
   SetupIframeServerResponseData,
   VersionsMetaframe,
   VersionsMetapage,
-} from './v0_4';
-import { MetapageEvents } from './v0_4/events';
+} from './v1';
 
 /**
+ * This class runs in the parent metapage, and connects the communication pipes
+ * from the child metaframe iframe to the parent metapage.
+ * 
  * Initialization sequence:
  *   1. the child iframe object waits until its page loads
  *   2. the child iframe object sends SetupIframeClientRequest
@@ -63,8 +62,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   _parentId: MetapageId;
   _debug: boolean;
   _sendInputsAfterRegistration: boolean = false;
-  _definition: MetaframeDefinitionV6 | undefined;
-  _plugin: boolean = false;
+  _definition: MetaframeDefinitionV1 | undefined;
 
   _metapage: MetapageShared;
 
@@ -123,7 +121,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
         if (selfThis._iframe) { // check because possibly already disposed
         
           // iframe permissions (the "allow" attribute)
-          // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
+          // https://developer.mozilla.org/en-US/docs/Web/API/HTMLIFrameElement/allow
           // If there is an "allow" field in the frame definition in the metapage use that first
           if (this._metapage?._definition?.metaframes?.[this.id]?.allow) {
             selfThis._iframe.allow = this._metapage._definition.metaframes[this.id].allow!;
@@ -148,9 +146,6 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     this.dispose = this.dispose.bind(this);
     this.getDefinition = this.getDefinition.bind(this);
     this.getDefinitionUrl = this.getDefinitionUrl.bind(this);
-    this.setPlugin = this.setPlugin.bind(this);
-    this.hasPermissionsDefinition = this.hasPermissionsDefinition.bind(this);
-    this.hasPermissionsState = this.hasPermissionsState.bind(this);
     this.log = this.log.bind(this);
     this.logInternal = this.logInternal.bind(this);
     this.onInput = this.onInput.bind(this);
@@ -168,7 +163,6 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     this.setMetapage = this.setMetapage.bind(this);
     this.setOutput = this.setOutput.bind(this);
     this.setOutputs = this.setOutputs.bind(this);
-    this.setPlugin = this.setPlugin.bind(this);
     this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
     this.isDisposed = this.isDisposed.bind(this);
   }
@@ -184,33 +178,9 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     return disposer;
   }
 
-  public setPlugin(): MetapageIFrameRpcClient {
-    if (this._loaded) {
-      throw "Cannot setPlugin after MetapageIFrameRpcClient already loaded";
-    }
-    this._plugin = true;
-    return this;
-  }
-
   public setMetapage(metapage: MetapageShared): MetapageIFrameRpcClient {
     this._metapage = metapage;
     return this;
-  }
-
-  public hasPermissionsState(): boolean {
-    return (
-      this._definition !== undefined &&
-      this._definition.inputs !== undefined &&
-      this._definition.inputs![METAPAGE_KEY_STATE] !== undefined
-    );
-  }
-
-  public hasPermissionsDefinition(): boolean {
-    return (
-      this._definition !== undefined &&
-      this._definition.inputs !== undefined &&
-      this._definition.inputs![METAPAGE_KEY_DEFINITION] !== undefined
-    );
   }
 
   public getDefinitionUrl(): string {
@@ -229,7 +199,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
    * but advanced features e.g. allow permissions won't work and
    * anything relying on metadata.
    */
-  public async getDefinition(): Promise<MetaframeDefinitionV6 | undefined> {
+  public async getDefinition(): Promise<MetaframeDefinitionV1 | undefined> {
     if (this._definition) {
       return this._definition;
     }
@@ -404,7 +374,6 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     var response: SetupIframeServerResponseData = {
       iframeId: this.id,
       parentId: this._parentId,
-      plugin: this._plugin,
       state: {
         inputs: this.inputs,
       },
