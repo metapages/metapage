@@ -41,8 +41,6 @@ clean:
   rm -rf deploy
 
 test: _build_local_module
-  # PUPPETEER_PRODUCT=chrome deno run -A --unstable https://deno.land/x/puppeteer@16.2.0/install.ts
-  # deno run -A --unstable --unsafely-ignore-certificate-errors test/src/run-tests-in-puppeteer.ts
   deno run -A --unstable --unsafely-ignore-certificate-errors test/src/run-tests-in-astral.ts
 
 build: _build_local_module

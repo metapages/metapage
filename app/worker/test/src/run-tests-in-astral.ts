@@ -15,12 +15,7 @@
 
 import { launch } from "jsr:@astral/astral";import { exists } from "https://deno.land/std/fs/mod.ts";
 import { parse } from "https://deno.land/std/flags/mod.ts";
-
 import { delay } from "https://deno.land/std/async/delay.ts";
-
-import dev from "$fresh/dev.ts";
-import config from "../../src/fresh.config.ts";
-import "$std/dotenv/load.ts";
 
 const flags = parse(Deno.args);
 
@@ -33,10 +28,6 @@ const timePerTest = 10000;
 const serverPort = Deno.env.get("APP_PORT") ? parseInt(Deno.env.get("APP_PORT")!) : 4430;
 const serverFqdn = Deno.env.get("APP_FQDN") ? Deno.env.get("APP_FQDN")! : "server1.localhost";
 const serverOrigin = `https://${serverFqdn}:${serverPort}`;
-
-// (async () => {
-//   await dev(import.meta.url, "../../src/main.ts", config);
-// })();
 
 // Function to start the Deno Fresh server
 async function startDenoFreshServer() {
@@ -51,17 +42,31 @@ async function startDenoFreshServer() {
 
   // Wait for the server to start
   const decoder = new TextDecoder();
-  for await (const chunk of process.stdout) {
-    const output = decoder.decode(chunk);
-    console.log(output);
-    if (output.includes("Listening on")) {
-      console.log("Deno Fresh server started");
-      break;
+  (async () => {
+
+    for await (const chunk of process.stdout) {
+      const output = decoder.decode(chunk);
+      console.log(output);
+      if (output.includes("Listening on")) {
+        console.log("Deno Fresh server started");
+        break;
+      }
     }
-  }
+  })();
 
   return process;
 }
+
+const serverProcess = await startDenoFreshServer();
+
+const shutdownServer = async () => {
+  // Shutdown the Deno Fresh server
+  serverProcess.kill("SIGTERM");
+  await serverProcess.status;
+  console.log("Deno Fresh server stopped");
+}
+// Wait a bit to ensure the server is fully ready
+await delay(2000);
 
 
 async function runSingleMetapageTest(version: string, timeout: number) {
@@ -122,22 +127,29 @@ async function runSingleMetapageTest(version: string, timeout: number) {
     const val = await thing.jsonValue();
     console.error(val);
     if (headless) {
+      await shutdownServer();
       Deno.exit(1);
     }
   } catch (err) {
     // ignored
   }
 
-  await page.waitForFunction(
-    'document.querySelector("#status").innerText.indexOf("METAPAGE TESTS PASS") > -1',
-    {
-      polling: 200,
-      timeout: timeout,
-    }
-  );
-
-  await browser.close();
-  console.log(`🍀🍀🍀   SUCCESS version:${version}   🍾🍾🍾 `);
+  try {
+    await page.waitForFunction(
+      'document.querySelector("#status").innerText.indexOf("METAPAGE TESTS PASS") > -1',
+      {
+        polling: 200,
+        timeout: timeout,
+      }
+    );
+    console.log(`🍀🍀🍀   SUCCESS version:${version}   🍾🍾🍾 `);
+    await browser.close();
+  } catch (err) {
+    console.log(`💥💥💥   fail version:${version} TIMEOUT`);
+    await browser.close();
+    await shutdownServer();
+    Deno.exit(1);
+  } 
 }
 
 const getMetapageTestUrl = (version: string) => {
@@ -154,19 +166,7 @@ const getMetapageVersions = async () :Promise<string[]> => {
 };
 
 
-let serverProcess:any;
-(async () => {
-  serverProcess = await startDenoFreshServer();
-})();
 
-const shutdownServer = async () => {
-  // Shutdown the Deno Fresh server
-  serverProcess.kill("SIGTERM");
-  await serverProcess.status;
-  console.log("Deno Fresh server stopped");
-}
-// Wait a bit to ensure the server is fully ready
-await delay(1000);
 
 let allVersions = await getMetapageVersions();
 if (!nolocalBuild) {
