@@ -14,7 +14,7 @@
 #################################################################
 # Base image
 #################################################################
-# To shell into this container: just build docs && just docker-compose run --rm -w /workspace/docs -v $(pwd)/docs:/workspace/docs docs bash
+# To shell into this container: just build docs && just docker compose run --rm -w /workspace/docs -v $(pwd)/docs:/workspace/docs docs bash
 
 
 # Jekyll container serving the static website with metapage/frame libraries

@@ -1,0 +1,30 @@
+# https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
+name: Deploy and Publish
+
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+on:
+  push:
+    branches:
+      - "main"
+
+jobs:
+  deploy-and-publish:
+    # Can switch to ubuntu-latest but self-hosted is safer and faster
+    name: Deploy and Publish
+    runs-on: self-hosted
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      - name: deploy worker
+        env:
+          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
+        run: just app/worker/deploy
+
+      - name: publish module
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: just app/libs/publish
+

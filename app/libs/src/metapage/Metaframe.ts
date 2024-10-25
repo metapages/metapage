@@ -3,11 +3,7 @@ import {
   ListenerFn,
 } from 'eventemitter3';
 
-import {
-  METAPAGE_KEY_DEFINITION,
-  METAPAGE_KEY_STATE,
-  VERSION_METAFRAME,
-} from './Constants';
+import { VERSION_METAFRAME } from './Constants';
 import {
   deserializeInputs,
   serializeInputs,
@@ -21,8 +17,6 @@ import {
 } from './MetapageTools';
 import { isIframe } from './Shared';
 import {
-  ApiPayloadPluginRequest,
-  ApiPayloadPluginRequestMethod,
   JsonRpcMethodsFromChild,
   JsonRpcMethodsFromParent,
   MetaframeId,
@@ -32,8 +26,8 @@ import {
   MinimumClientMessage,
   SetupIframeServerResponseData,
   VersionsMetapage,
-} from './v0_4';
-import { MetapageEventUrlHashUpdate } from './v0_4/events';
+} from './v1';
+import { MetapageEventUrlHashUpdate } from './v1/events';
 
 // TODO combine/unify MetaframeEvents and MetaframeLoadingState
 export enum MetaframeLoadingState {
@@ -78,7 +72,6 @@ export class Metaframe extends EventEmitter<
 
   debug: boolean = isDebugFromUrlsParams();
   color: string | undefined;
-  plugin: MetaframePlugin | undefined;
   /**
    * If this is false, Files and Blobs will not be automatically serialized and deserialized
    * This is useful to avoid the overhead of serialization/deserialization if you know you won't be using it
@@ -110,16 +103,16 @@ export class Metaframe extends EventEmitter<
     this.setInput = this.setInput.bind(this);
     this.setInputs = this.setInputs.bind(this);
     this.setInternalInputsAndNotify =
-      this.setInternalInputsAndNotify.bind(this);
+    this.setInternalInputsAndNotify.bind(this);
     this.setOutput = this.setOutput.bind(this);
     this.setOutputs = this.setOutputs.bind(this);
     this.warn = this.warn.bind(this);
     this._resolveSetupIframeServerResponse =
-      this._resolveSetupIframeServerResponse.bind(this);
+    this._resolveSetupIframeServerResponse.bind(this);
     this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
     this.connected = this.connected.bind(this);
     this.disableNotifyOnHashUrlChange =
-      this.disableNotifyOnHashUrlChange.bind(this);
+    this.disableNotifyOnHashUrlChange.bind(this);
     this._onHashUrlChange = this._onHashUrlChange.bind(this);
 
     if (!this._isIframe) {
@@ -205,11 +198,6 @@ export class Metaframe extends EventEmitter<
         }
 
         this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
-
-        // if this is a plugin, initialize the plugin object
-        if (params.plugin) {
-          this.plugin = new MetaframePlugin(this);
-        }
 
         //Resolve AFTER sending inputs. This way consumers can either:
         //1) Just listen to inputs updates. The first will be when the metaframe is ready
@@ -374,6 +362,7 @@ export class Metaframe extends EventEmitter<
 
     Object.keys(inputs).forEach((pipeId) => {
       try {
+        // if we don't actually need this event, we should remove it
         this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId])
       } catch(err) {
         console.error(`Error emitting input ${pipeId}: ${err}`)
@@ -429,6 +418,12 @@ export class Metaframe extends EventEmitter<
   public disableNotifyOnHashUrlChange(): void {
     window.removeEventListener("hashchange", this._onHashUrlChange);
   }
+
+  // public getHashParam(key:string): string {
+  //   window.removeEventListener("hashchange", this._onHashUrlChange);
+  // }
+
+
 
   /** Tell the parent metapage our hash params changed */
   _onHashUrlChange(_: any): void {
@@ -503,63 +498,5 @@ export class Metaframe extends EventEmitter<
         this.emit(MetaframeEvents.Message, jsonrpc);
       }
     }
-  }
-}
-
-/**
- * A special kind of metaframe that can get and set the metapage definition
- * and metapage state (so quite powerful).
- */
-export class MetaframePlugin {
-  _metaframe: Metaframe;
-
-  constructor(metaframe: Metaframe) {
-    this._metaframe = metaframe;
-    this.requestState = this.requestState.bind(this);
-    this.onState = this.onState.bind(this);
-    this.getState = this.getState.bind(this);
-    this.setState = this.setState.bind(this);
-    this.onDefinition = this.onDefinition.bind(this);
-    this.getDefinition = this.getDefinition.bind(this);
-    this.setDefinition = this.setDefinition.bind(this);
-  }
-
-  requestState() {
-    var payload: ApiPayloadPluginRequest = {
-      method: ApiPayloadPluginRequestMethod.State,
-    };
-    this._metaframe.sendRpc(JsonRpcMethodsFromChild.PluginRequest, payload);
-  }
-
-  onState(listener: (_: any) => void): () => void {
-    const disposer = this._metaframe.onInput(METAPAGE_KEY_STATE, listener);
-    if (this.getState()) {
-      listener(this.getState());
-    }
-    return disposer;
-  }
-
-  getState(): any {
-    return this._metaframe.getInput(METAPAGE_KEY_STATE);
-  }
-
-  setState(state: any) {
-    this._metaframe.setOutput(METAPAGE_KEY_STATE, state);
-  }
-
-  onDefinition(listener: (a: any) => void): () => void {
-    var disposer = this._metaframe.onInput(METAPAGE_KEY_DEFINITION, listener);
-    if (this.getDefinition()) {
-      listener(this.getDefinition());
-    }
-    return disposer;
-  }
-
-  setDefinition(definition: any) {
-    this._metaframe.setOutput(METAPAGE_KEY_DEFINITION, definition);
-  }
-
-  getDefinition(): any {
-    return this._metaframe.getInput(METAPAGE_KEY_DEFINITION);
   }
 }

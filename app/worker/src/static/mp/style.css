@@ -1,0 +1,48 @@
+/* General reset to remove browser default styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/mp/JetBrainsMono-Regular.woff2') format('woff2');
+  font-weight: normal;
+  font-style: normal;
+}
+
+body {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+.backgroundGrey300 {
+  background-color: #F7F7F7;
+}
+.backgroundGrey600 {
+  background-color: #EFEFEF;
+}
+
+.linkpadding {
+  margin: 10px 10px 10px 10px;
+}
+
+li {
+  margin: 10px 0px 10px 0px;
+}
+
+ul {
+  margin: 10px 10px 10px 30px;
+}
+
+a {
+  /* padding: 0 10px; */
+  margin: 10px 0px 10px 0px;
+}
+
+.box {
+  padding: 10px;
+}
+
+a, address, blockquote, caption, cite, code, dd, del,
+dfn, li, p, pre, q, td, textarea, th, tt { max-width: 70ex }

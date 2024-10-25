@@ -3,7 +3,7 @@ import {
   MetaframePipeId,
 } from './core';
 import { MetapageDefinitionV3 } from './metapage';
-import { VersionsMetaframe } from './versions';
+import { VersionsMetaframe } from '../versions';
 
 export interface PipeInput {
   metaframe: MetaframeId;

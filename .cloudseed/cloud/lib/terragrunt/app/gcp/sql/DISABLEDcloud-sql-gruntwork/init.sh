@@ -1,1 +1,0 @@
-../cloud-sql-instance/init.sh

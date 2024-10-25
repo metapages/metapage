@@ -1,0 +1,69 @@
+set shell               := ["bash", "-c"]
+set dotenv-load         := true
+set export              := true
+APP_FQDN                := env_var_or_default("APP_FQDN", "server1.localhost")
+APP_PORT                := env_var_or_default("APP_PORT", "4430")
+DENO_DEPLOY_TOKEN       := env_var_or_default("DENO_DEPLOY_TOKEN", "")
+# minimal formatting, bold is very useful
+bold                               := '\033[1m'
+normal                             := '\033[0m'
+green                              := "\\e[32m"
+yellow                             := "\\e[33m"
+blue                               := "\\e[34m"
+magenta                            := "\\e[35m"
+grey                               := "\\e[90m"
+
+@_help:
+    just --list --unsorted
+    echo -e "APP_FQDN={{APP_FQDN}}"
+
+# Run the server in development mode
+@dev +args="": _mkcert _build_local_module open
+  deno task start
+
+open:
+  deno run --allow-all --unstable https://deno.land/x/metapages@v0.0.27/exec/open_url.ts 'https://metapages.github.io/load-page-when-available/?url=https://{{APP_FQDN}}:{{APP_PORT}}'
+
+deploy: _ensure_deployctl
+  #!/usr/bin/env bash
+  set -euo pipefail
+  rm -rf deploy
+  mkdir -p deploy
+  cp -r src deploy/
+  cp -r deno.json deploy/b
+  cd deploy
+  deno task build
+  deployctl deploy --project=metapage-module --prod --entrypoint src/main.ts
+
+# Delete all cached and generated files, and docker volumes
+clean:
+  rm -rf .certs
+  rm -rf deploy
+
+test: _build_local_module
+  PUPPETEER_PRODUCT=chrome deno run -A --unstable https://deno.land/x/puppeteer@16.2.0/install.ts
+  deno run -A --unstable --unsafely-ignore-certificate-errors test/src/run-tests-in-puppeteer.ts
+
+build: _build_local_module
+  deno task build
+
+@_build_local_module:
+  just ../libs/build
+
+@_ensure_deployctl:
+    if ! command -v deployctl &> /dev/null; then echo '‼️ deployctl is being installed ‼️'; deno install --allow-all --no-check -r -f https://deno.land/x/deploy/deployctl.ts; fi
+
+# DEV: generate TLS certs for HTTPS over localhost https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
+_mkcert:
+  #!/usr/bin/env bash
+  if [ ! -f .certs/local-key.pem ]; then
+    mkdir -p .certs ;
+    mkcert -cert-file .certs/local-cert.pem -key-file .certs/local-key.pem {{APP_FQDN}} localhost ;
+  fi
+  if grep -q "{{APP_FQDN}}" /etc/hosts; then
+    echo -e "✅ Hostname {{APP_FQDN}} found in /etc/hosts"
+  else
+    echo -e "💥 Hostname {{APP_FQDN}} not found in /etc/hosts"
+    echo -e "👉 Add: '127.0.0.1   {{APP_FQDN}}' to /etc/hosts"
+    exit 1
+  fi
