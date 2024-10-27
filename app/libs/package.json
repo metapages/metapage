@@ -1,7 +1,7 @@
 {
     "name": "@metapages/metapage",
     "public": true,
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Connect web pages together",
     "repository": "https://github.com/metapages/metapage",
     "homepage": "https://metapage.io/",
