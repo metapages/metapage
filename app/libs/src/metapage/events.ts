@@ -1,5 +1,5 @@
-import { MetaframeId, MetapageDefinitionV3 } from ".";
-import { MetapageIFrameRpcClient } from "../MetapageIFrameRpcClient";
+import { MetaframeId, MetapageDefinitionV1 } from "./v1";
+import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
 
 export enum MetapageEvents {
   Inputs = "inputs",
@@ -8,10 +8,6 @@ export enum MetapageEvents {
   // The definition has already changed e.g. a metaframe changes its hash params
   // so the current definition now contains that change
   Definition = "definition",
-  // A plugin is requesting to modify the definition
-  // This is not automatically processed, the context of the metapage decides what
-  // to do with this update (apply, recreate metapage, ignore etc)
-  DefinitionUpdateRequest = "definitionupdaterequest",
   Error = "error",
   // when a metaframe wants to tell the metapage of the new URL (for saving state/config)
   UrlHashUpdate = "urlhashupdate",
@@ -20,11 +16,8 @@ export enum MetapageEvents {
 }
 
 export interface MetapageEventDefinition {
-  definition: MetapageDefinitionV3;
+  definition: MetapageDefinitionV1;
   metaframes: {
-    [key: string]: MetapageIFrameRpcClient;
-  };
-  plugins?: {
     [key: string]: MetapageIFrameRpcClient;
   };
 }

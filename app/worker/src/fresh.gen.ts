@@ -5,12 +5,13 @@
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_coming_soon from "./routes/_coming_soon.tsx";
-import * as $_util_versions from "./routes/_util/versions.ts";
-import * as $_util_web from "./routes/_util/web.ts";
 import * as $api_joke from "./routes/api/joke.ts";
 import * as $convert_index from "./routes/convert/index.tsx";
-import * as $convert_metaframe from "./routes/convert/metaframe.tsx";
-import * as $convert_metapage from "./routes/convert/metapage.tsx";
+import * as $convert_metaframe_targetversion_ from "./routes/convert/metaframe/[targetversion].tsx";
+import * as $convert_metaframe_index from "./routes/convert/metaframe/index.tsx";
+import * as $convert_metapage_targetversion_ from "./routes/convert/metapage/[targetversion].tsx";
+import * as $convert_metapage_index from "./routes/convert/metapage/index.tsx";
+import * as $convert_types from "./routes/convert/types.ts";
 import * as $index from "./routes/index.tsx";
 import * as $lib_path_ from "./routes/lib/[...path].ts";
 import * as $test_types from "./routes/test/_types.ts";
@@ -33,12 +34,15 @@ const manifest = {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
     "./routes/_coming_soon.tsx": $_coming_soon,
-    "./routes/_util/versions.ts": $_util_versions,
-    "./routes/_util/web.ts": $_util_web,
     "./routes/api/joke.ts": $api_joke,
     "./routes/convert/index.tsx": $convert_index,
-    "./routes/convert/metaframe.tsx": $convert_metaframe,
-    "./routes/convert/metapage.tsx": $convert_metapage,
+    "./routes/convert/metaframe/[targetversion].tsx":
+      $convert_metaframe_targetversion_,
+    "./routes/convert/metaframe/index.tsx": $convert_metaframe_index,
+    "./routes/convert/metapage/[targetversion].tsx":
+      $convert_metapage_targetversion_,
+    "./routes/convert/metapage/index.tsx": $convert_metapage_index,
+    "./routes/convert/types.ts": $convert_types,
     "./routes/index.tsx": $index,
     "./routes/lib/[...path].ts": $lib_path_,
     "./routes/test/_types.ts": $test_types,

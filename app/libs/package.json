@@ -16,7 +16,7 @@
     "types": "dist/index.d.ts",
     "dependencies": {
         "base64-arraybuffer": "^1.0.2",
-        "compare-versions": "^4.1.4",
+        "compare-versions": "^6.1.1",
         "eventemitter3": "^4.0.0",
         "fast-json-stable-stringify": "^2.1.0",
         "mutative": "^1.0.11",

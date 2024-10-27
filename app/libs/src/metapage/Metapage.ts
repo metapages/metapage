@@ -3,14 +3,26 @@ import { create } from 'mutative';
 
 import { VERSION_METAPAGE } from './Constants';
 import {
+  convertMetapageDefinitionToCurrentVersion,
+  getMatchingMetapageVersion,
+} from './conversions';
+import {
   deserializeInputs,
   serializeInputs,
 } from './data';
+import {
+  MetapageEventDefinition,
+  MetapageEvents,
+  MetapageEventUrlHashUpdate,
+} from './events';
+import {
+  JsonRpcMethodsFromChild,
+  MinimumClientMessage,
+  SetupIframeClientAckData,
+} from './jsonrpc';
 import { MetapageIFrameRpcClient } from './MetapageIFrameRpcClient';
 import {
-  convertMetapageDefinitionToCurrentVersion,
   generateMetapageId,
-  getMatchingVersion,
   isDebugFromUrlsParams,
   log as MetapageToolsLog,
   pageLoaded,
@@ -20,7 +32,6 @@ import {
   MetapageShared,
 } from './Shared';
 import {
-  JsonRpcMethodsFromChild,
   MetaframeId,
   MetaframeInputMap,
   MetaframeInstance,
@@ -29,17 +40,10 @@ import {
   MetapageId,
   MetapageInstanceInputs,
   MetapageOptionsV1,
-  MinimumClientMessage,
   PipeInput,
   PipeUpdateBlob,
-  SetupIframeClientAckData,
-  VersionsMetapage,
 } from './v1';
-import {
-  MetapageEventDefinition,
-  MetapageEvents,
-  MetapageEventUrlHashUpdate,
-} from './v1/events';
+import { VersionsMetapage } from './versions';
 
 interface MetapageStatePartial {
   inputs: MetapageInstanceInputs;
@@ -62,7 +66,7 @@ const emptyState = (): MetapageState => {
 export const getLibraryVersionMatching = (
   version: string
 ): VersionsMetapage => {
-  return getMatchingVersion(version);
+  return getMatchingMetapageVersion(version);
 };
 
 export const matchPipe = (
@@ -120,7 +124,7 @@ export class Metapage extends MetapageShared {
   public static deserializeInputs = deserializeInputs;
   public static serializeInputs = serializeInputs;
 
-  public static from(metaPageDef: any, inputs?: any): Metapage {
+  public static async from(metaPageDef: any, inputs?: any): Promise<Metapage> {
     if (metaPageDef == null) {
       throw "Metapage definition cannot be null";
     }
@@ -281,13 +285,13 @@ export class Metapage extends MetapageShared {
     return this._definition;
   }
 
-  public setDefinition(def: any, state?: MetapageState): Metapage {
+  public async setDefinition(def: any, state?: MetapageState): Promise<Metapage> {
     // Some validation
     if (!def.version) {
       throw "Metapage definition must have a version";
     }
 
-    const newDefinition: MetapageDefinitionV1 =
+    const newDefinition: MetapageDefinitionV1 = await
       convertMetapageDefinitionToCurrentVersion(def);
 
     if (newDefinition.metaframes) {

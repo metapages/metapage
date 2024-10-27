@@ -1,4 +1,4 @@
-import {VersionsMetapage as Versions} from "../versions";
+import { VersionsMetapage as Versions } from '../versions.js';
 
 export type MetaframePipeId = string;
 export type MetaframeId = string;
@@ -12,17 +12,17 @@ export type MetaframePipeDefinition = {
   type?: string;
 };
 
-export interface MetapageDefinition {
+export interface MetapageDefinitionV02 {
 	id ?:MetapageId;
   // Best to require this even if annoying to users. It's like the docker-compose.yml version. Human velocity changes (slow but steady)
 	version :Versions;
-	metaframes :{ [key: string]: MetaframeInstance; } ;
+	metaframes :{ [key: string]: MetaframeInstanceV02; } ;
 	// The plugin URLs point to the path containing a MetaframeInstance JSON
 	// It's an array because it needs to be sorted, but currently don't allow duplicate plugin URLs
 	meta ?:MetapageMetadata;
 }
 
-export interface MetaframeDefinition {
+export interface MetaframeDefinitionV02 {
   version?: Versions;
   inputs?: {
     [key: string]: MetaframePipeDefinition
@@ -30,7 +30,7 @@ export interface MetaframeDefinition {
   outputs?: {
     [key: string]: MetaframePipeDefinition
   }; // <MetaframePipeId, MetaframePipeDefinition>
-  metadata: MetaframeMetadata;
+  metadata: MetaframeMetadataV02;
 }
 
 export type MetapageMetadata = {
@@ -52,7 +52,7 @@ export type MetapageMetadata = {
 
 export interface MetaframeInstanceAnonymous {
   url: string;
-  metaframe: MetaframeDefinition;
+  metaframe: MetaframeDefinitionV02;
   screenshotUrl?: string;
 }
 
@@ -67,7 +67,7 @@ export interface PipeUpdateBlob {
   value: any;
 }
 
-export interface MetaframeInstance extends MetaframeInstanceAnonymous {
+export interface MetaframeInstanceV02 extends MetaframeInstanceAnonymous {
   //This id is only used when the metaframe is part of
   //a metapage, i.e. it's an "instance" of the base metaframe
   id: MetaframeId;
@@ -83,7 +83,7 @@ export interface MetaframeInstance extends MetaframeInstanceAnonymous {
   outputs?: PipeUpdateBlob[];
 }
 
-export type MetaframeMetadata = {
+export type MetaframeMetadataV02 = {
   version?: string;
   title?: string;
   author?: string;

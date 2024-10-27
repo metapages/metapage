@@ -1,6 +1,4 @@
-export * from "./core";
-export * from "./events";
-export * from "../jsonrpc";
-export * from "./metaframe";
-export * from "./metapage";
-export * from "../versions";
+export * from "./core.js";
+export * from "./metaframe.js";
+export * from "./metapage.js";
+

@@ -10,7 +10,7 @@ export const config: RouteConfig = {
 
 const testname = 'compatibility';
 
-export default function MetaframePage(props: PageProps<>) {
+export default function MetaframePage(props: PageProps) {
   let { version } = props.params;
   if (version.startsWith('latest')) {
       // it can be versionLatest in the URL header but the internal VERSION must then be 'latest';

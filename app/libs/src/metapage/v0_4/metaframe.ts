@@ -1,9 +1,9 @@
+import { VersionsMetaframe } from '../versions.js';
 import {
   MetaframeId,
   MetaframePipeId,
-} from './core';
-import { MetapageDefinitionV3 } from './metapage';
-import { VersionsMetaframe } from '../versions';
+} from './core.js';
+import { MetapageDefinitionV3 } from './metapage.js';
 
 export interface PipeInput {
   metaframe: MetaframeId;

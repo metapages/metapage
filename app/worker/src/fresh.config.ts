@@ -17,6 +17,6 @@ export default defineConfig({
     cert,
     key,
     port: parseInt(Deno.env.get("APP_PORT") || Deno.env.get("PORT") || "8000"),
-    hostname: Deno.env.get("APP_FQDN") || "0.0.0.0",
+    hostname: "0.0.0.0", //Deno.env.get("APP_FQDN") || 
   },
 });

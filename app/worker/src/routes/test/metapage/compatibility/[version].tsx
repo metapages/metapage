@@ -24,6 +24,7 @@ export default function MetaframePage(props: PageProps<VersionProps>) {
       <Head>
         <meta charset="UTF-8" />
         <title>Metapage test {testname} @ version: {displayVersion}</title>
+        <script src="https://unpkg.com/compare-versions/lib/umd/index.js"></script>
       </Head>
     <main>
       <p>Metapage test {testname} @ version: {displayVersion}</p>

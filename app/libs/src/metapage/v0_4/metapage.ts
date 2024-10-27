@@ -1,9 +1,9 @@
+import { VersionsMetapage } from '../versions.js';
 import {
   MetapageId,
   Url,
-} from './core';
-import { MetaframeInstance } from './metaframe';
-import { VersionsMetapage } from '../versions';
+} from './core.js';
+import { MetaframeInstance } from './metaframe.js';
 
 export interface MetapageOptions {
   id?: MetapageId;

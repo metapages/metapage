@@ -1,6 +1,7 @@
 
 import { type Handlers } from "$fresh/server.ts";
-import type { VersionProps } from "../../../types.ts";
+import type { VersionProps } from "../../../_types.ts";
+
 
 export const handler: Handlers<VersionProps> = {
 	async GET(_req, ctx) {

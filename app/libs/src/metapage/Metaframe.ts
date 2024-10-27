@@ -17,17 +17,14 @@ import {
 } from './MetapageTools';
 import { isIframe } from './Shared';
 import {
-  JsonRpcMethodsFromChild,
-  JsonRpcMethodsFromParent,
   MetaframeId,
   MetaframeInputMap,
   MetaframePipeId,
   MetapageId,
-  MinimumClientMessage,
-  SetupIframeServerResponseData,
-  VersionsMetapage,
 } from './v1';
-import { MetapageEventUrlHashUpdate } from './v1/events';
+import { MetapageEventUrlHashUpdate } from './events';
+import { JsonRpcMethodsFromChild, JsonRpcMethodsFromParent, MinimumClientMessage, SetupIframeServerResponseData } from './jsonrpc';
+import { VersionsMetapage } from './versions';
 
 // TODO combine/unify MetaframeEvents and MetaframeLoadingState
 export enum MetaframeLoadingState {

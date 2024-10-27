@@ -17,15 +17,15 @@ export const handler: Handlers = {
   },
 };
 
-export default function MetapageConversionPage(props: PageProps) {
+export default function MetaframeConversionPage(props: PageProps) {
   return (
     <>
       <Head>
         <meta charset="UTF-8" />
-        <title>Metapage definition conversion</title>
+        <title>Metaframe definition conversion</title>
       </Head>
       <main>
-        <h2>Metapage definition conversion</h2>
+        <h2>Metaframe definition conversion</h2>
         <br />
         <div>todo</div>
       </main>

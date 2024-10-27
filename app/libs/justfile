@@ -47,7 +47,7 @@ watch: _ensure_node_modules
     echo "✅ typescript check"
     {{vite}} --watch build
 
-_tsc +args="":
+@_tsc +args="":
     {{tsc}} {{args}}
 
 # Run tests

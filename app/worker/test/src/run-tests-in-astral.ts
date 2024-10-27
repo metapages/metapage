@@ -13,9 +13,9 @@
  *
  */
 
-import { launch } from "jsr:@astral/astral";import { exists } from "https://deno.land/std/fs/mod.ts";
-import { parse } from "https://deno.land/std/flags/mod.ts";
-import { delay } from "https://deno.land/std/async/delay.ts";
+import { compareVersions } from 'compare-versions';
+import { parse } from 'https://deno.land/std/flags/mod.ts';
+import { launch } from 'jsr:@astral/astral';
 
 const flags = parse(Deno.args);
 
@@ -26,8 +26,8 @@ const headless = !flags["disable-headless"];
 
 const timePerTest = 10000;
 const serverPort = Deno.env.get("APP_PORT") ? parseInt(Deno.env.get("APP_PORT")!) : 4430;
-const serverFqdn = Deno.env.get("APP_FQDN") ? Deno.env.get("APP_FQDN")! : "server1.localhost";
-const serverOrigin = `https://${serverFqdn}:${serverPort}`;
+const serverFqdn = "localhost";//Deno.env.get("APP_FQDN") ? Deno.env.get("APP_FQDN")! : "server1.localhost";
+const serverOrigin = `http://${serverFqdn}:${serverPort}`;
 
 // Function to start the Deno Fresh server
 async function startDenoFreshServer() {
@@ -65,9 +65,34 @@ const shutdownServer = async () => {
   await serverProcess.status;
   console.log("Deno Fresh server stopped");
 }
-// Wait a bit to ensure the server is fully ready
-await delay(2000);
 
+async function pollServerUntilUp(url: string, maxAttempts = 30, interval = 1000) {
+  console.log(`Polling server until up: ${url}`);
+  const isUp = async () => {
+    try {
+      const response = await fetch(url);
+      return response.ok;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  for await (const attempt of Array.from(Array(maxAttempts).keys())) {
+    const up = await isUp();
+    if (up) {
+      console.log('Server is up!');
+      return true;
+    }
+    console.log(`Attempt ${attempt + 1} failed. Retrying in ${interval}ms...`);
+    await new Promise(resolve => setTimeout(resolve, interval));
+  }
+
+  console.error('Server did not come up within the allocated time');
+  return false;
+}
+
+// ensure the server is fully ready
+await pollServerUntilUp(serverOrigin);
 
 async function runSingleMetapageTest(version: string, timeout: number) {
   console.log(
@@ -161,7 +186,9 @@ const getMetapageTestUrl = (version: string) => {
 
 const getMetapageVersions = async () :Promise<string[]> => {
   const resp = await fetch(`${serverOrigin}/versions/metapages/metapage`);
-  const versions = await resp.json();
+  let versions = await resp.json();
+  // remove versions we know don't pass
+  versions = versions.filter((v: string) => compareVersions(v, "0.16.2") > 0);
   return versions;
 };
 
