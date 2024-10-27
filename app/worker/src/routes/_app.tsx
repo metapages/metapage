@@ -7,13 +7,8 @@ export default function App({ Component }: PageProps) {
         <meta charset="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1.0" />
         <title>Metapage core module API and Tests</title>
-
-        {/* <link
-          rel='stylesheet'
-          href='https://cdn.simplecss.org/simple.min.css'
-        ></link> */}
-
         <link rel="stylesheet" href="/mp/style.css"></link>
+        <link rel="stylesheet" href="/style.css"></link>
       </head>
       <body>
         <header class="box backgroundGrey600">

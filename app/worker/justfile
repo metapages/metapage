@@ -29,9 +29,14 @@ deploy: _ensure_deployctl
   set -euo pipefail
   rm -rf deploy
   mkdir -p deploy
-  cp -r src deploy/
+  cp -rL src deploy/
   cp -r deno.json deploy/
   cd deploy
+  # deploy deploy is on an older version of deno which does not support 
+  # the "sloppy-imports" flag
+  # So jump through some hoops to convert the imports
+  find src/lib -type f -name '*.ts' -exec sd -s ".js'" ".ts'" {} +
+  find src/lib -type f -name '*.ts' -exec sd -s '.js"' '.ts"' {} +
   deno task build
   deployctl deploy --project=metapage-module --prod --entrypoint src/main.ts
 
@@ -39,18 +44,24 @@ deploy: _ensure_deployctl
 clean:
   rm -rf .certs
   rm -rf deploy
+  rm -rf src/_fresh
 
 test: _build_local_module
-  deno run -A --unstable --unsafely-ignore-certificate-errors test/src/run-tests-in-astral.ts
+  rm -rf .certs
+  APP_PORT=8762 deno run -A --unstable --unsafely-ignore-certificate-errors test/src/run-tests-in-astral.ts
 
 build: _build_local_module
   deno task build
+
+@check:
+  deno check src/main.ts
+  echo "✅ worker typescript compilation"
 
 @_build_local_module:
   just ../libs/build
 
 @_ensure_deployctl:
-    if ! command -v deployctl &> /dev/null; then echo '‼️ deployctl is being installed ‼️'; deno install --allow-all --no-check -r -f https://deno.land/x/deploy/deployctl.ts; fi
+  if ! command -v deployctl &> /dev/null; then echo '‼️ 👉 deployctl is being installed ‼️'; deno install -gArf jsr:@deno/deployctl; fi
 
 # DEV: generate TLS certs for HTTPS over localhost https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
 _mkcert:

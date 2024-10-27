@@ -4,7 +4,7 @@ import {
   PageProps,
 } from '$fresh/server.ts';
 
-import { getAllMetapageVersions } from '../../../_util/versions.ts';
+import { getAllMetapageVersions } from '../../../../util/version-tools.ts';
 import type { VersionsProps } from '../../_types.ts';
 
 export const handler: Handlers<VersionsProps> = {

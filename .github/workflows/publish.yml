@@ -5,7 +5,7 @@ name: Deploy and Publish
 on:
   push:
     branches:
-      - "main"
+      - "version-conversion"
 
 jobs:
   deploy-and-publish:
@@ -26,5 +26,5 @@ jobs:
       - name: publish module
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-        run: just app/libs/publish
+        run: echo "$HOME/.deno/bin/" >> "$GITHUB_PATH" && just app/libs/publish
 

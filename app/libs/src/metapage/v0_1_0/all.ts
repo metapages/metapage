@@ -1,4 +1,4 @@
-import {VersionsMetaframe as Versions} from "../versions";
+import { VersionsMetaframe as Versions } from '../versions.js';
 
 export type MetaframePipeId = string;
 export type MetaframeId = string;
@@ -16,7 +16,7 @@ export interface PipeOutput {
 
 export interface PipeInput extends PipeOutput {}
 
-export type MetaframeMetadata = {
+export type MetaframeMetadataV01 = {
   version?: string;
   title?: string;
   author?: string;
@@ -26,18 +26,18 @@ export type MetaframeMetadata = {
   iconUrl?: string;
 };
 
-export interface MetaframeDefinition {
+export interface MetaframeDefinitionV01 {
   version?: Versions;
   inputs?: MetaframePipeDefinition[];
   outputs?: MetaframePipeDefinition[];
-  metadata?: MetaframeMetadata;
+  metadata?: MetaframeMetadataV01;
 }
 
-export interface MetapageDefinition {
+export interface MetapageDefinitionV01 {
   id?: MetapageId;
   version: Versions; // Best to require this even if annoying to users.
   iframes: {
-    [key: string]: MetaframeInstance
+    [key: string]: MetaframeInstanceV01
   };
   options?: any;
   pipes?: Pipe[];
@@ -73,12 +73,12 @@ export enum DataSource {
 
 export interface MetaframeInstanceAnonymous {
   url: string;
-  metaframe: MetaframeDefinition;
+  metaframe: MetaframeDefinitionV01;
   screenshotUrl?: string;
   updatedAt?: Date;
 }
 
-export interface MetaframeInstance extends MetaframeInstanceAnonymous {
+export interface MetaframeInstanceV01 extends MetaframeInstanceAnonymous {
   url: string;
   //This is starting data, a way to configure and
   //save metaframe instance state independent of pipes

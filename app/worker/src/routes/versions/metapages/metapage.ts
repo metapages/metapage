@@ -1,5 +1,6 @@
-import { type Handlers } from "$fresh/server.ts";
-import { getAllMetapageVersions } from "../../_util/versions.ts";
+import { type Handlers } from '$fresh/server.ts';
+
+import { getAllMetapageVersions } from '../../../util/version-tools.ts';
 
 export const handler: Handlers = {
   async GET(_req) {

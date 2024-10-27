@@ -1,6 +1,13 @@
-import { VersionsMetaframe, VersionsMetapage } from "./versions";
-import { JsonRpcRequest } from './jsonrpc2';
-import { MetaframeId, MetaframeInputMap, MetapageId } from "./v1";
+import { JsonRpcRequest } from './jsonrpc2.js';
+import {
+  MetaframeId,
+  MetaframeInputMap,
+  MetapageId,
+} from './v1/index.js';
+import {
+  VersionsMetaframe,
+  VersionsMetapage,
+} from './versions.js';
 
 export enum JsonRpcMethodsFromChild {
   InputsUpdate = "InputsUpdate",

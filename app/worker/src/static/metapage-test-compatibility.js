@@ -1,5 +1,6 @@
 // Download the specific metaPAGE library version
 // to make it easier to test all versions against all
+const { compareVersions } = window.compareVersions
 const url = new URL(window.location.href);
 console.log(`url: ${url}`);
 const urlPathElements = url.pathname.split("/").filter((e) =>
@@ -487,8 +488,13 @@ VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
 
 // set the Metapage class into the window object for easier manipulation later
 globalThis.Metapage = Metapage;
+let metapageInstance;
+if (version === "latest" || compareVersions(version, "1.0.0") >= 0) {
+    metapageInstance = await Metapage.from(metaPageDefinition);
+} else {
+    metapageInstance = Metapage.from(metaPageDefinition);
+}
 
-const metapageInstance = Metapage.from(metaPageDefinition);
 globalThis.metapageInstance = metapageInstance;
 
 if (debug) {

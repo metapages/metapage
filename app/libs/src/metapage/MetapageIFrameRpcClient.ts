@@ -7,7 +7,6 @@ import { VERSION_METAPAGE } from './Constants';
 import { serializeInputs } from './data';
 import { JsonRpcRequest } from './jsonrpc2';
 import {
-  convertMetaframeJsonToCurrentVersion,
   log as MetapageToolsLog,
   merge,
   pageLoaded,
@@ -18,20 +17,17 @@ import {
   MetapageShared,
 } from './Shared';
 import {
-  ClientMessageRecievedAck,
-  JsonRpcMethodsFromParent,
   MetaframeDefinitionV1,
   MetaframeId,
   MetaframeInputMap,
   MetaframePipeId,
-  MetapageEvents,
   MetapageId,
   MetapageInstanceInputs,
-  MinimumClientMessage,
-  SetupIframeServerResponseData,
-  VersionsMetaframe,
-  VersionsMetapage,
 } from './v1';
+import { convertMetaframeJsonToCurrentVersion } from './conversions';
+import { MetapageEvents } from './events';
+import { ClientMessageRecievedAck, JsonRpcMethodsFromParent, MinimumClientMessage, SetupIframeServerResponseData } from './jsonrpc';
+import { VersionsMetaframe, VersionsMetapage } from './versions';
 
 /**
  * This class runs in the parent metapage, and connects the communication pipes

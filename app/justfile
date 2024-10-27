@@ -26,6 +26,11 @@ dev:
 test:
     just worker/test
 
+# Quick compile check
+@check:
+    just libs/check
+    just worker/check
+
 # Publish new npm module version (defined in package.json)
 publish:
     just libs/publish
