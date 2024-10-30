@@ -84,10 +84,15 @@ publish: _require_NPM_TOKEN _ensure_node_modules
     #!/usr/bin/env bash
     set -euo pipefail
     VERSION=`cat package.json | jq -r '.version'`
-    INDEX=`npm view {{NPM_MODULE}} versions --json | jq "index( \"$VERSION\" )"`
-    if [ "$INDEX" != "null" ]; then
-        echo -e '🌳 Version exists, not publishing'
-        exit 0
+    # Check if the package exists, if not this is the first publish
+    if ! npm view {{NPM_MODULE}} version &> /dev/null; then
+        echo "📦 First time publishing {{NPM_MODULE}}"
+    else
+        INDEX=`npm view {{NPM_MODULE}} versions --json | jq "index( \"$VERSION\" )"`
+        if [ "$INDEX" != "null" ]; then
+            echo -e '🌳 Version exists, not publishing'
+            exit 0
+        fi
     fi
     just build
     echo "PUBLISHING npm version $VERSION"
