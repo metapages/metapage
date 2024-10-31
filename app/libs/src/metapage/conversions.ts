@@ -24,9 +24,10 @@ import {
   VersionsMetapage,
 } from './versions.js';
 
-export const convertMetapageDefinitionToCurrentVersion = async (
-  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1
-): Promise<MetapageDefinitionV1> => {
+export const convertMetapageDefinitionToVersion = async (
+  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1,
+  targetVersion: VersionsMetapage
+): Promise<any> => {
   if (!def) {
     throw "Metapage definition null";
   }
@@ -34,11 +35,14 @@ export const convertMetapageDefinitionToCurrentVersion = async (
   if (!def.version) {
     throw 'Missing "version" key in metapage definition';
   }
+  if (!targetVersion) {
+    throw 'Missing "version" argument';
+  }
 
-  if (compareVersions(def.version, MetapageVersionCurrent) > 0) {
+  if (compareVersions(def.version, targetVersion) > 0) {
     // The version we are given is from the future, so we need the API to convert it
     try {
-      const resp = await fetch(`https://metapage-npm.dev:4441/conversion/metapage/${MetapageVersionCurrent}`, 
+      const resp = await fetch(`https://module.metapage.io/conversion/metapage/${targetVersion}`, 
         {
           method: "POST",
           body: JSON.stringify(def),
@@ -50,16 +54,23 @@ export const convertMetapageDefinitionToCurrentVersion = async (
       const respBody = await resp.json();
       return respBody as MetapageDefinitionV1;
     } catch(err) {
-      throw `Error converting metapage definition to version ${MetapageVersionCurrent}: ${err}`;
+      throw `Error converting metapage definition to version ${targetVersion}: ${err}`;
     }
     
   }
 
-  const mostUpToDateDefinition = convertMetapageDefinitionToTargetVersion(def, MetapageVersionCurrent);
-  return mostUpToDateDefinition;
+  const targetDefinition = convertMetapageDefinitionToTargetVersionInternal(def, targetVersion);
+  return targetDefinition;
 };
 
-export const convertMetapageDefinitionToTargetVersion = (
+export const convertMetapageDefinitionToCurrentVersion = async (
+  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1
+): Promise<MetapageDefinitionV1> => {
+
+  return convertMetapageDefinitionToVersion(def, MetapageVersionCurrent);
+};
+
+const convertMetapageDefinitionToTargetVersionInternal = (
   def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1,
   targetVersion: VersionsMetapage
 ): MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 => {

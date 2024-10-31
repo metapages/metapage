@@ -5,7 +5,7 @@ import {
 } from '$fresh/server.ts';
 
 import {
-  convertMetapageDefinitionToTargetVersion,
+  convertMetapageDefinitionToVersion,
 } from '@lib/metapage/conversions.ts';
 import { VersionsMetapage } from '@lib/metapage/versions.ts';
 
@@ -51,7 +51,7 @@ export const handler: Handlers = {
     console.log(`metapageDefinition (targetVersion=${targetVersion})`, metapageDefinition);
 
     try {
-      const newVersion = convertMetapageDefinitionToTargetVersion(metapageDefinition, targetVersion as VersionsMetapage);
+      const newVersion = await convertMetapageDefinitionToVersion(metapageDefinition, targetVersion as VersionsMetapage);
       return new Response(JSON.stringify(newVersion), {
         headers: { "Content-Type": "application/json" },
       });
