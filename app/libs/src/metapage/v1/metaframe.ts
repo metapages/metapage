@@ -2,25 +2,26 @@ import { VersionsMetaframe } from '../versions.js';
 import {
   MetaframeId,
   MetaframePipeId,
-} from './core.js';
+} from '../core.js';
 import { MetapageDefinitionV1 } from './metapage.js';
+import { MetaframePipeDefinition, PipeInput } from '../v0_4/index.js';
 
-export interface PipeInput {
-  metaframe: MetaframeId;
-  source: MetaframePipeId;
-  target: MetaframePipeId;
-}
+// export interface PipeInput {
+//   metaframe: MetaframeId;
+//   source: MetaframePipeId;
+//   target: MetaframePipeId;
+// }
 
-export interface PipeUpdateBlob {
-  name: MetaframePipeId;
-  value: any;
-}
+// export interface PipeUpdateBlob {
+//   name: MetaframePipeId;
+//   value: any;
+// }
 
-export type MetaframePipeDefinition = {
-  type?: string;
-};
+// export type MetaframePipeDefinition = {
+//   type?: string;
+// };
 
-export type MetaframeEditType = "metapage" | "metaframe";
+// export type MetaframeEditType = "metapage" | "metaframe";
 
 export type MetaframeEditTypeMetaframeV1 = {
   url: string;
@@ -57,26 +58,26 @@ export interface MetaframeDefinitionV1 {
   allow?: string;
 }
 
-export interface PipeInput {
-  metaframe: MetaframeId;
-  source: MetaframePipeId;
-  target: MetaframePipeId;
-}
+// export interface PipeInput {
+//   metaframe: MetaframeId;
+//   source: MetaframePipeId;
+//   target: MetaframePipeId;
+// }
 
-export interface PipeUpdateBlob {
-  name: MetaframePipeId;
-  value: any;
-}
+// export interface PipeUpdateBlob {
+//   name: MetaframePipeId;
+//   value: any;
+// }
 
-export interface MetaframeInstance {
-  url: string;
-  // Defines the inputs pipes from other metaframes
-  inputs?: PipeInput[];
-  // Set or override allowed features for the iframe
-  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
-  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Feature-Policy#directives
-  allow?: string;
-}
+// export interface MetaframeInstance {
+//   url: string;
+//   // Defines the inputs pipes from other metaframes
+//   inputs?: PipeInput[];
+//   // Set or override allowed features for the iframe
+//   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
+//   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Feature-Policy#directives
+//   allow?: string;
+// }
 
 export type MetaframeEditTypesV1 = "metapage" | "url";
 

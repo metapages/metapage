@@ -1,4 +1,5 @@
-import { MetaframeId, MetapageDefinitionV1 } from "./v1";
+import { MetaframeId } from "./core";
+import { MetapageDefinitionV1 } from "./v1";
 import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
 
 export enum MetapageEvents {

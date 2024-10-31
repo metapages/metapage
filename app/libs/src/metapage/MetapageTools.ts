@@ -3,11 +3,14 @@ import stringify from 'fast-json-stable-stringify';
 import { MetapageHashParams } from './Shared.js';
 import {
   MetaframeId,
-  MetaframeInputMap,
-  MetapageDefinitionV1,
   MetapageId,
+} from './core.js';
+import {
+  MetapageDefinitionV1,
 } from './v1/index.js';
-
+import {
+  MetaframeInputMap,
+} from './v0_4/index.js';
 /**
  * Merges new values into the current object.
  * Does NOT check if there are actually new keys.

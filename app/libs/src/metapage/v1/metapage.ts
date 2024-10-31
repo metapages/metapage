@@ -1,6 +1,6 @@
 import { VersionsMetapage } from '../versions.js';
-import { MetapageId } from './core.js';
-import { MetaframeInstance } from './metaframe.js';
+import { MetapageId } from '../core.js';
+import { MetaframeInstance } from '../v0_4/index.js';
 
 export interface MetapageOptionsV1 {
   id?: MetapageId;
@@ -31,10 +31,10 @@ export interface MetapageDefinitionV1 {
   meta?: MetapageMetadataV1;
 }
 
-export type MetaframeInputMap = {
-  [key: string]: any;
-}; // key: MetaframePipeId
+// export type MetaframeInputMap = {
+//   [key: string]: any;
+// }; // key: MetaframePipeId
 
-export interface MetapageInstanceInputs {
-  [key: string]: MetaframeInputMap;
-}
+// export interface MetapageInstanceInputs {
+//   [key: string]: MetaframeInputMap;
+// }

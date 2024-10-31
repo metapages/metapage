@@ -17,11 +17,13 @@ import {
 } from './MetapageTools';
 import { isIframe } from './Shared';
 import {
-  MetaframeId,
   MetaframeInputMap,
+} from './v0_4';
+import {
+  MetaframeId,
   MetaframePipeId,
   MetapageId,
-} from './v1';
+} from './core';
 import { MetapageEventUrlHashUpdate } from './events';
 import { JsonRpcMethodsFromChild, JsonRpcMethodsFromParent, MinimumClientMessage, SetupIframeServerResponseData } from './jsonrpc';
 import { VersionsMetapage } from './versions';

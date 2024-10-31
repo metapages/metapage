@@ -18,12 +18,16 @@ import {
 } from './Shared';
 import {
   MetaframeDefinitionV1,
-  MetaframeId,
+} from './v1';
+import {
   MetaframeInputMap,
+  MetapageInstanceInputs,
+} from './v0_4';
+import {
+  MetaframeId,
   MetaframePipeId,
   MetapageId,
-  MetapageInstanceInputs,
-} from './v1';
+} from './core';
 import { convertMetaframeJsonToCurrentVersion } from './conversions';
 import { MetapageEvents } from './events';
 import { ClientMessageRecievedAck, JsonRpcMethodsFromParent, MinimumClientMessage, SetupIframeServerResponseData } from './jsonrpc';

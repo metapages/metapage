@@ -31,18 +31,18 @@ import {
   INITIAL_NULL_METAPAGE_DEFINITION,
   MetapageShared,
 } from './Shared';
+import { MetapageId, MetaframeId, MetaframePipeId } from "./core";
 import {
-  MetaframeId,
+  MetapageDefinitionV1,
+  MetapageOptionsV1,
+} from './v1';
+import {
   MetaframeInputMap,
   MetaframeInstance,
-  MetaframePipeId,
-  MetapageDefinitionV1,
-  MetapageId,
   MetapageInstanceInputs,
-  MetapageOptionsV1,
   PipeInput,
   PipeUpdateBlob,
-} from './v1';
+} from './v0_4';
 import { VersionsMetapage } from './versions';
 
 interface MetapageStatePartial {

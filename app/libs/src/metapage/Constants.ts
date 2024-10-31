@@ -1,7 +1,7 @@
 import {
   MetaframeVersionsAll,
   MetapageVersionsAll,
-} from './v0_4';
+} from './versions';
 
 export const METAFRAME_JSON_FILE = "metaframe.json";
 /**
