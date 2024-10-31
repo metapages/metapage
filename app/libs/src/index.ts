@@ -6,3 +6,4 @@ export * from "./metapage/MetapageIFrameRpcClient";
 export * from "./metapage/v0_4";
 export * from "./metapage/data";
 export * from "./metapage/conversions";
+export * from "./metapage/versions";
