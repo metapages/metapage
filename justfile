@@ -7,13 +7,17 @@
 set shell       := ["bash", "-c"]
 set dotenv-load := true
 # TODO: bold doesn't work, and it used to. What happened?
-bold            := '\033[1m'
-normal          := '\033[0m'
-blue            := '\033[0;34m'
+bold               := '\033[1m'
+normal             := '\033[0m'
+green              := "\\e[32m"
+yellow             := "\\e[33m"
+blue               := "\\e[34m"
+magenta            := "\\e[35m"
+grey               := "\\e[90m"
 
 _help:
     #!/usr/bin/env bash
-    just --list --unsorted --list-heading $'🚪 Commands root level: (simple, reliable, probably slow)\n\n'
+    just --list --unsorted --list-heading $'🚪 Commands for {{green}}https://github.com/metapages/metapage{{normal}}:\n\n'
     echo -e ""
     echo -e "       🔽 {{bold}}Sub-commands: ( just <command> ){{normal}}"
     echo -e "           app    {{blue}}#lib and worker commands{{normal}}"
