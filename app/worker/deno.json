@@ -22,15 +22,16 @@
     "**/_fresh/*"
   ],
   "imports": {
-    "@lib/": "./src/lib/",
     "$fresh/": "https://deno.land/x/fresh@1.7.3/",
     "$std/": "https://deno.land/std@0.216.0/",
+    "@lib/": "./src/lib/",
     "@preact-icons/pi": "jsr:@preact-icons/pi@^1.0.12",
     "@preact/signals": "https://esm.sh/*@preact/signals@1.2.2",
     "@preact/signals-core": "https://esm.sh/*@preact/signals-core@1.5.1",
     "@std/semver": "jsr:@std/semver@^1.0.3",
-    "mutative": "npm:mutative@1.0.11",
     "compare-versions": "npm:compare-versions@6.1.1",
+    "fetch-retry": "npm:fetch-retry@^6.0.0",
+    "mutative": "npm:mutative@1.0.11",
     "preact": "https://esm.sh/preact@10.22.0",
     "preact/": "https://esm.sh/preact@10.22.0/",
     "tailwindcss": "npm:tailwindcss@3.4.1",
