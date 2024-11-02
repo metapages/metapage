@@ -83,6 +83,10 @@ const convertMetapageDefinitionToTargetVersionInternal = (
   }
 
   let currentVersion = getMatchingMetapageVersion(def.version);
+  if (currentVersion === targetVersion) {
+    return def;
+  }
+
   let currentDefinition: MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 = def;
 
   while (currentVersion !== targetVersion) {

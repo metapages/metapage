@@ -13,3 +13,4 @@ export * from "./metapage/core";
 export * from "./metapage/v0_4";
 export * from "./metapage/v1";
 export * from "./metapage/versions";
+export * from "./metapage/util";
