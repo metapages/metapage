@@ -1,5 +1,6 @@
 import { compareVersions } from 'compare-versions';
 import { create } from 'mutative';
+import fetchRetryWrapper from "fetch-retry";
 
 import { MetapageDefinitionV02 } from './v0_2/all.js';
 import { MetapageDefinitionV03 } from './v0_3/all.js';
@@ -24,6 +25,8 @@ import {
   VersionsMetapage,
 } from './versions.js';
 
+const fetchRetry = fetchRetryWrapper(fetch);
+
 export const convertMetapageDefinitionToVersion = async (
   def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1,
   targetVersion: VersionsMetapage
@@ -42,8 +45,11 @@ export const convertMetapageDefinitionToVersion = async (
   if (compareVersions(def.version, targetVersion) > 0) {
     // The version we are given is from the future, so we need the API to convert it
     try {
-      const resp = await fetch(`https://module.metapage.io/conversion/metapage/${targetVersion}`, 
+      const resp = await fetchRetry(`https://module.metapage.io/conversion/metapage/${targetVersion}`, 
         {
+          redirect: "follow",
+          retries: 3,
+          retryDelay: 1000,
           method: "POST",
           body: JSON.stringify(def),
           headers: {
