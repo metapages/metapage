@@ -294,6 +294,11 @@ export class Metapage extends MetapageShared {
     const newDefinition: MetapageDefinitionV1 = await
       convertMetapageDefinitionToCurrentVersion(def);
 
+    if (this.isDisposed()) {
+      // we got disposed while converting
+      return this;
+    }
+
     if (newDefinition.metaframes) {
       Object.keys(newDefinition.metaframes).forEach((metaframeId) => {
         var metaframeDefinition = newDefinition.metaframes[metaframeId];
