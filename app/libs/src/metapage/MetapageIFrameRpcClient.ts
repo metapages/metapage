@@ -275,11 +275,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
       inputUpdate[this.id] = maybeNewInputs;
       this._metapage.emit(MetapageEvents.Inputs, inputUpdate);
     }
-    // //TODO is this really used anymore?
-    // this._cachedEventInputsUpdate.iframeId = this.id;
-    // this._cachedEventInputsUpdate.inputs = this.inputs;
-    // this._metapage.emit(JsonRpcMethodsFromParent.InputsUpdate, this._cachedEventInputsUpdate);
-
+  
     return this;
   }
 
@@ -295,7 +291,6 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     inputs: null,
   };
   public setOutputs(maybeNewOutputs: MetaframeInputMap) {
-
     const originalOutputs = maybeNewOutputs;
     this.outputs = merge(this.outputs, maybeNewOutputs);
     if (this.outputs === originalOutputs) {

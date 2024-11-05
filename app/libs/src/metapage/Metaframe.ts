@@ -350,7 +350,6 @@ export class Metaframe extends EventEmitter<
 
   async setInternalInputsAndNotify(inputs: MetaframeInputMap) {
     // this is where we deserialize the inputs
-    
     if (this.isInputOutputBlobSerialization) {
       inputs = await deserializeInputs(inputs);
     }
