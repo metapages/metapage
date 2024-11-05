@@ -197,7 +197,7 @@ const getMetapageVersions = async () :Promise<string[]> => {
 
 let allVersions = await getMetapageVersions();
 if (!nolocalBuild) {
-  allVersions.push("latest");
+  allVersions.unshift("latest");
 }
 console.log(`🍳👉 allVersions ${allVersions}`);
 const maxTimeAllTests = timePerTest * allVersions.length ** 2;

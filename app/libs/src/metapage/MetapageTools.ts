@@ -1,5 +1,5 @@
 import stringify from 'fast-json-stable-stringify';
-
+import { create } from 'mutative';
 import { MetapageHashParams } from './Shared.js';
 import {
   MetaframeId,
@@ -12,32 +12,31 @@ import {
   MetaframeInputMap,
 } from './v0_4/index.js';
 /**
- * Merges new values into the current object.
+ * Merges new values into the a new object.
  * Does NOT check if there are actually new keys.
  * Does NOT check values against each other. This means you
  * can keep sending the same value, and the message will
  * be passed in.
- * Returns true if the original map was modified.
+ * Returns the original map if nothing modified.
  */
 export const merge = (
   current: MetaframeInputMap,
   newInputs: MetaframeInputMap
-): boolean => {
+): MetaframeInputMap => {
   if (!newInputs) {
-    return false;
+    return current;
   }
-  let modified = false;
-  Object.keys(newInputs).forEach((pipeId: string) => {
-    modified = true;
-    // undefined means remove the key
-    // null means keep the key, but set to null
-    if (newInputs[pipeId] === undefined) {
-      delete current[pipeId];
-    } else {
-      current[pipeId] = newInputs[pipeId];
-    }
+  return create<MetaframeInputMap>(current, (draft: MetaframeInputMap) => {
+    Object.keys(newInputs).forEach((pipeId: string) => {
+      // undefined means remove the key
+      // null means keep the key, but set to null
+      if (newInputs[pipeId] === undefined) {
+        delete draft[pipeId];
+      } else {
+        draft[pipeId] = newInputs[pipeId];
+      }
+    });
   });
-  return modified;
 };
 
 export const getUrlParam = (key: MetapageHashParams): string | null => {

@@ -1,5 +1,6 @@
 import { MetaframeInputMap } from "./v0_4";
 import { encode, decode } from "base64-arraybuffer";
+import { create } from 'mutative';
 
 /**
  * Modifies in place!!!
@@ -10,12 +11,13 @@ export const serializeInputs = async (
   inputs: MetaframeInputMap
 ): Promise<MetaframeInputMap> => {
   // only serialize one level deep
-  for (const key of Object.keys(inputs)) {
-    const maybeNewObject = await possiblySerializeValueToDataref(inputs[key]);
-    inputs[key] = maybeNewObject;
-  }
-
-  return inputs;
+  return create<MetaframeInputMap>(inputs, async (draft: MetaframeInputMap) => {
+    for (const key of Object.keys(inputs)) {
+      const maybeNewObject = await possiblySerializeValueToDataref(inputs[key]);
+      draft[key] = maybeNewObject;
+      return draft;
+    }
+  });
 };
 
 /**

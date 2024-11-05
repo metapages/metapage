@@ -350,12 +350,14 @@ export class Metaframe extends EventEmitter<
 
   async setInternalInputsAndNotify(inputs: MetaframeInputMap) {
     // this is where we deserialize the inputs
-
+    
     if (this.isInputOutputBlobSerialization) {
       inputs = await deserializeInputs(inputs);
     }
 
-    if (!merge(this._inputPipeValues, inputs)) {
+    const originalInputs = inputs;
+    this._inputPipeValues = merge(this._inputPipeValues, inputs);
+    if (this._inputPipeValues === originalInputs) {
       return;
     }
 
@@ -403,9 +405,13 @@ export class Metaframe extends EventEmitter<
     if (this.isInputOutputBlobSerialization) {
       outputs = await serializeInputs(outputs);
     }
-    if (!merge(this._outputPipeValues, outputs)) {
+
+    const originalOutputs = outputs;
+    this._outputPipeValues = merge(this._outputPipeValues, outputs);
+    if (this._outputPipeValues === originalOutputs) {
       return;
     }
+
     this.sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
   }
 

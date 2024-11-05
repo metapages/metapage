@@ -250,9 +250,13 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   };
   public setInputs(maybeNewInputs: MetaframeInputMap): MetapageIFrameRpcClient {
     this.log({ m: "MetapageIFrameRpcClient", inputs: maybeNewInputs });
-    if (!merge(this.inputs, maybeNewInputs)) {
+
+    const originalInputs = maybeNewInputs;
+    this.inputs = merge(this.inputs, maybeNewInputs);
+    if (this.inputs === originalInputs) {
       return this;
     }
+
     if (!this._loaded) {
       this._sendInputsAfterRegistration = true;
     }
@@ -291,9 +295,13 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     inputs: null,
   };
   public setOutputs(maybeNewOutputs: MetaframeInputMap) {
-    if (!merge(this.outputs, maybeNewOutputs)) {
-      return;
+
+    const originalOutputs = maybeNewOutputs;
+    this.outputs = merge(this.outputs, maybeNewOutputs);
+    if (this.outputs === originalOutputs) {
+      return this;
     }
+
     this.emit(MetapageEvents.Outputs, maybeNewOutputs);
 
     if (this._metapage.listenerCount(MetapageEvents.Outputs) > 0) {
