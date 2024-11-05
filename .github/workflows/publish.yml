@@ -18,13 +18,12 @@ jobs:
         with:
           fetch-depth: '0'
 
-      - name: deploy worker
-        env:
-          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
-        run: just app/worker/deploy
-
       - name: publish module
         env:
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: echo "$HOME/.deno/bin/" >> "$GITHUB_PATH" && just app/libs/publish
 
+      - name: deploy worker
+        env:
+          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
+        run: just app/worker/deploy
