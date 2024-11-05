@@ -29,11 +29,13 @@ export const deserializeInputs = async (
   inputs: MetaframeInputMap
 ): Promise<MetaframeInputMap> => {
   // only deserialize one level deep
-  for (const key of Object.keys(inputs)) {
-    const maybeNewObject = await possiblyDeserializeDatarefToValue(inputs[key]);
-    inputs[key] = maybeNewObject;
-  }
-  return inputs;
+  return create<MetaframeInputMap>(inputs, async (draft: MetaframeInputMap) => {
+    for (const key of Object.keys(inputs)) {
+      const maybeNewObject = await possiblyDeserializeDatarefToValue(inputs[key]);
+      draft[key] = maybeNewObject;
+      return draft;
+    }
+  });
 };
 
 export type DataRefSerialized = {
