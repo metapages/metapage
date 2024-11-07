@@ -1,4 +1,4 @@
-import { VersionsMetapage as Versions } from '../versions.js';
+import { type VersionsMetapage , type VersionsMetaframe } from '../versions.js';
 
 export type MetaframePipeId = string;
 export type MetaframeId = string;
@@ -15,7 +15,7 @@ export type MetaframePipeDefinition = {
 export interface MetapageDefinitionV02 {
 	id ?:MetapageId;
   // Best to require this even if annoying to users. It's like the docker-compose.yml version. Human velocity changes (slow but steady)
-	version :Versions;
+	version :VersionsMetapage;
 	metaframes :{ [key: string]: MetaframeInstanceV02; } ;
 	// The plugin URLs point to the path containing a MetaframeInstance JSON
 	// It's an array because it needs to be sorted, but currently don't allow duplicate plugin URLs
@@ -23,7 +23,7 @@ export interface MetapageDefinitionV02 {
 }
 
 export interface MetaframeDefinitionV02 {
-  version?: Versions;
+  version: VersionsMetaframe;
   inputs?: {
     [key: string]: MetaframePipeDefinition
   }; // <MetaframePipeId, MetaframePipeDefinition>

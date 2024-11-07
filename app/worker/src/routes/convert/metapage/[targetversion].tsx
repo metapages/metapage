@@ -6,7 +6,7 @@ import {
 
 import {
   convertMetapageDefinitionToVersion,
-} from '@lib/metapage/conversions.ts';
+} from '../../../lib/metapage/conversions-metapage.ts';
 import { VersionsMetapage } from '@lib/metapage/versions.ts';
 
 import { type TargetVersionProps } from '../types.ts';

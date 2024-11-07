@@ -28,7 +28,7 @@ import {
   MetaframePipeId,
   MetapageId,
 } from './core';
-import { convertMetaframeJsonToCurrentVersion } from './conversions';
+import { convertMetaframeJsonToCurrentVersion } from './conversions-metaframe';
 import { MetapageEvents } from './events';
 import { ClientMessageRecievedAck, JsonRpcMethodsFromParent, MinimumClientMessage, SetupIframeServerResponseData } from './jsonrpc';
 import { VersionsMetaframe, VersionsMetapage } from './versions';
@@ -212,8 +212,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
       if (response.ok) {
         const metaframeDef = await response.json();
 
-        const metaframeDefCurrent =
-          convertMetaframeJsonToCurrentVersion(metaframeDef);
+        const metaframeDefCurrent = await convertMetaframeJsonToCurrentVersion(metaframeDef);
         this._definition = metaframeDefCurrent;
         return this._definition;
       } else {

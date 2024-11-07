@@ -45,7 +45,7 @@ export type MetaframeMetadataV1 = {
 };
 
 export interface MetaframeDefinitionV1 {
-  version?: VersionsMetaframe;
+  version: VersionsMetaframe;
   inputs?: {
     [key: string]: MetaframePipeDefinition;
   }; // <MetaframePipeId, MetaframePipeDefinition>
@@ -99,6 +99,11 @@ export type MetaframeEditTypeUrlV1 = {
   // might map to path or search elements on the target metaframe
   params?: MetaframeEditTypeUrlV1Param[];
 };
+
+// edit?: {
+//   type: MetaframeEditType;
+//   value: MetaframeEditTypeMetaframe | MetaframeEditTypeMetapage;
+// };
 
 export interface MetaframeEditTypeMetapageV1Param {
   // the key of the source metaframe that will supply a hash param to the edit metaframe

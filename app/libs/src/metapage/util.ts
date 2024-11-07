@@ -1,5 +1,5 @@
 import fetchRetryWrapper from "fetch-retry";
-import { convertMetapageDefinitionToVersion } from "./conversions";
+import { convertMetapageDefinitionToVersion } from "./conversions-metapage";
 import { MetaframeDefinitionV1, MetapageDefinitionV1 } from "./v1";
 import { VersionsMetaframe, VersionsMetapage } from "./versions";
 import { MetaframeDefinitionV4, MetapageDefinitionV3 } from "./v0_4";
