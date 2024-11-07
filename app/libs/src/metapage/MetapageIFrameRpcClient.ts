@@ -411,7 +411,13 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   }
 
   async sendInputs(inputs: MetaframeInputMap) {
+    if (!inputs) {
+      return;
+    }
     inputs = await serializeInputs(inputs);
+    if (this.isDisposed()) {
+      return;
+    }
     this.sendRpc(JsonRpcMethodsFromParent.InputsUpdate, {
       inputs: inputs,
       parentId: this._parentId,

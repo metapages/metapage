@@ -54,14 +54,12 @@ export interface MetapageState {
   metaframes: MetapageStatePartial;
 }
 
-const emptyState = (): MetapageState => {
-  return create<MetapageState>({
-    metaframes: {
-      inputs: {},
-      outputs: {},
-    },
-  }, draft => draft);
-};
+const emptyState :MetapageState= create<MetapageState>({
+  metaframes: {
+    inputs: {},
+    outputs: {},
+  },
+}, draft => draft);
 
 export const getLibraryVersionMatching = (
   version: string
@@ -141,7 +139,7 @@ export class Metapage extends MetapageShared {
   }
 
   _id: MetapageId;
-  _state: MetapageState = emptyState();
+  _state: MetapageState = emptyState;
   _metaframes: MetaframeClients = create({}, draft => draft); //<MetaframeId, MetapageIFrameRpcClient>
 
   debug: boolean = isDebugFromUrlsParams();
@@ -272,7 +270,7 @@ export class Metapage extends MetapageShared {
       );
     });
 
-    if (this.listenerCount(MetapageEvents.State) > 0) {
+    if (this.listenerCount(MetapageEvents.State) > 0 && emptyState !== this._state) {
       this.emit(MetapageEvents.State, this._state);
     }
   }
@@ -357,7 +355,7 @@ export class Metapage extends MetapageShared {
       window.setTimeout(() => {
         if (!this.isDisposed() && newDefinition === this._definition) {
           this._emitDefinitionEvent();
-          if (state && this.listenerCount(MetapageEvents.State) > 0) {
+          if (state && this.listenerCount(MetapageEvents.State) > 0 && emptyState !== this._state) {
             this.emit(MetapageEvents.State, this._state);
           }
         }
@@ -432,7 +430,7 @@ export class Metapage extends MetapageShared {
       this._metaframes[id].dispose()
     );
     this._metaframes = create({}, draft => draft);
-    this._state = emptyState();
+    this._state = emptyState;
     this._inputMap = create({}, draft => draft);
     this._cachedInputLookupMap = create({}, draft => draft);
   }
@@ -664,8 +662,10 @@ export class Metapage extends MetapageShared {
       this.listenerCount(MetapageEvents.State) > 0 ||
       this.listenerCount(MetapageEvents.Inputs) > 0
     ) {
-      this.emit(MetapageEvents.State, this._state);
-      this.emit(MetapageEvents.Inputs, this._state);
+      if (emptyState !== this._state) {
+        this.emit(MetapageEvents.State, this._state);
+        this.emit(MetapageEvents.Inputs, this._state?.metaframes?.inputs);
+      }
     }
   }
 
@@ -969,7 +969,7 @@ export class Metapage extends MetapageShared {
               });
             }
             // only send a state event if downstream inputs were modified
-            if (this.listenerCount(MetapageEvents.State) > 0) {
+            if (this.listenerCount(MetapageEvents.State) > 0 && emptyState !== this._state) {
               this.emit(MetapageEvents.State, this._state);
             }
             if (this.debug) {
@@ -995,7 +995,7 @@ export class Metapage extends MetapageShared {
             // Currently on for setting metaframe inputs that haven't loaded yet
             this.setInputStateOnlyMetaframeInputMap(metaframeId, inputs);
             this._metaframes[metaframeId].setInputs(inputs);
-            if (this.listenerCount(MetapageEvents.State) > 0) {
+            if (this.listenerCount(MetapageEvents.State) > 0 && emptyState !== this._state) {
               this.emit(MetapageEvents.State, this._state);
             }
 

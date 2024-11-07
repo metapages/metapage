@@ -179,3 +179,70 @@ export const possiblyDeserializeDatarefToValue = (value: any): any => {
   } catch (e) {}
   return value;
 };
+
+export const possiblyDeserializeDatarefToFile = (value: any): File | undefined => {
+  if (
+    !(
+      value &&
+      typeof value === "object" &&
+      (value as DataRefSerialized)._s === true
+    )
+  ) {
+    return undefined;
+  }
+  const serializedRef = value as DataRefSerialized;
+  const _c: string = serializedRef._c;
+  if (_c === Blob.name) {
+    const serializedRefBlob = value as DataRefSerializedBlob;
+    const blob = new Blob(
+      [decode(serializedRef.value)],
+      {
+        type: serializedRefBlob.fileType,
+      }
+    );
+    return new File([blob], 'file', {
+        type: blob.type,
+    });
+  } else if (_c === File.name) {
+    const serializedRefFile = value as DataRefSerializedFile;
+    const file = new File(
+      [decode(serializedRef.value)],
+      serializedRefFile.name,
+      {
+        type: serializedRefFile.fileType,
+        lastModified: serializedRefFile.lastModified,
+      }
+    );
+    return file;
+  } else if (_c === ArrayBuffer.name) {
+    const arrayBuffer: ArrayBuffer = decode(serializedRef.value);
+    return new File(
+      [arrayBuffer],
+      "file",
+      {
+        type: "application/octet-stream",
+      }
+    );
+  }
+  // Assume typed array
+  const serializedRefTypedArray = value as DataRefSerializedTypedArray;
+  const arrayBuffer: ArrayBuffer = decode(
+    serializedRefTypedArray.value
+  );
+  const constructorName: string = serializedRefTypedArray._c;
+
+  try {
+    // @ts-ignore
+    const typedArray: ArrayBufferView = new globalThis[constructorName](
+      arrayBuffer,
+    );
+    return new File(
+      [typedArray],
+      "file",
+      {
+        type: "application/octet-stream",
+      }
+    );
+  } catch (e) {}
+  return undefined;
+};
