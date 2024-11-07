@@ -5,7 +5,7 @@ import { VERSION_METAPAGE } from './Constants';
 import {
   convertMetapageDefinitionToCurrentVersion,
   getMatchingMetapageVersion,
-} from './conversions';
+} from './conversions-metapage';
 import {
   deserializeInputs,
   serializeInputs,

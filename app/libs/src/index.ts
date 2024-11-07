@@ -1,5 +1,6 @@
 export * from "./metapage/Constants";
-export * from "./metapage/conversions";
+export * from "./metapage/conversions-metapage";
+export * from "./metapage/conversions-metaframe";
 export * from "./metapage/data";
 export * from "./metapage/events";
 export * from "./metapage/jsonrpc";

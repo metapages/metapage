@@ -3,21 +3,16 @@ import {
   type Handlers,
   PageProps,
 } from '$fresh/server.ts';
+import { MetaframeVersionsAll } from "@lib/metapage/versions.ts";
+import type { VersionsProps } from "../../test/_types.ts";
 
 export const handler: Handlers = {
   async GET(_req, ctx) {
-    return ctx.render(ctx.data);
-  },
-
-  async POST(_req, ctx) {
-    const headers = _req.headers;
-    return new Response(JSON.stringify({ message: "todo" }), {
-      headers: { "Content-Type": "application/json" },
-    })
+    return ctx.render({ versions: MetaframeVersionsAll.toReversed() });
   },
 };
 
-export default function MetaframeConversionPage(props: PageProps) {
+export default function MetaframeConversionPage(props: PageProps<VersionsProps>) {
   return (
     <>
       <Head>
@@ -26,8 +21,16 @@ export default function MetaframeConversionPage(props: PageProps) {
       </Head>
       <main>
         <h2>Metaframe definition conversion</h2>
-        <br />
-        <div>todo</div>
+        <br/>
+        <p>Choose target metaframe definition version:</p>
+        <br/>
+        <ul>
+        {
+          props.data.versions.map((version) => (
+            <li><a href={`./metaframe/v${version}`}>{version}</a></li>   
+          ))
+        }
+        </ul>
       </main>
     </>
   );

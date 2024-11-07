@@ -63,7 +63,7 @@ export type MetaframeMetadataV5 = {
 };
 
 export interface MetaframeDefinitionV4 {
-  version?: VersionsMetaframe;
+  version: VersionsMetaframe;
   inputs?: {
     [key: string]: MetaframePipeDefinition;
   }; // <MetaframePipeId, MetaframePipeDefinition>
