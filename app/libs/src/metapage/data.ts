@@ -63,6 +63,56 @@ export type DataRefSerializedFile = DataRefSerializedBlob & {
   lastModified?: number;
 };
 
+export const valueToFile = async (value: any, fileName: string, options?: FilePropertyBag): Promise<File> => {
+  value = possiblyDeserializeDatarefToValue(value);
+  options = options || {};
+  if (!options.type) {
+    options.type = "application/octet-stream";
+  }
+
+  if (value instanceof ArrayBuffer) {
+    return new File([value], fileName, options);
+  }
+  if (value instanceof File || value instanceof Blob) {
+    const buffer = await value.arrayBuffer();
+    if (value instanceof File) {
+      options.type = (value as File).type;
+    }
+    return new File([buffer], fileName, options);
+  }
+  if (
+    value instanceof Int8Array ||
+    value instanceof Uint8Array ||
+    value instanceof Uint8ClampedArray ||
+    value instanceof Int16Array ||
+    value instanceof Uint16Array ||
+    value instanceof Int32Array ||
+    value instanceof Uint32Array ||
+    value instanceof Float32Array ||
+    value instanceof Float64Array
+  ) {
+    const typedValue = value as ArrayBufferView;
+    return new File([typedValue.buffer], fileName, options);
+  }
+  if (typeof(value) === "string") {
+    var blob = new Blob([value], { type: 'text/plain' });
+    options.type = "text/plain";
+    new File([blob], fileName, options);
+  }
+  if (typeof(value) === "object") {
+    const blob = new Blob([JSON.stringify(value)], {
+      type: 'application/json',
+    });
+    options.type = "application/json";
+    new File([blob], fileName, options);
+  }
+
+  // assume it's a string
+  var blob = new Blob([value as string], { type: 'text/plain' });
+  options.type = "text/plain";
+  return new File([blob], fileName, options);
+};
+
 export const possiblySerializeValueToDataref = async <T>(
   value: T
 ): Promise<T | DataRefSerialized> => {
