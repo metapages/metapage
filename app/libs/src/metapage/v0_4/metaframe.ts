@@ -109,6 +109,8 @@ export interface MetaframeInstance {
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Feature-Policy#directives
   allow?: string;
+  // internal use only. Used for internal metaframe state
+  _?: any;
 }
 
 export interface MetaframeDefinitionV6 {
