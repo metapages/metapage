@@ -194,10 +194,37 @@ const getMetapageVersions = async () :Promise<string[]> => {
   return versions;
 };
 
+const getRepresentativeMetapageVersions = async () :Promise<string[]> => {
+  
+  let versions = await getMetapageVersions();
+  // Only most recent x.y versions
+  // versions are already sorted
+  const subset: string[] = [];
+  let currentMajor = 10000;
+  let currentMinor = 10000;
+  const minorLimit = 3;
+  let minors = 0;
+  for (const version of versions) {
+    const [x, y] = version.split(".").map(v => parseInt(v));
+    if (x < currentMajor) {
+      currentMajor = x;
+      currentMinor = y;
+      subset.push(version);
+      minors = 0;
+    } else if (y < currentMinor || minors < minorLimit) {
+      currentMinor = y;
+      subset.push(version);
+      minors++;
+    }
+  }
+  return subset;
+};
 
 
 
-let allVersions = await getMetapageVersions();
+
+let allVersions = await getRepresentativeMetapageVersions();
+console.log(`🍳👉 representative versions ${allVersions}`);
 if (!nolocalBuild) {
   allVersions.unshift("latest");
 }
