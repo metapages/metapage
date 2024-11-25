@@ -2,7 +2,20 @@ import {
   EventEmitter,
   ListenerFn,
 } from 'eventemitter3';
-
+import { 
+  setHashParamInWindow,
+  getHashParamFromWindow,
+  setHashParamValueBooleanInWindow,
+  getHashParamValueBooleanFromWindow,
+  setHashParamValueJsonInWindow,
+  getHashParamValueJsonFromWindow,
+  setHashParamValueBase64EncodedInWindow,
+  getHashParamValueBase64DecodedFromWindow,
+  setHashParamValueFloatInWindow,
+  getHashParamValueFloatFromWindow,
+  setHashParamValueIntInWindow,
+  getHashParamValueIntFromWindow,
+} from '@metapages/hash-query';
 import { VERSION_METAFRAME } from './Constants';
 import {
   deserializeInputs,
@@ -110,9 +123,25 @@ export class Metaframe extends EventEmitter<
     this._resolveSetupIframeServerResponse.bind(this);
     this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
     this.connected = this.connected.bind(this);
+    this.isConnected = this.isConnected.bind(this);
     this.disableNotifyOnHashUrlChange =
     this.disableNotifyOnHashUrlChange.bind(this);
     this._onHashUrlChange = this._onHashUrlChange.bind(this);
+
+    this.setParameter = this.setParameter.bind(this);
+    this.setParameterBoolean = this.setParameterBoolean.bind(this);
+    this.setParameterJson = this.setParameterJson.bind(this);
+    this.setParameterBase64 = this.setParameterBase64.bind(this);
+    this.setParameterFloat = this.setParameterFloat.bind(this);
+    this.setParameterInt = this.setParameterInt.bind(this);
+    this.getParameter = this.getParameter.bind(this);
+    this.getParameterBoolean = this.getParameterBoolean.bind(this);
+    this.getParameterJson = this.getParameterJson.bind(this);
+    this.getParameterBase64 = this.getParameterBase64.bind(this);
+    this.getParameterFloat = this.getParameterFloat.bind(this);
+    this.getParameterInt = this.getParameterInt.bind(this);
+    this.deleteParameter = this.deleteParameter.bind(this);
+
 
     if (!this._isIframe) {
       //Don't add any of the machinery, it only works if we're iframes.
@@ -173,7 +202,7 @@ export class Metaframe extends EventEmitter<
         //       : params.state.inputs
         //     : this._inputPipeValues;
 
-        //Tell the parent we have registered.
+        // Tell the parent we have registered.
         this._state = MetaframeLoadingState.Ready;
         // TODO why do we need  Metaframe.version here? It was sent in the initial SetupIframeClientRequest
         this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {
@@ -187,16 +216,18 @@ export class Metaframe extends EventEmitter<
           Object.keys(this._inputPipeValues).length > 0
         ) {
           this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
-          Object.keys(this._inputPipeValues).forEach((pipeId) =>
-            this.emit(
-              MetaframeEvents.Input,
-              pipeId,
-              this._inputPipeValues[pipeId]
-            )
-          );
+          if (this.listenerCount(MetaframeEvents.Input) > 0) {
+            Object.keys(this._inputPipeValues).forEach((pipeId) =>
+              this.emit(
+                MetaframeEvents.Input,
+                pipeId,
+                this._inputPipeValues[pipeId]
+              )
+            );
+          }
         }
 
-        this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
+        // this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
 
         //Resolve AFTER sending inputs. This way consumers can either:
         //1) Just listen to inputs updates. The first will be when the metaframe is ready
@@ -205,6 +236,10 @@ export class Metaframe extends EventEmitter<
         //   want to know when the metaframe is ready
         //*** Does this distinction make sense?
         this.emit(MetaframeEvents.Connected);
+
+        // Send the initial outputs to the parent, we have been accumulating them
+        this.sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, this._outputPipeValues);
+
       } else {
         this.log(
           "Got JsonRpcMethods.SetupIframeServerResponse but already resolved"
@@ -213,11 +248,16 @@ export class Metaframe extends EventEmitter<
     })();
   }
 
+  isConnected(): boolean {
+    return this._state === MetaframeLoadingState.Ready;
+  }
+
   async connected(): Promise<void> {
-    if (this._state === MetaframeLoadingState.Ready) {
-      return;
-    }
     return new Promise((resolve, _) => {
+      if (this._state === MetaframeLoadingState.Ready) {
+        resolve();
+        return;
+      }
       let disposer: () => void;
       disposer = this.addListenerReturnDisposer(
         MetaframeEvents.Connected,
@@ -411,7 +451,10 @@ export class Metaframe extends EventEmitter<
       return;
     }
 
-    this.sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
+    // If we are not ready/connected, outputs will be sent when connected
+    if (this._state === MetaframeLoadingState.Ready) {
+      this.sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
+    }
   }
 
   /**
@@ -499,8 +542,62 @@ export class Metaframe extends EventEmitter<
             break;
         }
 
-        this.emit(MetaframeEvents.Message, jsonrpc);
+        if (this.listenerCount(MetaframeEvents.Message) > 0) {
+          this.emit(MetaframeEvents.Message, jsonrpc);
+        }
       }
     }
+  }
+
+  setParameter(key: string, value: any) {
+    setHashParamInWindow(key, value);
+  }
+
+  getParameter(key: string) :string | undefined {
+    return getHashParamFromWindow(key);
+  }
+
+  setParameterBoolean(key: string, value: boolean | undefined) {
+    setHashParamValueBooleanInWindow(key, value);
+  }
+
+  getParameterBoolean(key: string) :boolean | undefined {
+    return getHashParamValueBooleanFromWindow(key);
+  }
+
+  setParameterJson(key: string, value: any) {
+    setHashParamValueJsonInWindow(key, value);
+  }
+
+  getParameterJson<T>(key: string) :T|undefined {
+    return getHashParamValueJsonFromWindow<T>(key);
+  }
+
+  setParameterBase64(key: string, value: string | undefined) {
+    setHashParamValueBase64EncodedInWindow(key, value);
+  }
+
+  getParameterBase64(key: string) :string | undefined {
+    return getHashParamValueBase64DecodedFromWindow(key);
+  }
+
+  setParameterFloat(key: string, value: number | undefined) {
+    setHashParamValueFloatInWindow(key, value);
+  }
+
+  getParameterFloat(key: string) :number | undefined {
+    return getHashParamValueFloatFromWindow(key);
+  }
+
+  setParameterInt(key: string, value: number | undefined) {
+    setHashParamValueIntInWindow(key, value);
+  }
+
+  getParameterInt(key: string) :number | undefined {
+    return getHashParamValueIntFromWindow(key);
+  }
+
+  deleteParameter(key: string) {
+    setHashParamInWindow(key, undefined);
   }
 }

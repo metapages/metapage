@@ -436,17 +436,12 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   }
 
   public ack(message: any) {
-    this.log("⚒ ⚒ ⚒ calling ack");
     if (this._debug) {
       this.log("⚒ ⚒ ⚒ sending ack from client to frame");
       var payload: ClientMessageRecievedAck<any> = {
         message: message,
       };
       this.sendRpc(JsonRpcMethodsFromParent.MessageAck, payload);
-    } else {
-      this.log(
-        "⚒ ⚒ ⚒ NOT sending ack from client to frame since not debug mode"
-      );
     }
   }
 

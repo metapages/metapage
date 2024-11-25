@@ -29,6 +29,8 @@ const serverPort = Deno.env.get("APP_PORT") ? parseInt(Deno.env.get("APP_PORT")!
 const serverFqdn = "localhost";//Deno.env.get("APP_FQDN") ? Deno.env.get("APP_FQDN")! : "server1.localhost";
 const serverOrigin = `http://${serverFqdn}:${serverPort}`;
 
+type TestType = "compatibility" | "globs";
+
 // Function to start the Deno Fresh server
 async function startDenoFreshServer() {
   console.log("Starting Deno Fresh server ", Deno.cwd());
@@ -94,12 +96,12 @@ async function pollServerUntilUp(url: string, maxAttempts = 30, interval = 1000)
 // ensure the server is fully ready
 await pollServerUntilUp(serverOrigin);
 
-async function runSingleMetapageTest(version: string, timeout: number) {
+
+
+async function runSingleMetapageTest(type :TestType, version: string, timeout: number) {
   console.log(
     `\n\nRUNNING METAPAGE TEST: ${version} timeout:${timeout / 1000}s`
   );
-
-  
 
   const browser = await launch({
     headless: headless,
@@ -130,7 +132,7 @@ async function runSingleMetapageTest(version: string, timeout: number) {
     });
   }
 
-  const url = getMetapageTestUrl(version);
+  const url = getMetapageTestUrl(type, version);
   console.log(`Metapage url: ${url}`);
 
   await page.goto(url);
@@ -177,9 +179,9 @@ async function runSingleMetapageTest(version: string, timeout: number) {
   } 
 }
 
-const getMetapageTestUrl = (version: string) => {
+const getMetapageTestUrl = (test :TestType, version: string) => {
   // https://metapage-npm.dev:4441/test/metapage/compatibility/
-  return `${serverOrigin}/test/metapage/compatibility/${version}${
+  return `${serverOrigin}/test/metapage/${test}/${version}${
     debugMetapage ? "?debug=true" : ""
   }`;
 };
@@ -210,16 +212,18 @@ const timeout = setTimeout(async () => {
   }
 }, maxTimeAllTests);
 
-console.log(
-  `  ${allVersions
-    .map(getMetapageTestUrl)
-    .map((e) => e.replace("docs", "localhost"))
-    .join("\n  ")}`
-);
+// console.log(
+//   `  ${allVersions
+//     .map(getMetapageTestUrl)
+//     .map((e) => e.replace("docs", "localhost"))
+//     .join("\n  ")}`
+// );
 
 // run tests sequentially, not concurrently
-for (const version of allVersions) {
-  await runSingleMetapageTest(version, timePerTest * allVersions.length);
+for (const testType of ["compatibility", "globs"] as TestType[]) {
+  for (const version of allVersions) {
+    await runSingleMetapageTest(testType, version, timePerTest * allVersions.length);
+  }
 }
 
 clearTimeout(timeout);

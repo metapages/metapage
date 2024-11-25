@@ -486,6 +486,8 @@ VERSIONS_METAFRAME.forEach((versionMetaframe, index) => {
     }
 });
 
+
+console.log("metaPageDefinition", JSON.stringify(metaPageDefinition, null, 2));
 // set the Metapage class into the window object for easier manipulation later
 globalThis.Metapage = Metapage;
 let metapageInstance;

@@ -5,9 +5,10 @@ import type { VersionProps } from '../../_types.ts';
 
 export default function MetaframePage(props: PageProps<VersionProps>) {
   let { version } = props.params;
-
+  
+  // Extract testname from URL path
   const testname = props.url.pathname.split('/').slice(-2)[0];
-
+  
   // the URL param version=latest-begin is a way of having
   // the same metaframe/plugin in multiple places without
   // id/key collisions. The actual version of 'latest-begin'
@@ -29,6 +30,7 @@ export default function MetaframePage(props: PageProps<VersionProps>) {
       </Head>
     <main>
       <p>Metapage test {testname} @ version: {displayVersion}</p>
+      <a href="https://app.metapage.io/dion/metapage-npm-library-globs-test-6b2482bed7664c5bb91777bdd121f283?view=default">Source metapage</a>
       <div id='status'>status</div>
       <div id='body'></div>
       <script type="module" src={`/test/metapage/${testname}/metapage-test.js`}></script>

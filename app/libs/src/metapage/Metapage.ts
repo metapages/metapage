@@ -1,11 +1,17 @@
 import { ListenerFn } from 'eventemitter3';
 import { create } from 'mutative';
+import picomatch from 'picomatch-browser';
 
 import { VERSION_METAPAGE } from './Constants';
 import {
   convertMetapageDefinitionToCurrentVersion,
   getMatchingMetapageVersion,
 } from './conversions-metapage';
+import {
+  MetaframeId,
+  MetaframePipeId,
+  MetapageId,
+} from './core';
 import {
   deserializeInputs,
   serializeInputs,
@@ -31,11 +37,6 @@ import {
   INITIAL_NULL_METAPAGE_DEFINITION,
   MetapageShared,
 } from './Shared';
-import { MetapageId, MetaframeId, MetaframePipeId } from "./core";
-import {
-  MetapageDefinitionV1,
-  MetapageOptionsV1,
-} from './v1';
 import {
   MetaframeInputMap,
   MetaframeInstance,
@@ -43,6 +44,10 @@ import {
   PipeInput,
   PipeUpdateBlob,
 } from './v0_4';
+import {
+  MetapageDefinitionV1,
+  MetapageOptionsV1,
+} from './v1';
 import { VersionsMetapage } from './versions';
 
 interface MetapageStatePartial {
@@ -68,25 +73,38 @@ export const getLibraryVersionMatching = (
 };
 
 export const matchPipe = (
-  outputPipeName: string,
-  inputPipeName?: string
+  outputName: string,
+  source: string,
+  target?: string
 ): boolean => {
-  if (!inputPipeName || inputPipeName === "*") {
+  // console.log(`❓❓ matchPipe: metapage.getState().metaframes=${outputName} source=${source} target=${target}`);
+
+  if ((!source || source === "*") && (!target || target === "*")) {
+    // console.log(`❓matchPipe 1: ✅`);
     return true;
   }
 
-  if (outputPipeName === inputPipeName) {
+  if (outputName === source) {
+    // console.log(`❓matchPipe 1.1: ✅`);
     return true;
   }
 
-  if (inputPipeName.endsWith("*")) {
-    return outputPipeName.startsWith(inputPipeName.slice(0, -1));
+  if (!picomatch.isMatch(outputName, source)) {
+    // console.log(`❓matchPipe 2: ❌`);
+    return false;
   }
 
-  if (inputPipeName.startsWith("*")) {
-    return outputPipeName.endsWith(inputPipeName.slice(1));
+  if (!target || target === "*" || target.endsWith("/")) {
+    // console.log(`❓matchPipe 3: ✅`);
+    return true;
   }
 
+  if (picomatch.isMatch(outputName, target)) {
+    // console.log(`❓matchPipe 4: ✅`);
+    return true;
+  }
+
+  // console.log(`❓matchPipe 5: ❌`);
   return false;
 };
 
@@ -556,6 +574,7 @@ export class Metapage extends MetapageShared {
   // This call is cached
   getInputsFromOutput(
     source: MetaframeId,
+    // the pipe id is simply the name of the output file/object/thing
     outputPipeId: MetaframePipeId
   ): MetaframeInputTargetsFromOutput[] {
     // Do all the cache checking
@@ -581,7 +600,7 @@ export class Metapage extends MetapageShared {
             if (inputPipe.metaframe === source) {
               // Check the kind of source string
               // it could be a basic string, or a glob?
-              if (matchPipe(outputPipeId, inputPipe.source)) {
+              if (matchPipe(outputPipeId, inputPipe.source || "*", inputPipe.target || "*")) {
                 // A match, now figure out the actual input pipe name
                 // since it might be * or absent meaning that the input
                 // field name is the same as the incoming
@@ -592,6 +611,8 @@ export class Metapage extends MetapageShared {
                   inputPipe.target === ""
                 ) {
                   targetName = outputPipeId;
+                } else if (targetName.endsWith("/")) {
+                  targetName = targetName + outputPipeId;
                 }
                 targets.push({ metaframe: metaframeId, pipe: targetName });
               }
@@ -905,8 +926,6 @@ export class Metapage extends MetapageShared {
         );
       }
 
-      let stateImmutable: MetapageState | undefined = undefined;
-
       switch (method) {
         /**
          * An iframe is sending a connection request.
@@ -914,9 +933,7 @@ export class Metapage extends MetapageShared {
          * communication channel.
          */
         case JsonRpcMethodsFromChild.SetupIframeClientRequest:
-          if (metaframe) {
-            metaframe.register();
-          }
+          metaframe.register();
           break;
 
         /* A client iframe responded */
@@ -948,6 +965,8 @@ export class Metapage extends MetapageShared {
             outputKeys.forEach((outputKey, i) => {
               const targets: MetaframeInputTargetsFromOutput[] =
                 this.getInputsFromOutput(metaframeId!, outputKey);
+
+              // console.log(`targets:`, targets); 
               if (targets.length > 0) {
                 targets.forEach((target) => {
                   if (!collectedOutputs[target.metaframe]) {

@@ -5,6 +5,7 @@
 import * as $_404 from "./routes/_404.tsx";
 import * as $_app from "./routes/_app.tsx";
 import * as $_coming_soon from "./routes/_coming_soon.tsx";
+import * as $_middleware from "./routes/_middleware.ts";
 import * as $api_joke from "./routes/api/joke.ts";
 import * as $convert_index from "./routes/convert/index.tsx";
 import * as $convert_metaframe_targetversion_ from "./routes/convert/metaframe/[targetversion].tsx";
@@ -20,7 +21,13 @@ import * as $test_metaframe_compatibility_version_metaframe_json from "./routes/
 import * as $test_metaframe_compatibility_metaframe_test_compatibility_js from "./routes/test/metaframe/compatibility/metaframe-test-compatibility.js.ts";
 import * as $test_metapage_compatibility_version_ from "./routes/test/metapage/compatibility/[version].tsx";
 import * as $test_metapage_compatibility_index from "./routes/test/metapage/compatibility/index.tsx";
-import * as $test_metapage_compatibility_metapage_test_compatibility_js from "./routes/test/metapage/compatibility/metapage-test-compatibility.js.ts";
+import * as $test_metapage_compatibility_metapage_test_js from "./routes/test/metapage/compatibility/metapage-test.js.ts";
+import * as $test_metapage_first_message_version_ from "./routes/test/metapage/first-message/[version].tsx";
+import * as $test_metapage_first_message_index from "./routes/test/metapage/first-message/index.tsx";
+import * as $test_metapage_first_message_metapage_test_js from "./routes/test/metapage/first-message/metapage-test.js.ts";
+import * as $test_metapage_globs_version_ from "./routes/test/metapage/globs/[version].tsx";
+import * as $test_metapage_globs_index from "./routes/test/metapage/globs/index.tsx";
+import * as $test_metapage_globs_metapage_test_js from "./routes/test/metapage/globs/metapage-test.js.ts";
 import * as $test_metapage_index from "./routes/test/metapage/index.tsx";
 import * as $test_metapage_timing_version_ from "./routes/test/metapage/timing/[version].tsx";
 import * as $test_metapage_timing_index from "./routes/test/metapage/timing/index.tsx";
@@ -34,6 +41,7 @@ const manifest = {
     "./routes/_404.tsx": $_404,
     "./routes/_app.tsx": $_app,
     "./routes/_coming_soon.tsx": $_coming_soon,
+    "./routes/_middleware.ts": $_middleware,
     "./routes/api/joke.ts": $api_joke,
     "./routes/convert/index.tsx": $convert_index,
     "./routes/convert/metaframe/[targetversion].tsx":
@@ -56,8 +64,18 @@ const manifest = {
       $test_metapage_compatibility_version_,
     "./routes/test/metapage/compatibility/index.tsx":
       $test_metapage_compatibility_index,
-    "./routes/test/metapage/compatibility/metapage-test-compatibility.js.ts":
-      $test_metapage_compatibility_metapage_test_compatibility_js,
+    "./routes/test/metapage/compatibility/metapage-test.js.ts":
+      $test_metapage_compatibility_metapage_test_js,
+    "./routes/test/metapage/first-message/[version].tsx":
+      $test_metapage_first_message_version_,
+    "./routes/test/metapage/first-message/index.tsx":
+      $test_metapage_first_message_index,
+    "./routes/test/metapage/first-message/metapage-test.js.ts":
+      $test_metapage_first_message_metapage_test_js,
+    "./routes/test/metapage/globs/[version].tsx": $test_metapage_globs_version_,
+    "./routes/test/metapage/globs/index.tsx": $test_metapage_globs_index,
+    "./routes/test/metapage/globs/metapage-test.js.ts":
+      $test_metapage_globs_metapage_test_js,
     "./routes/test/metapage/index.tsx": $test_metapage_index,
     "./routes/test/metapage/timing/[version].tsx":
       $test_metapage_timing_version_,
