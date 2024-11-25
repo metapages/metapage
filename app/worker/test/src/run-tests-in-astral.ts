@@ -29,7 +29,7 @@ const serverPort = Deno.env.get("APP_PORT") ? parseInt(Deno.env.get("APP_PORT")!
 const serverFqdn = "localhost";//Deno.env.get("APP_FQDN") ? Deno.env.get("APP_FQDN")! : "server1.localhost";
 const serverOrigin = `http://${serverFqdn}:${serverPort}`;
 
-type TestType = "compatibility" | "globs";
+type TestType = "compatibility" | "globs" | "first-message";
 
 // Function to start the Deno Fresh server
 async function startDenoFreshServer() {
@@ -239,16 +239,13 @@ const timeout = setTimeout(async () => {
   }
 }, maxTimeAllTests);
 
-// console.log(
-//   `  ${allVersions
-//     .map(getMetapageTestUrl)
-//     .map((e) => e.replace("docs", "localhost"))
-//     .join("\n  ")}`
-// );
-
 // run tests sequentially, not concurrently
-for (const testType of ["compatibility", "globs"] as TestType[]) {
+for (const testType of ["globs", "first-message", "compatibility"] as TestType[]) {
   for (const version of allVersions) {
+    if (version !== "latest" && testType === "globs" && compareVersions(version, "1.1.0") < 0) {
+      console.log(`🍳👉 skipping globs test for version ${version} because < 1.1.0`);
+      continue;
+    }
     await runSingleMetapageTest(testType, version, timePerTest * allVersions.length);
   }
 }
