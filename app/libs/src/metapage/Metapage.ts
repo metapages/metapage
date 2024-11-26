@@ -947,6 +947,9 @@ export class Metapage extends MetapageShared {
 
         case JsonRpcMethodsFromChild.OutputsUpdate:
           const outputs: MetaframeInputMap = jsonrpc.params;
+          if (!outputs || Object.keys(outputs).length === 0) {
+            break;
+          }
 
           if (this._metaframes[metaframeId]) {
             var iframe = this._metaframes[metaframeId];
