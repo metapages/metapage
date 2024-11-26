@@ -16,6 +16,7 @@ export default function MetaframePage(props: PageProps) {
         <li><a href={`./metapage/compatibility`}>Test a metapage@version with all existing metaframe versions</a></li>
         <li><a href={`./metapage/globs`}>Test globs in message pipes</a></li>
         <li><a href={`./metapage/first-message`}>Don't miss the first message</a></li>
+        <li><a href={`./metapage/io-pipe-names`}>Pipe names (renaming) are correct</a></li>
         {/* <li><a href={`./metapage/timing`}>Test timing and internal APIs</a></li> */}
       </ul>
     </main>

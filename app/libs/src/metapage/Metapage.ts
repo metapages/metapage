@@ -74,12 +74,11 @@ export const getLibraryVersionMatching = (
 
 export const matchPipe = (
   outputName: string,
-  source: string,
-  target?: string
+  source?: string,
 ): boolean => {
-  // console.log(`❓❓ matchPipe: metapage.getState().metaframes=${outputName} source=${source} target=${target}`);
+  // console.log(`❓❓ matchPipe: metapage.getState().metaframes=${outputName} source=${source} `);
 
-  if ((!source || source === "*") && (!target || target === "*")) {
+  if ((!source || source === "**")) { // && (!target || target === "*")
     // console.log(`❓matchPipe 1: ✅`);
     return true;
   }
@@ -89,20 +88,20 @@ export const matchPipe = (
     return true;
   }
 
-  if (!picomatch.isMatch(outputName, source)) {
-    // console.log(`❓matchPipe 2: ❌`);
-    return false;
-  }
-
-  if (!target || target === "*" || target.endsWith("/")) {
-    // console.log(`❓matchPipe 3: ✅`);
+  if (picomatch.isMatch(outputName, source)) {
+    // console.log(`❓matchPipe 2: ✅`);
     return true;
   }
 
-  if (picomatch.isMatch(outputName, target)) {
-    // console.log(`❓matchPipe 4: ✅`);
-    return true;
-  }
+  // if (!target || target === "*" || target.endsWith("/")) {
+  //   console.log(`❓matchPipe 3: ✅`);
+  //   return true;
+  // }
+
+  // if (picomatch.isMatch(outputName, target)) {
+  //   console.log(`❓matchPipe 4: ✅`);
+  //   return true;
+  // }
 
   // console.log(`❓matchPipe 5: ❌`);
   return false;
@@ -595,12 +594,14 @@ export class Metapage extends MetapageShared {
             // No self pipes, does not make sense
             return;
           }
+          
           this._inputMap[metaframeId].forEach((inputPipe) => {
             // At least the source metaframe matches, now check pipes
             if (inputPipe.metaframe === source) {
               // Check the kind of source string
               // it could be a basic string, or a glob?
-              if (matchPipe(outputPipeId, inputPipe.source || "*", inputPipe.target || "*")) {
+              if (matchPipe(outputPipeId, inputPipe.source)) {
+                // console.log("✅ matches");
                 // A match, now figure out the actual input pipe name
                 // since it might be * or absent meaning that the input
                 // field name is the same as the incoming
@@ -969,7 +970,6 @@ export class Metapage extends MetapageShared {
               const targets: MetaframeInputTargetsFromOutput[] =
                 this.getInputsFromOutput(metaframeId!, outputKey);
 
-              // console.log(`targets:`, targets); 
               if (targets.length > 0) {
                 targets.forEach((target) => {
                   if (!collectedOutputs[target.metaframe]) {

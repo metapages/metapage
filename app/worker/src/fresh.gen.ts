@@ -29,6 +29,9 @@ import * as $test_metapage_globs_version_ from "./routes/test/metapage/globs/[ve
 import * as $test_metapage_globs_index from "./routes/test/metapage/globs/index.tsx";
 import * as $test_metapage_globs_metapage_test_js from "./routes/test/metapage/globs/metapage-test.js.ts";
 import * as $test_metapage_index from "./routes/test/metapage/index.tsx";
+import * as $test_metapage_io_pipe_names_version_ from "./routes/test/metapage/io-pipe-names/[version].tsx";
+import * as $test_metapage_io_pipe_names_index from "./routes/test/metapage/io-pipe-names/index.tsx";
+import * as $test_metapage_io_pipe_names_metapage_test_js from "./routes/test/metapage/io-pipe-names/metapage-test.js.ts";
 import * as $test_metapage_timing_version_ from "./routes/test/metapage/timing/[version].tsx";
 import * as $test_metapage_timing_index from "./routes/test/metapage/timing/index.tsx";
 import * as $versions_index from "./routes/versions/index.tsx";
@@ -77,6 +80,12 @@ const manifest = {
     "./routes/test/metapage/globs/metapage-test.js.ts":
       $test_metapage_globs_metapage_test_js,
     "./routes/test/metapage/index.tsx": $test_metapage_index,
+    "./routes/test/metapage/io-pipe-names/[version].tsx":
+      $test_metapage_io_pipe_names_version_,
+    "./routes/test/metapage/io-pipe-names/index.tsx":
+      $test_metapage_io_pipe_names_index,
+    "./routes/test/metapage/io-pipe-names/metapage-test.js.ts":
+      $test_metapage_io_pipe_names_metapage_test_js,
     "./routes/test/metapage/timing/[version].tsx":
       $test_metapage_timing_version_,
     "./routes/test/metapage/timing/index.tsx": $test_metapage_timing_index,

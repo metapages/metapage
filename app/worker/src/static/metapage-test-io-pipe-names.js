@@ -1,5 +1,5 @@
 // The metapage we use: 
-const SourceMetapage = "https://app.metapage.io/dion/metapage-npm-library-debug-early-messages-missed-e59b3aa35806425d80cff197f3e19da0";
+const SourceMetapage = "https://app.metapage.io/dion/metapages-module-test-io-pipe-names-6a97801b3eed4b3d9d6f5d24b508f324";
 const TestMetapageUrl = `${SourceMetapage}/metapage.json`;
 // Download the specific metaPAGE library version
 // to make it easier to test all versions against all
@@ -10,7 +10,6 @@ const urlPathElements = url.pathname.split("/").filter((e) =>
     e !== ""
 );
 var version = urlPathElements[3] || "latest";
-var testname = urlPathElements[2];
 
 const importURl = `${
     version === "latest"
@@ -101,7 +100,7 @@ class Test {
 
 TESTS = [
     
-    new Test("do not miss the first message", // Look to the outputs of the LAST metaframe, it should have an array
+    new Test("all outputs are named correctly", // Look to the outputs of the LAST metaframe, it should have an array
     // of the chain of metaframe versions the array has passed through
     (metapage) => { // metapage instance
         return new Promise((resolve, reject) => {

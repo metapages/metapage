@@ -1,6 +1,5 @@
 // The metapage we use: 
 const SourceMetapage = "https://app.metapage.io/dion/metapage-npm-library-globs-test-6b2482bed7664c5bb91777bdd121f283";
-// const SourceMetapage = "https://app.metapage.io/dion/metapage-npm-library-debug-early-messages-missed-e59b3aa35806425d80cff197f3e19da0";
 const TestMetapageUrl = `${SourceMetapage}/metapage.json`;
 // Download the specific metaPAGE library version
 // to make it easier to test all versions against all
