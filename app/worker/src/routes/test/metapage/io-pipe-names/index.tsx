@@ -35,7 +35,12 @@ export default function MetaframePage(props: PageProps<VersionsProps>) {
       </Head>
       <main>
         <h2>Metapage test: {props.data.testname}</h2>
+        <br/>
+        <a href="https://app.metapage.io/dion/metapages-module-test-io-pipe-names-6a97801b3eed4b3d9d6f5d24b508f324?view=default">Source metapage</a>
+        <br/>
+        <br/>
         <p>Choose version:</p>
+        <br/>
         {
           props.data.versions.map((version) => (
             <>

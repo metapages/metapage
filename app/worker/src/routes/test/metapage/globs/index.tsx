@@ -42,7 +42,7 @@ export default function MetaframePage(props: PageProps<VersionsProps>) {
         <h2>Metapage test: {props.data.testname}</h2>
         <br/>
         <a href="https://app.metapage.io/dion/metapage-npm-library-globs-test-6b2482bed7664c5bb91777bdd121f283?view=default">Source metapage</a>
-
+        <br/>
         <br/>
         <p>Choose version:</p>
         <br/>

@@ -30,6 +30,7 @@ export default function MetaframePage(props: PageProps<VersionProps>) {
       </Head>
     <main>
       <p>Metapage test {testname} @ version: {displayVersion}</p>
+      <a href="https://app.metapage.io/dion/metapages-module-test-io-pipe-names-6a97801b3eed4b3d9d6f5d24b508f324?view=default">Source metapage</a>
       <div id='status'>status</div>
       <div id='body'></div>
       <script type="module" src={`/metapage-test-${testname}.js`}></script>

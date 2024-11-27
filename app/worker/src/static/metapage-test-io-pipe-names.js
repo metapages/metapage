@@ -5,7 +5,7 @@ const TestMetapageUrl = `${SourceMetapage}/metapage.json`;
 // to make it easier to test all versions against all
 const { compareVersions } = window.compareVersions
 const url = new URL(window.location.href);
-console.log(`url: ${url}`);
+// console.log(`url: ${url}`);
 const urlPathElements = url.pathname.split("/").filter((e) =>
     e !== ""
 );
@@ -18,7 +18,7 @@ const importURl = `${
             version.split("-")[0]
 }`;
 
-console.log('importURl', importURl);
+// console.log('importURl', importURl);
 const { Metapage } = await import(importURl);
 
 let debug = ["debug", "mp_debug"].reduce((exists, flag) => {
@@ -107,17 +107,17 @@ TESTS = [
             let disposeListener;
             const onStateChange = (e) => {
                 const outputs = metapage.getState().metaframes.outputs;
-                // console.log('metapage state', metapage.getState().metaframes);
-
                 const metaframeIds = metapage.metaframeIds();
 
-                const success = metaframeIds.every((id) => outputs[id]?.success);
-                // console.log('success', success);
+                const filterMetaframesThatOutputSuccess = (id) => {
+                    return !(metapage.getDefinition().metaframes[id].url.startsWith("https://app.metapage.io/fs") || metapage.getDefinition().metaframes[id].url.startsWith("https://container.mtfm.io"));
+                }
+
+                const success = metaframeIds.filter(filterMetaframesThatOutputSuccess).every((id) => outputs[id]?.success);
                 if (success) {
                     disposeListener();
                     resolve(true);
                     setStatus();
-                    // console.log('TESTS PASS');
                 }
             };
 
