@@ -32,3 +32,22 @@ export const getMetaframeDefinitionFromUrl = async (url: string, version?: Versi
   const convertedDefinition = await convertMetaframeDefinitionToVersion(definition, version || "1");
   return convertedDefinition;
 };
+
+export const isEmptyMetaframeDefinition = (definition?: MetaframeDefinitionV1|MetaframeDefinitionV4): boolean => {
+  if (!definition) {
+    return true;
+  }
+  if (definition?.inputs && Object.keys(definition.inputs).length > 0) {
+    return false;
+  }
+  if (definition?.outputs && Object.keys(definition.outputs).length > 0) {
+    return false;
+  }
+  if (definition?.allow) {
+    return false;
+  }
+  if (definition?.metadata && Object.keys(definition.metadata).length > 0) {
+    return false;
+  }
+  return true;
+};
