@@ -605,14 +605,14 @@ export class Metapage extends MetapageShared {
                 // A match, now figure out the actual input pipe name
                 // since it might be * or absent meaning that the input
                 // field name is the same as the incoming
-                var targetName = inputPipe.target;
+                var targetName :string = inputPipe.target || "";
                 if (
                   !inputPipe.target ||
                   inputPipe.target.startsWith("*") ||
                   inputPipe.target === ""
                 ) {
                   targetName = outputPipeId;
-                } else if (targetName.endsWith("/")) {
+                } else if (targetName && targetName.endsWith("/")) {
                   targetName = targetName + outputPipeId;
                 }
                 targets.push({ metaframe: metaframeId, pipe: targetName });

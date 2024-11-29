@@ -1,14 +1,15 @@
-import { VersionsMetaframe } from '../versions.js';
 import {
   MetaframeId,
   MetaframePipeId,
 } from '../core.js';
+import { VersionsMetaframe } from '../versions.js';
 import { MetapageDefinitionV3 } from './metapage.js';
 
 export interface PipeInput {
   metaframe: MetaframeId;
   source: MetaframePipeId;
-  target: MetaframePipeId;
+  // optional target pipe id
+  target?: MetaframePipeId;
 }
 
 export interface PipeUpdateBlob {
@@ -93,7 +94,7 @@ export interface MetaframeDefinitionV5 {
 export interface PipeInput {
   metaframe: MetaframeId;
   source: MetaframePipeId;
-  target: MetaframePipeId;
+  target?: MetaframePipeId;
 }
 
 export interface PipeUpdateBlob {
