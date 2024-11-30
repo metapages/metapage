@@ -23,7 +23,9 @@ export const convertMetapageDefinitionToVersion = async (
   }
 
   if (!def.version) {
-    throw 'Missing "version" key in metapage definition';
+    def = create(def, (draft :MetapageDefinitionV03) => {
+      draft.version = "0.3";
+    }) as MetapageDefinitionV03;
   }
   if (!targetVersion) {
     throw 'Missing "version" argument';

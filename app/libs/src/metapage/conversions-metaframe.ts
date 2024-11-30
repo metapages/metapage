@@ -76,7 +76,11 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
   }
 
   if (!def.version) {
-    throw 'Missing "version" key in metaframe definition';
+    // we assume this is an older version of the definition
+    // that does not have the version key
+    def = create(def, (draft :MetaframeDefinitionV03) => {
+      draft.version = "0.3";
+    }) as MetaframeDefinitionV6;
   }
 
   let currentVersion = getMatchingMetaframeVersion(def.version);
