@@ -1,42 +1,34 @@
-import {
-  EventEmitter,
-  ListenerFn,
-} from 'eventemitter3';
+import { EventEmitter, ListenerFn } from "eventemitter3";
 
-import { VERSION_METAPAGE } from './Constants';
-import { serializeInputs } from './data';
-import { JsonRpcRequest } from './jsonrpc2';
+import { VERSION_METAPAGE } from "./Constants";
+import { serializeInputs } from "./data";
+import { JsonRpcRequest } from "./jsonrpc2";
 import {
   log as MetapageToolsLog,
   merge,
   pageLoaded,
   stringToRgb,
-} from './MetapageTools';
+} from "./MetapageTools";
+import { MetapageHashParams, MetapageShared } from "./Shared";
+import { MetaframeDefinitionV1 } from "./v1";
+import { MetaframeInputMap, MetapageInstanceInputs } from "./v0_4";
+import { MetaframeId, MetaframePipeId, MetapageId } from "./core";
+import { convertMetaframeJsonToCurrentVersion } from "./conversions-metaframe";
+import { MetapageEvents } from "./events";
 import {
-  MetapageHashParams,
-  MetapageShared,
-} from './Shared';
-import {
-  MetaframeDefinitionV1,
-} from './v1';
-import {
-  MetaframeInputMap,
-  MetapageInstanceInputs,
-} from './v0_4';
-import {
-  MetaframeId,
-  MetaframePipeId,
-  MetapageId,
-} from './core';
-import { convertMetaframeJsonToCurrentVersion } from './conversions-metaframe';
-import { MetapageEvents } from './events';
-import { ClientMessageRecievedAck, JsonRpcMethodsFromParent, MinimumClientMessage, SetupIframeServerResponseData } from './jsonrpc';
-import { VersionsMetaframe, VersionsMetapage } from './versions';
+  ClientMessageRecievedAck,
+  JsonRpcMethodsFromParent,
+  MinimumClientMessage,
+  SetupIframeServerResponseData,
+} from "./jsonrpc";
+import { VersionsMetaframe, VersionsMetapage } from "./versions";
+import { getHashParamValueJsonFromUrl } from "@metapages/hash-query";
+import { getMetaframeDefinitionFromUrl } from "./util";
 
 /**
  * This class runs in the parent metapage, and connects the communication pipes
  * from the child metaframe iframe to the parent metapage.
- * 
+ *
  * Initialization sequence:
  *   1. the child iframe object waits until its page loads
  *   2. the child iframe object sends SetupIframeClientRequest
@@ -118,14 +110,17 @@ export class MetapageIFrameRpcClient extends EventEmitter<
       pageLoaded().then(async () => {
         // parent page loaded, set the iframe src to start loading
         // get the definition in case we need to set allow permissions
-        if (selfThis._iframe) { // check because possibly already disposed
-        
+        if (selfThis._iframe) {
+          // check because possibly already disposed
+
           // iframe permissions (the "allow" attribute)
           // https://developer.mozilla.org/en-US/docs/Web/API/HTMLIFrameElement/allow
           // If there is an "allow" field in the frame definition in the metapage use that first
           if (this._metapage?._definition?.metaframes?.[this.id]?.allow) {
-            selfThis._iframe.allow = this._metapage._definition.metaframes[this.id].allow!;
-          } else { // Otherwise use whatever is in the metaframe.json 
+            selfThis._iframe.allow =
+              this._metapage._definition.metaframes[this.id].allow!;
+          } else {
+            // Otherwise use whatever is in the metaframe.json
             const metaframeDef = await selfThis.getDefinition();
             if (!selfThis._iframe) {
               // possibly already disposed
@@ -203,29 +198,42 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     if (this._definition) {
       return this._definition;
     }
-    var url = this.getDefinitionUrl();
-    try {
-      // this should be retried?
-      const response = await window.fetch(url, {
-        signal: AbortSignal.timeout(6000),
-      });
-      if (response.ok) {
-        const metaframeDef = await response.json();
 
-        const metaframeDefCurrent = await convertMetaframeJsonToCurrentVersion(metaframeDef);
+    try {
+      const definitionFromHashParams: MetaframeDefinitionV1 | undefined =
+        getHashParamValueJsonFromUrl(this.url, "definition");
+      if (definitionFromHashParams) {
+        const metaframeDefCurrent = await convertMetaframeJsonToCurrentVersion(
+          definitionFromHashParams
+        );
         this._definition = metaframeDefCurrent;
         return this._definition;
-      } else {
-        this.emit(
-          MetapageEvents.Error,
-          `Failed to fetch: ${url}\nStatus: ${response.status}\nStatus text: ${response.statusText}`
-        );
       }
     } catch (err) {
+      this.emit(
+        MetapageEvents.Warning,
+        `Failed to convert metaframe definition from hash params. Error: ${
+          (err as Error)?.message ? (err as Error)?.message : "unknown error"
+        }`
+      );
+      return;
+    }
+
+    // TODO: this should be retried?
+    var url = this.getDefinitionUrl();
+    try {
+      const metaframeDef = await getMetaframeDefinitionFromUrl(this.url);
+      if (metaframeDef) {
+        this._definition = metaframeDef;
+        return this._definition;
+      }
+    } catch (err: unknown) {
       // hmm silent on failures to load the metaframe.json?
       this.emit(
-        MetapageEvents.Error,
-        `Failed to fetch or convert: ${url}\nError: ${err}`
+        MetapageEvents.Warning,
+        `Failed to fetch or convert: ${url}\nError: ${
+          (err as Error)?.message ? (err as Error)?.message : err?.toString()
+        }`
       );
     }
   }
@@ -274,7 +282,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
       inputUpdate[this.id] = maybeNewInputs;
       this._metapage.emit(MetapageEvents.Inputs, inputUpdate);
     }
-  
+
     return this;
   }
 
