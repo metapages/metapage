@@ -1,5 +1,5 @@
 // The metapage we use: 
-const SourceMetapage = "https://app.metapage.io/dion/metapages-module-test-io-pipe-names-6a97801b3eed4b3d9d6f5d24b508f324";
+const SourceMetapage = "https://metapage.io/dion/metapages-module-test-io-pipe-names-6a97801b3eed4b3d9d6f5d24b508f324";
 const TestMetapageUrl = `${SourceMetapage}/metapage.json`;
 // Download the specific metaPAGE library version
 // to make it easier to test all versions against all
@@ -106,11 +106,15 @@ TESTS = [
         return new Promise((resolve, reject) => {
             let disposeListener;
             const onStateChange = (e) => {
+                console.log("onStateChange", e);
                 const outputs = metapage.getState().metaframes.outputs;
                 const metaframeIds = metapage.metaframeIds();
 
                 const filterMetaframesThatOutputSuccess = (id) => {
-                    return !(metapage.getDefinition().metaframes[id].url.startsWith("https://app.metapage.io/fs") || metapage.getDefinition().metaframes[id].url.startsWith("https://container.mtfm.io"));
+                    const url = metapage.getDefinition().metaframes[id].url;
+                    const pathTokens = new URL(url).pathname.split("/");
+                    const isFs = pathTokens[3] === "fs";
+                    return !(isFs || url.startsWith("https://container.mtfm.io"));
                 }
 
                 const success = metaframeIds.filter(filterMetaframesThatOutputSuccess).every((id) => outputs[id]?.success);
