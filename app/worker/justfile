@@ -22,7 +22,7 @@ grey                               := "\\e[90m"
   deno task start
 
 open:
-  deno run --allow-all --unstable https://deno.land/x/metapages@v0.0.27/exec/open_url.ts 'https://metapages.github.io/load-page-when-available/?url=https://{{APP_FQDN}}:{{APP_PORT}}'
+  deno run --allow-all https://deno.land/x/metapages@v0.0.27/exec/open_url.ts 'https://metapages.github.io/load-page-when-available/?url=https://{{APP_FQDN}}:{{APP_PORT}}'
 
 deploy: _ensure_deployctl
   #!/usr/bin/env bash
@@ -48,7 +48,7 @@ clean:
 
 test: _build_local_module
   rm -rf .certs
-  APP_PORT=8762 deno run -A --unstable --unsafely-ignore-certificate-errors test/src/run-tests-in-astral.ts
+  APP_PORT=8762 deno run -A --unsafely-ignore-certificate-errors test/src/run-tests-in-astral.ts
 
 build: _build_local_module
   deno task build
