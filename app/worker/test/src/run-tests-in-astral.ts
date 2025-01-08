@@ -199,10 +199,10 @@ const getRepresentativeMetapageVersions = async () :Promise<string[]> => {
   let versions = await getMetapageVersions();
   // Only most recent x.y versions
   // versions are already sorted
+  const minorLimit = 0;
   const subset: string[] = [];
   let currentMajor = 10000;
   let currentMinor = 10000;
-  const minorLimit = 3;
   let minors = 0;
   for (const version of versions) {
     const [x, y] = version.split(".").map(v => parseInt(v));
