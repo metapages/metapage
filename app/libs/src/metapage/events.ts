@@ -10,6 +10,7 @@ export enum MetapageEvents {
   // so the current definition now contains that change
   Definition = "definition",
   Error = "error",
+  Warning = "warning",
   // when a metaframe wants to tell the metapage of the new URL (for saving state/config)
   UrlHashUpdate = "urlhashupdate",
   // general event, all events are emitted in their raw form to this namespace
