@@ -97,14 +97,14 @@ export const valueToFile = async (value: any, fileName: string, options?: FilePr
   if (typeof(value) === "string") {
     var blob = new Blob([value], { type: 'text/plain' });
     options.type = "text/plain";
-    new File([blob], fileName, options);
+    return new File([blob], fileName, options);
   }
   if (typeof(value) === "object") {
     const blob = new Blob([JSON.stringify(value)], {
       type: 'application/json',
     });
     options.type = "application/json";
-    new File([blob], fileName, options);
+    return new File([blob], fileName, options);
   }
 
   // assume it's a string
