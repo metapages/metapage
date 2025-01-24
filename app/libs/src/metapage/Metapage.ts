@@ -46,6 +46,7 @@ import {
 } from './v0_4';
 import {
   MetapageDefinitionV1,
+  MetapageMetadataV1,
   MetapageOptionsV1,
 } from './v1';
 import { VersionsMetapage } from './versions';
@@ -232,6 +233,7 @@ export class Metapage extends MetapageShared {
     this.setOutputStateOnlyMetaframeInputValue = this.setOutputStateOnlyMetaframeInputValue.bind(this);
     this.setOutputStateOnlyMetaframeInputMap = this.setOutputStateOnlyMetaframeInputMap.bind(this);
     this.setOutputStateOnlyMetapageInstanceInputs = this.setOutputStateOnlyMetapageInstanceInputs.bind(this);
+    this.setMetadata = this.setMetadata.bind(this);
     this.setMetaframeClientInputAndSentClientEvent =
     this.setMetaframeClientInputAndSentClientEvent.bind(this);
     this.setState = this.setState.bind(this);
@@ -380,6 +382,13 @@ export class Metapage extends MetapageShared {
     }
 
     return this;
+  }
+
+  setMetadata(metadata: MetapageMetadataV1) {
+    this._definition = create(this._definition, (draft) => {
+      draft.meta = metadata;
+    });
+    this._emitDefinitionEvent();
   }
 
   // Convenience method
