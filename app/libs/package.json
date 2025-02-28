@@ -1,7 +1,7 @@
 {
     "name": "@metapages/metapage",
     "public": true,
-    "version": "1.5.0",
+    "version": "1.5.2",
     "description": "Connect web pages together",
     "repository": "https://github.com/metapages/metapage",
     "homepage": "https://metapage.io/",
@@ -23,7 +23,7 @@
     "source": "src/index.ts",
     "types": "dist/index.d.ts",
     "dependencies": {
-        "@metapages/hash-query": "^0.6.5",
+        "@metapages/hash-query": "^0.8.5",
         "base64-arraybuffer": "^1.0.2",
         "compare-versions": "^6.1.1",
         "eventemitter3": "^4.0.0",
