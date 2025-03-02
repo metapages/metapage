@@ -45,10 +45,12 @@ import {
   PipeUpdateBlob,
 } from './v0_4';
 import {
-  MetapageDefinitionV1,
-  MetapageMetadataV1,
   MetapageOptionsV1,
 } from './v1';
+import {
+  MetapageDefinitionV2,
+  MetapageMetadataV2,
+} from './v2';
 import { VersionsMetapage } from './versions';
 
 interface MetapageStatePartial {
@@ -298,7 +300,7 @@ export class Metapage extends MetapageShared {
     return this._state.metaframes;
   }
 
-  public getDefinition(): MetapageDefinitionV1 {
+  public getDefinition(): MetapageDefinitionV2 {
     return this._definition;
   }
 
@@ -308,7 +310,7 @@ export class Metapage extends MetapageShared {
       throw "Metapage definition must have a version";
     }
 
-    const newDefinition: MetapageDefinitionV1 = await
+    const newDefinition: MetapageDefinitionV2 = await
       convertMetapageDefinitionToCurrentVersion(def);
 
     if (this.isDisposed()) {
@@ -384,7 +386,7 @@ export class Metapage extends MetapageShared {
     return this;
   }
 
-  setMetadata(metadata: MetapageMetadataV1) {
+  setMetadata(metadata: MetapageMetadataV2) {
     this._definition = create(this._definition, (draft) => {
       draft.meta = metadata;
     });
@@ -1065,7 +1067,7 @@ export class Metapage extends MetapageShared {
             // Update the local metaframe client reference
             metaframe.url = url.href;
             // Update the definition in place
-            this._definition = create<MetapageDefinitionV1>(
+            this._definition = create<MetapageDefinitionV2>(
               this._definition,
               (draft) => {
                 draft.metaframes[hashParamsUpdatePayload.metaframe].url = url.href;

@@ -10,7 +10,7 @@ import {
   stringToRgb,
 } from "./MetapageTools";
 import { MetapageHashParams, MetapageShared } from "./Shared";
-import { MetaframeDefinitionV1 } from "./v1";
+import { MetaframeDefinitionV2 } from "./v2";
 import { MetaframeInputMap, MetapageInstanceInputs } from "./v0_4";
 import { MetaframeId, MetaframePipeId, MetapageId } from "./core";
 import { convertMetaframeJsonToCurrentVersion } from "./conversions-metaframe";
@@ -54,7 +54,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   _parentId: MetapageId;
   _debug: boolean;
   _sendInputsAfterRegistration: boolean = false;
-  _definition: MetaframeDefinitionV1 | undefined;
+  _definition: MetaframeDefinitionV2 | undefined;
 
   _metapage: MetapageShared;
 
@@ -194,13 +194,13 @@ export class MetapageIFrameRpcClient extends EventEmitter<
    * but advanced features e.g. allow permissions won't work and
    * anything relying on metadata.
    */
-  public async getDefinition(): Promise<MetaframeDefinitionV1 | undefined> {
+  public async getDefinition(): Promise<MetaframeDefinitionV2 | undefined> {
     if (this._definition) {
       return this._definition;
     }
 
     try {
-      const definitionFromHashParams: MetaframeDefinitionV1 | undefined =
+      const definitionFromHashParams: MetaframeDefinitionV2 | undefined =
         getHashParamValueJsonFromUrl(this.url, "definition");
       if (definitionFromHashParams) {
         const metaframeDefCurrent = await convertMetaframeJsonToCurrentVersion(
