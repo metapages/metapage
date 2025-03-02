@@ -1,27 +1,6 @@
 import { VersionsMetaframe } from '../versions.js';
-import {
-  MetaframeId,
-  MetaframePipeId,
-} from '../core.js';
 import { MetapageDefinitionV1 } from './metapage.js';
-import { MetaframePipeDefinition, PipeInput } from '../v0_4/index.js';
-
-// export interface PipeInput {
-//   metaframe: MetaframeId;
-//   source: MetaframePipeId;
-//   target: MetaframePipeId;
-// }
-
-// export interface PipeUpdateBlob {
-//   name: MetaframePipeId;
-//   value: any;
-// }
-
-// export type MetaframePipeDefinition = {
-//   type?: string;
-// };
-
-// export type MetaframeEditType = "metapage" | "metaframe";
+import { MetaframePipeDefinition } from '../v0_4/index.js';
 
 export type MetaframeEditTypeMetaframeV1 = {
   url: string;
@@ -58,27 +37,6 @@ export interface MetaframeDefinitionV1 {
   allow?: string;
 }
 
-// export interface PipeInput {
-//   metaframe: MetaframeId;
-//   source: MetaframePipeId;
-//   target: MetaframePipeId;
-// }
-
-// export interface PipeUpdateBlob {
-//   name: MetaframePipeId;
-//   value: any;
-// }
-
-// export interface MetaframeInstance {
-//   url: string;
-//   // Defines the inputs pipes from other metaframes
-//   inputs?: PipeInput[];
-//   // Set or override allowed features for the iframe
-//   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
-//   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Feature-Policy#directives
-//   allow?: string;
-// }
-
 export type MetaframeEditTypesV1 = "metapage" | "url";
 
 export interface MetaframeEditTypeUrlV1Param {
@@ -99,11 +57,6 @@ export type MetaframeEditTypeUrlV1 = {
   // might map to path or search elements on the target metaframe
   params?: MetaframeEditTypeUrlV1Param[];
 };
-
-// edit?: {
-//   type: MetaframeEditType;
-//   value: MetaframeEditTypeMetaframe | MetaframeEditTypeMetapage;
-// };
 
 export interface MetaframeEditTypeMetapageV1Param {
   // the key of the source metaframe that will supply a hash param to the edit metaframe

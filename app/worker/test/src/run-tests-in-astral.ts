@@ -26,8 +26,8 @@ const headless = !flags["disable-headless"];
 
 const timePerTest = 10000;
 const serverPort = Deno.env.get("APP_PORT") ? parseInt(Deno.env.get("APP_PORT")!) : 4430;
-const serverFqdn = "localhost";//Deno.env.get("APP_FQDN") ? Deno.env.get("APP_FQDN")! : "server1.localhost";
-const serverOrigin = `http://${serverFqdn}:${serverPort}`;
+const serverFqdn = Deno.env.get("APP_FQDN") ? Deno.env.get("APP_FQDN")! : "server1.localhost";
+const serverOrigin = `https://${serverFqdn}:${serverPort}`;
 
 type TestType = "compatibility" | "globs" | "first-message" | "io-pipe-names";
 

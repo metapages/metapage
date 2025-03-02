@@ -103,6 +103,9 @@ export interface PipeUpdateBlob {
 }
 
 export interface MetaframeInstance {
+  // This is not currently used, but likely will be used in the future
+  id?: string;
+  // The URL of the metaframe
   url: string;
   // Defines the inputs pipes from other metaframes
   inputs?: PipeInput[];
@@ -110,6 +113,13 @@ export interface MetaframeInstance {
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
   // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Feature-Policy#directives
   allow?: string;
+  // Set or override allowed features for the iframe
+  // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#sandbox
+  sandbox?: string;
+  // The source of the metaframe, could be a URL or a metaframe id
+  // This is used when generating archives, we need the full source of the metaframe
+  // but also it's origin so the reader can see the current version
+  source?: string;
   // internal use only. Used for internal metaframe state
   _?: any;
 }

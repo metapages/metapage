@@ -46,8 +46,7 @@ clean:
   rm -rf deploy
   rm -rf src/_fresh
 
-test: _build_local_module
-  rm -rf .certs
+test: _build_local_module _mkcert
   APP_PORT=8762 deno run -A --unsafely-ignore-certificate-errors test/src/run-tests-in-astral.ts
 
 build: _build_local_module

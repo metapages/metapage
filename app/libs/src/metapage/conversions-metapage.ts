@@ -11,11 +11,12 @@ import {
   MetapageVersionCurrent,
   VersionsMetapage,
 } from './versions.js';
+import { MetapageDefinitionV2 } from './v2/metapage.js';
 
 const fetchRetry = fetchRetryWrapper(fetch);
 
 export const convertMetapageDefinitionToVersion = async (
-  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1,
+  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 | MetapageDefinitionV2,
   targetVersion: VersionsMetapage
 ): Promise<any> => {
   if (!def) {
@@ -59,16 +60,16 @@ export const convertMetapageDefinitionToVersion = async (
 };
 
 export const convertMetapageDefinitionToCurrentVersion = async (
-  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1
+  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 | MetapageDefinitionV2
 ): Promise<MetapageDefinitionV1> => {
 
   return convertMetapageDefinitionToVersion(def, MetapageVersionCurrent);
 };
 
 const convertMetapageDefinitionToTargetVersionInternal = (
-  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1,
+  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 | MetapageDefinitionV2,
   targetVersion: VersionsMetapage
-): MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 => {
+): MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 | MetapageDefinitionV2 => {
   if (!def) {
     throw "Metapage definition null";
   }
@@ -82,7 +83,7 @@ const convertMetapageDefinitionToTargetVersionInternal = (
     return def;
   }
 
-  let currentDefinition: MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 = def;
+  let currentDefinition: MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 | MetapageDefinitionV2 = def;
 
   while (currentVersion !== targetVersion) {
     switch (currentVersion) {
@@ -107,9 +108,19 @@ const convertMetapageDefinitionToTargetVersionInternal = (
       }
       case "1": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
-          throw `Cannot convert from version ${currentVersion} to ${targetVersion}, 1 is the latest version`;
+          currentDefinition = definition_v1_to_v2(currentDefinition as MetapageDefinitionV1);
+          currentVersion = getMatchingMetapageVersion(currentDefinition.version);
         } else {
           currentDefinition = definition_v1_to_v0_3(currentDefinition as MetapageDefinitionV1);
+          currentVersion = getMatchingMetapageVersion(currentDefinition.version);
+        }
+        break;
+      }
+      case "2": {
+        if (compareVersions(targetVersion, currentVersion) > 0) {
+          throw `Cannot convert from version ${currentVersion} to ${targetVersion}, 1 is the latest version`;
+        } else {
+          currentDefinition = definition_v2_to_v1(currentDefinition as MetapageDefinitionV2);
           currentVersion = getMatchingMetapageVersion(currentDefinition.version);
         }
         break;
@@ -165,6 +176,49 @@ const definition_v1_to_v0_3 = (
   }) as MetapageDefinitionV03;
 };
 
+
+const definition_v2_to_v1 = (
+  def: MetapageDefinitionV2
+): MetapageDefinitionV1 => {
+
+  return create(def, (draft:MetapageDefinitionV2) => {
+    // keywords -> tags
+    // author -> authors
+    draft.version = "1";
+    if (draft?.meta?.tags) {
+      (draft as MetapageDefinitionV1).meta!.keywords = draft.meta.tags;
+      delete draft.meta!.tags;
+    }
+    if (draft?.meta?.authors) {
+      (draft as MetapageDefinitionV1).meta!.author = draft.meta.authors[0];
+      delete (draft as MetapageDefinitionV2).meta!.authors;
+    }
+    return draft;
+  }) as MetapageDefinitionV1;
+};
+
+const definition_v1_to_v2 = (
+  def: MetapageDefinitionV1
+): MetapageDefinitionV2 => {
+
+  return create(def, (draft:MetapageDefinitionV1) => {
+    // tags -> keywords
+    // authors -> author
+    draft.version = "2";
+    
+    if (draft?.meta?.keywords) {
+      (draft as MetapageDefinitionV2).meta!.tags = draft.meta.keywords;
+      delete (draft as MetapageDefinitionV1).meta!.keywords;
+    }
+    if (draft?.meta?.author) {
+      (draft as MetapageDefinitionV2).meta!.authors = [draft.meta.author];
+      delete (draft as MetapageDefinitionV1).meta!.author;
+    }
+    
+    return draft;
+  }) as MetapageDefinitionV2;
+};
+
 export const getMatchingMetapageVersion = (version: string): VersionsMetapage => {
   if (version === "latest") {
     return MetapageVersionCurrent;
@@ -177,8 +231,10 @@ export const getMatchingMetapageVersion = (version: string): VersionsMetapage =>
     return "0.2";
   } else if (compareVersions(version, "0.3") <= 0) {
     return "0.3";
-  } else if (version === "1") {
+  } else if (compareVersions(version, "1") <= 0) {
     return "1";
+  } else if (version === "2") {
+    return "2";
   } else {
     // Return something, assume latest
     throw `Unknown version: ${version}`;

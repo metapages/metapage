@@ -7,16 +7,24 @@ let cert: string | undefined;
 let key: string | undefined;
 // Check if the file exists in the current directory.
 try {
-  cert = Deno.statSync(certPath).isFile  ? Deno.readTextFileSync(certPath) : undefined;
+  cert = Deno.statSync(certPath).isFile ? Deno.readTextFileSync(certPath) : undefined;
   key = Deno.statSync(keyPath).isFile ? Deno.readTextFileSync(keyPath) : undefined;
-} catch (err) {} // ignore
+} catch (err :any) {
+  console.warn("Could not load SSL certificates:", err.message);
+} // continue without SSL if files not found
+
+// Get environment variables with defaults
+const PORT = parseInt(Deno.env.get("APP_PORT") || Deno.env.get("PORT") || "8000");
+const HOSTNAME = Deno.env.get("APP_FQDN") || "localhost"; // Changed from 0.0.0.0 to localhost
 
 export default defineConfig({
   plugins: [tailwind()],
   server: {
     cert,
     key,
-    port: parseInt(Deno.env.get("APP_PORT") || Deno.env.get("PORT") || "8000"),
-    hostname: "0.0.0.0", //Deno.env.get("APP_FQDN") || 
+    port: PORT,
+    hostname: HOSTNAME,
+    // Force HTTPS when certificates are available
+    secure: cert !== undefined && key !== undefined
   },
 });

@@ -14,10 +14,11 @@ import {
 MetaframeVersionCurrent,
   type VersionsMetaframe,
 } from './versions.js';
+import { MetaframeDefinitionV2 } from './v2/metaframe.js';
 
 const fetchRetry = fetchRetryWrapper(fetch);
 
-type AnyMetaframeDefinition = MetaframeDefinitionV03 | MetaframeDefinitionV4 | MetaframeDefinitionV5 | MetaframeDefinitionV6 | MetaframeDefinitionV1;
+type AnyMetaframeDefinition = MetaframeDefinitionV03 | MetaframeDefinitionV4 | MetaframeDefinitionV5 | MetaframeDefinitionV6 | MetaframeDefinitionV1 | MetaframeDefinitionV2;
 
 export const convertMetaframeDefinitionToVersion = async (
   def: any | AnyMetaframeDefinition,
@@ -50,7 +51,7 @@ export const convertMetaframeDefinitionToVersion = async (
         }
       );
       const respBody = await resp.json();
-      return respBody as MetaframeDefinitionV1;
+      return respBody as MetaframeDefinitionV2;
     } catch(err) {
       throw `Error converting metapage definition to version ${targetVersion}: ${err}`;
     }
@@ -90,7 +91,7 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
 
   let currentDefinition:AnyMetaframeDefinition = def;
 
-  // ["0.3", "0.4", "0.5", "0.6", "1"]
+  // ["0.3", "0.4", "0.5", "0.6", "1", "2"]
   while (currentVersion !== targetVersion) {
     switch (currentVersion) {
       case "0.3": {
@@ -132,11 +133,21 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
         }
         break;
       }
-      case "1": {
+        case "1": {
+          if (compareVersions(targetVersion, currentVersion) > 0) {
+            currentDefinition = definition_v1_to_v2(currentDefinition as MetaframeDefinitionV1);
+            currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
+          } else {
+            currentDefinition = definition_v1_to_v0_6(currentDefinition as MetaframeDefinitionV1);
+            currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
+          }
+          break;
+        }
+      case "2": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
-          throw `Cannot convert from version ${currentVersion} to ${targetVersion}, 1 is the latest version`;
+          throw `Cannot convert from version ${currentVersion} to ${targetVersion}`;
         } else {
-          currentDefinition = definition_v1_to_v0_6(currentDefinition as MetaframeDefinitionV1);
+          currentDefinition = definition_v2_to_v1(currentDefinition as MetaframeDefinitionV2);
           currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
         }
         break;
@@ -153,7 +164,7 @@ export const convertMetaframeJsonToCurrentVersion = async (
   m: AnyMetaframeDefinition | undefined,
   // deprecated
   opts?: { errorIfUnknownVersion?: boolean }
-): Promise<MetaframeDefinitionV1 | undefined> => {
+): Promise<MetaframeDefinitionV2 | undefined> => {
   if (!m) {
     return;
   }
@@ -235,6 +246,30 @@ const definition_v1_to_v0_6 = (def: MetaframeDefinitionV1) :MetaframeDefinitionV
   }) as MetaframeDefinitionV6;
 }
 
+const definition_v2_to_v1 = (def: MetaframeDefinitionV2) :MetaframeDefinitionV1 => {
+  return create(def, (draft: MetaframeDefinitionV2) => {
+    draft.version = "1";
+    if (draft?.metadata?.authors) {
+      // ugh we lose information here, but it's the best we can do
+      (draft as MetaframeDefinitionV1).metadata.author = draft?.metadata?.authors[0];
+      delete draft.metadata.authors;
+    }
+    return draft;
+  }) as MetaframeDefinitionV1;
+}
+
+const definition_v1_to_v2 = (def: MetaframeDefinitionV1) :MetaframeDefinitionV2 => {
+  return create(def, (draft: MetaframeDefinitionV1) => {
+    draft.version = "2";
+    if (draft?.metadata?.author) {
+      // ugh we lose information here, but it's the best we can do
+      (draft as MetaframeDefinitionV2).metadata.authors = [draft.metadata.author];
+      delete draft.metadata.author;
+    }
+    return draft;
+  }) as MetaframeDefinitionV2;
+}
+
 // The only difference between v5 and v6 is the metadata operations field
 // which we are not using in any of those versions, its too new and not stable
 // and not documented.
@@ -273,8 +308,10 @@ export const getMatchingMetaframeVersion = (version: string): VersionsMetaframe 
     return "0.5";
   } else if (compareVersions(version, "0.6") <= 0) {
     return "0.6";
-  } else if (version === "1") {
+  } else if (compareVersions(version, "1") <= 0) {
     return "1";
+  } else if (version === "2") {
+    return "2";
   } else {
     // Return something, assume latest
     throw `Unknown version: ${version}`;
