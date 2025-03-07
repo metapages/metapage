@@ -4,15 +4,17 @@
         "allowSyntheticDefaultImports": true,
         "declaration": true,
         "declarationMap": true,
+        "esModuleInterop": true,
         "lib": ["DOM", "es6"],
         "module": "esnext",
-        "moduleResolution": "node",
+        "moduleResolution": "bundler",
         "outDir": "dist",
         "paths": {
             // avoid ../../../../foo type import paths
             "/@/*": ["./*"],
         },
         "removeComments": true,
+        "skipLibCheck": true,
         "sourceMap": true,
         "strict": true,
         "target": "es2020",
