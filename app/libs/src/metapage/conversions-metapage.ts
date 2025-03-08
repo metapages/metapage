@@ -61,7 +61,7 @@ export const convertMetapageDefinitionToVersion = async (
 
 export const convertMetapageDefinitionToCurrentVersion = async (
   def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 | MetapageDefinitionV2
-): Promise<MetapageDefinitionV1> => {
+): Promise<MetapageDefinitionV2> => {
 
   return convertMetapageDefinitionToVersion(def, MetapageVersionCurrent);
 };
