@@ -13,7 +13,13 @@ export default defineConfig(({ mode }) => ({
     },
   },
 
-  plugins: [],
+  plugins: [
+    typescript({
+      sourceMap: true,
+      declaration: true,
+      outDir: "dist",
+    }),
+  ],
 
   esbuild: {
     logOverride: { "this-is-undefined-in-esm": "silent" },
@@ -41,44 +47,19 @@ export default defineConfig(({ mode }) => ({
         'object-hash',
         'picomatch-browser',
       ],
+      output: {
+        preserveModules: true,
+        preserveModulesRoot: 'src',
+        entryFileNames: (chunk) => {
+          return `[name].js`;
+        },
+      },
+      plugins: [
+        typescriptPaths({
+          preserveExtensions: true,
+        }),
+      ],
     },
-
-
-
-
-
-
-
-    // target: "modules",
-    // emptyOutDir: true,
-    // sourcemap: true,
-    // minify: "esbuild",
     reportCompressedSize: true,
-    // lib: {
-    //   entry: path.resolve(__dirname, "src/index.ts"),
-    //   formats: ['es', 'cjs'],
-    //   fileName: format => `index.${format === 'cjs' ? 'cjs' : 'js'}`
-    // },
-    // rollupOptions: {
-    //   output: {
-    //     entryFileNames: '[name].js',
-    //     chunkFileNames: '[name].js',
-    //     // Make sure to keep separate files for imports
-    //     // entryFileNames: '[name].js',
-    //     // chunkFileNames: '[name]-[hash].js',
-    //     // assetFileNames: '[name]-[hash][extname]',
-    //   },
-    //   external: [],
-    //   plugins: [
-    //     typescriptPaths({
-    //       preserveExtensions: true,
-    //     }),
-    //     typescript({
-    //       sourceMap: true,
-    //       declaration: true,
-    //       outDir: "dist",
-    //     }),
-    //   ],
-    // },
   },
 }));
