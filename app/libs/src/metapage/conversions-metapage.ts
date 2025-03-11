@@ -75,7 +75,7 @@ const convertMetapageDefinitionToTargetVersionInternal = (
   }
 
   if (!def.version) {
-    throw 'Missing "version" key in metapage definition';
+    throw `Missing "version" key in metapage definition: ${JSON.stringify(def)}`;
   }
 
   let currentVersion = getMatchingMetapageVersion(def.version);

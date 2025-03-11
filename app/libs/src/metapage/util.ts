@@ -3,8 +3,9 @@ import { convertMetapageDefinitionToVersion } from "./conversions-metapage";
 import { MetaframeDefinitionV1, MetapageDefinitionV1 } from "./v1";
 import { VersionsMetaframe, VersionsMetapage } from "./versions";
 import { MetaframeDefinitionV4, MetapageDefinitionV3 } from "./v0_4";
-import { convertMetaframeDefinitionToVersion } from "./conversions-metaframe";
+import { convertMetaframeDefinitionToVersion, convertMetaframeJsonToCurrentVersion } from "./conversions-metaframe";
 import { MetaframeDefinitionV2, MetapageDefinitionV2 } from "./v2";
+import { getHashParamValueJsonFromUrl } from "@metapages/hash-query";
 
 const fetchRetry = fetchRetryWrapper(fetch);
 
@@ -21,17 +22,34 @@ export const getMetapageDefinitionFromUrl = async (url: string, version?: Versio
   return convertedDefinition;
 };
 
-export const getMetaframeDefinitionFromUrl = async (url: string, version?: VersionsMetaframe): Promise<MetaframeDefinitionV2|MetaframeDefinitionV1|MetaframeDefinitionV4> => {
+export const getMetaframeDefinitionFromUrl = async (url: string, version?: VersionsMetaframe): Promise<MetaframeDefinitionV2|MetaframeDefinitionV1|MetaframeDefinitionV4|undefined> => {
   const metaframeUrl = new URL(url);
-  metaframeUrl.pathname = metaframeUrl.pathname + (metaframeUrl.pathname.endsWith("/") ? "metaframe.json" : "/metaframe.json");
-  const response = await fetchRetry(metaframeUrl.href, {
-    redirect: "follow",
-    retries: 3,
-    retryDelay: 1000,
-  });
-  const definition = await response.json();
-  const convertedDefinition = await convertMetaframeDefinitionToVersion(definition, version || "1");
-  return convertedDefinition;
+
+  // first try hash param encoded definition
+  let urlEncodedDefinition: MetaframeDefinitionV2 | undefined = getHashParamValueJsonFromUrl(url, "definition");
+
+  if (urlEncodedDefinition?.version) {
+    return convertMetaframeJsonToCurrentVersion(urlEncodedDefinition)
+  }
+
+  // then try metaframe.json in the url
+  if (!metaframeUrl.pathname.endsWith("metaframe.json")) {
+    metaframeUrl.pathname = metaframeUrl.pathname + (metaframeUrl.pathname.endsWith("/") ? "metaframe.json" : "/metaframe.json");
+  }
+  try {
+
+    const response = await fetchRetry(metaframeUrl.href, {
+      redirect: "follow",
+      retries: 3,
+      retryDelay: 1000,
+    });
+    const definition = await response.json();
+    const convertedDefinition = await convertMetaframeDefinitionToVersion(definition, version || "1");
+    return convertedDefinition;
+  } catch (error) {
+    console.error(`Error fetching metaframe definition from ${metaframeUrl.href}: ${error}`);
+    return undefined;
+  }
 };
 
 export const isEmptyMetaframeDefinition = (definition?: MetaframeDefinitionV1|MetaframeDefinitionV2|MetaframeDefinitionV4): boolean => {

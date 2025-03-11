@@ -25,11 +25,11 @@ export const convertMetaframeDefinitionToVersion = async (
   targetVersion: VersionsMetaframe
 ): Promise<any> => {
   if (!def) {
-    throw "Metapage definition null";
+    throw "Metaframe definition null";
   }
 
   if (!def.version) {
-    throw 'Missing "version" key in metapage definition';
+    throw `Missing "version" key in metaframe definition: ${JSON.stringify(def)}`;
   }
   if (!targetVersion) {
     throw 'Missing "version" argument';
