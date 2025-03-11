@@ -120,14 +120,29 @@ export class MetapageIFrameRpcClient extends EventEmitter<
             selfThis._iframe.allow =
               this._metapage._definition.metaframes[this.id].allow!;
           } else {
-            // Otherwise use whatever is in the metaframe.json
-            const metaframeDef = await selfThis.getDefinition();
+            // else use the url encoded definition
+            let urlEncodedDefinition: MetaframeDefinitionV2 | undefined =
+              getHashParamValueJsonFromUrl(this.url, "definition");
+
+            urlEncodedDefinition = urlEncodedDefinition
+              ? await convertMetaframeJsonToCurrentVersion(urlEncodedDefinition)
+              : undefined;
             if (!selfThis._iframe) {
               // possibly already disposed
               return;
             }
-            if (metaframeDef && metaframeDef.allow) {
-              selfThis._iframe.allow = metaframeDef.allow;
+            if (urlEncodedDefinition?.allow) {
+              selfThis._iframe.allow = urlEncodedDefinition.allow;
+            } else {
+              // Otherwise use whatever is in the metaframe.json
+              const metaframeDef = await selfThis.getDefinition();
+              if (!selfThis._iframe) {
+                // possibly already disposed
+                return;
+              }
+              if (metaframeDef && metaframeDef.allow) {
+                selfThis._iframe.allow = metaframeDef.allow;
+              }
             }
           }
           // set the src after the allow attribute is set
