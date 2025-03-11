@@ -146,6 +146,9 @@ export class MetapageIFrameRpcClient extends EventEmitter<
             }
           }
           // set the src after the allow attribute is set
+          if (this._debug) {
+            this.log(`mf allow=${selfThis._iframe.allow} from ${this.url}`);
+          }
           selfThis._iframe.src = this.url;
           resolve(selfThis._iframe);
         }
