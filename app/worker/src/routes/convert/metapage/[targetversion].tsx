@@ -36,8 +36,11 @@ export const handler: Handlers = {
       // Handle form data
       const form = await _req.formData();
       try {
-        console.log('form.get("metapageDefinition")', form.get("metapageDefinition"));
-        metapageDefinition = JSON.parse(form.get("metapageDefinition") as string | null || "");
+        if (form.get("metapageDefinition")) {
+          console.log('form.get("metapageDefinition")', form.get("metapageDefinition"));
+          console.log('form', form);
+          metapageDefinition = JSON.parse(form.get("metapageDefinition") as string | null || "");
+        }
       } catch (error) {
         return new Response("Invalid JSON", { status: 400 });
       }
@@ -48,7 +51,7 @@ export const handler: Handlers = {
       return new Response("Missing metapage definition", { status: 400 });
     }
 
-    console.log(`metapageDefinition (targetVersion=${targetVersion})`, metapageDefinition);
+    // console.log(`metapageDefinition (targetVersion=${targetVersion})`, metapageDefinition);
 
     try {
       const newVersion = await convertMetapageDefinitionToVersion(metapageDefinition, targetVersion as VersionsMetapage);
