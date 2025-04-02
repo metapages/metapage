@@ -1,7 +1,7 @@
 import fetchRetryWrapper from "fetch-retry";
 import { convertMetapageDefinitionToVersion } from "./conversions-metapage";
 import { MetaframeDefinitionV1, MetapageDefinitionV1 } from "./v1";
-import { VersionsMetaframe, VersionsMetapage } from "./versions";
+import { MetaframeVersionCurrent, MetapageVersionCurrent, VersionsMetaframe, VersionsMetapage } from "./versions";
 import { MetaframeDefinitionV4, MetapageDefinitionV3 } from "./v0_4";
 import { convertMetaframeDefinitionToVersion, convertMetaframeJsonToCurrentVersion } from "./conversions-metaframe";
 import { MetaframeDefinitionV2, MetapageDefinitionV2 } from "./v2";
@@ -18,7 +18,7 @@ export const getMetapageDefinitionFromUrl = async (url: string, version?: Versio
     retryDelay: 1000,
   });
   const definition = await response.json();
-  const convertedDefinition = await convertMetapageDefinitionToVersion(definition, version || "1");
+  const convertedDefinition = await convertMetapageDefinitionToVersion(definition, version || MetapageVersionCurrent);
   return convertedDefinition;
 };
 
@@ -44,7 +44,7 @@ export const getMetaframeDefinitionFromUrl = async (url: string, version?: Versi
       retryDelay: 1000,
     });
     const definition = await response.json();
-    const convertedDefinition = await convertMetaframeDefinitionToVersion(definition, version || "1");
+    const convertedDefinition = await convertMetaframeDefinitionToVersion(definition, version || MetaframeVersionCurrent);
     return convertedDefinition;
   } catch (error) {
     console.error(`Error fetching metaframe definition from ${metaframeUrl.href}: ${error}`);

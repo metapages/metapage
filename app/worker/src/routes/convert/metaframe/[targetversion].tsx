@@ -37,6 +37,7 @@ export const handler: Handlers = {
       const form = await _req.formData();
       try {
         console.log('form.get("metaframeDefinition")', form.get("metaframeDefinition"));
+        
         metaframeDefinition = JSON.parse(form.get("metaframeDefinition") as string | null || "");
       } catch (error) {
         return new Response("Invalid JSON", { status: 400 });
