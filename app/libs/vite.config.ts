@@ -1,8 +1,8 @@
-import path, { resolve } from 'path';
-import { typescriptPaths } from 'rollup-plugin-typescript-paths';
-import { defineConfig } from 'vite';
+import path, { resolve } from "path";
+import { typescriptPaths } from "rollup-plugin-typescript-paths";
+import { defineConfig } from "vite";
 
-import typescript from '@rollup/plugin-typescript';
+import typescript from "@rollup/plugin-typescript";
 
 // https://vitejs.dev/config/
 
@@ -26,30 +26,30 @@ export default defineConfig(({ mode }) => ({
   },
 
   build: {
-    outDir: 'dist',
+    outDir: "dist",
     lib: {
-      entry: path.resolve(__dirname, 'src/index.ts'),
-      formats: ['es', 'cjs'],
-      fileName: (format) => (format === 'cjs' ? 'index.cjs' : 'index.js'),
+      entry: path.resolve(__dirname, "src/index.ts"),
+      formats: ["es"],
+      fileName: () => "index.js",
     },
     sourcemap: true,
     emptyOutDir: true,
-    minify: 'esbuild',
+    minify: "esbuild",
     rollupOptions: {
       external: [
-        '@metapages/hash-query',
-        'base64-arraybuffer',
-        'compare-versions',
-        'eventemitter3',
-        'fast-json-stable-stringify',
-        'fetch-retry',
-        'mutative',
-        'object-hash',
-        'picomatch-browser',
+        "@metapages/hash-query",
+        "base64-arraybuffer",
+        "compare-versions",
+        "eventemitter3",
+        "fast-json-stable-stringify",
+        "fetch-retry",
+        "mutative",
+        "object-hash",
+        "picomatch-browser",
       ],
       output: {
         preserveModules: true,
-        preserveModulesRoot: 'src',
+        preserveModulesRoot: "src",
         entryFileNames: (chunk) => {
           return `[name].js`;
         },
