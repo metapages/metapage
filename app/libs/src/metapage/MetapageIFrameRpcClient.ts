@@ -71,7 +71,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     // Urls can be relative paths, if so, turn them into absolute URLs
     // Also local development often skips the "http:" part, so add that
     // on so the origin is valid
-    if (!url.startsWith("http")) {
+    if (!url.startsWith("data:") && !url.startsWith("http")) {
       while (url.startsWith("/")) {
         url = url.substring(1);
       }
@@ -119,17 +119,22 @@ export class MetapageIFrameRpcClient extends EventEmitter<
           if (this._metapage?._definition?.metaframes?.[this.id]?.allow) {
             selfThis._iframe.allow =
               this._metapage._definition.metaframes[this.id].allow!;
-              if (this._debug) {
-                this.log(`mf allow=${selfThis._iframe.allow} from this._metapage?._definition`);
-              }
+            if (this._debug) {
+              this.log(
+                `mf allow=${selfThis._iframe.allow} from this._metapage?._definition`
+              );
+            }
           } else {
             // else use the url encoded definition
             let urlEncodedDefinition: MetaframeDefinitionV2 | undefined =
               getHashParamValueJsonFromUrl(this.url, "definition");
 
-            urlEncodedDefinition = urlEncodedDefinition && urlEncodedDefinition?.version
-              ? await convertMetaframeJsonToCurrentVersion(urlEncodedDefinition)
-              : undefined;
+            urlEncodedDefinition =
+              urlEncodedDefinition && urlEncodedDefinition?.version
+                ? await convertMetaframeJsonToCurrentVersion(
+                    urlEncodedDefinition
+                  )
+                : undefined;
             if (!selfThis._iframe) {
               // possibly already disposed
               return;
@@ -138,13 +143,15 @@ export class MetapageIFrameRpcClient extends EventEmitter<
               selfThis._iframe.allow = urlEncodedDefinition.allow;
             } else {
               // Otherwise use whatever is in the metaframe.json
-              let metaframeDef : MetaframeDefinitionV2 | undefined = await selfThis.getDefinition();
+              let metaframeDef: MetaframeDefinitionV2 | undefined =
+                await selfThis.getDefinition();
               if (this._debug) {
                 this.log(`mf metaframeDef=${JSON.stringify(metaframeDef)}`);
               }
-              metaframeDef = metaframeDef && metaframeDef?.version
-              ? await convertMetaframeJsonToCurrentVersion(metaframeDef)
-              : undefined;
+              metaframeDef =
+                metaframeDef && metaframeDef?.version
+                  ? await convertMetaframeJsonToCurrentVersion(metaframeDef)
+                  : undefined;
 
               if (this._debug) {
                 this.log(`mf metaframeDef=${JSON.stringify(metaframeDef)}`);
@@ -229,7 +236,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     if (this._definition) {
       return this._definition;
     }
-    
+
     try {
       const metaframeDef = await getMetaframeDefinitionFromUrl(this.url);
       if (metaframeDef) {

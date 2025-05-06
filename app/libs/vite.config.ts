@@ -36,22 +36,27 @@ export default defineConfig(({ mode }) => ({
     emptyOutDir: true,
     minify: "esbuild",
     rollupOptions: {
-      external: [
-        "@metapages/hash-query",
-        "base64-arraybuffer",
-        "compare-versions",
-        "eventemitter3",
-        "fast-json-stable-stringify",
-        "fetch-retry",
-        "mutative",
-        "object-hash",
-        "picomatch-browser",
-      ],
+      // external: [
+      //   "@metapages/hash-query",
+      //   "base64-arraybuffer",
+      //   "compare-versions",
+      //   "eventemitter3",
+      //   "fast-json-stable-stringify",
+      //   "fetch-retry",
+      //   "mutative",
+      //   "object-hash",
+      //   "picomatch-browser",
+      // ],
       output: {
         preserveModules: true,
         preserveModulesRoot: "src",
         entryFileNames: (chunk) => {
           return `[name].js`;
+        },
+        minifyInternalExports: true,
+        generatedCode: {
+          preset: "es2015",
+          constBindings: true,
         },
       },
       plugins: [
