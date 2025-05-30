@@ -1,22 +1,22 @@
-import { compareVersions } from 'compare-versions';
+import { compareVersions } from "compare-versions";
 import fetchRetryWrapper from "fetch-retry";
-import { create } from 'mutative';
+import { create } from "mutative";
 
-import { MetapageDefinitionV02 } from './v0_2/all.js';
-import { MetapageDefinitionV03 } from './v0_3/all.js';
-import {
-  MetapageDefinitionV1
-} from './v1/index.js';
-import {
-  MetapageVersionCurrent,
-  VersionsMetapage,
-} from './versions.js';
-import { MetapageDefinitionV2 } from './v2/metapage.js';
+import { MetapageDefinitionV02 } from "./v0_2/all.js";
+import { MetapageDefinitionV03 } from "./v0_3/all.js";
+import { MetapageDefinitionV1 } from "./v1/index.js";
+import { MetapageVersionCurrent, VersionsMetapage } from "./versions.js";
+import { MetapageDefinitionV2 } from "./v2/metapage.js";
 
 const fetchRetry = fetchRetryWrapper(fetch);
 
 export const convertMetapageDefinitionToVersion = async (
-  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 | MetapageDefinitionV2,
+  def:
+    | any
+    | MetapageDefinitionV02
+    | MetapageDefinitionV03
+    | MetapageDefinitionV1
+    | MetapageDefinitionV2,
   targetVersion: VersionsMetapage
 ): Promise<any> => {
   if (!def) {
@@ -24,7 +24,7 @@ export const convertMetapageDefinitionToVersion = async (
   }
 
   if (!def.version) {
-    def = create(def, (draft :MetapageDefinitionV03) => {
+    def = create(def, (draft: MetapageDefinitionV03) => {
       draft.version = "0.3";
     }) as MetapageDefinitionV03;
   }
@@ -35,7 +35,8 @@ export const convertMetapageDefinitionToVersion = async (
   if (compareVersions(targetVersion, MetapageVersionCurrent) > 0) {
     // The version we are given is from the future, so we need the API to convert it
     try {
-      const resp = await fetchRetry(`https://module.metapage.io/conversion/metapage/${targetVersion}`, 
+      const resp = await fetchRetry(
+        `https://module.metapage.io/conversion/metapage/v${targetVersion}`,
         {
           redirect: "follow",
           retries: 3,
@@ -49,33 +50,50 @@ export const convertMetapageDefinitionToVersion = async (
       );
       const respBody = await resp.json();
       return respBody as MetapageDefinitionV1;
-    } catch(err) {
+    } catch (err) {
       throw `Error converting metapage definition to version ${targetVersion}: ${err}`;
     }
-    
   }
 
-  const targetDefinition = convertMetapageDefinitionToTargetVersionInternal(def, targetVersion);
+  const targetDefinition = convertMetapageDefinitionToTargetVersionInternal(
+    def,
+    targetVersion
+  );
   return targetDefinition;
 };
 
 export const convertMetapageDefinitionToCurrentVersion = async (
-  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 | MetapageDefinitionV2
+  def:
+    | any
+    | MetapageDefinitionV02
+    | MetapageDefinitionV03
+    | MetapageDefinitionV1
+    | MetapageDefinitionV2
 ): Promise<MetapageDefinitionV2> => {
-
   return convertMetapageDefinitionToVersion(def, MetapageVersionCurrent);
 };
 
 const convertMetapageDefinitionToTargetVersionInternal = (
-  def: any | MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 | MetapageDefinitionV2,
+  def:
+    | any
+    | MetapageDefinitionV02
+    | MetapageDefinitionV03
+    | MetapageDefinitionV1
+    | MetapageDefinitionV2,
   targetVersion: VersionsMetapage
-): MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 | MetapageDefinitionV2 => {
+):
+  | MetapageDefinitionV02
+  | MetapageDefinitionV03
+  | MetapageDefinitionV1
+  | MetapageDefinitionV2 => {
   if (!def) {
     throw "Metapage definition null";
   }
 
   if (!def.version) {
-    throw `Missing "version" key in metapage definition: ${JSON.stringify(def)}`;
+    throw `Missing "version" key in metapage definition: ${JSON.stringify(
+      def
+    )}`;
   }
 
   let currentVersion = getMatchingMetapageVersion(def.version);
@@ -83,14 +101,22 @@ const convertMetapageDefinitionToTargetVersionInternal = (
     return def;
   }
 
-  let currentDefinition: MetapageDefinitionV02 | MetapageDefinitionV03 | MetapageDefinitionV1 | MetapageDefinitionV2 = def;
+  let currentDefinition:
+    | MetapageDefinitionV02
+    | MetapageDefinitionV03
+    | MetapageDefinitionV1
+    | MetapageDefinitionV2 = def;
 
   while (currentVersion !== targetVersion) {
     switch (currentVersion) {
       case "0.2": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
-          currentDefinition = definition_v0_2_to_v0_3(currentDefinition as MetapageDefinitionV02);
-          currentVersion = getMatchingMetapageVersion(currentDefinition.version);
+          currentDefinition = definition_v0_2_to_v0_3(
+            currentDefinition as MetapageDefinitionV02
+          );
+          currentVersion = getMatchingMetapageVersion(
+            currentDefinition.version
+          );
         } else {
           throw `Cannot convert from version ${currentVersion} to ${targetVersion}`;
         }
@@ -98,21 +124,37 @@ const convertMetapageDefinitionToTargetVersionInternal = (
       }
       case "0.3": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
-          currentDefinition = definition_v0_3_to_v1(currentDefinition as MetapageDefinitionV03);
-          currentVersion = getMatchingMetapageVersion(currentDefinition.version);
+          currentDefinition = definition_v0_3_to_v1(
+            currentDefinition as MetapageDefinitionV03
+          );
+          currentVersion = getMatchingMetapageVersion(
+            currentDefinition.version
+          );
         } else {
-          currentDefinition = definition_v0_3_to_v0_2(currentDefinition as MetapageDefinitionV03);
-          currentVersion = getMatchingMetapageVersion(currentDefinition.version);
+          currentDefinition = definition_v0_3_to_v0_2(
+            currentDefinition as MetapageDefinitionV03
+          );
+          currentVersion = getMatchingMetapageVersion(
+            currentDefinition.version
+          );
         }
         break;
       }
       case "1": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
-          currentDefinition = definition_v1_to_v2(currentDefinition as MetapageDefinitionV1);
-          currentVersion = getMatchingMetapageVersion(currentDefinition.version);
+          currentDefinition = definition_v1_to_v2(
+            currentDefinition as MetapageDefinitionV1
+          );
+          currentVersion = getMatchingMetapageVersion(
+            currentDefinition.version
+          );
         } else {
-          currentDefinition = definition_v1_to_v0_3(currentDefinition as MetapageDefinitionV1);
-          currentVersion = getMatchingMetapageVersion(currentDefinition.version);
+          currentDefinition = definition_v1_to_v0_3(
+            currentDefinition as MetapageDefinitionV1
+          );
+          currentVersion = getMatchingMetapageVersion(
+            currentDefinition.version
+          );
         }
         break;
       }
@@ -120,19 +162,21 @@ const convertMetapageDefinitionToTargetVersionInternal = (
         if (compareVersions(targetVersion, currentVersion) > 0) {
           throw `Cannot convert from version ${currentVersion} to ${targetVersion}, 1 is the latest version`;
         } else {
-          currentDefinition = definition_v2_to_v1(currentDefinition as MetapageDefinitionV2);
-          currentVersion = getMatchingMetapageVersion(currentDefinition.version);
+          currentDefinition = definition_v2_to_v1(
+            currentDefinition as MetapageDefinitionV2
+          );
+          currentVersion = getMatchingMetapageVersion(
+            currentDefinition.version
+          );
         }
         break;
       }
       default:
         throw `Unknow version ${currentVersion} to ${targetVersion}`; // Latest
     }
-
   }
   return currentDefinition;
 };
-
 
 const definition_v0_2_to_v0_3 = (
   old: MetapageDefinitionV02
@@ -152,11 +196,9 @@ const definition_v0_3_to_v0_2 = (
   });
 };
 
-
 const definition_v0_3_to_v1 = (
   def: MetapageDefinitionV03
 ): MetapageDefinitionV1 => {
-
   return create<MetapageDefinitionV1>(def, (draft) => {
     // We removed plugins in v1
     const castV1 = draft as MetapageDefinitionV03;
@@ -168,20 +210,17 @@ const definition_v0_3_to_v1 = (
 const definition_v1_to_v0_3 = (
   def: MetapageDefinitionV1
 ): MetapageDefinitionV03 => {
-
-  return create(def, (draft:MetapageDefinitionV1) => {
+  return create(def, (draft: MetapageDefinitionV1) => {
     // We removed plugins in v1, but we don't need to add them back
     draft.version = "0.3";
     return draft;
   }) as MetapageDefinitionV03;
 };
 
-
 const definition_v2_to_v1 = (
   def: MetapageDefinitionV2
 ): MetapageDefinitionV1 => {
-
-  return create(def, (draft:MetapageDefinitionV2) => {
+  return create(def, (draft: MetapageDefinitionV2) => {
     // keywords -> tags
     // author -> authors
     draft.version = "1";
@@ -200,12 +239,11 @@ const definition_v2_to_v1 = (
 const definition_v1_to_v2 = (
   def: MetapageDefinitionV1
 ): MetapageDefinitionV2 => {
-
-  return create(def, (draft:MetapageDefinitionV1) => {
+  return create(def, (draft: MetapageDefinitionV1) => {
     // tags -> keywords
     // authors -> author
     draft.version = "2";
-    
+
     if (draft?.meta?.keywords) {
       (draft as MetapageDefinitionV2).meta!.tags = draft.meta.keywords;
       delete (draft as MetapageDefinitionV1).meta!.keywords;
@@ -214,12 +252,14 @@ const definition_v1_to_v2 = (
       (draft as MetapageDefinitionV2).meta!.authors = [draft.meta.author];
       delete (draft as MetapageDefinitionV1).meta!.author;
     }
-    
+
     return draft;
   }) as MetapageDefinitionV2;
 };
 
-export const getMatchingMetapageVersion = (version: string): VersionsMetapage => {
+export const getMatchingMetapageVersion = (
+  version: string
+): VersionsMetapage => {
   if (version === "latest") {
     return MetapageVersionCurrent;
   } else if (compareVersions(version, "0.2") < 0) {

@@ -1,24 +1,25 @@
-import { compareVersions } from 'compare-versions';
-import { create } from 'mutative';
+import { compareVersions } from "compare-versions";
+import { create } from "mutative";
 import fetchRetryWrapper from "fetch-retry";
-import { type MetaframeDefinitionV03 } from './v0_3/all.js';
+import { type MetaframeDefinitionV03 } from "./v0_3/all.js";
 import {
   MetaframeDefinitionV4,
   MetaframeDefinitionV5,
   MetaframeDefinitionV6,
-} from './v0_4/index.js';
-import {
-  MetaframeDefinitionV1,
-} from './v1/index.js';
-import {
-MetaframeVersionCurrent,
-  type VersionsMetaframe,
-} from './versions.js';
-import { MetaframeDefinitionV2 } from './v2/metaframe.js';
+} from "./v0_4/index.js";
+import { MetaframeDefinitionV1 } from "./v1/index.js";
+import { MetaframeVersionCurrent, type VersionsMetaframe } from "./versions.js";
+import { MetaframeDefinitionV2 } from "./v2/metaframe.js";
 
 const fetchRetry = fetchRetryWrapper(fetch);
 
-type AnyMetaframeDefinition = MetaframeDefinitionV03 | MetaframeDefinitionV4 | MetaframeDefinitionV5 | MetaframeDefinitionV6 | MetaframeDefinitionV1 | MetaframeDefinitionV2;
+type AnyMetaframeDefinition =
+  | MetaframeDefinitionV03
+  | MetaframeDefinitionV4
+  | MetaframeDefinitionV5
+  | MetaframeDefinitionV6
+  | MetaframeDefinitionV1
+  | MetaframeDefinitionV2;
 
 export const convertMetaframeDefinitionToVersion = async (
   def: any | AnyMetaframeDefinition,
@@ -29,7 +30,9 @@ export const convertMetaframeDefinitionToVersion = async (
   }
 
   if (!def.version) {
-    throw `Missing "version" key in metaframe definition: ${JSON.stringify(def)}`;
+    throw `Missing "version" key in metaframe definition: ${JSON.stringify(
+      def
+    )}`;
   }
   if (!targetVersion) {
     throw 'Missing "version" argument';
@@ -38,7 +41,8 @@ export const convertMetaframeDefinitionToVersion = async (
   if (compareVersions(targetVersion, MetaframeVersionCurrent) > 0) {
     // The version we are given is from the future, so we need the API to convert it
     try {
-      const resp = await fetchRetry(`https://module.metapage.io/conversion/metaframe/${targetVersion}`, 
+      const resp = await fetchRetry(
+        `https://module.metapage.io/conversion/metaframe/v${targetVersion}`,
         {
           redirect: "follow",
           retries: 3,
@@ -52,13 +56,15 @@ export const convertMetaframeDefinitionToVersion = async (
       );
       const respBody = await resp.json();
       return respBody as MetaframeDefinitionV2;
-    } catch(err) {
+    } catch (err) {
       throw `Error converting metapage definition to version ${targetVersion}: ${err}`;
     }
-    
   }
 
-  const targetDefinition = convertMetaframeDefinitionToTargetVersionInternal(def, targetVersion);
+  const targetDefinition = convertMetaframeDefinitionToTargetVersionInternal(
+    def,
+    targetVersion
+  );
   return targetDefinition;
 };
 
@@ -79,7 +85,7 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
   if (!def.version) {
     // we assume this is an older version of the definition
     // that does not have the version key
-    def = create(def, (draft :MetaframeDefinitionV03) => {
+    def = create(def, (draft: MetaframeDefinitionV03) => {
       draft.version = "0.3";
     }) as MetaframeDefinitionV6;
   }
@@ -89,15 +95,19 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
     return def;
   }
 
-  let currentDefinition:AnyMetaframeDefinition = def;
+  let currentDefinition: AnyMetaframeDefinition = def;
 
   // ["0.3", "0.4", "0.5", "0.6", "1", "2"]
   while (currentVersion !== targetVersion) {
     switch (currentVersion) {
       case "0.3": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
-          currentDefinition = definition_v0_3_to_v0_4(currentDefinition as MetaframeDefinitionV03);
-          currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
+          currentDefinition = definition_v0_3_to_v0_4(
+            currentDefinition as MetaframeDefinitionV03
+          );
+          currentVersion = getMatchingMetaframeVersion(
+            currentDefinition.version
+          );
         } else {
           throw `Cannot convert from version ${currentVersion} to ${targetVersion}`;
         }
@@ -105,57 +115,92 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
       }
       case "0.4": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
-          currentDefinition = definition_v0_4_to_v0_5(currentDefinition as MetaframeDefinitionV4);
-          currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
+          currentDefinition = definition_v0_4_to_v0_5(
+            currentDefinition as MetaframeDefinitionV4
+          );
+          currentVersion = getMatchingMetaframeVersion(
+            currentDefinition.version
+          );
         } else {
-          currentDefinition = definition_v0_4_to_v0_3(currentDefinition as MetaframeDefinitionV4);
-          currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
+          currentDefinition = definition_v0_4_to_v0_3(
+            currentDefinition as MetaframeDefinitionV4
+          );
+          currentVersion = getMatchingMetaframeVersion(
+            currentDefinition.version
+          );
         }
         break;
       }
       case "0.5": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
-          currentDefinition = definition_v0_5_to_v0_6(currentDefinition as MetaframeDefinitionV5);
-          currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
+          currentDefinition = definition_v0_5_to_v0_6(
+            currentDefinition as MetaframeDefinitionV5
+          );
+          currentVersion = getMatchingMetaframeVersion(
+            currentDefinition.version
+          );
         } else {
-          currentDefinition = definition_v0_5_to_v0_4(currentDefinition as MetaframeDefinitionV5);
-          currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
+          currentDefinition = definition_v0_5_to_v0_4(
+            currentDefinition as MetaframeDefinitionV5
+          );
+          currentVersion = getMatchingMetaframeVersion(
+            currentDefinition.version
+          );
         }
         break;
       }
       case "0.6": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
-          currentDefinition = definition_v0_6_to_v1(currentDefinition as MetaframeDefinitionV6);
-          currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
+          currentDefinition = definition_v0_6_to_v1(
+            currentDefinition as MetaframeDefinitionV6
+          );
+          currentVersion = getMatchingMetaframeVersion(
+            currentDefinition.version
+          );
         } else {
-          currentDefinition = definition_v0_6_to_v0_5(currentDefinition as MetaframeDefinitionV6);
-          currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
+          currentDefinition = definition_v0_6_to_v0_5(
+            currentDefinition as MetaframeDefinitionV6
+          );
+          currentVersion = getMatchingMetaframeVersion(
+            currentDefinition.version
+          );
         }
         break;
       }
-        case "1": {
-          if (compareVersions(targetVersion, currentVersion) > 0) {
-            currentDefinition = definition_v1_to_v2(currentDefinition as MetaframeDefinitionV1);
-            currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
-          } else {
-            currentDefinition = definition_v1_to_v0_6(currentDefinition as MetaframeDefinitionV1);
-            currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
-          }
-          break;
+      case "1": {
+        if (compareVersions(targetVersion, currentVersion) > 0) {
+          currentDefinition = definition_v1_to_v2(
+            currentDefinition as MetaframeDefinitionV1
+          );
+          currentVersion = getMatchingMetaframeVersion(
+            currentDefinition.version
+          );
+        } else {
+          currentDefinition = definition_v1_to_v0_6(
+            currentDefinition as MetaframeDefinitionV1
+          );
+          currentVersion = getMatchingMetaframeVersion(
+            currentDefinition.version
+          );
         }
+        break;
+      }
       case "2": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
           throw `Cannot convert from version ${currentVersion} to ${targetVersion}`;
         } else {
-          currentDefinition = definition_v2_to_v1(currentDefinition as MetaframeDefinitionV2);
-          currentVersion = getMatchingMetaframeVersion(currentDefinition.version);
+          currentDefinition = definition_v2_to_v1(
+            currentDefinition as MetaframeDefinitionV2
+          );
+          currentVersion = getMatchingMetaframeVersion(
+            currentDefinition.version
+          );
         }
         break;
       }
       default:
         throw `Unknow version ${currentVersion} to ${targetVersion}`; // Latest
     }
-
   }
   return currentDefinition;
 };
@@ -172,20 +217,20 @@ export const convertMetaframeJsonToCurrentVersion = async (
 };
 
 const definition_v0_4_to_v0_3 = (def: MetaframeDefinitionV4) => {
-  return create(def, (draft :MetaframeDefinitionV4) => {
+  return create(def, (draft: MetaframeDefinitionV4) => {
     draft.version = "0.3";
     delete draft.allow;
   }) as MetaframeDefinitionV03;
 };
 
 const definition_v0_3_to_v0_4 = (def: MetaframeDefinitionV03) => {
-  return create(def, (draft :MetaframeDefinitionV03) => {
+  return create(def, (draft: MetaframeDefinitionV03) => {
     draft.version = "0.4";
   }) as MetaframeDefinitionV4;
 };
 
 const definition_v0_4_to_v0_5 = (def: MetaframeDefinitionV4) => {
-  return create(def, (draft :MetaframeDefinitionV4) => {
+  return create(def, (draft: MetaframeDefinitionV4) => {
     draft.version = "0.5";
     if (!draft?.metadata) {
       return;
@@ -201,12 +246,11 @@ const definition_v0_4_to_v0_5 = (def: MetaframeDefinitionV4) => {
     const keywords = draft.metadata.keywords;
     delete draft.metadata.keywords;
     (draft as MetaframeDefinitionV5).metadata!.tags = keywords;
-
   }) as MetaframeDefinitionV1;
 };
 
 const definition_v0_5_to_v0_4 = (def: MetaframeDefinitionV5) => {
-  return create(def, (draft :MetaframeDefinitionV5) => {
+  return create(def, (draft: MetaframeDefinitionV5) => {
     draft.version = "0.4";
     if (!draft?.metadata) {
       return;
@@ -222,58 +266,70 @@ const definition_v0_5_to_v0_4 = (def: MetaframeDefinitionV5) => {
     const tags = draft.metadata.tags;
     delete draft.metadata.tags;
     (draft as MetaframeDefinitionV4).metadata.keywords = tags;
-
   }) as MetaframeDefinitionV4;
 };
 
 // v0.6 and v1 are identical, but remove the operations field
-const definition_v0_6_to_v1 = (def: MetaframeDefinitionV6) :MetaframeDefinitionV1 => {
+const definition_v0_6_to_v1 = (
+  def: MetaframeDefinitionV6
+): MetaframeDefinitionV1 => {
   return create(def, (draft: MetaframeDefinitionV6) => {
     draft.version = "1";
     if (draft?.metadata?.operations) {
       delete draft.metadata.operations;
     }
   }) as MetaframeDefinitionV1;
-}
+};
 
 // v0.6 and v1 are identical
-const definition_v1_to_v0_6 = (def: MetaframeDefinitionV1) :MetaframeDefinitionV6 => {
+const definition_v1_to_v0_6 = (
+  def: MetaframeDefinitionV1
+): MetaframeDefinitionV6 => {
   return create(def, (draft: MetaframeDefinitionV1) => {
     draft.version = "0.6";
     if (draft?.metadata?.operations) {
       delete draft.metadata.operations;
     }
   }) as MetaframeDefinitionV6;
-}
+};
 
-const definition_v2_to_v1 = (def: MetaframeDefinitionV2) :MetaframeDefinitionV1 => {
+const definition_v2_to_v1 = (
+  def: MetaframeDefinitionV2
+): MetaframeDefinitionV1 => {
   return create(def, (draft: MetaframeDefinitionV2) => {
     draft.version = "1";
     if (draft?.metadata?.authors) {
       // ugh we lose information here, but it's the best we can do
-      (draft as MetaframeDefinitionV1).metadata.author = draft?.metadata?.authors[0];
+      (draft as MetaframeDefinitionV1).metadata.author =
+        draft?.metadata?.authors[0];
       delete draft.metadata.authors;
     }
     return draft;
   }) as MetaframeDefinitionV1;
-}
+};
 
-const definition_v1_to_v2 = (def: MetaframeDefinitionV1) :MetaframeDefinitionV2 => {
+const definition_v1_to_v2 = (
+  def: MetaframeDefinitionV1
+): MetaframeDefinitionV2 => {
   return create(def, (draft: MetaframeDefinitionV1) => {
     draft.version = "2";
     if (draft?.metadata?.author) {
       // ugh we lose information here, but it's the best we can do
-      (draft as MetaframeDefinitionV2).metadata.authors = [draft.metadata.author];
+      (draft as MetaframeDefinitionV2).metadata.authors = [
+        draft.metadata.author,
+      ];
       delete draft.metadata.author;
     }
     return draft;
   }) as MetaframeDefinitionV2;
-}
+};
 
 // The only difference between v5 and v6 is the metadata operations field
 // which we are not using in any of those versions, its too new and not stable
 // and not documented.
-const definition_v0_5_to_v0_6 = (source: MetaframeDefinitionV5) :MetaframeDefinitionV6 => {
+const definition_v0_5_to_v0_6 = (
+  source: MetaframeDefinitionV5
+): MetaframeDefinitionV6 => {
   return create(source, (draft: MetaframeDefinitionV5) => {
     draft.version = "0.6";
     if ((draft as MetaframeDefinitionV6)?.metadata?.operations) {
@@ -285,17 +341,24 @@ const definition_v0_5_to_v0_6 = (source: MetaframeDefinitionV5) :MetaframeDefini
 // The only difference between v5 and v6 is the metadata operations field
 // which we are not using in any of those versions, its too new and not stable
 // and not documented.
-const definition_v0_6_to_v0_5 = (source: MetaframeDefinitionV6) :MetaframeDefinitionV5 => {
-  return create<MetaframeDefinitionV5>(source, (draft: MetaframeDefinitionV6) => {
-    draft.version = "0.5";
-    if (draft?.metadata?.operations) {
-      delete draft.metadata.operations;
+const definition_v0_6_to_v0_5 = (
+  source: MetaframeDefinitionV6
+): MetaframeDefinitionV5 => {
+  return create<MetaframeDefinitionV5>(
+    source,
+    (draft: MetaframeDefinitionV6) => {
+      draft.version = "0.5";
+      if (draft?.metadata?.operations) {
+        delete draft.metadata.operations;
+      }
     }
-  });
+  );
 };
 
 // ["0.3", "0.4", "0.5", "0.6", "1"]
-export const getMatchingMetaframeVersion = (version: string): VersionsMetaframe => {
+export const getMatchingMetaframeVersion = (
+  version: string
+): VersionsMetaframe => {
   if (version === "latest") {
     return MetaframeVersionCurrent;
   } else if (compareVersions(version, "0.3") < 0) {
