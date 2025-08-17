@@ -49,10 +49,19 @@ export const getMetaframeDefinitionFromUrl = async (
   | MetaframeDefinitionV4
   | undefined
 > => {
+  // we know some URLs will never provide a definition, so we can skip them
   if (url.startsWith("data:")) {
     return undefined;
   }
+
+  if (url.startsWith("https://docs.google.com")) {
+    return undefined;
+  }
+
   const metaframeUrl = new URL(url);
+  if (metaframeUrl.origin.endsWith(".notion.site")) {
+    return undefined;
+  }
 
   // first try hash param encoded definition
   let urlEncodedDefinition: MetaframeDefinitionV2 | undefined =
@@ -76,6 +85,9 @@ export const getMetaframeDefinitionFromUrl = async (
       retries: 3,
       retryDelay: 1000,
     });
+    if (response.status !== 200) {
+      return undefined;
+    }
     const definition = await response.json();
     const convertedDefinition = await convertMetaframeDefinitionToVersion(
       definition,

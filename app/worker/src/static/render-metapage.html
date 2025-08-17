@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <title>Metapage renderer</title>
+    <link rel="stylesheet" href="./style.css"/>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon"/>
+  </head>
+
+  <body style="margin: 0; padding: 0; border: none">
+    <main style="margin: 0; padding: 0; border: none">
+      <div id="root" style="width: 100vw; height: 100vh; margin: 0; padding: 0; border: none"></div>
+    </main>
+    <script type="module">
+      import {getHashParamValueJsonFromWindow, setHashParamValueJsonInWindow} from "https://cdn.jsdelivr.net/npm/@metapages/hash-query@0.8.15/+esm";
+      const {Metapage, renderMetapage} = await import ("{{VERSION}}");
+
+      const rootDiv = document.getElementById("root");
+
+      let metapageDefinition = getHashParamValueJsonFromWindow("definition");
+
+      if (metapageDefinition) {
+        const {inputs, dispose} = await renderMetapage({definition: metapageDefinition, rootDiv: document.getElementById("root")});
+      } else {
+        rootDiv.innerHTML = `
+          <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+            <a href="/">
+                <img
+                  style="margin-top: 6px; margin-right: 16px; margin-left: 15px; "
+                  class="my-6"
+                  src="/mp/logo.svg"
+                  width="40"
+                  height="40"
+                  alt="the Metapages logo"
+                />
+              </a>
+            
+            
+            <div id="pasteArea" style="
+              border: 2px dashed #ccc; 
+              padding: 40px; 
+              margin: 20px; 
+              border-radius: 8px;
+              background: #f9f9f9;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            " onmouseover="this.style.borderColor='#999'; this.style.background='#f0f0f0';" 
+               onmouseout="this.style.borderColor='#ccc'; this.style.background='#f9f9f9';">
+              <p style="margin: 0; color: #666;">Paste (Ctrl+V/Cmd+V) a <a href="https://metapage.io">metapage definition  or URL</a></p>
+            </div>
+
+            
+            <div id="jsonOutput" style="
+              margin: 20px; 
+              padding: 15px; 
+              background: #f5f5f5; 
+              border-radius: 5px; 
+              text-align: left; 
+              display: none;
+              max-height: 400px; 
+              overflow-y: auto;
+            "></div>
+          </div>
+        `;
+
+        // Add clipboard handler
+        const pasteArea = document.getElementById("pasteArea");
+        const jsonOutput = document.getElementById("jsonOutput");
+
+        // Global paste handler
+        document.addEventListener("paste", async (e) => {
+          let text = e
+            .clipboardData
+            .getData("text");
+          try {
+            text = text
+              ?.trim();
+            console.log(text);
+            if (!text) {
+              return;
+            }
+
+            if (text.trim().startsWith("https://metapage.io/m/")) {
+              const urlBlob = new URL(text);
+              const pathTokens = urlBlob
+                .pathname
+                .split("/");
+              const metapageId = pathTokens[2];
+              const resp = await fetch(`https://metapage.io/m/${metapageId}/metapage.json`, {follow: "redirects"});
+              const metapageDef = await resp.json();
+              setHashParamValueJsonInWindow("definition", metapageDef);
+              window
+                .location
+                .reload();
+              return;
+            }
+
+            const json = JSON.parse(text);
+            setHashParamValueJsonInWindow("definition", json);
+            window
+              .location
+              .reload();
+          } catch (e) {
+            jsonOutput.innerHTML = `<p style="color: #dc3545;">Error parsing JSON: ${e.message}</p>`;
+            jsonOutput.style.display = "block";
+          }
+        });
+      }
+    </script>
+  </body>
+
+</html>

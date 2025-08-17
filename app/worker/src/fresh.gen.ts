@@ -15,6 +15,7 @@ import * as $convert_metapage_index from "./routes/convert/metapage/index.tsx";
 import * as $convert_types from "./routes/convert/types.ts";
 import * as $index from "./routes/index.tsx";
 import * as $lib_path_ from "./routes/lib/[...path].ts";
+import * as $m_index from "./routes/m/index.tsx";
 import * as $test_types from "./routes/test/_types.ts";
 import * as $test_metaframe_compatibility_version_index from "./routes/test/metaframe/compatibility/[version]/index.tsx";
 import * as $test_metaframe_compatibility_version_metaframe_json from "./routes/test/metaframe/compatibility/[version]/metaframe.json.ts";
@@ -32,6 +33,9 @@ import * as $test_metapage_index from "./routes/test/metapage/index.tsx";
 import * as $test_metapage_io_pipe_names_version_ from "./routes/test/metapage/io-pipe-names/[version].tsx";
 import * as $test_metapage_io_pipe_names_index from "./routes/test/metapage/io-pipe-names/index.tsx";
 import * as $test_metapage_io_pipe_names_metapage_test_js from "./routes/test/metapage/io-pipe-names/metapage-test.js.ts";
+import * as $test_metapage_multiple_concurrently_version_ from "./routes/test/metapage/multiple-concurrently/[version].tsx";
+import * as $test_metapage_multiple_concurrently_index from "./routes/test/metapage/multiple-concurrently/index.tsx";
+import * as $test_metapage_multiple_concurrently_metapage_test_js from "./routes/test/metapage/multiple-concurrently/metapage-test.js.ts";
 import * as $test_metapage_timing_version_ from "./routes/test/metapage/timing/[version].tsx";
 import * as $test_metapage_timing_index from "./routes/test/metapage/timing/index.tsx";
 import * as $versions_index from "./routes/versions/index.tsx";
@@ -56,6 +60,7 @@ const manifest = {
     "./routes/convert/types.ts": $convert_types,
     "./routes/index.tsx": $index,
     "./routes/lib/[...path].ts": $lib_path_,
+    "./routes/m/index.tsx": $m_index,
     "./routes/test/_types.ts": $test_types,
     "./routes/test/metaframe/compatibility/[version]/index.tsx":
       $test_metaframe_compatibility_version_index,
@@ -86,6 +91,12 @@ const manifest = {
       $test_metapage_io_pipe_names_index,
     "./routes/test/metapage/io-pipe-names/metapage-test.js.ts":
       $test_metapage_io_pipe_names_metapage_test_js,
+    "./routes/test/metapage/multiple-concurrently/[version].tsx":
+      $test_metapage_multiple_concurrently_version_,
+    "./routes/test/metapage/multiple-concurrently/index.tsx":
+      $test_metapage_multiple_concurrently_index,
+    "./routes/test/metapage/multiple-concurrently/metapage-test.js.ts":
+      $test_metapage_multiple_concurrently_metapage_test_js,
     "./routes/test/metapage/timing/[version].tsx":
       $test_metapage_timing_version_,
     "./routes/test/metapage/timing/index.tsx": $test_metapage_timing_index,

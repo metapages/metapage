@@ -2,7 +2,7 @@
 // to make it easier to test all versions against all
 const url = new URL(window.location.href);
 var version = url.pathname.split('/').filter(e => e !== '')[3] || "latest"; 
-const importURl = `${version === "latest" ? "/lib/metapage/index.js" : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + version.split("-")[0]}`;
+const importURl = `${version === "latest" || version === "latest-begin" ? "/lib/metapage/index.js" : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + version.split("-")[0]}`;
 const { Metaframe } = await import(importURl);
 
 const debug = ["debug", "mp_debug"].reduce((exists, flag) => {

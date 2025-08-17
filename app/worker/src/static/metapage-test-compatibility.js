@@ -2,7 +2,7 @@
 // to make it easier to test all versions against all
 const { compareVersions } = window.compareVersions
 const url = new URL(window.location.href);
-console.log(`url: ${url}`);
+// console.log(`url: ${url}`);
 const urlPathElements = url.pathname.split("/").filter((e) =>
     e !== ""
 );
@@ -13,8 +13,9 @@ const importURl = `${
     version === "latest"
         ? "/lib/metapage/index.js"
         : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" +
-            version.split("-")[0]
+            version.split("-")[0] + "/dist/index.js"
 }`;
+
 const { Metapage } = await import(importURl);
 
 let debug = ["debug", "mp_debug"].reduce((exists, flag) => {
@@ -439,7 +440,7 @@ TESTS = [
 
 // Define the metapage definition dynamically
 const metaPageDefinition = {
-    version: "1", //convertNpmToInternalVersion(VERSION),
+    version: "2", //convertNpmToInternalVersion(VERSION),
 };
 
 const metaframesBlob = {};

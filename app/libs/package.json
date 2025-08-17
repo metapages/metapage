@@ -1,58 +1,62 @@
 {
-    "name": "@metapages/metapage",
-    "public": true,
-    "version": "1.8.3",
-    "description": "Connect web pages together",
-    "repository": "https://github.com/metapages/metapage",
-    "homepage": "https://metapage.io/",
-    "type": "module",
-    "main": "./dist/index.js",
-    "module": "./dist/index.js",
-    "types": "dist/index.d.ts",
-    "exports": {
-        ".": {
-            "types": "./dist/index.d.ts",
-            "import": "./dist/index.js",
-            "default": "./dist/index.js"
-        }
-    },
-    "files": [
-        "dist",
-        "src"
-    ],
-    "browser": "dist/index.js",
-    "source": "src/index.ts",
-    "dependencies": {
-        "@metapages/hash-query": "^0.8.5",
-        "base64-arraybuffer": "^1.0.2",
-        "compare-versions": "^6.1.1",
-        "eventemitter3": "^4.0.0",
-        "fast-json-stable-stringify": "^2.1.0",
-        "fetch-retry": "^6.0.0",
-        "mutative": "^1.0.11",
-        "object-hash": "^3.0.0",
-        "picomatch-browser": "^2.2.6"
-    },
-    "devDependencies": {
-        "@rollup/plugin-typescript": "^11.1.5",
-        "@types/object-hash": "^2.2.1",
-        "rollup-plugin-typescript-paths": "^1.4.0",
-        "typescript": "^5.3.3",
-        "vite": "^4.4.11"
-    },
-    "keywords": [
-        "iframe",
-        "metaframe",
-        "metapage",
-        "postmessage",
-        "workflow"
-    ],
-    "author": "Dion Whitehead <dion@metapage.io>",
-    "scripts": {
-        "test": "just test"
-    },
-    "license": "Apache-2.0",
-    "browserslist": [
-        "Chrome 78"
-    ]
+  "name": "@metapages/metapage",
+  "public": true,
+  "version": "1.8.5",
+  "description": "Connect web pages together",
+  "repository": "https://github.com/metapages/metapage",
+  "homepage": "https://metapage.io/",
+  "type": "module",
+  "browser": "dist/index.js",
+  "module": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "src"
+  ],
+  "source": "src/index.ts",
+  "dependencies": {
+    "@metapages/hash-query": "^0.8.15",
+    "base64-arraybuffer": "^1.0.2",
+    "compare-versions": "^6.1.1",
+    "eventemitter3": "^4.0.0",
+    "fast-json-stable-stringify": "^2.1.0",
+    "fetch-retry": "^6.0.0",
+    "mutative": "^1.0.11",
+    "object-hash": "^3.0.0",
+    "picomatch-browser": "^2.2.6"
+  },
+  "devDependencies": {
+    "@rollup/plugin-typescript": "^11.1.5",
+    "@types/object-hash": "^2.2.1",
+    "@vitest/browser": "^3.2.4",
+    "playwright": "^1.54.2",
+    "rollup-plugin-typescript-paths": "^1.4.0",
+    "typescript": "^5.3.3",
+    "vite": "^4.4.11",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "iframe",
+    "metaframe",
+    "metapage",
+    "postmessage",
+    "workflow"
+  ],
+  "author": "Dion Whitehead <dion@metapage.io>",
+  "scripts": {
+    "test": "vitest run",
+    "test-watch": "vitest",
+    "test:browser": "vitest --config=vitest.browser.config.ts"
+  },
+  "license": "Apache-2.0",
+  "browserslist": [
+    "Chrome 78"
+  ]
 }

@@ -16,3 +16,4 @@ export * from "./metapage/v1";
 export * from "./metapage/v2";
 export * from "./metapage/versions";
 export * from "./metapage/util";
+export * from "./metapage/metapageRenderer";

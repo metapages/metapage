@@ -1,4 +1,4 @@
-import { type PageProps } from '$fresh/server.ts';
+import { type PageProps } from "$fresh/server.ts";
 
 export default function App({ Component }: PageProps) {
   return (
@@ -12,8 +12,14 @@ export default function App({ Component }: PageProps) {
       </head>
       <body>
         <header class="box backgroundGrey600">
-          <div style="display: flex; justify-content: space-between; align-items: center;" class="backgroundGrey600">
-            <div style="display: flex; justify-content: flex-start; align-items: center;" class="backgroundGrey600">
+          <div
+            style="display: flex; justify-content: space-between; align-items: center;"
+            class="backgroundGrey600"
+          >
+            <div
+              style="display: flex; justify-content: flex-start; align-items: center;"
+              class="backgroundGrey600"
+            >
               <a href="/">
                 <img
                   style="margin-top: 6px; margin-right: 16px; margin-left: 15px; "
@@ -25,21 +31,36 @@ export default function App({ Component }: PageProps) {
                 />
               </a>
               <div class="backgroundGrey600">
-                <h1>Metapages core module API and Tests</h1>
+                <h1>Metapages</h1>
               </div>
             </div>
+
             <a href="https://github.com/metapages/metapage">
-              <img style="margin-right: 15px;" height="40" src="https://cdn.simpleicons.org/github?viewbox=auto" />
+              <img
+                style="margin-right: 15px;"
+                height="40"
+                src="https://cdn.simpleicons.org/github?viewbox=auto"
+              />
             </a>
           </div>
 
           <nav class="box backgroundGrey600">
-            <a class="linkpadding" href="/test/metapage">Tests</a>
-            <a class="linkpadding" href="/convert">Convert</a>
-            <a class="linkpadding" href="/versions">Versions</a>
+            <a class="linkpadding" href="/m">
+              Render
+            </a>
+            <a class="linkpadding" href="/test/metapage">
+              Test
+            </a>
+            <a class="linkpadding" href="/convert">
+              Convert
+            </a>
+            <a class="linkpadding" href="/versions">
+              Versions
+            </a>
+            <a href="https://docs.metapage.io">Docs</a>
           </nav>
         </header>
-        <div class="box" style="margin-left: 16px;" >
+        <div class="box" style="margin-left: 16px;">
           <Component />
         </div>
       </body>

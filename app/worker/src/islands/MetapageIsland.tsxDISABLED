@@ -1,0 +1,48 @@
+import { useRef, useEffect } from "preact/hooks";
+import { MetapageDefinitionV2 } from "@lib/index.ts";
+import { renderMetapage } from "@lib/metapage/metapageRenderer.ts";
+
+interface MetapageIslandProps {
+  definition: MetapageDefinitionV2;
+  title?: string;
+}
+
+export default function MetapageIsland({
+  definition,
+  title = "Interactive Metapage",
+}: MetapageIslandProps) {
+  const metapageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (metapageRef.current) {
+      // Render the metapage when the component mounts
+      renderMetapage(
+        definition,
+        (outputs) => {
+          console.log("Metapage outputs:", outputs);
+        },
+        metapageRef.current,
+        {
+          hideBorder: false,
+          hideFrameBorders: false,
+          hideOptions: false,
+          hideMetaframeLabels: false,
+          debug: true,
+        }
+      ).catch((error) => {
+        console.error("Failed to render metapage:", error);
+      });
+    }
+  }, [definition]);
+
+  return (
+    <div class="mt-8">
+      <h3>{title}</h3>
+      <div
+        ref={metapageRef}
+        class="w-full h-96 border border-gray-300 rounded-lg"
+        style="min-height: 400px;"
+      ></div>
+    </div>
+  );
+}

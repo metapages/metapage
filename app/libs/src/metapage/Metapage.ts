@@ -1,57 +1,42 @@
-import { ListenerFn } from 'eventemitter3';
-import { create } from 'mutative';
-import picomatch from 'picomatch-browser';
+import { ListenerFn } from "eventemitter3";
+import { create } from "mutative";
+import picomatch from "picomatch-browser";
 
-import { VERSION_METAPAGE } from './Constants';
+import { VERSION_METAPAGE } from "./Constants";
 import {
   convertMetapageDefinitionToCurrentVersion,
   getMatchingMetapageVersion,
-} from './conversions-metapage';
-import {
-  MetaframeId,
-  MetaframePipeId,
-  MetapageId,
-} from './core';
-import {
-  deserializeInputs,
-  serializeInputs,
-} from './data';
+} from "./conversions-metapage";
+import { MetaframeId, MetaframePipeId, MetapageId } from "./core";
+import { deserializeInputs, serializeInputs } from "./data";
 import {
   MetapageEventDefinition,
   MetapageEvents,
   MetapageEventUrlHashUpdate,
-} from './events';
+} from "./events";
 import {
   JsonRpcMethodsFromChild,
   MinimumClientMessage,
   SetupIframeClientAckData,
-} from './jsonrpc';
-import { MetapageIFrameRpcClient } from './MetapageIFrameRpcClient';
+} from "./jsonrpc";
+import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
 import {
   generateMetapageId,
   isDebugFromUrlsParams,
   log as MetapageToolsLog,
   pageLoaded,
-} from './MetapageTools';
-import {
-  INITIAL_NULL_METAPAGE_DEFINITION,
-  MetapageShared,
-} from './Shared';
+} from "./MetapageTools";
+import { INITIAL_NULL_METAPAGE_DEFINITION, MetapageShared } from "./Shared";
 import {
   MetaframeInputMap,
   MetaframeInstance,
   MetapageInstanceInputs,
   PipeInput,
   PipeUpdateBlob,
-} from './v0_4';
-import {
-  MetapageOptionsV1,
-} from './v1';
-import {
-  MetapageDefinitionV2,
-  MetapageMetadataV2,
-} from './v2';
-import { VersionsMetapage } from './versions';
+} from "./v0_4";
+import { MetapageOptionsV1 } from "./v1";
+import { MetapageDefinitionV2, MetapageMetadataV2 } from "./v2";
+import { VersionsMetapage } from "./versions";
 
 interface MetapageStatePartial {
   inputs: MetapageInstanceInputs;
@@ -62,12 +47,15 @@ export interface MetapageState {
   metaframes: MetapageStatePartial;
 }
 
-const emptyState :MetapageState= create<MetapageState>({
-  metaframes: {
-    inputs: {},
-    outputs: {},
+const emptyState: MetapageState = create<MetapageState>(
+  {
+    metaframes: {
+      inputs: {},
+      outputs: {},
+    },
   },
-}, draft => draft);
+  (draft) => draft
+);
 
 export const getLibraryVersionMatching = (
   version: string
@@ -75,13 +63,11 @@ export const getLibraryVersionMatching = (
   return getMatchingMetapageVersion(version);
 };
 
-export const matchPipe = (
-  outputName: string,
-  source?: string,
-): boolean => {
+export const matchPipe = (outputName: string, source?: string): boolean => {
   // console.log(`❓❓ matchPipe: metapage.getState().metaframes=${outputName} source=${source} `);
 
-  if ((!source || source === "**")) { // && (!target || target === "*")
+  if (!source || source === "**") {
+    // && (!target || target === "*")
     // console.log(`❓matchPipe 1: ✅`);
     return true;
   }
@@ -160,7 +146,7 @@ export class Metapage extends MetapageShared {
 
   _id: MetapageId;
   _state: MetapageState = emptyState;
-  _metaframes: MetaframeClients = create({}, draft => draft); //<MetaframeId, MetapageIFrameRpcClient>
+  _metaframes: MetaframeClients = create({}, (draft) => draft); //<MetaframeId, MetapageIFrameRpcClient>
 
   debug: boolean = isDebugFromUrlsParams();
   _consoleBackgroundColor: string;
@@ -169,7 +155,10 @@ export class Metapage extends MetapageShared {
   _internalReceivedMessageCounter: number = 0;
 
   // for caching input lookups
-  _cachedInputLookupMap: CachedInputLookupMap = create<CachedInputLookupMap>({}, draft => draft);
+  _cachedInputLookupMap: CachedInputLookupMap = create<CachedInputLookupMap>(
+    {},
+    (draft) => draft
+  );
   _inputMap: {
     [key: string]: PipeInput[];
   } = {};
@@ -229,15 +218,21 @@ export class Metapage extends MetapageShared {
     this.setDefinition = this.setDefinition.bind(this);
     this.setInput = this.setInput.bind(this);
     this.setInputs = this.setInputs.bind(this);
-    this.setInputStateOnlyMetaframeInputValue = this.setInputStateOnlyMetaframeInputValue.bind(this);
-    this.setInputStateOnlyMetaframeInputMap = this.setInputStateOnlyMetaframeInputMap.bind(this);
-    this.setInputStateOnlyMetapageInstanceInputs = this.setInputStateOnlyMetapageInstanceInputs.bind(this);
-    this.setOutputStateOnlyMetaframeInputValue = this.setOutputStateOnlyMetaframeInputValue.bind(this);
-    this.setOutputStateOnlyMetaframeInputMap = this.setOutputStateOnlyMetaframeInputMap.bind(this);
-    this.setOutputStateOnlyMetapageInstanceInputs = this.setOutputStateOnlyMetapageInstanceInputs.bind(this);
+    this.setInputStateOnlyMetaframeInputValue =
+      this.setInputStateOnlyMetaframeInputValue.bind(this);
+    this.setInputStateOnlyMetaframeInputMap =
+      this.setInputStateOnlyMetaframeInputMap.bind(this);
+    this.setInputStateOnlyMetapageInstanceInputs =
+      this.setInputStateOnlyMetapageInstanceInputs.bind(this);
+    this.setOutputStateOnlyMetaframeInputValue =
+      this.setOutputStateOnlyMetaframeInputValue.bind(this);
+    this.setOutputStateOnlyMetaframeInputMap =
+      this.setOutputStateOnlyMetaframeInputMap.bind(this);
+    this.setOutputStateOnlyMetapageInstanceInputs =
+      this.setOutputStateOnlyMetapageInstanceInputs.bind(this);
     this.setMetadata = this.setMetadata.bind(this);
     this.setMetaframeClientInputAndSentClientEvent =
-    this.setMetaframeClientInputAndSentClientEvent.bind(this);
+      this.setMetaframeClientInputAndSentClientEvent.bind(this);
     this.setState = this.setState.bind(this);
     this.isDisposed = this.isDisposed.bind(this);
     this._emitDefinitionEvent = this._emitDefinitionEvent.bind(this);
@@ -271,8 +266,12 @@ export class Metapage extends MetapageShared {
   public setDebugFromUrlParams(): Metapage {
     const url = new URL(window.location.href);
     this.debug = ["debug", "mp_debug"].reduce((exists, flag) => {
-      return exists || url.searchParams.get(flag) === "true" || url.searchParams.get(flag) === "1"
-    }, false)
+      return (
+        exists ||
+        url.searchParams.get(flag) === "true" ||
+        url.searchParams.get(flag) === "1"
+      );
+    }, false);
     return this;
   }
 
@@ -291,7 +290,10 @@ export class Metapage extends MetapageShared {
       );
     });
 
-    if (this.listenerCount(MetapageEvents.State) > 0 && emptyState !== this._state) {
+    if (
+      this.listenerCount(MetapageEvents.State) > 0 &&
+      emptyState !== this._state
+    ) {
       this.emit(MetapageEvents.State, this._state);
     }
   }
@@ -304,14 +306,17 @@ export class Metapage extends MetapageShared {
     return this._definition;
   }
 
-  public async setDefinition(def: any, state?: MetapageState): Promise<Metapage> {
+  public async setDefinition(
+    def: any,
+    state?: MetapageState
+  ): Promise<Metapage> {
     // Some validation
     if (!def.version) {
       throw "Metapage definition must have a version";
     }
 
-    const newDefinition: MetapageDefinitionV2 = await
-      convertMetapageDefinitionToCurrentVersion(def);
+    const newDefinition: MetapageDefinitionV2 =
+      await convertMetapageDefinitionToCurrentVersion(def);
 
     if (this.isDisposed()) {
       // we got disposed while converting
@@ -366,7 +371,7 @@ export class Metapage extends MetapageShared {
       });
     }
 
-    // TODO: fire the event anyway, but use immutable state so we 
+    // TODO: fire the event anyway, but use immutable state so we
     // can do a quick compare
     // Only fire a definition update event IF this is not the first
     // time the definition is externally set
@@ -376,7 +381,11 @@ export class Metapage extends MetapageShared {
       window.setTimeout(() => {
         if (!this.isDisposed() && newDefinition === this._definition) {
           this._emitDefinitionEvent();
-          if (state && this.listenerCount(MetapageEvents.State) > 0 && emptyState !== this._state) {
+          if (
+            state &&
+            this.listenerCount(MetapageEvents.State) > 0 &&
+            emptyState !== this._state
+          ) {
             this.emit(MetapageEvents.State, this._state);
           }
         }
@@ -438,7 +447,10 @@ export class Metapage extends MetapageShared {
         const inputPipes = draft[otherMetaframeId];
         let index = 0;
         while (index <= inputPipes.length) {
-          if (inputPipes[index] && inputPipes[index].metaframe === metaframeId) {
+          if (
+            inputPipes[index] &&
+            inputPipes[index].metaframe === metaframeId
+          ) {
             inputPipes.splice(index, 1);
           } else {
             index++;
@@ -448,7 +460,7 @@ export class Metapage extends MetapageShared {
     });
 
     // This will regenerate, simpler than surgery
-    this._cachedInputLookupMap = create({}, draft => draft);
+    this._cachedInputLookupMap = create({}, (draft) => draft);
   }
 
   // do not expose, change definition instead
@@ -457,10 +469,10 @@ export class Metapage extends MetapageShared {
     Object.keys(this._metaframes).forEach((id) =>
       this._metaframes[id].dispose()
     );
-    this._metaframes = create({}, draft => draft);
+    this._metaframes = create({}, (draft) => draft);
     this._state = emptyState;
-    this._inputMap = create({}, draft => draft);
-    this._cachedInputLookupMap = create({}, draft => draft);
+    this._inputMap = create({}, (draft) => draft);
+    this._cachedInputLookupMap = create({}, (draft) => draft);
   }
 
   public metaframes() {
@@ -518,9 +530,12 @@ export class Metapage extends MetapageShared {
       this._consoleBackgroundColor,
       this.debug
     ).setMetapage(this);
-    this._metaframes = create<MetaframeClients>(this._metaframes, (draft: MetaframeClients) => {
-      draft[metaframeId] = iframeClient;
-    });
+    this._metaframes = create<MetaframeClients>(
+      this._metaframes,
+      (draft: MetaframeClients) => {
+        draft[metaframeId] = iframeClient;
+      }
+    );
 
     iframeClient.addListener(MetapageEvents.Error, (err) => {
       // These can be displayed
@@ -589,49 +604,54 @@ export class Metapage extends MetapageShared {
   ): MetaframeInputTargetsFromOutput[] {
     // Do all the cache checking
     if (!this._cachedInputLookupMap[source]) {
-      this._cachedInputLookupMap = create(this._cachedInputLookupMap, (draft: CachedInputLookupMap) => {
-        draft[source] = create({}, __ => __);
-      });
+      this._cachedInputLookupMap = create(
+        this._cachedInputLookupMap,
+        (draft: CachedInputLookupMap) => {
+          draft[source] = create({}, (__) => __);
+        }
+      );
     }
 
     if (!this._cachedInputLookupMap[source][outputPipeId]) {
-
-      this._cachedInputLookupMap = create(this._cachedInputLookupMap, (draft: CachedInputLookupMap) => {
-        var targets: MetaframeInputTargetsFromOutput[] = [];
-        draft[source][outputPipeId] = targets;
-        // Go through the data structure, getting all the matching inputs that match this output
-        Object.keys(this._inputMap).forEach((metaframeId) => {
-          if (metaframeId === source) {
-            // No self pipes, does not make sense
-            return;
-          }
-          
-          this._inputMap[metaframeId].forEach((inputPipe) => {
-            // At least the source metaframe matches, now check pipes
-            if (inputPipe.metaframe === source) {
-              // Check the kind of source string
-              // it could be a basic string, or a glob?
-              if (matchPipe(outputPipeId, inputPipe.source)) {
-                // console.log("✅ matches");
-                // A match, now figure out the actual input pipe name
-                // since it might be * or absent meaning that the input
-                // field name is the same as the incoming
-                var targetName :string = inputPipe.target || "";
-                if (
-                  !inputPipe.target ||
-                  inputPipe.target.startsWith("*") ||
-                  inputPipe.target === ""
-                ) {
-                  targetName = outputPipeId;
-                } else if (targetName && targetName.endsWith("/")) {
-                  targetName = targetName + outputPipeId;
-                }
-                targets.push({ metaframe: metaframeId, pipe: targetName });
-              }
+      this._cachedInputLookupMap = create(
+        this._cachedInputLookupMap,
+        (draft: CachedInputLookupMap) => {
+          var targets: MetaframeInputTargetsFromOutput[] = [];
+          draft[source][outputPipeId] = targets;
+          // Go through the data structure, getting all the matching inputs that match this output
+          Object.keys(this._inputMap).forEach((metaframeId) => {
+            if (metaframeId === source) {
+              // No self pipes, does not make sense
+              return;
             }
+
+            this._inputMap[metaframeId].forEach((inputPipe) => {
+              // At least the source metaframe matches, now check pipes
+              if (inputPipe.metaframe === source) {
+                // Check the kind of source string
+                // it could be a basic string, or a glob?
+                if (matchPipe(outputPipeId, inputPipe.source)) {
+                  // console.log("✅ matches");
+                  // A match, now figure out the actual input pipe name
+                  // since it might be * or absent meaning that the input
+                  // field name is the same as the incoming
+                  var targetName: string = inputPipe.target || "";
+                  if (
+                    !inputPipe.target ||
+                    inputPipe.target.startsWith("*") ||
+                    inputPipe.target === ""
+                  ) {
+                    targetName = outputPipeId;
+                  } else if (targetName && targetName.endsWith("/")) {
+                    targetName = targetName + outputPipeId;
+                  }
+                  targets.push({ metaframe: metaframeId, pipe: targetName });
+                }
+              }
+            });
           });
-        });
-      });
+        }
+      );
     }
 
     return this._cachedInputLookupMap[source][outputPipeId];
@@ -651,16 +671,20 @@ export class Metapage extends MetapageShared {
       default:
         // TODO: check origin+source
         var iframeId: MetaframeId | undefined = message.iframeId;
-        if (
+        // if (
+        //   iframeId &&
+        //   !(
+        //     message.parentId === this._id &&
+        //     (this._metaframes[iframeId])
+        //   )
+        // ) {
+        //   return false;
+        // }
+        return (
           iframeId &&
-          !(
-            message.parentId === this._id &&
-            (this._metaframes[iframeId])
-          )
-        ) {
-          return false;
-        }
-        return true;
+          message.parentId === this._id &&
+          !!this._metaframes[iframeId]
+        );
     }
   }
 
@@ -673,10 +697,11 @@ export class Metapage extends MetapageShared {
    * @param inputPipeId If the above is a string id, then inputPipeId can be the pipe id or an object {pipeId:value}
    * @param value If the above is a pipe id, then the is the value.
    */
-  public setInput(iframeId: MetaframeId | MetapageInstanceInputs,
+  public setInput(
+    iframeId: MetaframeId | MetapageInstanceInputs,
     inputPipeId?: MetaframePipeId | MetaframeInputMap,
-    value?: PipeUpdateBlob) {
-
+    value?: PipeUpdateBlob
+  ) {
     if (typeof iframeId === "object") {
       this.setInputStateOnlyMetapageInstanceInputs(iframeId);
     } else if (typeof inputPipeId === "string") {
@@ -742,31 +767,63 @@ export class Metapage extends MetapageShared {
     }
   }
 
-  public setInputs(iframeId: MetaframeId | MetapageInstanceInputs, inputPipeId?: MetaframePipeId | MetaframeInputMap, value?: PipeUpdateBlob) {
+  public setInputs(
+    iframeId: MetaframeId | MetapageInstanceInputs,
+    inputPipeId?: MetaframePipeId | MetaframeInputMap,
+    value?: PipeUpdateBlob
+  ) {
     this.setInput(iframeId, inputPipeId, value);
   }
 
-  setOutputStateOnlyMetapageInstanceInputs(metapageInputs: MetapageInstanceInputs) {
+  setOutputStateOnlyMetapageInstanceInputs(
+    metapageInputs: MetapageInstanceInputs
+  ) {
     this._setStateOnlyMetaframes(false, metapageInputs);
   }
 
-  setOutputStateOnlyMetaframeInputValue(metaframeId: MetaframeId, inputPipeId: MetaframePipeId, value?: PipeUpdateBlob) {
-    this._setStateOnlyMetaframeInputValue(false, metaframeId, inputPipeId, value);
+  setOutputStateOnlyMetaframeInputValue(
+    metaframeId: MetaframeId,
+    inputPipeId: MetaframePipeId,
+    value?: PipeUpdateBlob
+  ) {
+    this._setStateOnlyMetaframeInputValue(
+      false,
+      metaframeId,
+      inputPipeId,
+      value
+    );
   }
 
-  setOutputStateOnlyMetaframeInputMap(metaframeId: MetaframeId, metaframeValuesNew: MetaframeInputMap) {
+  setOutputStateOnlyMetaframeInputMap(
+    metaframeId: MetaframeId,
+    metaframeValuesNew: MetaframeInputMap
+  ) {
     this._setStateOnlyMetaframeInputMap(false, metaframeId, metaframeValuesNew);
   }
 
-  setInputStateOnlyMetapageInstanceInputs(metapageInputs: MetapageInstanceInputs) {
+  setInputStateOnlyMetapageInstanceInputs(
+    metapageInputs: MetapageInstanceInputs
+  ) {
     this._setStateOnlyMetaframes(true, metapageInputs);
   }
 
-  setInputStateOnlyMetaframeInputValue(metaframeId: MetaframeId, inputPipeId: MetaframePipeId, value?: PipeUpdateBlob) {
-    this._setStateOnlyMetaframeInputValue(true, metaframeId, inputPipeId, value);
+  setInputStateOnlyMetaframeInputValue(
+    metaframeId: MetaframeId,
+    inputPipeId: MetaframePipeId,
+    value?: PipeUpdateBlob
+  ) {
+    this._setStateOnlyMetaframeInputValue(
+      true,
+      metaframeId,
+      inputPipeId,
+      value
+    );
   }
 
-  setInputStateOnlyMetaframeInputMap(metaframeId: MetaframeId, metaframeValuesNew: MetaframeInputMap) {
+  setInputStateOnlyMetaframeInputMap(
+    metaframeId: MetaframeId,
+    metaframeValuesNew: MetaframeInputMap
+  ) {
     this._setStateOnlyMetaframeInputMap(true, metaframeId, metaframeValuesNew);
   }
 
@@ -776,9 +833,7 @@ export class Metapage extends MetapageShared {
     metaframePipeId: MetaframePipeId,
     value?: PipeUpdateBlob
   ): void {
-
     this._state = create(this._state, (draft: MetapageState) => {
-
       const isMetaframe = this._metaframes.hasOwnProperty(metaframeId);
       if (!isMetaframe) {
         throw `No metaframe: ${metaframeId}`;
@@ -799,7 +854,7 @@ export class Metapage extends MetapageShared {
 
       let inputOrOutputState = isInputs
         ? draft.metaframes.inputs
-        : draft.metaframes.outputs
+        : draft.metaframes.outputs;
 
       // Ensure a map
       inputOrOutputState = inputOrOutputState || {};
@@ -817,20 +872,16 @@ export class Metapage extends MetapageShared {
     });
   }
 
-
-
   _setStateOnlyMetaframeInputMap(
     isInputs: boolean,
     metaframeId: MetaframeId,
     metaframeValuesNew: MetaframeInputMap
   ): void {
-
     if (!metaframeValuesNew || Object.keys(metaframeValuesNew).length === 0) {
       return;
     }
 
     this._state = create(this._state, (draft: MetapageState) => {
-
       const isMetaframe = this._metaframes.hasOwnProperty(metaframeId);
       if (!isMetaframe) {
         throw `No metaframe: ${metaframeId}`;
@@ -838,7 +889,7 @@ export class Metapage extends MetapageShared {
 
       let inputOrOutputState = isInputs
         ? draft.metaframes.inputs
-        : draft.metaframes.outputs
+        : draft.metaframes.outputs;
 
       // Ensure a map
       inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId]
@@ -855,15 +906,13 @@ export class Metapage extends MetapageShared {
             metaframeValuesNew[metaframePipedId];
         }
       });
-
     });
   }
 
   _setStateOnlyMetaframes(
     isInputs: boolean,
-    inputsMetaframesNew: MetapageInstanceInputs,
+    inputsMetaframesNew: MetapageInstanceInputs
   ): void {
-
     if (!inputsMetaframesNew || Object.keys(inputsMetaframesNew).length === 0) {
       return;
     }
@@ -883,7 +932,7 @@ export class Metapage extends MetapageShared {
 
         const inputOrOutputState = isInputs
           ? draft.metaframes.inputs
-          : draft.metaframes.outputs
+          : draft.metaframes.outputs;
 
         // Ensure a map
         inputOrOutputState[metaframeId] = inputOrOutputState[metaframeId]
@@ -900,7 +949,7 @@ export class Metapage extends MetapageShared {
               metaframeValuesNew[metaframePipedId];
           }
         });
-      })
+      });
     });
   }
 
@@ -1002,7 +1051,10 @@ export class Metapage extends MetapageShared {
               });
             }
             // only send a state event if downstream inputs were modified
-            if (this.listenerCount(MetapageEvents.State) > 0 && emptyState !== this._state) {
+            if (
+              this.listenerCount(MetapageEvents.State) > 0 &&
+              emptyState !== this._state
+            ) {
               this.emit(MetapageEvents.State, this._state);
             }
             if (this.debug) {
@@ -1028,7 +1080,10 @@ export class Metapage extends MetapageShared {
             // Currently on for setting metaframe inputs that haven't loaded yet
             this.setInputStateOnlyMetaframeInputMap(metaframeId, inputs);
             this._metaframes[metaframeId].setInputs(inputs);
-            if (this.listenerCount(MetapageEvents.State) > 0 && emptyState !== this._state) {
+            if (
+              this.listenerCount(MetapageEvents.State) > 0 &&
+              emptyState !== this._state
+            ) {
               this.emit(MetapageEvents.State, this._state);
             }
 
@@ -1042,9 +1097,7 @@ export class Metapage extends MetapageShared {
             console.error(
               `InputsUpdate failed no metaframe id: "${metaframeId}"`
             );
-            this.error(
-              `InputsUpdate failed no metaframe id: "${metaframeId}"`
-            );
+            this.error(`InputsUpdate failed no metaframe id: "${metaframeId}"`);
           }
           break;
         case JsonRpcMethodsFromChild.HashParamsUpdate:
@@ -1070,7 +1123,8 @@ export class Metapage extends MetapageShared {
             this._definition = create<MetapageDefinitionV2>(
               this._definition,
               (draft) => {
-                draft.metaframes[hashParamsUpdatePayload.metaframe].url = url.href;
+                draft.metaframes[hashParamsUpdatePayload.metaframe].url =
+                  url.href;
               }
             );
 
