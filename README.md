@@ -1,10 +1,11 @@
 # [Metapages](https://metapage.io/)
 
+- Render, tests, and tools: [module.metapage.io](https://module.metapage.io/)
+- Docs: [docs.metapage.io/](https://docs.metapage.io/)
+
 A **metapage** is a webpage that consists of a network of other embedded webpages. This repository contains the code for the core metapage module.
 
 NPM: https://www.npmjs.com/package/@metapages/metapage
-
-For documentation and examples: [https://docs.metapage.io/](https://docs.metapage.io/)
 
 ## Development
 

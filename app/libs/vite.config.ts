@@ -1,8 +1,8 @@
-import path, { resolve } from "path";
-import { typescriptPaths } from "rollup-plugin-typescript-paths";
-import { defineConfig } from "vite";
+import path, { resolve } from 'path';
+import { typescriptPaths } from 'rollup-plugin-typescript-paths';
+import { defineConfig } from 'vite';
 
-import typescript from "@rollup/plugin-typescript";
+import typescript from '@rollup/plugin-typescript';
 
 // https://vitejs.dev/config/
 
@@ -36,17 +36,6 @@ export default defineConfig(({ mode }) => ({
     emptyOutDir: true,
     minify: "esbuild",
     rollupOptions: {
-      // external: [
-      //   "@metapages/hash-query",
-      //   "base64-arraybuffer",
-      //   "compare-versions",
-      //   "eventemitter3",
-      //   "fast-json-stable-stringify",
-      //   "fetch-retry",
-      //   "mutative",
-      //   "object-hash",
-      //   "picomatch-browser",
-      // ],
       output: {
         preserveModules: true,
         preserveModulesRoot: "src",

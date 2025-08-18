@@ -11,6 +11,7 @@ export const handler: Handlers<VersionsProps> = {
       .filter((e) => e !== "");
     var testname = urlPathElements[2];
     const versions = await getAllMetapageVersions();
+    console.log("versions", versions);
     const isDevelopment = !Deno.env.get("DENO_DEPLOYMENT_ID");
     if (isDevelopment) {
       versions.unshift("latest");

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Test Debug</title>
+</head>
+<body>
+    <div id="status">status</div>
+    <div id="body"></div>
+    
+    <script>
+        console.log('Simple test script starting...');
+        
+        // Simulate test execution
+        setTimeout(() => {
+            console.log('Updating status...');
+            document.getElementById('status').textContent = 'Tests are running...';
+            
+            // Create a simple iframe to simulate metaframe
+            const iframe = document.createElement('iframe');
+            iframe.src = 'about:blank';
+            iframe.style.width = '300px';
+            iframe.style.height = '200px';
+            iframe.style.border = '1px solid black';
+            document.getElementById('body').appendChild(iframe);
+            
+            // Simulate test completion
+            setTimeout(() => {
+                document.getElementById('status').textContent = 'METAPAGE TESTS PASS';
+                console.log('Tests completed successfully');
+            }, 5000);
+            
+        }, 2000);
+        
+        console.log('Simple test script loaded');
+    </script>
+</body>
+</html>

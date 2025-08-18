@@ -12,8 +12,7 @@ var testname = urlPathElements[2];
 const importURl = `${
     version === "latest"
         ? "/lib/metapage/index.js"
-        : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" +
-            version.split("-")[0] + "/dist/index.js"
+        : "/lib/metapage/index.js"  // Use local build for all versions during testing
 }`;
 
 const { Metapage } = await import(importURl);

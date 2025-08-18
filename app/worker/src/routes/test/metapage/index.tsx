@@ -1,5 +1,5 @@
-import { Head } from "$fresh/runtime.ts";
-import { PageProps } from "$fresh/server.ts";
+import { Head } from '$fresh/runtime.ts';
+import { PageProps } from '$fresh/server.ts';
 
 export default function MetaframePage(props: PageProps) {
   return (
@@ -35,6 +35,7 @@ export default function MetaframePage(props: PageProps) {
               Multiple metapages in one page without problems
             </a>
           </li> */}
+
           {/* <li><a href={`./metapage/timing`}>Test timing and internal APIs</a></li> */}
         </ul>
       </main>

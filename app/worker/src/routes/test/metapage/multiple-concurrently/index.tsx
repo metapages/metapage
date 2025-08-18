@@ -1,8 +1,11 @@
-import { Head } from "$fresh/runtime.ts";
-import { type Handlers, PageProps } from "$fresh/server.ts";
+import { Head } from '$fresh/runtime.ts';
+import {
+  type Handlers,
+  PageProps,
+} from '$fresh/server.ts';
 
-import { getAllMetapageVersions } from "../../../../util/version-tools.ts";
-import type { VersionsProps } from "../../_types.ts";
+import { getAllMetapageVersions } from '../../../../util/version-tools.ts';
+import type { VersionsProps } from '../../_types.ts';
 
 export const handler: Handlers<VersionsProps> = {
   async GET(_req, ctx) {

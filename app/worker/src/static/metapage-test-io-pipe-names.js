@@ -14,8 +14,7 @@ var version = urlPathElements[3] || "latest";
 const importURl = `${
     version === "latest"
         ? "/lib/metapage/index.js"
-        : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" +
-            version.split("-")[0] + "/dist/index.js"
+        : "/lib/metapage/index.js"  // Use local build for all versions during testing
 }`;
 
 // console.log('importURl', importURl);

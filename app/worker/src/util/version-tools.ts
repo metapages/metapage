@@ -1,4 +1,7 @@
-import { compare, parse } from "@std/semver";
+import {
+  compare,
+  parse,
+} from '@std/semver';
 
 export const getAllMetapageVersions = async (): Promise<string[]> => {
   try {
@@ -11,7 +14,7 @@ export const getAllMetapageVersions = async (): Promise<string[]> => {
     const data = await response.json();
     const versions = Object.entries(data.versions)
       .filter(([_, versionData]: [string, any]) => !versionData.deprecated)
-      .filter(([version, _]) => compare(parse(version), parse("1.8.1")) >= 0)
+      .filter(([version, _]) => compare(parse(version), parse("1.8.8")) >= 0)
       .map(([version, _]) => version);
     return versions.sort((a, b) => {
       const [aMajor, aMinor, aPatch] = a.split(".").map(Number);
