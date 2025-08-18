@@ -18,7 +18,7 @@ grey                               := "\\e[90m"
     echo -e "APP_FQDN={{APP_FQDN}}"
 
 # Run the server in development mode
-@dev +args="": _mkcert _build_local_module open
+@dev +args="": _mkcert _check_for_hostname _build_local_module open
   deno task start
 
 open:
@@ -69,6 +69,9 @@ _mkcert:
     mkdir -p .certs ;
     mkcert -cert-file .certs/local-cert.pem -key-file .certs/local-key.pem {{APP_FQDN}} localhost ;
   fi
+
+_check_for_hostname:
+  #!/usr/bin/env bash
   if grep -q "{{APP_FQDN}}" /etc/hosts; then
     echo -e "✅ Hostname {{APP_FQDN}} found in /etc/hosts"
   else
