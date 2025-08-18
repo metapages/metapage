@@ -13,7 +13,7 @@ jobs:
   test:
     # Can switch to ubuntu-latest but self-hosted is safer and faster
     name: Test
-    runs-on: self-hosted
+    runs-on: [self-hosted, Linux]
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
