@@ -1,4 +1,4 @@
-import { Handlers } from "$fresh/server.ts";
+import { Handlers } from '$fresh/server.ts';
 
 export const handler: Handlers = {
   async GET(_req) {
@@ -6,6 +6,7 @@ export const handler: Handlers = {
     const pathSegments = url.pathname.split("/");
     const testType = pathSegments[pathSegments.length - 2];
     const filePath = `src/static/metapage-test-${testType}.js`;
+    console.log(`filePath: ${filePath}`);
     try {
       const fileContent = await Deno.readTextFile(filePath);
       const resp = new Response(fileContent, {

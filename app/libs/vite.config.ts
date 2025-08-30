@@ -37,11 +37,10 @@ export default defineConfig(({ mode }) => ({
     minify: "esbuild",
     rollupOptions: {
       output: {
-        preserveModules: true,
-        preserveModulesRoot: "src",
-        entryFileNames: (chunk) => {
-          return `[name].js`;
-        },
+        // Remove preserveModules to create a single bundled file
+        // preserveModules: true,
+        // preserveModulesRoot: "src",
+        entryFileNames: () => "index.js",
         minifyInternalExports: true,
         generatedCode: {
           preset: "es2015",

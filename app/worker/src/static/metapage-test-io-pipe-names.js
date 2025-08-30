@@ -11,11 +11,7 @@ const urlPathElements = url.pathname.split("/").filter((e) =>
 );
 var version = urlPathElements[3] || "latest";
 
-const importURl = `${
-    version === "latest"
-        ? "/lib/metapage/index.js"
-        : "/lib/metapage/index.js"  // Use local build for all versions during testing
-}`;
+const importURl = `${version === "latest" ? "/lib/index.js" : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + version.split("-")[0]}`;
 
 // console.log('importURl', importURl);
 const { Metapage } = await import(importURl);
