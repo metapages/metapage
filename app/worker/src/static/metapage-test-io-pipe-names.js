@@ -101,7 +101,7 @@ TESTS = [
         return new Promise((resolve, reject) => {
             let disposeListener;
             const onStateChange = (e) => {
-                console.log("onStateChange", e);
+                // console.log("onStateChange", e);
                 const outputs = metapage.getState().metaframes.outputs;
                 const metaframeIds = metapage.metaframeIds();
 
