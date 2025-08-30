@@ -13,9 +13,9 @@
  *
  */
 
-import { compareVersions } from "compare-versions";
-import { parse } from "https://deno.land/std/flags/mod.ts";
-import { launch } from "jsr:@astral/astral";
+import { compareVersions } from 'compare-versions';
+import { parse } from 'https://deno.land/std/flags/mod.ts';
+import { launch } from 'jsr:@astral/astral';
 
 const flags = parse(Deno.args);
 
@@ -217,11 +217,8 @@ async function runSingleMetapageTest(
   // Add additional arguments for headless mode stability
   if (headless) {
     browserArgs.push(
-      "--disable-background-timer-throttling",
-      "--disable-backgrounding-occluded-windows",
       "--disable-renderer-backgrounding",
       "--disable-features=TranslateUI",
-      "--disable-ipc-flooding-protection",
       "--no-first-run",
       "--no-default-browser-check",
       "--disable-default-apps",
@@ -231,8 +228,6 @@ async function runSingleMetapageTest(
       "--disable-translate",
       "--hide-scrollbars",
       "--mute-audio",
-      "--no-zygote",
-      "--single-process",
       "--ignore-certificate-errors",
       "--ignore-ssl-errors",
       "--ignore-certificate-errors-spki-list",
