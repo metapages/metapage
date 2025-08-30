@@ -1,5 +1,6 @@
-import { type Handlers } from "$fresh/server.ts";
-import { getAllMetapageVersions } from "../../util/version-tools.ts";
+import { type Handlers } from '$fresh/server.ts';
+
+import { getAllMetapageVersions } from '../../util/version-tools.ts';
 
 const versions = await getAllMetapageVersions();
 const latestVersion = versions[0];
@@ -11,7 +12,7 @@ const getCachedHtmlContent = async () => {
     "src/static/render-metapage.html"
   );
   const metapageLibImportUrl = isDevelopment
-    ? "/lib/metapage/index.js"
+    ? "/lib/index.js"
     : "https://cdn.jsdelivr.net/npm/@metapages/metapage@" + latestVersion;
 
   return htmlContent.replace("{{VERSION}}", metapageLibImportUrl);

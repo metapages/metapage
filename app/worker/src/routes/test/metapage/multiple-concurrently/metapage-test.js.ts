@@ -3,7 +3,7 @@ import { Handlers } from "$fresh/server.ts";
 export const handler: Handlers = {
   async GET(_req) {
     const url = new URL(_req.url);
-    const pathSegments = url.pathname.split('/');
+    const pathSegments = url.pathname.split("/");
     const testType = pathSegments[pathSegments.length - 2];
     const filePath = `src/static/metapage-test-${testType}.js`;
     try {

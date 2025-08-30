@@ -1,7 +1,7 @@
 set shell               := ["bash", "-c"]
 set dotenv-load         := true
 set export              := true
-APP_FQDN                := env_var_or_default("APP_FQDN", "server1.localhost")
+APP_FQDN                := env_var_or_default("APP_FQDN", "localhost")
 APP_PORT                := env_var_or_default("APP_PORT", "4430")
 DENO_DEPLOY_TOKEN       := env_var_or_default("DENO_DEPLOY_TOKEN", "")
 # minimal formatting, bold is very useful

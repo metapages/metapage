@@ -30,11 +30,11 @@ export default function MetaframePage(props: PageProps) {
               Pipe names (renaming) are correct
             </a>
           </li>
-          {/* <li>
+          <li>
             <a href={`./metapage/multiple-concurrently`}>
               Multiple metapages in one page without problems
             </a>
-          </li> */}
+          </li>
 
           {/* <li><a href={`./metapage/timing`}>Test timing and internal APIs</a></li> */}
         </ul>

@@ -1,10 +1,10 @@
-import { Handlers } from '$fresh/server.ts';
+import { Handlers } from "$fresh/server.ts";
 
 export const handler: Handlers = {
   async GET(req) {
     // Extract the path from the URL
     const url = new URL(req.url);
-    const pathSegments = url.pathname.split('/');
+    const pathSegments = url.pathname.split("/");
     const testType = pathSegments[pathSegments.length - 2];
     const filePath = `src/static/metapage-test-${testType}.js`;
     try {

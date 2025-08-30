@@ -18,6 +18,7 @@ export interface RenderingOptions {
 export interface MetapageRendererResult {
   setInputs: (inputs: MetapageInstanceInputs) => void;
   dispose: () => void;
+  metapage: Metapage;
 }
 
 // Layout item type for internal use
@@ -219,6 +220,7 @@ export async function renderMetapage(props: {
   if (visibleLayoutItems.length === 0) {
     // Return early with empty result
     return {
+      metapage,
       setInputs: (inputs: MetapageInstanceInputs) => {
         if (!metapage.isDisposed()) {
           metapage.setInputs(inputs);
@@ -370,6 +372,7 @@ export async function renderMetapage(props: {
 
   // Return the inputs function and dispose function
   return {
+    metapage,
     setInputs: (inputs: MetapageInstanceInputs) => {
       if (!metapage.isDisposed()) {
         metapage.setInputs(inputs);
