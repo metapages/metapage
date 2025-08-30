@@ -1,42 +1,55 @@
-import { ListenerFn } from "eventemitter3";
-import { create } from "mutative";
-import picomatch from "picomatch-browser";
+import { ListenerFn } from 'eventemitter3';
+import { create } from 'mutative';
+import picomatch from 'picomatch-browser';
 
-import { VERSION_METAPAGE } from "./Constants";
+import { VERSION_METAPAGE } from './Constants';
 import {
   convertMetapageDefinitionToCurrentVersion,
   getMatchingMetapageVersion,
-} from "./conversions-metapage";
-import { MetaframeId, MetaframePipeId, MetapageId } from "./core";
-import { deserializeInputs, serializeInputs } from "./data";
+} from './conversions-metapage';
+import {
+  MetaframeId,
+  MetaframePipeId,
+  MetapageId,
+} from './core';
+import {
+  deserializeInputs,
+  serializeInputs,
+} from './data';
 import {
   MetapageEventDefinition,
   MetapageEvents,
   MetapageEventUrlHashUpdate,
-} from "./events";
+} from './events';
 import {
   JsonRpcMethodsFromChild,
   MinimumClientMessage,
   SetupIframeClientAckData,
-} from "./jsonrpc";
-import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
+} from './jsonrpc';
+import { MetapageIFrameRpcClient } from './MetapageIFrameRpcClient';
 import {
   generateMetapageId,
   isDebugFromUrlsParams,
   log as MetapageToolsLog,
   pageLoaded,
-} from "./MetapageTools";
-import { INITIAL_NULL_METAPAGE_DEFINITION, MetapageShared } from "./Shared";
+} from './MetapageTools';
+import {
+  INITIAL_NULL_METAPAGE_DEFINITION,
+  MetapageShared,
+} from './Shared';
 import {
   MetaframeInputMap,
   MetaframeInstance,
   MetapageInstanceInputs,
   PipeInput,
   PipeUpdateBlob,
-} from "./v0_4";
-import { MetapageOptionsV1 } from "./v1";
-import { MetapageDefinitionV2, MetapageMetadataV2 } from "./v2";
-import { VersionsMetapage } from "./versions";
+} from './v0_4';
+import { MetapageOptionsV1 } from './v1';
+import {
+  MetapageDefinitionV2,
+  MetapageMetadataV2,
+} from './v2';
+import { VersionsMetapage } from './versions';
 
 interface MetapageStatePartial {
   inputs: MetapageInstanceInputs;
@@ -971,9 +984,15 @@ export class Metapage extends MetapageShared {
         return;
       }
 
+      // ignore messages from other metapages
+      if (method !== "SetupIframeClientRequest" && jsonrpc.parentId !== this._id) {
+        return;
+      }
+
       const metaframe = this.getMetaframe(metaframeId);
       if (!metaframe) {
-        this.error(`💥 onMessage no metaframe id=${metaframeId}`);
+        // SetupIframeClientRequest from other metapages is ignored
+        // this.error(`💥 onMessage method=${method}no metaframe id=${metaframeId}`);
         return;
       }
 

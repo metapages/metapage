@@ -11,7 +11,7 @@ if (debug) {
     console.log("❗🏗️ FRAME debug");
 }
 
-const messagePassingMetapageDefinition = {
+const messagePassingMetapageDefinition1 = {
     "meta": {
       "layouts": {
         "react-grid-layout": {
@@ -62,12 +62,20 @@ const messagePassingMetapageDefinition = {
         ]
       }
     }
-  }
+  };
+
+const messagePassingMetapageDefinition2 = JSON.parse(JSON.stringify(messagePassingMetapageDefinition1));
+messagePassingMetapageDefinition2.metaframes["frame1-2"] = messagePassingMetapageDefinition2.metaframes["frame1"];
+messagePassingMetapageDefinition2.metaframes["frame1-2"].inputs[0].metaframe = "frame2-2";
+delete messagePassingMetapageDefinition2.metaframes["frame1"];
+messagePassingMetapageDefinition2.metaframes["frame2-2"] = messagePassingMetapageDefinition2.metaframes["frame2"];
+messagePassingMetapageDefinition2.metaframes["frame2-2"].inputs[0].metaframe = "frame1-2";
+delete messagePassingMetapageDefinition2.metaframes["frame2"];
 
 const columnContainer = document.createElement("div");
 columnContainer.style = "display: flex; flex-direction: column; width: 100%;";
 document.getElementById("body").appendChild(columnContainer);
-
+const metapageDefinitions = [messagePassingMetapageDefinition1, messagePassingMetapageDefinition2];
 
 for (const count of [1, 2]) {
   const pageContainer = document.createElement("div");
@@ -81,11 +89,8 @@ for (const count of [1, 2]) {
   row.style = "display: flex; flex-direction: row; gap: 10px; width: 500px; min-height: 300px;";
   pageContainer.appendChild(row);
 
-  const metapageInstance = await Metapage.from(messagePassingMetapageDefinition);
-  // await metapageInstance.init();
-
-  // row.appendChild(column1);
-  // document.getElementById("body").appendChild(row);
+  const metapageInstance = await Metapage.from(metapageDefinitions[count - 1]);
+  // metapageInstance.debug = true;
   
   for (const metaframeId of metapageInstance.getMetaframeIds()) {
       const iframe = await metapageInstance.getMetaframe(metaframeId).iframe;

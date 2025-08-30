@@ -2,25 +2,39 @@ import {
   EventEmitter,
   ListenerFn,
 } from 'eventemitter3';
-import { 
-  setHashParamInWindow,
+
+import {
   getHashParamFromWindow,
-  setHashParamValueBooleanInWindow,
-  getHashParamValueBooleanFromWindow,
-  setHashParamValueJsonInWindow,
-  getHashParamValueJsonFromWindow,
-  setHashParamValueBase64EncodedInWindow,
   getHashParamValueBase64DecodedFromWindow,
-  setHashParamValueFloatInWindow,
+  getHashParamValueBooleanFromWindow,
   getHashParamValueFloatFromWindow,
-  setHashParamValueIntInWindow,
   getHashParamValueIntFromWindow,
+  getHashParamValueJsonFromWindow,
+  setHashParamInWindow,
+  setHashParamValueBase64EncodedInWindow,
+  setHashParamValueBooleanInWindow,
+  setHashParamValueFloatInWindow,
+  setHashParamValueIntInWindow,
+  setHashParamValueJsonInWindow,
 } from '@metapages/hash-query';
+
 import { VERSION_METAFRAME } from './Constants';
+import {
+  MetaframeId,
+  MetaframePipeId,
+  MetapageId,
+} from './core';
 import {
   deserializeInputs,
   serializeInputs,
 } from './data';
+import { MetapageEventUrlHashUpdate } from './events';
+import {
+  JsonRpcMethodsFromChild,
+  JsonRpcMethodsFromParent,
+  MinimumClientMessage,
+  SetupIframeServerResponseData,
+} from './jsonrpc';
 import {
   isDebugFromUrlsParams,
   log as MetapageToolsLog,
@@ -29,16 +43,7 @@ import {
   stringToRgb,
 } from './MetapageTools';
 import { isIframe } from './Shared';
-import {
-  MetaframeInputMap,
-} from './v0_4';
-import {
-  MetaframeId,
-  MetaframePipeId,
-  MetapageId,
-} from './core';
-import { MetapageEventUrlHashUpdate } from './events';
-import { JsonRpcMethodsFromChild, JsonRpcMethodsFromParent, MinimumClientMessage, SetupIframeServerResponseData } from './jsonrpc';
+import { MetaframeInputMap } from './v0_4';
 import { VersionsMetapage } from './versions';
 
 // TODO combine/unify MetaframeEvents and MetaframeLoadingState
@@ -509,12 +514,12 @@ export class Metaframe extends EventEmitter<
         var method = jsonrpc.method as JsonRpcMethodsFromParent;
         if (
           !(
-            method == JsonRpcMethodsFromParent.SetupIframeServerResponse ||
+            method == "SetupIframeServerResponse" ||
             (jsonrpc.parentId == this._parentId && jsonrpc.iframeId == this.id)
           )
         ) {
           this.log(
-            `window.message: received message but jsonrpc.parentId=${jsonrpc.parentId} _parentId=${this._parentId} jsonrpc.iframeId=${jsonrpc.iframeId} id=${this.id}`
+            `window.message: received message (method=${method}) but jsonrpc.parentId=${jsonrpc.parentId} _parentId=${this._parentId} jsonrpc.iframeId=${jsonrpc.iframeId} id=${this.id}`
           );
           return;
         }
