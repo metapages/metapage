@@ -8,6 +8,7 @@ export type MetaframeMetadataV2 = {
   authors?: string[];
   image?: string;
   tags?: string[];
+  // we should disable, very useful, but too complex for now
   operations?: MetaframeOperationsV1;
 };
 
@@ -26,5 +27,7 @@ export interface MetaframeDefinitionV2 {
   // Set or override allowed features for the iframe
   // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#sandbox
   sandbox?: string;
+  // whitelist allowed hash parameters.
+  hashParams?: string[];
 }
 
