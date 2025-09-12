@@ -220,6 +220,9 @@ export class Metapage extends MetapageShared {
     this.setInput = this.setInput.bind(this);
     this.setInputs = this.setInputs.bind(this);
     this.setOutputs = this.setOutputs.bind(this);
+    this.onInputs = this.onInputs.bind(this);
+    this.onOutputs = this.onOutputs.bind(this);
+    this.onState = this.onState.bind(this);
     this.setMetaframeOutputs = this.setMetaframeOutputs.bind(this);
     this.setInputStateOnlyMetaframeInputValue =
       this.setInputStateOnlyMetaframeInputValue.bind(this);
@@ -264,6 +267,18 @@ export class Metapage extends MetapageShared {
       super.removeListener(event, listener);
     };
     return disposer;
+  }
+
+  onInputs(cb: (inputs: MetapageInstanceInputs) => () => void) {
+    return this.addListenerReturnDisposer(MetapageEvents.Inputs, cb);
+  }
+
+  onOutputs(cb: (outputs: MetapageInstanceInputs) => void) {
+    return this.addListenerReturnDisposer(MetapageEvents.Outputs, cb);
+  }
+
+  onState(cb: (state: MetapageState) => void) {
+    return this.addListenerReturnDisposer(MetapageEvents.State, cb);
   }
 
   public setDebugFromUrlParams(): Metapage {
