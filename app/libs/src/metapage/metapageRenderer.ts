@@ -1,8 +1,9 @@
+import { MetaframeId } from "./core.js";
 import { MetapageEvents } from "./events.js";
 import { Metapage } from "./Metapage.js";
 import { pageLoaded } from "./MetapageTools.js";
 import { getMetapageDefinitionFromUrl } from "./util.js";
-import { MetapageInstanceInputs } from "./v0_4/index.js";
+import { MetaframeInputMap, MetapageInstanceInputs } from "./v0_4/index.js";
 import { MetapageDefinitionV2 } from "./v2/metapage.js";
 
 // Types for the pure function
@@ -17,7 +18,7 @@ export interface RenderingOptions {
 
 export interface MetapageRendererResult {
   setInputs: (inputs: MetapageInstanceInputs) => void;
-  setMetaframeOutputs: (outputs: MetapageInstanceInputs) => void;
+  setOutputs: (outputs: MetapageInstanceInputs) => void;
   dispose: () => void;
   metapage: Metapage;
 }
@@ -384,6 +385,11 @@ export async function renderMetapage(props: {
     setInputs: (inputs: MetapageInstanceInputs) => {
       if (!metapage.isDisposed()) {
         metapage.setInputs(inputs);
+      }
+    },
+    setOutputs: (outputs: MetapageInstanceInputs) => {
+      if (!metapage.isDisposed()) {
+        metapage.setOutputs(outputs);
       }
     },
     dispose: () => {
