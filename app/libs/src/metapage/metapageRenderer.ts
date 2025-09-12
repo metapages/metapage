@@ -33,7 +33,7 @@ interface LayoutItem {
 }
 
 // Utility function to check if a metaframe is a divider
-function isMetaframeDivider(url: string): boolean {
+export function isMetaframeDivider(url: string): boolean {
   if (!url.startsWith("data:")) {
     return false;
   }
@@ -402,6 +402,57 @@ export async function renderMetapage(props: {
     },
   };
 }
+
+export const isMetaframeHidden = (
+  definition: MetapageDefinitionV2,
+  metaframeId: MetaframeId
+): boolean => {
+  // Get the layout information
+  const desktopLayoutBlob = definition?.meta?.layouts?.["react-grid-layout"];
+  const layout = desktopLayoutBlob?.layout as LayoutItem[];
+
+  if (!desktopLayoutBlob || !layout) {
+    throw new Error("No valid layout found in metapage definition");
+  }
+
+  // Find dividers and determine which metaframes to hide
+  const metaframesToHide = new Set<string>();
+
+  // Find all dividers and their y positions
+  const dividers = layout
+    .map((item: LayoutItem, index: number) => {
+      const metaframe = definition?.metaframes?.[item.i];
+      return metaframe && isMetaframeDivider(metaframe.url)
+        ? { index, y: item.y, id: item.i }
+        : null;
+    })
+    .filter(
+      (item): item is { index: number; y: number; id: string } => item !== null
+    );
+
+  // If dividers found, determine which metaframes to hide
+  if (dividers.length > 0) {
+    // Find the divider with the lowest y value
+    const lowestYDivider = dividers.reduce(
+      (
+        lowest: { index: number; y: number; id: string },
+        current: { index: number; y: number; id: string }
+      ) => (current.y < lowest.y ? current : lowest)
+    );
+
+    const dividerY =
+      layout.find((item: LayoutItem) => item.i === lowestYDivider.id)?.y ?? 0;
+
+    // Add all metaframes at or below the divider's y position
+    layout.forEach((item: LayoutItem) => {
+      if (item.y >= dividerY) {
+        metaframesToHide.add(item.i);
+      }
+    });
+  }
+
+  return metaframesToHide.has(metaframeId);
+};
 
 const getMetaframeKey = (url: string | URL): string | undefined => {
   if (!url) {
