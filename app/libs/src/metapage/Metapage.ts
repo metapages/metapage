@@ -300,10 +300,10 @@ export class Metapage extends MetapageShared {
   public setState(newState: MetapageState) {
     this._state = create<MetapageState>(newState, (draft) => draft);
     this.getMetaframeIds().forEach((metaframeId) => {
-      this.getMetaframe(metaframeId).setInputs(
+      this.getMetaframe(metaframeId)?.setInputs(
         this._state.metaframes.inputs[metaframeId]
       );
-      this.getMetaframe(metaframeId).setOutputs(
+      this.getMetaframe(metaframeId)?.setOutputs(
         this._state.metaframes.outputs[metaframeId]
       );
     });
@@ -511,8 +511,8 @@ export class Metapage extends MetapageShared {
     return this._metaframes;
   }
 
-  public getMetaframe(id: MetaframeId): MetapageIFrameRpcClient {
-    return this?._metaframes[id];
+  public getMetaframe(id: MetaframeId): MetapageIFrameRpcClient | undefined {
+    return this?._metaframes?.[id];
   }
 
   // do not expose, change definition instead
