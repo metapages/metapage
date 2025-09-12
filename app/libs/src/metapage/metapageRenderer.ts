@@ -1,9 +1,10 @@
-import { MetapageEvents } from './events.js';
-import { Metapage } from './Metapage.js';
-import { pageLoaded } from './MetapageTools.js';
-import { getMetapageDefinitionFromUrl } from './util.js';
-import { MetapageInstanceInputs } from './v0_4/index.js';
-import { MetapageDefinitionV2 } from './v2/metapage.js';
+import { MetaframeId } from "./core.js";
+import { MetapageEvents } from "./events.js";
+import { Metapage } from "./Metapage.js";
+import { pageLoaded } from "./MetapageTools.js";
+import { getMetapageDefinitionFromUrl } from "./util.js";
+import { MetaframeInputMap, MetapageInstanceInputs } from "./v0_4/index.js";
+import { MetapageDefinitionV2 } from "./v2/metapage.js";
 
 // Types for the pure function
 export interface RenderingOptions {
@@ -17,6 +18,7 @@ export interface RenderingOptions {
 
 export interface MetapageRendererResult {
   setInputs: (inputs: MetapageInstanceInputs) => void;
+  setOutputs: (outputs: MetapageInstanceInputs) => void;
   dispose: () => void;
   metapage: Metapage;
 }
@@ -172,7 +174,7 @@ export async function renderMetapage(props: {
 
   // Find dividers and determine which metaframes to hide
   const metaframesToHide = new Set<string>();
-  
+
   // Find all dividers and their y positions
   const dividers = layout
     .map((item: LayoutItem, index: number) => {
@@ -215,7 +217,7 @@ export async function renderMetapage(props: {
   let visibleLayoutItems = layout.filter((item: LayoutItem) =>
     visibleMetaframeIds.includes(item.i)
   );
-  
+
   // Handle case where no metaframes are visible
   if (visibleLayoutItems.length === 0) {
     // Return early with empty result
@@ -226,6 +228,11 @@ export async function renderMetapage(props: {
           metapage.setInputs(inputs);
         }
       },
+      setOutputs: (outputs: MetapageInstanceInputs) => {
+        if (!metapage.isDisposed()) {
+          metapage.setOutputs(outputs);
+        }
+      },
       dispose: () => {
         disposers.forEach((disposer) => disposer());
         metapage.dispose();
@@ -233,7 +240,7 @@ export async function renderMetapage(props: {
       },
     };
   }
-  
+
   // Sort visible layout items by y position to ensure proper grid layout
   visibleLayoutItems.sort((a, b) => {
     if (a.y !== b.y) {
@@ -241,7 +248,7 @@ export async function renderMetapage(props: {
     }
     return a.x - b.x;
   });
-  
+
   // Create grid container style (will be updated after we know the actual dimensions)
   const gridStyle = {
     display: "grid",
@@ -280,18 +287,17 @@ export async function renderMetapage(props: {
 
   // Add visible metaframes to the grid
   const renderedMetaframes: LayoutItem[] = [];
-  
+
   for (const metaframeId of visibleMetaframeIds) {
-  
     const layoutItem = layout.find(
       (item: LayoutItem) => item.i === metaframeId
     );
     if (!layoutItem) continue;
 
     const metaframe = metapage.getMetaframes()[metaframeId];
-    const iframe = await metaframe.iframe
+    const iframe = await metaframe.iframe;
     if (!metaframe) continue;
-    
+
     // Track this metaframe for grid dimension calculation
     renderedMetaframes.push(layoutItem);
 
@@ -306,12 +312,12 @@ export async function renderMetapage(props: {
       alignSelf: "stretch", // Stretch to fill the grid cell height
       justifySelf: "stretch", // Stretch to fill the grid cell width
     };
-    
+
     // Create wrapper div for proper grid positioning
     const wrapper = document.createElement("div");
     Object.assign(wrapper.style, itemStyle);
     wrapper.appendChild(iframe);
-    
+
     gridContainer.appendChild(wrapper);
   }
 
@@ -320,14 +326,15 @@ export async function renderMetapage(props: {
     ...renderedMetaframes.map((item: LayoutItem) => item.x + item.w)
   );
 
-  
   const maxRow = Math.max(
     ...renderedMetaframes.map((item: LayoutItem) => item.y + item.h)
   );
-  
-  
+
   // Update the grid container with the correct dimensions
-  gridContainer.style.gridTemplateColumns = `repeat(${Math.max(1, maxCol)}, 1fr)`;
+  gridContainer.style.gridTemplateColumns = `repeat(${Math.max(
+    1,
+    maxCol
+  )}, 1fr)`;
 
   // Create hidden container for hidden metaframes
   const hiddenContainer = document.createElement("div");
@@ -340,7 +347,9 @@ export async function renderMetapage(props: {
   hiddenContainer.style.pointerEvents = "none";
 
   // Add hidden metaframes
-  for (const metaframeId of Object.keys(metapage.getMetaframes()).filter((id) => metaframesToHide.has(id))) {
+  for (const metaframeId of Object.keys(metapage.getMetaframes()).filter((id) =>
+    metaframesToHide.has(id)
+  )) {
     const metaframe = metapage.getMetaframes()[metaframeId];
     if (!metaframe) continue;
 
@@ -376,6 +385,11 @@ export async function renderMetapage(props: {
     setInputs: (inputs: MetapageInstanceInputs) => {
       if (!metapage.isDisposed()) {
         metapage.setInputs(inputs);
+      }
+    },
+    setOutputs: (outputs: MetapageInstanceInputs) => {
+      if (!metapage.isDisposed()) {
+        metapage.setOutputs(outputs);
       }
     },
     dispose: () => {
