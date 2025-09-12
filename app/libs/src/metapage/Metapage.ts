@@ -219,6 +219,8 @@ export class Metapage extends MetapageShared {
     this.setDefinition = this.setDefinition.bind(this);
     this.setInput = this.setInput.bind(this);
     this.setInputs = this.setInputs.bind(this);
+    this.setOutputs = this.setOutputs.bind(this);
+    this.setMetaframeOutputs = this.setMetaframeOutputs.bind(this);
     this.setInputStateOnlyMetaframeInputValue =
       this.setInputStateOnlyMetaframeInputValue.bind(this);
     this.setInputStateOnlyMetaframeInputMap =
@@ -969,6 +971,17 @@ export class Metapage extends MetapageShared {
       id: "_",
       params: outputs,
     });
+  }
+
+  /**
+   * Set the outputs manually, useful for when the
+   * parent wants to modify the outputs directly
+   * @param outputs
+   */
+  setOutputs(outputs: MetapageInstanceInputs) {
+    for (const metaframeId in outputs) {
+      this.setMetaframeOutputs(metaframeId, outputs[metaframeId]);
+    }
   }
 
   onMessage(e: MessageEvent) {
