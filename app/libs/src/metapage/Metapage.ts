@@ -1,55 +1,42 @@
-import { ListenerFn } from 'eventemitter3';
-import { create } from 'mutative';
-import picomatch from 'picomatch-browser';
+import { ListenerFn } from "eventemitter3";
+import { create } from "mutative";
+import picomatch from "picomatch-browser";
 
-import { VERSION_METAPAGE } from './Constants';
+import { VERSION_METAPAGE } from "./Constants";
 import {
   convertMetapageDefinitionToCurrentVersion,
   getMatchingMetapageVersion,
-} from './conversions-metapage';
-import {
-  MetaframeId,
-  MetaframePipeId,
-  MetapageId,
-} from './core';
-import {
-  deserializeInputs,
-  serializeInputs,
-} from './data';
+} from "./conversions-metapage";
+import { MetaframeId, MetaframePipeId, MetapageId } from "./core";
+import { deserializeInputs, serializeInputs } from "./data";
 import {
   MetapageEventDefinition,
   MetapageEvents,
   MetapageEventUrlHashUpdate,
-} from './events';
+} from "./events";
 import {
   JsonRpcMethodsFromChild,
   MinimumClientMessage,
   SetupIframeClientAckData,
-} from './jsonrpc';
-import { MetapageIFrameRpcClient } from './MetapageIFrameRpcClient';
+} from "./jsonrpc";
+import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
 import {
   generateMetapageId,
   isDebugFromUrlsParams,
   log as MetapageToolsLog,
   pageLoaded,
-} from './MetapageTools';
-import {
-  INITIAL_NULL_METAPAGE_DEFINITION,
-  MetapageShared,
-} from './Shared';
+} from "./MetapageTools";
+import { INITIAL_NULL_METAPAGE_DEFINITION, MetapageShared } from "./Shared";
 import {
   MetaframeInputMap,
   MetaframeInstance,
   MetapageInstanceInputs,
   PipeInput,
   PipeUpdateBlob,
-} from './v0_4';
-import { MetapageOptionsV1 } from './v1';
-import {
-  MetapageDefinitionV2,
-  MetapageMetadataV2,
-} from './v2';
-import { VersionsMetapage } from './versions';
+} from "./v0_4";
+import { MetapageOptionsV1 } from "./v1";
+import { MetapageDefinitionV2, MetapageMetadataV2 } from "./v2";
+import { VersionsMetapage } from "./versions";
 
 interface MetapageStatePartial {
   inputs: MetapageInstanceInputs;
@@ -225,6 +212,7 @@ export class Metapage extends MetapageShared {
     this.metaframeIds = this.metaframeIds.bind(this);
     this.metaframes = this.metaframes.bind(this);
     this.onMessage = this.onMessage.bind(this);
+    this.onMessageJsonRpc = this.onMessageJsonRpc.bind(this);
     this.removeAll = this.removeAll.bind(this);
     this.removeMetaframe = this.removeMetaframe.bind(this);
     this.setDebugFromUrlParams = this.setDebugFromUrlParams.bind(this);
@@ -966,6 +954,23 @@ export class Metapage extends MetapageShared {
     });
   }
 
+  /**
+   * Set the outputs for a metaframe manually, useful for when the
+   * metapage is modifying the outputs directly
+   * @param metaframeId
+   * @param outputs
+   */
+  setMetaframeOutputs(metaframeId: MetaframeId, outputs: MetaframeInputMap) {
+    this.onMessageJsonRpc({
+      iframeId: metaframeId,
+      parentId: this._id,
+      jsonrpc: "2.0",
+      method: JsonRpcMethodsFromChild.OutputsUpdate,
+      id: "_",
+      params: outputs,
+    });
+  }
+
   onMessage(e: MessageEvent) {
     // any other type of messages are ignored
     // maybe in the future we can pass around strings or ArrayBuffers
@@ -974,190 +979,196 @@ export class Metapage extends MetapageShared {
       if (!this.isValidJSONRpcMessage(jsonrpc)) {
         return;
       }
-      //Verify here
-      var method = jsonrpc.method as JsonRpcMethodsFromChild;
-      const metaframeId = jsonrpc.iframeId;
-      // The metaframe gets its id from the window.name field so the iframe knows
-      // its id from the very beginning
-      if (!metaframeId) {
-        // so if it's missing, bail early
-        return;
-      }
+      this.onMessageJsonRpc(jsonrpc);
+    }
+  }
 
-      // ignore messages from other metapages
-      if (method !== "SetupIframeClientRequest" && jsonrpc.parentId !== this._id) {
-        return;
-      }
+  onMessageJsonRpc(jsonrpc: MinimumClientMessage<any>) {
+    //Verify here
+    var method = jsonrpc.method as JsonRpcMethodsFromChild;
+    const metaframeId = jsonrpc.iframeId;
+    // The metaframe gets its id from the window.name field so the iframe knows
+    // its id from the very beginning
+    if (!metaframeId) {
+      // so if it's missing, bail early
+      return;
+    }
 
-      const metaframe = this.getMetaframe(metaframeId);
-      if (!metaframe) {
-        // SetupIframeClientRequest from other metapages is ignored
-        // this.error(`💥 onMessage method=${method}no metaframe id=${metaframeId}`);
-        return;
-      }
+    // ignore messages from other metapages
+    if (
+      method !== "SetupIframeClientRequest" &&
+      jsonrpc.parentId !== this._id
+    ) {
+      return;
+    }
 
-      // debugging: track messsages internally
-      (jsonrpc as any)["_messageCount"] = ++this
-        ._internalReceivedMessageCounter;
+    const metaframe = this.getMetaframe(metaframeId);
+    if (!metaframe) {
+      // SetupIframeClientRequest from other metapages is ignored
+      // this.error(`💥 onMessage method=${method}no metaframe id=${metaframeId}`);
+      return;
+    }
 
-      if (this.debug) {
-        this.log(
-          `processing ${JSON.stringify(jsonrpc, null, "  ").substring(0, 500)}`
-        );
-      }
+    // debugging: track messsages internally
+    (jsonrpc as any)["_messageCount"] = ++this._internalReceivedMessageCounter;
 
-      switch (method) {
-        /**
-         * An iframe is sending a connection request.
-         * Here we register it to set up a secure
-         * communication channel.
-         */
-        case JsonRpcMethodsFromChild.SetupIframeClientRequest:
-          metaframe.register();
+    if (this.debug) {
+      this.log(
+        `processing ${JSON.stringify(jsonrpc, null, "  ").substring(0, 500)}`
+      );
+    }
+
+    switch (method) {
+      /**
+       * An iframe is sending a connection request.
+       * Here we register it to set up a secure
+       * communication channel.
+       */
+      case JsonRpcMethodsFromChild.SetupIframeClientRequest:
+        metaframe.register();
+        break;
+
+      /* A client iframe responded */
+      case JsonRpcMethodsFromChild.SetupIframeServerResponseAck:
+        /* Send all inputs when a client has registered. */
+        if (metaframe) {
+          const params = jsonrpc.params as SetupIframeClientAckData<any>;
+          metaframe.registered(params.version);
+        }
+        break;
+
+      case JsonRpcMethodsFromChild.OutputsUpdate:
+        const outputs: MetaframeInputMap = jsonrpc.params;
+        if (!outputs || Object.keys(outputs).length === 0) {
           break;
+        }
 
-        /* A client iframe responded */
-        case JsonRpcMethodsFromChild.SetupIframeServerResponseAck:
-          /* Send all inputs when a client has registered. */
-          if (metaframe) {
-            const params = jsonrpc.params as SetupIframeClientAckData<any>;
-            metaframe.registered(params.version);
-          }
-          break;
+        if (this._metaframes[metaframeId]) {
+          var iframe = this._metaframes[metaframeId];
 
-        case JsonRpcMethodsFromChild.OutputsUpdate:
-          const outputs: MetaframeInputMap = jsonrpc.params;
-          if (!outputs || Object.keys(outputs).length === 0) {
-            break;
-          }
+          // set the internal state, no event yet, nor downstream inputs update (yet)
+          this.setOutputStateOnlyMetaframeInputMap(metaframeId, outputs);
+          // iframe outputs, metaframe only event sent
+          iframe.setOutputs(outputs);
+          // let's not send the state event until AFTER
+          // cached lookup of where those outputs are going
+          // Multiple outputs going to multiple inputs on the same metaframe must
+          // arrive as a single blob
+          var modified = false;
+          const outputKeys = Object.keys(outputs);
+          const collectedOutputs: { [key in string]: MetaframeInputMap } = {};
+          outputKeys.forEach((outputKey, i) => {
+            const targets: MetaframeInputTargetsFromOutput[] =
+              this.getInputsFromOutput(metaframeId!, outputKey);
 
-          if (this._metaframes[metaframeId]) {
-            var iframe = this._metaframes[metaframeId];
-
-            // set the internal state, no event yet, nor downstream inputs update (yet)
-            this.setOutputStateOnlyMetaframeInputMap(metaframeId, outputs);
-            // iframe outputs, metaframe only event sent
-            iframe.setOutputs(outputs);
-            // let's not send the state event until AFTER
-            // cached lookup of where those outputs are going
-            // Multiple outputs going to multiple inputs on the same metaframe must
-            // arrive as a single blob
-            var modified = false;
-            const outputKeys = Object.keys(outputs);
-            const collectedOutputs: { [key in string]: MetaframeInputMap } = {};
-            outputKeys.forEach((outputKey, i) => {
-              const targets: MetaframeInputTargetsFromOutput[] =
-                this.getInputsFromOutput(metaframeId!, outputKey);
-
-              if (targets.length > 0) {
-                targets.forEach((target) => {
-                  if (!collectedOutputs[target.metaframe]) {
-                    collectedOutputs[target.metaframe] = {};
-                  }
-                  collectedOutputs[target.metaframe][target.pipe] =
-                    outputs[outputKey];
-                  modified = true;
-                });
-              }
+            if (targets.length > 0) {
+              targets.forEach((target) => {
+                if (!collectedOutputs[target.metaframe]) {
+                  collectedOutputs[target.metaframe] = {};
+                }
+                collectedOutputs[target.metaframe][target.pipe] =
+                  outputs[outputKey];
+                modified = true;
+              });
+            }
+          });
+          if (modified) {
+            this.setInputStateOnlyMetapageInstanceInputs(collectedOutputs);
+            Object.keys(collectedOutputs).forEach((metaframeId) => {
+              this._metaframes[metaframeId].setInputs(
+                collectedOutputs[metaframeId]
+                // then actually set the inputs once collected
+              );
             });
-            if (modified) {
-              this.setInputStateOnlyMetapageInstanceInputs(collectedOutputs);
-              Object.keys(collectedOutputs).forEach((metaframeId) => {
-                this._metaframes[metaframeId].setInputs(
-                  collectedOutputs[metaframeId]
-                  // then actually set the inputs once collected
-                );
-              });
-            }
-            // only send a state event if downstream inputs were modified
-            if (
-              this.listenerCount(MetapageEvents.State) > 0 &&
-              emptyState !== this._state
-            ) {
-              this.emit(MetapageEvents.State, this._state);
-            }
-            if (this.debug) {
-              iframe.ack({ jsonrpc: jsonrpc, state: this._state });
-            }
-          } else {
-            this.error(`missing metaframe=${metaframeId}`);
           }
-
-          break;
-
-        case JsonRpcMethodsFromChild.InputsUpdate:
-          // This is triggered by the metaframe itself, meaning the metaframe
-          // decided to save this state info.
-          // We store it in the local state, then send it back so
-          // the metaframe is notified of its input state.
-          var inputs: MetaframeInputMap = jsonrpc.params;
-          if (this.debug)
-            this.log(`inputs ${JSON.stringify(inputs)} from ${metaframeId}`);
-          if (this._metaframes[metaframeId]) {
-            // Set the internal inputs state first so that anything that
-            // responds to events will get the updated state if requested
-            // Currently on for setting metaframe inputs that haven't loaded yet
-            this.setInputStateOnlyMetaframeInputMap(metaframeId, inputs);
-            this._metaframes[metaframeId].setInputs(inputs);
-            if (
-              this.listenerCount(MetapageEvents.State) > 0 &&
-              emptyState !== this._state
-            ) {
-              this.emit(MetapageEvents.State, this._state);
-            }
-
-            if (this.debug) {
-              this._metaframes[metaframeId].ack({
-                jsonrpc: jsonrpc,
-                state: this._state,
-              });
-            }
-          } else {
-            console.error(
-              `InputsUpdate failed no metaframe id: "${metaframeId}"`
-            );
-            this.error(`InputsUpdate failed no metaframe id: "${metaframeId}"`);
+          // only send a state event if downstream inputs were modified
+          if (
+            this.listenerCount(MetapageEvents.State) > 0 &&
+            emptyState !== this._state
+          ) {
+            this.emit(MetapageEvents.State, this._state);
           }
-          break;
-        case JsonRpcMethodsFromChild.HashParamsUpdate:
-          // Not really sure how to "automatically" process this right here
-          // It's a potential automatic security concern, IF we want to put credentials
-          // in the hash params (and we do)
-          // So for now, just emit an event, and let the parent context handle it
-          // In the current use case this app: https://github.com/metapages/metapage-app
-          // will listen for the event and update the definition accordingly
-          if (metaframe) {
-            // Update in place the local references to the new metaframe URL with the
-            // new hash params:
-            //   - if you call metapage.getDefinition() it will include the new URL
-            //   - compare metapage.getDefinition() with any updates outside of this
-            //     context to decide wether to re-render or recreate
-            const hashParamsUpdatePayload: MetapageEventUrlHashUpdate =
-              jsonrpc.params;
-            const url = new URL(metaframe.url);
-            url.hash = hashParamsUpdatePayload.hash;
-            // Update the local metaframe client reference
-            metaframe.url = url.href;
-            // Update the definition in place
-            this._definition = create<MetapageDefinitionV2>(
-              this._definition,
-              (draft) => {
-                draft.metaframes[hashParamsUpdatePayload.metaframe].url =
-                  url.href;
-              }
-            );
-
-            this._emitDefinitionEvent();
-          }
-          break;
-        default:
           if (this.debug) {
-            this.log(`Unknown RPC method: "${method}"`);
+            iframe.ack({ jsonrpc: jsonrpc, state: this._state });
           }
-      }
-      if (this.listenerCount(MetapageEvents.Message) > 0) {
-        this.emit(MetapageEvents.Message, jsonrpc);
-      }
+        } else {
+          this.error(`missing metaframe=${metaframeId}`);
+        }
+
+        break;
+
+      case JsonRpcMethodsFromChild.InputsUpdate:
+        // This is triggered by the metaframe itself, meaning the metaframe
+        // decided to save this state info.
+        // We store it in the local state, then send it back so
+        // the metaframe is notified of its input state.
+        var inputs: MetaframeInputMap = jsonrpc.params;
+        if (this.debug)
+          this.log(`inputs ${JSON.stringify(inputs)} from ${metaframeId}`);
+        if (this._metaframes[metaframeId]) {
+          // Set the internal inputs state first so that anything that
+          // responds to events will get the updated state if requested
+          // Currently on for setting metaframe inputs that haven't loaded yet
+          this.setInputStateOnlyMetaframeInputMap(metaframeId, inputs);
+          this._metaframes[metaframeId].setInputs(inputs);
+          if (
+            this.listenerCount(MetapageEvents.State) > 0 &&
+            emptyState !== this._state
+          ) {
+            this.emit(MetapageEvents.State, this._state);
+          }
+
+          if (this.debug) {
+            this._metaframes[metaframeId].ack({
+              jsonrpc: jsonrpc,
+              state: this._state,
+            });
+          }
+        } else {
+          console.error(
+            `InputsUpdate failed no metaframe id: "${metaframeId}"`
+          );
+          this.error(`InputsUpdate failed no metaframe id: "${metaframeId}"`);
+        }
+        break;
+      case JsonRpcMethodsFromChild.HashParamsUpdate:
+        // Not really sure how to "automatically" process this right here
+        // It's a potential automatic security concern, IF we want to put credentials
+        // in the hash params (and we do)
+        // So for now, just emit an event, and let the parent context handle it
+        // In the current use case this app: https://github.com/metapages/metapage-app
+        // will listen for the event and update the definition accordingly
+        if (metaframe) {
+          // Update in place the local references to the new metaframe URL with the
+          // new hash params:
+          //   - if you call metapage.getDefinition() it will include the new URL
+          //   - compare metapage.getDefinition() with any updates outside of this
+          //     context to decide wether to re-render or recreate
+          const hashParamsUpdatePayload: MetapageEventUrlHashUpdate =
+            jsonrpc.params;
+          const url = new URL(metaframe.url);
+          url.hash = hashParamsUpdatePayload.hash;
+          // Update the local metaframe client reference
+          metaframe.url = url.href;
+          // Update the definition in place
+          this._definition = create<MetapageDefinitionV2>(
+            this._definition,
+            (draft) => {
+              draft.metaframes[hashParamsUpdatePayload.metaframe].url =
+                url.href;
+            }
+          );
+
+          this._emitDefinitionEvent();
+        }
+        break;
+      default:
+        if (this.debug) {
+          this.log(`Unknown RPC method: "${method}"`);
+        }
+    }
+    if (this.listenerCount(MetapageEvents.Message) > 0) {
+      this.emit(MetapageEvents.Message, jsonrpc);
     }
   }
 
