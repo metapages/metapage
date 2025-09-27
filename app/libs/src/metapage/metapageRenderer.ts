@@ -236,7 +236,6 @@ export async function renderMetapage(props: {
       dispose: () => {
         disposers.forEach((disposer) => disposer());
         metapage.dispose();
-        rootDiv.innerHTML = "";
       },
     };
   }
@@ -273,9 +272,6 @@ export async function renderMetapage(props: {
     display: "flex",
     flexDirection: "column" as const,
   };
-
-  // Clear the root div
-  rootDiv.innerHTML = "";
 
   // Create container
   const container = document.createElement("div");
@@ -397,8 +393,9 @@ export async function renderMetapage(props: {
       disposers.forEach((disposer) => disposer());
       // Dispose the metapage
       metapage.dispose();
-      // Clear the DOM
-      rootDiv.innerHTML = "";
+      if (container.parentNode) {
+        container.parentNode.removeChild(container);
+      }
     },
   };
 }
