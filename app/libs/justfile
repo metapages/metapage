@@ -119,10 +119,10 @@ module_deprecate version +message:
     npm deprecate {{NPM_MODULE}}@{{version}} "{{message}}"
 
 # delete all generated assets/files
-clean:
-    @mkdir -p dist
+@clean:
+    mkdir -p dist
     rm -rf dist/*
-    just test/clean
+    echo -e "✅ Cleaned libs"
 
 @_require_NPM_TOKEN:
     if [ -z "$NPM_TOKEN" ]; then echo "Missing NPM_TOKEN"; exit 1; fi

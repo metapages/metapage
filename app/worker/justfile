@@ -18,7 +18,7 @@ grey                               := "\\e[90m"
     echo -e "APP_FQDN={{APP_FQDN}}"
 
 # Run the server in development mode
-@dev +args="": _mkcert _check_for_hostname _build_local_module open
+@dev +args="": clean _mkcert _check_for_hostname _build_local_module open
   deno task start
 
 open:
@@ -41,10 +41,11 @@ deploy: _ensure_deployctl
   deployctl deploy --project=metapage-module --prod --entrypoint src/main.ts
 
 # Delete all cached and generated files, and docker volumes
-clean:
+@clean:
   rm -rf .certs
   rm -rf deploy
   rm -rf src/_fresh
+  echo -e "✅ Cleaned worker"
 
 test: _build_local_module _mkcert
   APP_PORT=8762 deno run -A --unsafely-ignore-certificate-errors test/src/run-tests-in-astral.ts

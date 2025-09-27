@@ -994,6 +994,9 @@ export class Metapage extends MetapageShared {
    * @param outputs
    */
   setOutputs(outputs: MetapageInstanceInputs) {
+    if (!this._metaframes) {
+      return;
+    }
     for (const metaframeId in outputs) {
       this.setMetaframeOutputs(metaframeId, outputs[metaframeId]);
     }
