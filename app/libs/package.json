@@ -52,6 +52,7 @@
   ],
   "author": "Dion Whitehead <dion@metapage.io>",
   "scripts": {
+    "format": "npx prettier . --write",
     "test": "vitest run",
     "test-watch": "vitest",
     "test:browser": "vitest --config=vitest.browser.config.ts"

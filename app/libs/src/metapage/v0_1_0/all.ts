@@ -1,4 +1,4 @@
-import { VersionsMetaframe as Versions } from '../versions.js';
+import { VersionsMetaframe as Versions } from "../versions.js";
 
 export type MetaframePipeId = string;
 export type MetaframeId = string;
@@ -37,7 +37,7 @@ export interface MetapageDefinitionV01 {
   id?: MetapageId;
   version: Versions; // Best to require this even if annoying to users.
   iframes: {
-    [key: string]: MetaframeInstanceV01
+    [key: string]: MetaframeInstanceV01;
   };
   options?: any;
   pipes?: Pipe[];
@@ -63,12 +63,12 @@ export interface DataBlob {
 export enum DataEncoding {
   utf8 = "utf8",
   base64 = "base64",
-  json = "json"
+  json = "json",
 }
 
 export enum DataSource {
   SourceUrl = "url",
-  SourceInline = "inline" //Default
+  SourceInline = "inline", //Default
 }
 
 export interface MetaframeInstanceAnonymous {
@@ -107,13 +107,13 @@ export interface MetapageMetadata {
 }
 
 export enum MetapageVersionLayoutType {
-  gridlayout = "gridlayout"
+  gridlayout = "gridlayout",
 }
 
 export type MetapageMetadataLayout = {
   version?: string;
   layouts?: {
-    [key in MetapageVersionLayoutType]: MetapageVersionLayoutGrid
+    [key in MetapageVersionLayoutType]: MetapageVersionLayoutGrid;
   };
 };
 

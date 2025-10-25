@@ -157,7 +157,7 @@ export class MetapageWidget {
     this.container.dispatchEvent(
       new CustomEvent("metapage-outputs", {
         detail: outputs,
-      })
+      }),
     );
   }
 }

@@ -1,10 +1,6 @@
-import { JsonRpcRequest } from '../jsonrpc2.js';
-import { VersionsMetapage as Versions } from '../versions.js';
-import {
-  MetaframeId,
-  MetaframeInputMap,
-  MetapageId,
-} from './all.js';
+import { JsonRpcRequest } from "../jsonrpc2.js";
+import { VersionsMetapage as Versions } from "../versions.js";
+import { MetaframeId, MetaframeInputMap, MetapageId } from "./all.js";
 
 export enum JsonRpcMethodsFromChild {
   InputsUpdate = "InputsUpdate",
@@ -20,14 +16,14 @@ export enum JsonRpcMethodsFromChild {
 export enum JsonRpcMethodsFromParent {
   InputsUpdate = "InputsUpdate",
   MessageAck = "MessageAck",
-  SetupIframeServerResponse = "SetupIframeServerResponse"
+  SetupIframeServerResponse = "SetupIframeServerResponse",
 }
 
 export interface SetupIframeServerResponseData {
   iframeId: MetaframeId;
   parentId: MetapageId;
   state: {
-    inputs: MetaframeInputMap
+    inputs: MetaframeInputMap;
   };
   // Allow newer metaframes to handle older metapage versions
   version: Versions;
@@ -50,7 +46,7 @@ export interface ClientMessageRecievedAck<T> {
 
 // Plugin API definitions
 export enum ApiPayloadPluginRequestMethod {
-  State = "metapage/state"
+  State = "metapage/state",
 }
 
 export interface ApiPayloadPluginRequest {

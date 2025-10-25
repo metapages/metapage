@@ -23,7 +23,7 @@ type AnyMetaframeDefinition =
 
 export const convertMetaframeDefinitionToVersion = async (
   def: any | AnyMetaframeDefinition,
-  targetVersion: VersionsMetaframe
+  targetVersion: VersionsMetaframe,
 ): Promise<any> => {
   if (!def) {
     throw "Metaframe definition null";
@@ -31,7 +31,7 @@ export const convertMetaframeDefinitionToVersion = async (
 
   if (!def.version) {
     throw `Missing "version" key in metaframe definition: ${JSON.stringify(
-      def
+      def,
     )}`;
   }
   if (!targetVersion) {
@@ -52,7 +52,7 @@ export const convertMetaframeDefinitionToVersion = async (
           headers: {
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       const respBody = await resp.json();
       return respBody as MetaframeDefinitionV2;
@@ -63,20 +63,20 @@ export const convertMetaframeDefinitionToVersion = async (
 
   const targetDefinition = convertMetaframeDefinitionToTargetVersionInternal(
     def,
-    targetVersion
+    targetVersion,
   );
   return targetDefinition;
 };
 
 export const convertMetaframeDefinitionToCurrentVersion = async (
-  def: any | AnyMetaframeDefinition
+  def: any | AnyMetaframeDefinition,
 ): Promise<MetaframeDefinitionV1> => {
   return convertMetaframeDefinitionToVersion(def, MetaframeVersionCurrent);
 };
 
 const convertMetaframeDefinitionToTargetVersionInternal = (
   def: any | AnyMetaframeDefinition,
-  targetVersion: VersionsMetaframe
+  targetVersion: VersionsMetaframe,
 ): AnyMetaframeDefinition => {
   if (!def) {
     throw "Metaframe definition null";
@@ -103,10 +103,10 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
       case "0.3": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
           currentDefinition = definition_v0_3_to_v0_4(
-            currentDefinition as MetaframeDefinitionV03
+            currentDefinition as MetaframeDefinitionV03,
           );
           currentVersion = getMatchingMetaframeVersion(
-            currentDefinition.version
+            currentDefinition.version,
           );
         } else {
           throw `Cannot convert from version ${currentVersion} to ${targetVersion}`;
@@ -116,17 +116,17 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
       case "0.4": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
           currentDefinition = definition_v0_4_to_v0_5(
-            currentDefinition as MetaframeDefinitionV4
+            currentDefinition as MetaframeDefinitionV4,
           );
           currentVersion = getMatchingMetaframeVersion(
-            currentDefinition.version
+            currentDefinition.version,
           );
         } else {
           currentDefinition = definition_v0_4_to_v0_3(
-            currentDefinition as MetaframeDefinitionV4
+            currentDefinition as MetaframeDefinitionV4,
           );
           currentVersion = getMatchingMetaframeVersion(
-            currentDefinition.version
+            currentDefinition.version,
           );
         }
         break;
@@ -134,17 +134,17 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
       case "0.5": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
           currentDefinition = definition_v0_5_to_v0_6(
-            currentDefinition as MetaframeDefinitionV5
+            currentDefinition as MetaframeDefinitionV5,
           );
           currentVersion = getMatchingMetaframeVersion(
-            currentDefinition.version
+            currentDefinition.version,
           );
         } else {
           currentDefinition = definition_v0_5_to_v0_4(
-            currentDefinition as MetaframeDefinitionV5
+            currentDefinition as MetaframeDefinitionV5,
           );
           currentVersion = getMatchingMetaframeVersion(
-            currentDefinition.version
+            currentDefinition.version,
           );
         }
         break;
@@ -152,17 +152,17 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
       case "0.6": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
           currentDefinition = definition_v0_6_to_v1(
-            currentDefinition as MetaframeDefinitionV6
+            currentDefinition as MetaframeDefinitionV6,
           );
           currentVersion = getMatchingMetaframeVersion(
-            currentDefinition.version
+            currentDefinition.version,
           );
         } else {
           currentDefinition = definition_v0_6_to_v0_5(
-            currentDefinition as MetaframeDefinitionV6
+            currentDefinition as MetaframeDefinitionV6,
           );
           currentVersion = getMatchingMetaframeVersion(
-            currentDefinition.version
+            currentDefinition.version,
           );
         }
         break;
@@ -170,17 +170,17 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
       case "1": {
         if (compareVersions(targetVersion, currentVersion) > 0) {
           currentDefinition = definition_v1_to_v2(
-            currentDefinition as MetaframeDefinitionV1
+            currentDefinition as MetaframeDefinitionV1,
           );
           currentVersion = getMatchingMetaframeVersion(
-            currentDefinition.version
+            currentDefinition.version,
           );
         } else {
           currentDefinition = definition_v1_to_v0_6(
-            currentDefinition as MetaframeDefinitionV1
+            currentDefinition as MetaframeDefinitionV1,
           );
           currentVersion = getMatchingMetaframeVersion(
-            currentDefinition.version
+            currentDefinition.version,
           );
         }
         break;
@@ -190,10 +190,10 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
           throw `Cannot convert from version ${currentVersion} to ${targetVersion}`;
         } else {
           currentDefinition = definition_v2_to_v1(
-            currentDefinition as MetaframeDefinitionV2
+            currentDefinition as MetaframeDefinitionV2,
           );
           currentVersion = getMatchingMetaframeVersion(
-            currentDefinition.version
+            currentDefinition.version,
           );
         }
         break;
@@ -208,7 +208,7 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
 export const convertMetaframeJsonToCurrentVersion = async (
   m: AnyMetaframeDefinition | undefined,
   // deprecated
-  opts?: { errorIfUnknownVersion?: boolean }
+  opts?: { errorIfUnknownVersion?: boolean },
 ): Promise<MetaframeDefinitionV2 | undefined> => {
   if (!m) {
     return;
@@ -271,7 +271,7 @@ const definition_v0_5_to_v0_4 = (def: MetaframeDefinitionV5) => {
 
 // v0.6 and v1 are identical, but remove the operations field
 const definition_v0_6_to_v1 = (
-  def: MetaframeDefinitionV6
+  def: MetaframeDefinitionV6,
 ): MetaframeDefinitionV1 => {
   return create(def, (draft: MetaframeDefinitionV6) => {
     draft.version = "1";
@@ -283,7 +283,7 @@ const definition_v0_6_to_v1 = (
 
 // v0.6 and v1 are identical
 const definition_v1_to_v0_6 = (
-  def: MetaframeDefinitionV1
+  def: MetaframeDefinitionV1,
 ): MetaframeDefinitionV6 => {
   return create(def, (draft: MetaframeDefinitionV1) => {
     draft.version = "0.6";
@@ -294,7 +294,7 @@ const definition_v1_to_v0_6 = (
 };
 
 const definition_v2_to_v1 = (
-  def: MetaframeDefinitionV2
+  def: MetaframeDefinitionV2,
 ): MetaframeDefinitionV1 => {
   return create(def, (draft: MetaframeDefinitionV2) => {
     draft.version = "1";
@@ -309,7 +309,7 @@ const definition_v2_to_v1 = (
 };
 
 const definition_v1_to_v2 = (
-  def: MetaframeDefinitionV1
+  def: MetaframeDefinitionV1,
 ): MetaframeDefinitionV2 => {
   return create(def, (draft: MetaframeDefinitionV1) => {
     draft.version = "2";
@@ -328,7 +328,7 @@ const definition_v1_to_v2 = (
 // which we are not using in any of those versions, its too new and not stable
 // and not documented.
 const definition_v0_5_to_v0_6 = (
-  source: MetaframeDefinitionV5
+  source: MetaframeDefinitionV5,
 ): MetaframeDefinitionV6 => {
   return create(source, (draft: MetaframeDefinitionV5) => {
     draft.version = "0.6";
@@ -342,7 +342,7 @@ const definition_v0_5_to_v0_6 = (
 // which we are not using in any of those versions, its too new and not stable
 // and not documented.
 const definition_v0_6_to_v0_5 = (
-  source: MetaframeDefinitionV6
+  source: MetaframeDefinitionV6,
 ): MetaframeDefinitionV5 => {
   return create<MetaframeDefinitionV5>(
     source,
@@ -351,13 +351,13 @@ const definition_v0_6_to_v0_5 = (
       if (draft?.metadata?.operations) {
         delete draft.metadata.operations;
       }
-    }
+    },
   );
 };
 
 // ["0.3", "0.4", "0.5", "0.6", "1"]
 export const getMatchingMetaframeVersion = (
-  version: string
+  version: string,
 ): VersionsMetaframe => {
   if (version === "latest") {
     return MetaframeVersionCurrent;

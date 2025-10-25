@@ -1,25 +1,25 @@
 {
-    "compilerOptions": {
-        "baseUrl": "src",
-        "rootDir": "src",
-        "allowSyntheticDefaultImports": true,
-        "declaration": true,
-        "declarationMap": true,
-        "esModuleInterop": true,
-        "lib": ["DOM", "es6"],
-        "module": "esnext",
-        "moduleResolution": "bundler",
-        "outDir": "dist",
-        "paths": {
-            // avoid ../../../../foo type import paths
-            "/@/*": ["./*"],
-        },
-        "removeComments": true,
-        "skipLibCheck": true,
-        "sourceMap": true,
-        "strict": true,
-        "target": "es2020",
-        "typeRoots": ["node_modules/@types", "src/metapage/types"],
+  "compilerOptions": {
+    "baseUrl": "src",
+    "rootDir": "src",
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "declarationMap": true,
+    "esModuleInterop": true,
+    "lib": ["DOM", "es6"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "outDir": "dist",
+    "paths": {
+      // avoid ../../../../foo type import paths
+      "/@/*": ["./*"]
     },
-    "include": ["src/**/*.ts"]
+    "removeComments": true,
+    "skipLibCheck": true,
+    "sourceMap": true,
+    "strict": true,
+    "target": "es2020",
+    "typeRoots": ["node_modules/@types", "src/metapage/types"]
+  },
+  "include": ["src/**/*.ts"]
 }

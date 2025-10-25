@@ -42,7 +42,7 @@ export function isMetaframeDivider(url: string): boolean {
 
 // Utility function to validate layout (simplified version)
 function validateLayout(
-  definition: MetapageDefinitionV2
+  definition: MetapageDefinitionV2,
 ): MetapageDefinitionV2 {
   // Create a deep copy to avoid mutating the original
   const validated = JSON.parse(JSON.stringify(definition));
@@ -77,7 +77,9 @@ function validateLayout(
         const currentMaxY =
           layout.layout.length > 0
             ? Math.max(
-                ...layout.layout.map((l: LayoutItem) => (l.y || 0) + (l.h || 2))
+                ...layout.layout.map(
+                  (l: LayoutItem) => (l.y || 0) + (l.h || 2),
+                ),
               )
             : 0;
 
@@ -94,7 +96,7 @@ function validateLayout(
     // Remove non-existent metaframes from layout
     const allMetaframeIds = new Set(Object.keys(validated.metaframes));
     layout.layout = layout.layout.filter((l: LayoutItem) =>
-      allMetaframeIds.has(l.i)
+      allMetaframeIds.has(l.i),
     );
 
     // Ensure all layout items have valid numeric values
@@ -160,7 +162,7 @@ export async function renderMetapage(props: {
 
   if (onOutputs) {
     disposers.push(
-      metapage.addListenerReturnDisposer(MetapageEvents.Outputs, onOutputs)
+      metapage.addListenerReturnDisposer(MetapageEvents.Outputs, onOutputs),
     );
   }
 
@@ -184,7 +186,7 @@ export async function renderMetapage(props: {
         : null;
     })
     .filter(
-      (item): item is { index: number; y: number; id: string } => item !== null
+      (item): item is { index: number; y: number; id: string } => item !== null,
     );
 
   // If dividers found, determine which metaframes to hide
@@ -193,8 +195,8 @@ export async function renderMetapage(props: {
     const lowestYDivider = dividers.reduce(
       (
         lowest: { index: number; y: number; id: string },
-        current: { index: number; y: number; id: string }
-      ) => (current.y < lowest.y ? current : lowest)
+        current: { index: number; y: number; id: string },
+      ) => (current.y < lowest.y ? current : lowest),
     );
 
     const dividerY =
@@ -215,7 +217,7 @@ export async function renderMetapage(props: {
 
   // Calculate grid dimensions based on visible metaframes only
   let visibleLayoutItems = layout.filter((item: LayoutItem) =>
-    visibleMetaframeIds.includes(item.i)
+    visibleMetaframeIds.includes(item.i),
   );
 
   // Handle case where no metaframes are visible
@@ -286,7 +288,7 @@ export async function renderMetapage(props: {
 
   for (const metaframeId of visibleMetaframeIds) {
     const layoutItem = layout.find(
-      (item: LayoutItem) => item.i === metaframeId
+      (item: LayoutItem) => item.i === metaframeId,
     );
     if (!layoutItem) continue;
 
@@ -319,17 +321,17 @@ export async function renderMetapage(props: {
 
   // Now calculate grid dimensions based on actually rendered metaframes
   const maxCol = Math.max(
-    ...renderedMetaframes.map((item: LayoutItem) => item.x + item.w)
+    ...renderedMetaframes.map((item: LayoutItem) => item.x + item.w),
   );
 
   const maxRow = Math.max(
-    ...renderedMetaframes.map((item: LayoutItem) => item.y + item.h)
+    ...renderedMetaframes.map((item: LayoutItem) => item.y + item.h),
   );
 
   // Update the grid container with the correct dimensions
   gridContainer.style.gridTemplateColumns = `repeat(${Math.max(
     1,
-    maxCol
+    maxCol,
   )}, 1fr)`;
 
   // Create hidden container for hidden metaframes
@@ -344,7 +346,7 @@ export async function renderMetapage(props: {
 
   // Add hidden metaframes
   for (const metaframeId of Object.keys(metapage.getMetaframes()).filter((id) =>
-    metaframesToHide.has(id)
+    metaframesToHide.has(id),
   )) {
     const metaframe = metapage.getMetaframes()[metaframeId];
     if (!metaframe) continue;
@@ -402,7 +404,7 @@ export async function renderMetapage(props: {
 
 export const isMetaframeHidden = (
   definition: MetapageDefinitionV2,
-  metaframeId: MetaframeId
+  metaframeId: MetaframeId,
 ): boolean => {
   // Get the layout information
   const desktopLayoutBlob = definition?.meta?.layouts?.["react-grid-layout"];
@@ -424,7 +426,7 @@ export const isMetaframeHidden = (
         : null;
     })
     .filter(
-      (item): item is { index: number; y: number; id: string } => item !== null
+      (item): item is { index: number; y: number; id: string } => item !== null,
     );
 
   // If dividers found, determine which metaframes to hide
@@ -433,8 +435,8 @@ export const isMetaframeHidden = (
     const lowestYDivider = dividers.reduce(
       (
         lowest: { index: number; y: number; id: string },
-        current: { index: number; y: number; id: string }
-      ) => (current.y < lowest.y ? current : lowest)
+        current: { index: number; y: number; id: string },
+      ) => (current.y < lowest.y ? current : lowest),
     );
 
     const dividerY =
@@ -463,7 +465,7 @@ const getMetaframeKey = (url: string | URL): string | undefined => {
   }
 
   let mfk = /\/m?f\/([0-9a-zA-Z-]{3,})\/?(metaframe\.json)?.*$/g.exec(
-    url.pathname
+    url.pathname,
   )?.[1];
   if (mfk) {
     return mfk;
@@ -472,13 +474,13 @@ const getMetaframeKey = (url: string | URL): string | undefined => {
 };
 
 const processMetapage = async (
-  metapageDefinition: MetapageDefinitionV2
+  metapageDefinition: MetapageDefinitionV2,
 ): Promise<MetapageDefinitionV2> => {
   if (!metapageDefinition?.metaframes) {
     return metapageDefinition;
   }
   for (const [metaframeId, metaframe] of Object.entries(
-    metapageDefinition.metaframes
+    metapageDefinition.metaframes,
   )) {
     // ignore non-prod non-synced metaframes
     if (
@@ -494,7 +496,7 @@ const processMetapage = async (
       continue;
     }
     const metaframeDefinition = await fetch(
-      `https://metapage.io/f/${mfk}/definition.json`
+      `https://metapage.io/f/${mfk}/definition.json`,
     ).then((r) => r.json());
     if (metaframeDefinition?.url) {
       metaframe.url = metaframeDefinition?.url;

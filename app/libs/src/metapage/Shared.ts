@@ -1,9 +1,9 @@
-import { EventEmitter } from 'eventemitter3';
+import { EventEmitter } from "eventemitter3";
 
-import { MetapageEvents } from './events.js';
-import { JsonRpcMethodsFromParent } from './jsonrpc.js';
-import { MetapageDefinitionV2 } from './v2/index.js';
-import { MetapageVersionCurrent } from './versions.js';
+import { MetapageEvents } from "./events.js";
+import { JsonRpcMethodsFromParent } from "./jsonrpc.js";
+import { MetapageDefinitionV2 } from "./v2/index.js";
+import { MetapageVersionCurrent } from "./versions.js";
 
 export enum MetapageHashParams {
   mp_debug = "mp_debug",

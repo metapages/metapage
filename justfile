@@ -41,6 +41,9 @@ _help:
 @check:
     just app/check
 
+@fmt +failIfChanged="":
+    just app/fmt {{failIfChanged}}
+
 ###################################################
 # Internal utilies
 ###################################################

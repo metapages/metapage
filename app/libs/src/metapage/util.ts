@@ -19,7 +19,7 @@ const fetchRetry = fetchRetryWrapper(fetch);
 
 export const getMetapageDefinitionFromUrl = async (
   url: string,
-  version?: VersionsMetapage
+  version?: VersionsMetapage,
 ): Promise<
   MetapageDefinitionV2 | MetapageDefinitionV1 | MetapageDefinitionV3
 > => {
@@ -35,14 +35,14 @@ export const getMetapageDefinitionFromUrl = async (
   const definition = await response.json();
   const convertedDefinition = await convertMetapageDefinitionToVersion(
     definition,
-    version || MetapageVersionCurrent
+    version || MetapageVersionCurrent,
   );
   return convertedDefinition;
 };
 
 export const getMetaframeDefinitionFromUrl = async (
   url: string,
-  version?: VersionsMetaframe
+  version?: VersionsMetaframe,
 ): Promise<
   | MetaframeDefinitionV2
   | MetaframeDefinitionV1
@@ -91,12 +91,12 @@ export const getMetaframeDefinitionFromUrl = async (
     const definition = await response.json();
     const convertedDefinition = await convertMetaframeDefinitionToVersion(
       definition,
-      version || MetaframeVersionCurrent
+      version || MetaframeVersionCurrent,
     );
     return convertedDefinition;
   } catch (error) {
     console.error(
-      `Error fetching metaframe definition from ${metaframeUrl.href}: ${error}`
+      `Error fetching metaframe definition from ${metaframeUrl.href}: ${error}`,
     );
     return undefined;
   }
@@ -106,7 +106,7 @@ export const isEmptyMetaframeDefinition = (
   definition?:
     | MetaframeDefinitionV1
     | MetaframeDefinitionV2
-    | MetaframeDefinitionV4
+    | MetaframeDefinitionV4,
 ): boolean => {
   if (!definition) {
     return true;

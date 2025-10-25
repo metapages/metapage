@@ -1,6 +1,6 @@
-import { VersionsMetaframe } from '../versions.js';
-import { MetapageDefinitionV1 } from './metapage.js';
-import { MetaframePipeDefinition } from '../v0_4/index.js';
+import { VersionsMetaframe } from "../versions.js";
+import { MetapageDefinitionV1 } from "./metapage.js";
+import { MetaframePipeDefinition } from "../v0_4/index.js";
 
 export type MetaframeEditTypeMetaframeV1 = {
   url: string;
@@ -91,4 +91,3 @@ export interface MetaframeOperationsV1 {
   edit?: MetaframeOperationTypeV1;
   view?: MetaframeOperationTypeV1;
 }
-
