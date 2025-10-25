@@ -1,14 +1,9 @@
-import stringify from 'fast-json-stable-stringify';
-import { create } from 'mutative';
-import { MetapageHashParams } from './Shared.js';
-import {
-  MetaframeId,
-  MetapageId,
-} from './core.js';
-import {
-  MetaframeInputMap,
-} from './v0_4/index.js';
-import { MetapageDefinitionV2 } from './v2/metapage.js';
+import stringify from "fast-json-stable-stringify";
+import { create } from "mutative";
+import { MetapageHashParams } from "./Shared.js";
+import { MetaframeId, MetapageId } from "./core.js";
+import { MetaframeInputMap } from "./v0_4/index.js";
+import { MetapageDefinitionV2 } from "./v2/metapage.js";
 /**
  * Merges new values into the a new object.
  * Does NOT check if there are actually new keys.
@@ -19,7 +14,7 @@ import { MetapageDefinitionV2 } from './v2/metapage.js';
  */
 export const merge = (
   current: MetaframeInputMap,
-  newInputs: MetaframeInputMap
+  newInputs: MetaframeInputMap,
 ): MetaframeInputMap => {
   if (!newInputs) {
     return current;
@@ -46,13 +41,13 @@ export const getUrlParam = (key: MetapageHashParams): string | null => {
 
 export const getUrlParamDebug = (): boolean => {
   return new URLSearchParams(window.location.search).has(
-    MetapageHashParams.mp_debug
+    MetapageHashParams.mp_debug,
   );
 };
 
 export const isDebugFromUrlsParams = (): boolean => {
   const param = new URLSearchParams(window.location.search).get(
-    MetapageHashParams.mp_debug
+    MetapageHashParams.mp_debug,
   );
   return param === "true" || param === "1";
 };
@@ -162,19 +157,21 @@ export const pageLoaded = async (): Promise<void> => {
 export const metapageAllSha256Hash = async (metapage: MetapageDefinitionV2) => {
   const metapageStr = stringify(metapage);
   return await sha256ToBase64(metapageStr);
-}
+};
 
-export const metapageOnlyEssentailSha256Hash = async (metapage: Pick<MetapageDefinitionV2, "metaframes" | "version">) => {
+export const metapageOnlyEssentailSha256Hash = async (
+  metapage: Pick<MetapageDefinitionV2, "metaframes" | "version">,
+) => {
   const metapageStr = stringify({
     version: metapage.version,
     metaframes: metapage.metaframes,
   });
   return await sha256ToBase64(metapageStr);
-}
+};
 
 async function sha256ToBase64(str: string) {
   const encoder = new TextEncoder();
   const data = encoder.encode(str);
-  const hash = await crypto.subtle.digest('SHA-256', data);
+  const hash = await crypto.subtle.digest("SHA-256", data);
   return btoa(String.fromCharCode(...new Uint8Array(hash)));
 }

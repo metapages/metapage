@@ -1,6 +1,6 @@
-import { VersionsMetapage } from '../versions.js';
-import { MetapageId } from '../core.js';
-import { MetaframeInstance } from '../v0_4/index.js';
+import { VersionsMetapage } from "../versions.js";
+import { MetapageId } from "../core.js";
+import { MetaframeInstance } from "../v0_4/index.js";
 
 export type MetapageMetadataV2 = Partial<{
   name: string;

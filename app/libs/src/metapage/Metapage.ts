@@ -54,11 +54,11 @@ const emptyState: MetapageState = create<MetapageState>(
       outputs: {},
     },
   },
-  (draft) => draft
+  (draft) => draft,
 );
 
 export const getLibraryVersionMatching = (
-  version: string
+  version: string,
 ): VersionsMetapage => {
   return getMatchingMetapageVersion(version);
 };
@@ -157,7 +157,7 @@ export class Metapage extends MetapageShared {
   // for caching input lookups
   _cachedInputLookupMap: CachedInputLookupMap = create<CachedInputLookupMap>(
     {},
-    (draft) => draft
+    (draft) => draft,
   );
   _inputMap: {
     [key: string]: PipeInput[];
@@ -260,7 +260,7 @@ export class Metapage extends MetapageShared {
 
   addListenerReturnDisposer(
     event: MetapageEvents,
-    listener: ListenerFn<any[]>
+    listener: ListenerFn<any[]>,
   ): () => void {
     super.addListener(event, listener);
     const disposer = () => {
@@ -301,10 +301,10 @@ export class Metapage extends MetapageShared {
     this._state = create<MetapageState>(newState, (draft) => draft);
     this.getMetaframeIds().forEach((metaframeId) => {
       this.getMetaframe(metaframeId)?.setInputs(
-        this._state.metaframes.inputs[metaframeId]
+        this._state.metaframes.inputs[metaframeId],
       );
       this.getMetaframe(metaframeId)?.setOutputs(
-        this._state.metaframes.outputs[metaframeId]
+        this._state.metaframes.outputs[metaframeId],
       );
     });
 
@@ -326,7 +326,7 @@ export class Metapage extends MetapageShared {
 
   public async setDefinition(
     def: any,
-    state?: MetapageState
+    state?: MetapageState,
   ): Promise<Metapage> {
     // Some validation
     if (!def.version) {
@@ -351,7 +351,7 @@ export class Metapage extends MetapageShared {
 
         if (!metaframeDefinition.url) {
           this.emitErrorMessage(
-            `Metaframe "${metaframeId}" missing field: url`
+            `Metaframe "${metaframeId}" missing field: url`,
           );
           throw `Metaframe "${metaframeId}" missing field: url`;
         }
@@ -485,7 +485,7 @@ export class Metapage extends MetapageShared {
   // to add/remove
   removeAll(): void {
     Object.keys(this._metaframes).forEach((id) =>
-      this._metaframes[id].dispose()
+      this._metaframes[id].dispose(),
     );
     this._metaframes = create({}, (draft) => draft);
     this._state = emptyState;
@@ -518,7 +518,7 @@ export class Metapage extends MetapageShared {
   // do not expose, change definition instead
   addMetaframe(
     metaframeId: MetaframeId,
-    definition: MetaframeInstance
+    definition: MetaframeInstance,
   ): MetapageIFrameRpcClient {
     if (!metaframeId) {
       throw "addMetaframe missing metaframeId";
@@ -535,7 +535,7 @@ export class Metapage extends MetapageShared {
 
     if (!definition.url) {
       this.emitErrorMessage(
-        `Metaframe definition missing url id=${metaframeId}`
+        `Metaframe definition missing url id=${metaframeId}`,
       );
       throw `Metaframe definition missing url id=${metaframeId}`;
     }
@@ -546,13 +546,13 @@ export class Metapage extends MetapageShared {
       metaframeId,
       this._id,
       this._consoleBackgroundColor,
-      this.debug
+      this.debug,
     ).setMetapage(this);
     this._metaframes = create<MetaframeClients>(
       this._metaframes,
       (draft: MetaframeClients) => {
         draft[metaframeId] = iframeClient;
-      }
+      },
     );
 
     iframeClient.addListener(MetapageEvents.Error, (err) => {
@@ -581,7 +581,7 @@ export class Metapage extends MetapageShared {
     window.removeEventListener("message", this.onMessage);
     if (this._metaframes) {
       Object.keys(this._metaframes).forEach((metaframeId) =>
-        this._metaframes[metaframeId].dispose()
+        this._metaframes[metaframeId].dispose(),
       );
     }
 
@@ -618,7 +618,7 @@ export class Metapage extends MetapageShared {
   getInputsFromOutput(
     source: MetaframeId,
     // the pipe id is simply the name of the output file/object/thing
-    outputPipeId: MetaframePipeId
+    outputPipeId: MetaframePipeId,
   ): MetaframeInputTargetsFromOutput[] {
     // Do all the cache checking
     if (!this._cachedInputLookupMap[source]) {
@@ -626,7 +626,7 @@ export class Metapage extends MetapageShared {
         this._cachedInputLookupMap,
         (draft: CachedInputLookupMap) => {
           draft[source] = create({}, (__) => __);
-        }
+        },
       );
     }
 
@@ -668,7 +668,7 @@ export class Metapage extends MetapageShared {
               }
             });
           });
-        }
+        },
       );
     }
 
@@ -718,7 +718,7 @@ export class Metapage extends MetapageShared {
   public setInput(
     iframeId: MetaframeId | MetapageInstanceInputs,
     inputPipeId?: MetaframePipeId | MetaframeInputMap,
-    value?: PipeUpdateBlob
+    value?: PipeUpdateBlob,
   ) {
     if (typeof iframeId === "object") {
       this.setInputStateOnlyMetapageInstanceInputs(iframeId);
@@ -731,7 +731,7 @@ export class Metapage extends MetapageShared {
     this.setMetaframeClientInputAndSentClientEvent(
       iframeId,
       inputPipeId,
-      value
+      value,
     );
     // finally send the main events
     if (
@@ -748,7 +748,7 @@ export class Metapage extends MetapageShared {
   setMetaframeClientInputAndSentClientEvent(
     iframeId: MetaframeId | MetapageInstanceInputs,
     inputPipeId?: MetaframePipeId | MetaframeInputMap,
-    value?: PipeUpdateBlob
+    value?: PipeUpdateBlob,
   ) {
     if (typeof iframeId === "object") {
       if (inputPipeId || value) {
@@ -788,13 +788,13 @@ export class Metapage extends MetapageShared {
   public setInputs(
     iframeId: MetaframeId | MetapageInstanceInputs,
     inputPipeId?: MetaframePipeId | MetaframeInputMap,
-    value?: PipeUpdateBlob
+    value?: PipeUpdateBlob,
   ) {
     this.setInput(iframeId, inputPipeId, value);
   }
 
   setOutputStateOnlyMetapageInstanceInputs(
-    metapageInputs: MetapageInstanceInputs
+    metapageInputs: MetapageInstanceInputs,
   ) {
     this._setStateOnlyMetaframes(false, metapageInputs);
   }
@@ -802,25 +802,25 @@ export class Metapage extends MetapageShared {
   setOutputStateOnlyMetaframeInputValue(
     metaframeId: MetaframeId,
     inputPipeId: MetaframePipeId,
-    value?: PipeUpdateBlob
+    value?: PipeUpdateBlob,
   ) {
     this._setStateOnlyMetaframeInputValue(
       false,
       metaframeId,
       inputPipeId,
-      value
+      value,
     );
   }
 
   setOutputStateOnlyMetaframeInputMap(
     metaframeId: MetaframeId,
-    metaframeValuesNew: MetaframeInputMap
+    metaframeValuesNew: MetaframeInputMap,
   ) {
     this._setStateOnlyMetaframeInputMap(false, metaframeId, metaframeValuesNew);
   }
 
   setInputStateOnlyMetapageInstanceInputs(
-    metapageInputs: MetapageInstanceInputs
+    metapageInputs: MetapageInstanceInputs,
   ) {
     this._setStateOnlyMetaframes(true, metapageInputs);
   }
@@ -828,19 +828,19 @@ export class Metapage extends MetapageShared {
   setInputStateOnlyMetaframeInputValue(
     metaframeId: MetaframeId,
     inputPipeId: MetaframePipeId,
-    value?: PipeUpdateBlob
+    value?: PipeUpdateBlob,
   ) {
     this._setStateOnlyMetaframeInputValue(
       true,
       metaframeId,
       inputPipeId,
-      value
+      value,
     );
   }
 
   setInputStateOnlyMetaframeInputMap(
     metaframeId: MetaframeId,
-    metaframeValuesNew: MetaframeInputMap
+    metaframeValuesNew: MetaframeInputMap,
   ) {
     this._setStateOnlyMetaframeInputMap(true, metaframeId, metaframeValuesNew);
   }
@@ -849,7 +849,7 @@ export class Metapage extends MetapageShared {
     isInputs: boolean,
     metaframeId: MetaframeId,
     metaframePipeId: MetaframePipeId,
-    value?: PipeUpdateBlob
+    value?: PipeUpdateBlob,
   ): void {
     this._state = create(this._state, (draft: MetapageState) => {
       const isMetaframe = this._metaframes.hasOwnProperty(metaframeId);
@@ -893,7 +893,7 @@ export class Metapage extends MetapageShared {
   _setStateOnlyMetaframeInputMap(
     isInputs: boolean,
     metaframeId: MetaframeId,
-    metaframeValuesNew: MetaframeInputMap
+    metaframeValuesNew: MetaframeInputMap,
   ): void {
     if (!metaframeValuesNew || Object.keys(metaframeValuesNew).length === 0) {
       return;
@@ -929,7 +929,7 @@ export class Metapage extends MetapageShared {
 
   _setStateOnlyMetaframes(
     isInputs: boolean,
-    inputsMetaframesNew: MetapageInstanceInputs
+    inputsMetaframesNew: MetapageInstanceInputs,
   ): void {
     if (!inputsMetaframesNew || Object.keys(inputsMetaframesNew).length === 0) {
       return;
@@ -1045,7 +1045,7 @@ export class Metapage extends MetapageShared {
 
     if (this.debug) {
       this.log(
-        `processing ${JSON.stringify(jsonrpc, null, "  ").substring(0, 500)}`
+        `processing ${JSON.stringify(jsonrpc, null, "  ").substring(0, 500)}`,
       );
     }
 
@@ -1107,7 +1107,7 @@ export class Metapage extends MetapageShared {
             this.setInputStateOnlyMetapageInstanceInputs(collectedOutputs);
             Object.keys(collectedOutputs).forEach((metaframeId) => {
               this._metaframes[metaframeId].setInputs(
-                collectedOutputs[metaframeId]
+                collectedOutputs[metaframeId],
                 // then actually set the inputs once collected
               );
             });
@@ -1157,7 +1157,7 @@ export class Metapage extends MetapageShared {
           }
         } else {
           console.error(
-            `InputsUpdate failed no metaframe id: "${metaframeId}"`
+            `InputsUpdate failed no metaframe id: "${metaframeId}"`,
           );
           this.error(`InputsUpdate failed no metaframe id: "${metaframeId}"`);
         }
@@ -1187,7 +1187,7 @@ export class Metapage extends MetapageShared {
             (draft) => {
               draft.metaframes[hashParamsUpdatePayload.metaframe].url =
                 url.href;
-            }
+            },
           );
 
           this._emitDefinitionEvent();

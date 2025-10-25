@@ -1,7 +1,4 @@
-import {
-  EventEmitter,
-  ListenerFn,
-} from 'eventemitter3';
+import { EventEmitter, ListenerFn } from "eventemitter3";
 
 import {
   getHashParamFromWindow,
@@ -16,35 +13,28 @@ import {
   setHashParamValueFloatInWindow,
   setHashParamValueIntInWindow,
   setHashParamValueJsonInWindow,
-} from '@metapages/hash-query';
+} from "@metapages/hash-query";
 
-import { VERSION_METAFRAME } from './Constants';
-import {
-  MetaframeId,
-  MetaframePipeId,
-  MetapageId,
-} from './core';
-import {
-  deserializeInputs,
-  serializeInputs,
-} from './data';
-import { MetapageEventUrlHashUpdate } from './events';
+import { VERSION_METAFRAME } from "./Constants";
+import { MetaframeId, MetaframePipeId, MetapageId } from "./core";
+import { deserializeInputs, serializeInputs } from "./data";
+import { MetapageEventUrlHashUpdate } from "./events";
 import {
   JsonRpcMethodsFromChild,
   JsonRpcMethodsFromParent,
   MinimumClientMessage,
   SetupIframeServerResponseData,
-} from './jsonrpc';
+} from "./jsonrpc";
 import {
   isDebugFromUrlsParams,
   log as MetapageToolsLog,
   merge,
   pageLoaded,
   stringToRgb,
-} from './MetapageTools';
-import { isIframe } from './Shared';
-import { MetaframeInputMap } from './v0_4';
-import { VersionsMetapage } from './versions';
+} from "./MetapageTools";
+import { isIframe } from "./Shared";
+import { MetaframeInputMap } from "./v0_4";
+import { VersionsMetapage } from "./versions";
 
 // TODO combine/unify MetaframeEvents and MetaframeLoadingState
 export enum MetaframeLoadingState {
@@ -120,17 +110,17 @@ export class Metaframe extends EventEmitter<
     this.setInput = this.setInput.bind(this);
     this.setInputs = this.setInputs.bind(this);
     this.setInternalInputsAndNotify =
-    this.setInternalInputsAndNotify.bind(this);
+      this.setInternalInputsAndNotify.bind(this);
     this.setOutput = this.setOutput.bind(this);
     this.setOutputs = this.setOutputs.bind(this);
     this.warn = this.warn.bind(this);
     this._resolveSetupIframeServerResponse =
-    this._resolveSetupIframeServerResponse.bind(this);
+      this._resolveSetupIframeServerResponse.bind(this);
     this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
     this.connected = this.connected.bind(this);
     this.isConnected = this.isConnected.bind(this);
     this.disableNotifyOnHashUrlChange =
-    this.disableNotifyOnHashUrlChange.bind(this);
+      this.disableNotifyOnHashUrlChange.bind(this);
     this._onHashUrlChange = this._onHashUrlChange.bind(this);
 
     this.setParameter = this.setParameter.bind(this);
@@ -146,7 +136,6 @@ export class Metaframe extends EventEmitter<
     this.getParameterFloat = this.getParameterFloat.bind(this);
     this.getParameterInt = this.getParameterInt.bind(this);
     this.deleteParameter = this.deleteParameter.bind(this);
-
 
     if (!this._isIframe) {
       //Don't add any of the machinery, it only works if we're iframes.
@@ -180,7 +169,6 @@ export class Metaframe extends EventEmitter<
     }
 
     (async () => {
-
       if (!this._parentId) {
         this._parentVersion = params.version;
         this.color = stringToRgb(this.id);
@@ -188,13 +176,14 @@ export class Metaframe extends EventEmitter<
         this.log(
           `metapage[${this._parentId}](v${
             this._parentVersion ? this._parentVersion : "unknown"
-          }) registered`
+          }) registered`,
         );
-
 
         if (params.state && params.state.inputs) {
           if (this.isInputOutputBlobSerialization) {
-            this._inputPipeValues = await deserializeInputs(params.state.inputs);
+            this._inputPipeValues = await deserializeInputs(
+              params.state.inputs,
+            );
           } else {
             this._inputPipeValues = params.state.inputs;
           }
@@ -226,8 +215,8 @@ export class Metaframe extends EventEmitter<
               this.emit(
                 MetaframeEvents.Input,
                 pipeId,
-                this._inputPipeValues[pipeId]
-              )
+                this._inputPipeValues[pipeId],
+              ),
             );
           }
         }
@@ -243,11 +232,13 @@ export class Metaframe extends EventEmitter<
         this.emit(MetaframeEvents.Connected);
 
         // Send the initial outputs to the parent, we have been accumulating them
-        this.sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, this._outputPipeValues);
-
+        this.sendRpc(
+          JsonRpcMethodsFromChild.OutputsUpdate,
+          this._outputPipeValues,
+        );
       } else {
         this.log(
-          "Got JsonRpcMethods.SetupIframeServerResponse but already resolved"
+          "Got JsonRpcMethods.SetupIframeServerResponse but already resolved",
         );
       }
     })();
@@ -269,14 +260,14 @@ export class Metaframe extends EventEmitter<
         () => {
           resolve();
           disposer();
-        }
+        },
       );
     });
   }
 
   addListenerReturnDisposer(
     event: MetaframeEvents | JsonRpcMethodsFromChild,
-    listener: ListenerFn<any[]>
+    listener: ListenerFn<any[]>,
   ): () => void {
     super.addListener(event, listener);
     const disposer = () => {
@@ -331,7 +322,7 @@ export class Metaframe extends EventEmitter<
 
   public addListener(
     event: MetaframeEvents | JsonRpcMethodsFromChild,
-    listener: ListenerFn<any[]>
+    listener: ListenerFn<any[]>,
   ) {
     super.addListener(event, listener);
 
@@ -355,14 +346,14 @@ export class Metaframe extends EventEmitter<
         if (pipeId === pipe) {
           listener(value);
         }
-      }
+      },
     );
   }
 
   public onInputs(listener: (m: MetaframeInputMap) => void): () => void {
     const disposer = this.addListenerReturnDisposer(
       MetaframeEvents.Inputs,
-      listener
+      listener,
     );
     return disposer;
   }
@@ -408,16 +399,19 @@ export class Metaframe extends EventEmitter<
     Object.keys(inputs).forEach((pipeId) => {
       try {
         // if we don't actually need this event, we should remove it
-        this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId])
-      } catch(err) {
-        console.error(`Error emitting input ${pipeId}: ${err}`)
-        this.emit(MetaframeEvents.Error, `Error emitting input ${pipeId}: ${err}`);
+        this.emit(MetaframeEvents.Input, pipeId, inputs[pipeId]);
+      } catch (err) {
+        console.error(`Error emitting input ${pipeId}: ${err}`);
+        this.emit(
+          MetaframeEvents.Error,
+          `Error emitting input ${pipeId}: ${err}`,
+        );
       }
     });
     try {
       this.emit(MetaframeEvents.Inputs, inputs);
-    } catch(err) {
-      console.error(`Error emitting inputs: ${err}`)
+    } catch (err) {
+      console.error(`Error emitting inputs: ${err}`);
       this.emit(MetaframeEvents.Error, `Error emitting inputs: ${err}`);
     }
   }
@@ -475,8 +469,6 @@ export class Metaframe extends EventEmitter<
   //   window.removeEventListener("hashchange", this._onHashUrlChange);
   // }
 
-
-
   /** Tell the parent metapage our hash params changed */
   _onHashUrlChange(_: any): void {
     const payload: MetapageEventUrlHashUpdate = {
@@ -501,7 +493,7 @@ export class Metaframe extends EventEmitter<
       }
     } else {
       this.log(
-        "Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe"
+        "Cannot send JSON-RPC window message: there is no window.parent which means we are not an iframe",
       );
     }
   }
@@ -519,7 +511,7 @@ export class Metaframe extends EventEmitter<
           )
         ) {
           this.log(
-            `window.message: received message (method=${method}) but jsonrpc.parentId=${jsonrpc.parentId} _parentId=${this._parentId} jsonrpc.iframeId=${jsonrpc.iframeId} id=${this.id}`
+            `window.message: received message (method=${method}) but jsonrpc.parentId=${jsonrpc.parentId} _parentId=${this._parentId} jsonrpc.iframeId=${jsonrpc.iframeId} id=${this.id}`,
           );
           return;
         }
@@ -541,8 +533,8 @@ export class Metaframe extends EventEmitter<
             if (this.debug)
               this.log(
                 `window.message: unknown JSON-RPC method: ${JSON.stringify(
-                  jsonrpc
-                )}`
+                  jsonrpc,
+                )}`,
               );
             break;
         }
@@ -558,7 +550,7 @@ export class Metaframe extends EventEmitter<
     setHashParamInWindow(key, value);
   }
 
-  getParameter(key: string) :string | undefined {
+  getParameter(key: string): string | undefined {
     return getHashParamFromWindow(key);
   }
 
@@ -566,7 +558,7 @@ export class Metaframe extends EventEmitter<
     setHashParamValueBooleanInWindow(key, value);
   }
 
-  getParameterBoolean(key: string) :boolean | undefined {
+  getParameterBoolean(key: string): boolean | undefined {
     return getHashParamValueBooleanFromWindow(key);
   }
 
@@ -574,7 +566,7 @@ export class Metaframe extends EventEmitter<
     setHashParamValueJsonInWindow(key, value);
   }
 
-  getParameterJson<T>(key: string) :T|undefined {
+  getParameterJson<T>(key: string): T | undefined {
     return getHashParamValueJsonFromWindow<T>(key);
   }
 
@@ -582,7 +574,7 @@ export class Metaframe extends EventEmitter<
     setHashParamValueBase64EncodedInWindow(key, value);
   }
 
-  getParameterBase64(key: string) :string | undefined {
+  getParameterBase64(key: string): string | undefined {
     return getHashParamValueBase64DecodedFromWindow(key);
   }
 
@@ -590,7 +582,7 @@ export class Metaframe extends EventEmitter<
     setHashParamValueFloatInWindow(key, value);
   }
 
-  getParameterFloat(key: string) :number | undefined {
+  getParameterFloat(key: string): number | undefined {
     return getHashParamValueFloatFromWindow(key);
   }
 
@@ -598,7 +590,7 @@ export class Metaframe extends EventEmitter<
     setHashParamValueIntInWindow(key, value);
   }
 
-  getParameterInt(key: string) :number | undefined {
+  getParameterInt(key: string): number | undefined {
     return getHashParamValueIntFromWindow(key);
   }
 

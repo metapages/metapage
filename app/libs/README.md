@@ -1,12 +1,11 @@
 # [Metapages](https://docs.metapage.io/docs)
 
+A _metapage_ is a set of connected iframes (_metaframes_).
+
 - Examples: [https://metapage.io](https://metapage.io)
 - Documentation: [https://docs.metapage.io/docs](https://docs.metapage.io/docs)
 - Online tests and conversion tools: [https://module.metapage.io](https://module.metapage.io)
 - Example javascript component: [https://js.mtfm.io](https://js.mtfm.io)
-
-
-A *metapage* is a set of connected iframes (*metaframes*).
 
 Each component iframe runs the metapage module and establishes input/output pipes. Now you can create, edit, and embed whole complex applications directly in your own apps, or simply create using the [metapage editor]((https://metapage.io) and publish and share immediately.
 
@@ -19,22 +18,21 @@ import { renderMetapage } from "https://cdn.jsdelivr.net/npm/@metapages/metapage
 
 // download a metapage definition from metapage.io
 // or just use your own definition JSON
-const response = await fetch("https://metapage.io/m/87ae11673508447e883b598bf7da9c5d/metapage.json");
+const response = await fetch(
+  "https://metapage.io/m/87ae11673508447e883b598bf7da9c5d/metapage.json",
+);
 const metapageDefinition = await response.json();
 await renderMetapage({
-	definition: metapageDefinition,
-	rootDiv: document.getElementById('metapage-container')
+  definition: metapageDefinition,
+  rootDiv: document.getElementById("metapage-container"),
 });
 ```
 
-The rendered workflow: 
+The rendered workflow:
 
 ![Logo](https://unpkg.com/@metapages/metapage/assets/example-01.png)
 
-
-
 ## Full example
-
 
 ```html
 <!DOCTYPE html>
@@ -71,7 +69,9 @@ The rendered workflow:
 
       // download a metapage definition from metapage.io
       // or just use your own definition JSON
-      const response = await fetch("https://metapage.io/m/87ae11673508447e883b598bf7da9c5d/metapage.json");
+      const response = await fetch(
+        "https://metapage.io/m/87ae11673508447e883b598bf7da9c5d/metapage.json",
+      );
       const metapageDefinition = await response.json();
 
       // handle metapage outputs
@@ -95,5 +95,6 @@ The rendered workflow:
     </script>
   </body>
 </html>
-
 ```
+
+Online tests and conversion tools: [https://module.metapage.io](https://module.metapage.io)

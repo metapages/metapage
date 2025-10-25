@@ -12,19 +12,19 @@ import { MetapageDefinitionV03 } from "../src/metapage/v0_3/all";
 describe("metapage version conversions", async () => {
   it("the version field is set to the correct version", async () => {
     let metapageLatest = await convertMetapageDefinitionToCurrentVersion(
-      ExampleMetapageDefinitionV1
+      ExampleMetapageDefinitionV1,
     );
     expect(MetapageVersionCurrent).to.equal("2");
     expect(MetapageVersionCurrent).to.equal(metapageLatest.version);
 
     metapageLatest = await convertMetapageDefinitionToCurrentVersion(
-      ExampleMetapageDefinitionV03
+      ExampleMetapageDefinitionV03,
     );
     expect(MetapageVersionCurrent).to.equal("2");
     expect(MetapageVersionCurrent).to.equal(metapageLatest.version);
 
     metapageLatest = await convertMetapageDefinitionToCurrentVersion(
-      ExampleMetapageDefinitionV2
+      ExampleMetapageDefinitionV2,
     );
     expect(MetapageVersionCurrent).to.equal("2");
     expect(MetapageVersionCurrent).to.equal(metapageLatest.version);

@@ -31,6 +31,9 @@ test:
     just libs/check
     just worker/check
 
+@fmt +failIfChanged="":
+    just libs/fmt {{failIfChanged}}
+
 # Publish new npm module version (defined in package.json)
 publish:
     just libs/publish

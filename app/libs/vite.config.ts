@@ -1,8 +1,8 @@
-import path, { resolve } from 'path';
-import { typescriptPaths } from 'rollup-plugin-typescript-paths';
-import { defineConfig } from 'vite';
+import path, { resolve } from "path";
+import { typescriptPaths } from "rollup-plugin-typescript-paths";
+import { defineConfig } from "vite";
 
-import typescript from '@rollup/plugin-typescript';
+import typescript from "@rollup/plugin-typescript";
 
 // https://vitejs.dev/config/
 

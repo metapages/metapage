@@ -1,6 +1,6 @@
 import { MetaframeInputMap } from "./v0_4";
 import { encode, decode } from "base64-arraybuffer";
-import { create } from 'mutative';
+import { create } from "mutative";
 
 /**
  * Modifies in place!!!
@@ -8,7 +8,7 @@ import { create } from 'mutative';
  * @returns
  */
 export const serializeInputs = async (
-  inputs: MetaframeInputMap
+  inputs: MetaframeInputMap,
 ): Promise<MetaframeInputMap> => {
   // only serialize one level deep
   return create<MetaframeInputMap>(inputs, async (draft: MetaframeInputMap) => {
@@ -26,12 +26,14 @@ export const serializeInputs = async (
  * @returns
  */
 export const deserializeInputs = async (
-  inputs: MetaframeInputMap
+  inputs: MetaframeInputMap,
 ): Promise<MetaframeInputMap> => {
   // only deserialize one level deep
   return create<MetaframeInputMap>(inputs, async (draft: MetaframeInputMap) => {
     for (const key of Object.keys(inputs)) {
-      const maybeNewObject = await possiblyDeserializeDatarefToValue(inputs[key]);
+      const maybeNewObject = await possiblyDeserializeDatarefToValue(
+        inputs[key],
+      );
       draft[key] = maybeNewObject;
       return draft;
     }
@@ -63,7 +65,11 @@ export type DataRefSerializedFile = DataRefSerializedBlob & {
   lastModified?: number;
 };
 
-export const valueToFile = async (value: any, fileName: string, options?: FilePropertyBag): Promise<File> => {
+export const valueToFile = async (
+  value: any,
+  fileName: string,
+  options?: FilePropertyBag,
+): Promise<File> => {
   value = possiblyDeserializeDatarefToValue(value);
   options = options || {};
   if (!options.type) {
@@ -94,27 +100,27 @@ export const valueToFile = async (value: any, fileName: string, options?: FilePr
     const typedValue = value as ArrayBufferView;
     return new File([typedValue.buffer], fileName, options);
   }
-  if (typeof(value) === "string") {
-    var blob = new Blob([value], { type: 'text/plain' });
+  if (typeof value === "string") {
+    var blob = new Blob([value], { type: "text/plain" });
     options.type = "text/plain";
     return new File([blob], fileName, options);
   }
-  if (typeof(value) === "object") {
+  if (typeof value === "object") {
     const blob = new Blob([JSON.stringify(value)], {
-      type: 'application/json',
+      type: "application/json",
     });
     options.type = "application/json";
     return new File([blob], fileName, options);
   }
 
   // assume it's a string
-  var blob = new Blob([value as string], { type: 'text/plain' });
+  var blob = new Blob([value as string], { type: "text/plain" });
   options.type = "text/plain";
   return new File([blob], fileName, options);
 };
 
 export const possiblySerializeValueToDataref = async <T>(
-  value: T
+  value: T,
 ): Promise<T | DataRefSerialized> => {
   if (
     value instanceof Int8Array ||
@@ -188,12 +194,9 @@ export const possiblyDeserializeDatarefToValue = (value: any): any => {
   const _c: string = serializedRef._c;
   if (_c === Blob.name) {
     const serializedRefBlob = value as DataRefSerializedBlob;
-    const blob = new Blob(
-      [decode(serializedRef.value)],
-      {
-        type: serializedRefBlob.fileType,
-      }
-    );
+    const blob = new Blob([decode(serializedRef.value)], {
+      type: serializedRefBlob.fileType,
+    });
     return blob;
   } else if (_c === File.name) {
     const serializedRefFile = value as DataRefSerializedFile;
@@ -203,7 +206,7 @@ export const possiblyDeserializeDatarefToValue = (value: any): any => {
       {
         type: serializedRefFile.fileType,
         lastModified: serializedRefFile.lastModified,
-      }
+      },
     );
     return file;
   } else if (_c === ArrayBuffer.name) {
@@ -213,9 +216,7 @@ export const possiblyDeserializeDatarefToValue = (value: any): any => {
   // Assume typed array
   const serializedRefTypedArray = value as DataRefSerializedTypedArray;
 
-  const arrayBuffer: ArrayBuffer = decode(
-    serializedRefTypedArray.value
-  );
+  const arrayBuffer: ArrayBuffer = decode(serializedRefTypedArray.value);
   const constructorName: string = serializedRefTypedArray._c;
 
   try {
@@ -230,7 +231,9 @@ export const possiblyDeserializeDatarefToValue = (value: any): any => {
   return value;
 };
 
-export const possiblyDeserializeDatarefToFile = (value: any): File | undefined => {
+export const possiblyDeserializeDatarefToFile = (
+  value: any,
+): File | undefined => {
   if (
     !(
       value &&
@@ -244,14 +247,11 @@ export const possiblyDeserializeDatarefToFile = (value: any): File | undefined =
   const _c: string = serializedRef._c;
   if (_c === Blob.name) {
     const serializedRefBlob = value as DataRefSerializedBlob;
-    const blob = new Blob(
-      [decode(serializedRef.value)],
-      {
-        type: serializedRefBlob.fileType,
-      }
-    );
-    return new File([blob], 'file', {
-        type: blob.type,
+    const blob = new Blob([decode(serializedRef.value)], {
+      type: serializedRefBlob.fileType,
+    });
+    return new File([blob], "file", {
+      type: blob.type,
     });
   } else if (_c === File.name) {
     const serializedRefFile = value as DataRefSerializedFile;
@@ -261,24 +261,18 @@ export const possiblyDeserializeDatarefToFile = (value: any): File | undefined =
       {
         type: serializedRefFile.fileType,
         lastModified: serializedRefFile.lastModified,
-      }
+      },
     );
     return file;
   } else if (_c === ArrayBuffer.name) {
     const arrayBuffer: ArrayBuffer = decode(serializedRef.value);
-    return new File(
-      [arrayBuffer],
-      "file",
-      {
-        type: "application/octet-stream",
-      }
-    );
+    return new File([arrayBuffer], "file", {
+      type: "application/octet-stream",
+    });
   }
   // Assume typed array
   const serializedRefTypedArray = value as DataRefSerializedTypedArray;
-  const arrayBuffer: ArrayBuffer = decode(
-    serializedRefTypedArray.value
-  );
+  const arrayBuffer: ArrayBuffer = decode(serializedRefTypedArray.value);
   const constructorName: string = serializedRefTypedArray._c;
 
   try {
@@ -286,13 +280,9 @@ export const possiblyDeserializeDatarefToFile = (value: any): File | undefined =
     const typedArray: ArrayBufferView = new globalThis[constructorName](
       arrayBuffer,
     );
-    return new File(
-      [typedArray],
-      "file",
-      {
-        type: "application/octet-stream",
-      }
-    );
+    return new File([typedArray], "file", {
+      type: "application/octet-stream",
+    });
   } catch (e) {}
   return undefined;
 };

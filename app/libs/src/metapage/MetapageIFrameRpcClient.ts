@@ -64,7 +64,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     iframeId: MetaframeId,
     parentId: MetapageId,
     consoleBackgroundColor: string,
-    debug: boolean = false
+    debug: boolean = false,
   ) {
     super();
     // Url sanitation
@@ -121,7 +121,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
               this._metapage._definition.metaframes[this.id].allow!;
             if (this._debug) {
               this.log(
-                `mf allow=${selfThis._iframe.allow} from this._metapage?._definition`
+                `mf allow=${selfThis._iframe.allow} from this._metapage?._definition`,
               );
             }
           } else {
@@ -132,7 +132,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
             urlEncodedDefinition =
               urlEncodedDefinition && urlEncodedDefinition?.version
                 ? await convertMetaframeJsonToCurrentVersion(
-                    urlEncodedDefinition
+                    urlEncodedDefinition,
                   )
                 : undefined;
             if (!selfThis._iframe) {
@@ -202,7 +202,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
 
   addListenerReturnDisposer(
     event: JsonRpcMethodsFromParent | MetapageEvents,
-    listener: ListenerFn<any[]>
+    listener: ListenerFn<any[]>,
   ): () => void {
     super.addListener(event, listener);
     const disposer = () => {
@@ -251,7 +251,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
         MetapageEvents.Warning,
         `Failed to fetch or convert: ${url}\nError: ${
           (err as Error)?.message ? (err as Error)?.message : err?.toString()
-        }`
+        }`,
       );
     }
   }
@@ -409,7 +409,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     };
     this.sendRpcInternal(
       JsonRpcMethodsFromParent.SetupIframeServerResponse,
-      response
+      response,
     );
   }
 
@@ -490,7 +490,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     MetapageToolsLog(
       `Metapage[${this._parentId}] Metaframe[${this.id}] ${s}`,
       this._color,
-      this._consoleBackgroundColor
+      this._consoleBackgroundColor,
     );
   }
 
@@ -509,14 +509,14 @@ export class MetapageIFrameRpcClient extends EventEmitter<
       if (this._metapage) {
         this._metapage.error(
           `Cannot send to child iframe messageJSON=${JSON.stringify(
-            messageJSON
-          ).substring(0, 200)}`
+            messageJSON,
+          ).substring(0, 200)}`,
         );
       } else {
         console.error(
           `Cannot send to child iframe messageJSON=${JSON.stringify(
-            messageJSON
-          ).substring(0, 200)}`
+            messageJSON,
+          ).substring(0, 200)}`,
         );
       }
     }
@@ -534,7 +534,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
         this._bufferTimeout = window.setInterval(function () {
           if (thing._iframe && thing._iframe.contentWindow) {
             thing._bufferMessages!.forEach((m) =>
-              thing._iframe!.contentWindow!.postMessage(m, thing.url)
+              thing._iframe!.contentWindow!.postMessage(m, thing.url),
             );
             window.clearInterval(thing._bufferTimeout);
             thing._bufferTimeout = undefined;

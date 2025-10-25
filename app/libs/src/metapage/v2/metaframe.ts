@@ -1,6 +1,6 @@
-import { VersionsMetaframe } from '../versions.js';
-import { MetaframePipeDefinition } from '../v0_4/index.js';
-import { MetaframeOperationsV1 } from '../v1/metaframe.js';
+import { VersionsMetaframe } from "../versions.js";
+import { MetaframePipeDefinition } from "../v0_4/index.js";
+import { MetaframeOperationsV1 } from "../v1/metaframe.js";
 
 export type MetaframeMetadataV2 = {
   name?: string;
@@ -30,4 +30,3 @@ export interface MetaframeDefinitionV2 {
   // whitelist allowed hash parameters.
   hashParams?: string[];
 }
-

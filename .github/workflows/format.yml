@@ -1,0 +1,25 @@
+# https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
+name: Check Formatting
+
+# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+on:
+  push:
+    branches:
+      - "**"
+      - "!main"
+      - "!master"
+
+jobs:
+  check-formatting:
+    # Can switch to ubuntu-latest but self-hosted is faster
+    name: Formatting
+    runs-on: [self-hosted]
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      - name: run format check
+        run: just fmt FailIfChanged
+

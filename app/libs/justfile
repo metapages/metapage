@@ -50,6 +50,19 @@ watch: _ensure_npm_modules
 @_tsc +args="":
     {{tsc}} {{args}}
 
+fmt +failIfChanged="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo -e "TODO: npm run lint:fix"
+    npm run format
+    if [ "{{ failIfChanged }}" != "" ]; then
+        if ! git diff --quiet; then
+            echo "💥 Files were modified by formatting"
+            git diff --name-only
+            echo "💥 👉 Run: 'just frontend/browser/format'"
+            exit 1
+        fi
+    fi
 
 # check
 @test-io: 
