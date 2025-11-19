@@ -3,7 +3,7 @@ import { MetapageEvents } from "./events.js";
 import { Metapage } from "./Metapage.js";
 import { pageLoaded } from "./MetapageTools.js";
 import { getMetapageDefinitionFromUrl } from "./util.js";
-import { MetaframeInputMap, MetapageInstanceInputs } from "./v0_4/index.js";
+import { MetapageInstanceInputs } from "./v0_4/index.js";
 import { MetapageDefinitionV2 } from "./v2/metapage.js";
 
 // Types for the pure function
@@ -111,6 +111,91 @@ function validateLayout(
   return validated;
 }
 
+export const getVisibleGridLayoutData = (
+  definition: MetapageDefinitionV2,
+): {
+  visibleLayoutItems: LayoutItem[];
+  hiddenMetaframeIds: Set<string>;
+  visibleMetaframeIds: Set<string>;
+  totalVisibleGridHeight: number;
+} => {
+  // Get the layout information
+  const desktopLayoutBlob = definition?.meta?.layouts?.["react-grid-layout"];
+  const layout = desktopLayoutBlob?.layout as LayoutItem[];
+
+  if (!desktopLayoutBlob || !layout) {
+    throw new Error("No valid layout found in metapage definition");
+  }
+
+  // Find dividers and determine which metaframes to hide
+  const metaframesToHide = new Set<string>();
+
+  // Find all dividers and their y positions
+  const dividers = layout
+    .map((item: LayoutItem, index: number) => {
+      const metaframe = definition.metaframes[item.i];
+      return metaframe && isMetaframeDivider(metaframe.url)
+        ? { index, y: item.y, id: item.i }
+        : null;
+    })
+    .filter(
+      (item): item is { index: number; y: number; id: string } => item !== null,
+    );
+
+  // If dividers found, determine which metaframes to hide
+  if (dividers.length > 0) {
+    // Find the divider with the lowest y value
+    const lowestYDivider = dividers.reduce(
+      (
+        lowest: { index: number; y: number; id: string },
+        current: { index: number; y: number; id: string },
+      ) => (current.y < lowest.y ? current : lowest),
+    );
+
+    const dividerY =
+      layout.find((item: LayoutItem) => item.i === lowestYDivider.id)?.y ?? 0;
+
+    // Add all metaframes at or below the divider's y position
+    layout.forEach((item: LayoutItem) => {
+      if (item.y >= dividerY) {
+        metaframesToHide.add(item.i);
+      }
+    });
+  }
+
+  // Get visible metaframes
+  const visibleMetaframeIds = Object.keys(definition.metaframes).filter(
+    (metaframeId) => !metaframesToHide.has(metaframeId),
+  );
+  const hiddenMetaframeIds = Object.keys(definition.metaframes).filter(
+    (metaframeId) => metaframesToHide.has(metaframeId),
+  );
+
+  // Calculate grid dimensions based on visible metaframes only
+  let visibleLayoutItems = layout.filter((item: LayoutItem) =>
+    visibleMetaframeIds.includes(item.i),
+  );
+  // Sort visible layout items by y position to ensure proper grid layout
+  visibleLayoutItems.sort((a, b) => {
+    if (a.y !== b.y) {
+      return a.y - b.y;
+    }
+    return a.x - b.x;
+  });
+
+  // get the total grid height of the visible metaframes
+  const totalVisibleGridHeight = visibleLayoutItems.reduce(
+    (acc, item) => Math.max(acc, item.y + item.h),
+    0,
+  );
+
+  return {
+    visibleLayoutItems,
+    hiddenMetaframeIds: new Set(hiddenMetaframeIds),
+    visibleMetaframeIds: new Set(visibleMetaframeIds),
+    totalVisibleGridHeight,
+  };
+};
 /**
  * Pure function to render a metapage and return inputs function
  * This function creates a metapage instance, renders it to the DOM,
@@ -174,51 +259,8 @@ export async function renderMetapage(props: {
     throw new Error("No valid layout found in metapage definition");
   }
 
-  // Find dividers and determine which metaframes to hide
-  const metaframesToHide = new Set<string>();
-
-  // Find all dividers and their y positions
-  const dividers = layout
-    .map((item: LayoutItem, index: number) => {
-      const metaframe = metapage.getMetaframes()[item.i];
-      return metaframe && isMetaframeDivider(metaframe.url)
-        ? { index, y: item.y, id: item.i }
-        : null;
-    })
-    .filter(
-      (item): item is { index: number; y: number; id: string } => item !== null,
-    );
-
-  // If dividers found, determine which metaframes to hide
-  if (dividers.length > 0) {
-    // Find the divider with the lowest y value
-    const lowestYDivider = dividers.reduce(
-      (
-        lowest: { index: number; y: number; id: string },
-        current: { index: number; y: number; id: string },
-      ) => (current.y < lowest.y ? current : lowest),
-    );
-
-    const dividerY =
-      layout.find((item: LayoutItem) => item.i === lowestYDivider.id)?.y ?? 0;
-
-    // Add all metaframes at or below the divider's y position
-    layout.forEach((item: LayoutItem) => {
-      if (item.y >= dividerY) {
-        metaframesToHide.add(item.i);
-      }
-    });
-  }
-
-  // Get visible metaframes
-  const visibleMetaframeIds = metapage
-    .getMetaframeIds()
-    .filter((metaframeId) => !metaframesToHide.has(metaframeId));
-
-  // Calculate grid dimensions based on visible metaframes only
-  let visibleLayoutItems = layout.filter((item: LayoutItem) =>
-    visibleMetaframeIds.includes(item.i),
-  );
+  let { visibleLayoutItems, hiddenMetaframeIds, visibleMetaframeIds } =
+    getVisibleGridLayoutData(metapage.getDefinition());
 
   // Handle case where no metaframes are visible
   if (visibleLayoutItems.length === 0) {
@@ -346,7 +388,7 @@ export async function renderMetapage(props: {
 
   // Add hidden metaframes
   for (const metaframeId of Object.keys(metapage.getMetaframes()).filter((id) =>
-    metaframesToHide.has(id),
+    hiddenMetaframeIds.has(id),
   )) {
     const metaframe = metapage.getMetaframes()[metaframeId];
     if (!metaframe) continue;
