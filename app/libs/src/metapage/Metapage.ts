@@ -7,7 +7,7 @@ import {
   convertMetapageDefinitionToCurrentVersion,
   getMatchingMetapageVersion,
 } from "./conversions-metapage";
-import { MetaframeId, MetaframePipeId, MetapageId } from "./core";
+import { Disposer, MetaframeId, MetaframePipeId, MetapageId } from "./core";
 import { deserializeInputs, serializeInputs } from "./data";
 import {
   MetapageEventDefinition,
@@ -261,7 +261,7 @@ export class Metapage extends MetapageShared {
   addListenerReturnDisposer(
     event: MetapageEvents,
     listener: ListenerFn<any[]>,
-  ): () => void {
+  ): Disposer {
     super.addListener(event, listener);
     const disposer = () => {
       super.removeListener(event, listener);
@@ -269,15 +269,15 @@ export class Metapage extends MetapageShared {
     return disposer;
   }
 
-  onInputs(cb: (inputs: MetapageInstanceInputs) => () => void) {
+  onInputs(cb: (inputs: MetapageInstanceInputs) => void): Disposer {
     return this.addListenerReturnDisposer(MetapageEvents.Inputs, cb);
   }
 
-  onOutputs(cb: (outputs: MetapageInstanceInputs) => void) {
+  onOutputs(cb: (outputs: MetapageInstanceInputs) => void): Disposer {
     return this.addListenerReturnDisposer(MetapageEvents.Outputs, cb);
   }
 
-  onState(cb: (state: MetapageState) => void) {
+  onState(cb: (state: MetapageState) => void): Disposer {
     return this.addListenerReturnDisposer(MetapageEvents.State, cb);
   }
 

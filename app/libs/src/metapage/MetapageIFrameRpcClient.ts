@@ -12,7 +12,7 @@ import {
 import { MetapageHashParams, MetapageShared } from "./Shared";
 import { MetaframeDefinitionV2 } from "./v2";
 import { MetaframeInputMap, MetapageInstanceInputs } from "./v0_4";
-import { MetaframeId, MetaframePipeId, MetapageId } from "./core";
+import { Disposer, MetaframeId, MetaframePipeId, MetapageId } from "./core";
 import { convertMetaframeJsonToCurrentVersion } from "./conversions-metaframe";
 import { MetapageEvents } from "./events";
 import {
@@ -47,10 +47,10 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   _consoleBackgroundColor: string;
   inputs: MetaframeInputMap = {};
   outputs: MetaframeInputMap = {};
-  _disposables: (() => void)[] = [];
+  _disposables: Disposer[] = [];
   _rpcListeners: ((r: JsonRpcRequest<any>) => void)[] = [];
   _loaded: boolean = false;
-  _onLoaded: (() => void)[] = [];
+  _onLoaded: Disposer[] = [];
   _parentId: MetapageId;
   _debug: boolean;
   _sendInputsAfterRegistration: boolean = false;
@@ -203,7 +203,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   addListenerReturnDisposer(
     event: JsonRpcMethodsFromParent | MetapageEvents,
     listener: ListenerFn<any[]>,
-  ): () => void {
+  ): Disposer {
     super.addListener(event, listener);
     const disposer = () => {
       super.removeListener(event, listener);
@@ -331,11 +331,11 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     }
   }
 
-  public onInputs(f: (m: MetaframeInputMap) => void): () => void {
+  public onInputs(f: (m: MetaframeInputMap) => void): Disposer {
     return this.addListenerReturnDisposer(MetapageEvents.Inputs, f);
   }
 
-  public onInput(pipeName: MetaframePipeId, f: (_: any) => void): () => void {
+  public onInput(pipeName: MetaframePipeId, f: (_: any) => void): Disposer {
     var fWrap = function (inputs: MetaframeInputMap) {
       if (inputs.hasOwnProperty(pipeName)) {
         f(inputs[pipeName]);
@@ -344,11 +344,11 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     return this.addListenerReturnDisposer(MetapageEvents.Inputs, fWrap);
   }
 
-  public onOutputs(f: (m: MetaframeInputMap) => void): () => void {
+  public onOutputs(f: (m: MetaframeInputMap) => void): Disposer {
     return this.addListenerReturnDisposer(MetapageEvents.Outputs, f);
   }
 
-  public onOutput(pipeName: MetaframePipeId, f: (_: any) => void): () => void {
+  public onOutput(pipeName: MetaframePipeId, f: (_: any) => void): Disposer {
     var fWrap = function (outputs: MetaframeInputMap) {
       if (outputs.hasOwnProperty(pipeName)) {
         f(outputs[pipeName]);
