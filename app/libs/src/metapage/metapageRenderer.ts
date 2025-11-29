@@ -1,4 +1,4 @@
-import { MetaframeId } from "./core.js";
+import { Disposer, MetaframeId } from "./core.js";
 import { MetapageEvents } from "./events.js";
 import { Metapage } from "./Metapage.js";
 import { pageLoaded } from "./MetapageTools.js";
@@ -19,7 +19,7 @@ export interface RenderingOptions {
 export interface MetapageRendererResult {
   setInputs: (inputs: MetapageInstanceInputs) => void;
   setOutputs: (outputs: MetapageInstanceInputs) => void;
-  dispose: () => void;
+  dispose: Disposer;
   metapage: Metapage;
 }
 
@@ -243,7 +243,7 @@ export async function renderMetapage(props: {
   }
 
   // Set up event listeners
-  const disposers: (() => void)[] = [];
+  const disposers: Disposer[] = [];
 
   if (onOutputs) {
     disposers.push(

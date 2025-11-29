@@ -16,7 +16,7 @@ import {
 } from "@metapages/hash-query";
 
 import { VERSION_METAFRAME } from "./Constants";
-import { MetaframeId, MetaframePipeId, MetapageId } from "./core";
+import { Disposer, MetaframeId, MetaframePipeId, MetapageId } from "./core";
 import { deserializeInputs, serializeInputs } from "./data";
 import { MetapageEventUrlHashUpdate } from "./events";
 import {
@@ -254,7 +254,7 @@ export class Metaframe extends EventEmitter<
         resolve();
         return;
       }
-      let disposer: () => void;
+      let disposer: Disposer;
       disposer = this.addListenerReturnDisposer(
         MetaframeEvents.Connected,
         () => {
@@ -268,7 +268,7 @@ export class Metaframe extends EventEmitter<
   addListenerReturnDisposer(
     event: MetaframeEvents | JsonRpcMethodsFromChild,
     listener: ListenerFn<any[]>,
-  ): () => void {
+  ): Disposer {
     super.addListener(event, listener);
     const disposer = () => {
       super.removeListener(event, listener);
@@ -339,7 +339,7 @@ export class Metaframe extends EventEmitter<
     return this;
   }
 
-  public onInput(pipeId: MetaframePipeId, listener: any): () => void {
+  public onInput(pipeId: MetaframePipeId, listener: any): Disposer {
     return this.addListenerReturnDisposer(
       MetaframeEvents.Input,
       (pipe: MetaframePipeId, value: any) => {
@@ -350,7 +350,7 @@ export class Metaframe extends EventEmitter<
     );
   }
 
-  public onInputs(listener: (m: MetaframeInputMap) => void): () => void {
+  public onInputs(listener: (m: MetaframeInputMap) => void): Disposer {
     const disposer = this.addListenerReturnDisposer(
       MetaframeEvents.Inputs,
       listener,
