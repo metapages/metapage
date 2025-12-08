@@ -1,18 +1,7 @@
 import { EventEmitter, ListenerFn } from "eventemitter3";
 
-import { getHashParamValueJsonFromUrl } from "@metapages/hash-query";
-
 import { VERSION_METAPAGE } from "./Constants";
-import { convertMetaframeJsonToCurrentVersion } from "./conversions-metaframe";
-import { Disposer, MetaframeId, MetaframePipeId, MetapageId } from "./core";
 import { serializeInputs } from "./data";
-import { MetapageEvents } from "./events";
-import {
-  ClientMessageRecievedAck,
-  JsonRpcMethodsFromParent,
-  MinimumClientMessage,
-  SetupIframeServerResponseData,
-} from "./jsonrpc";
 import { JsonRpcRequest } from "./jsonrpc2";
 import {
   log as MetapageToolsLog,
@@ -21,10 +10,20 @@ import {
   stringToRgb,
 } from "./MetapageTools";
 import { MetapageHashParams, MetapageShared } from "./Shared";
-import { getMetaframeDefinitionFromUrl } from "./util";
-import { MetaframeInputMap, MetapageInstanceInputs } from "./v0_4";
 import { MetaframeDefinitionV2 } from "./v2";
+import { MetaframeInputMap, MetapageInstanceInputs } from "./v0_4";
+import { Disposer, MetaframeId, MetaframePipeId, MetapageId } from "./core";
+import { convertMetaframeJsonToCurrentVersion } from "./conversions-metaframe";
+import { MetapageEvents } from "./events";
+import {
+  ClientMessageRecievedAck,
+  JsonRpcMethodsFromParent,
+  MinimumClientMessage,
+  SetupIframeServerResponseData,
+} from "./jsonrpc";
 import { VersionsMetaframe, VersionsMetapage } from "./versions";
+import { getHashParamValueJsonFromUrl } from "@metapages/hash-query";
+import { getMetaframeDefinitionFromUrl } from "./util";
 
 /**
  * This class runs in the parent metapage, and connects the communication pipes
@@ -327,7 +326,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
 
     if (this._metapage.listenerCount(MetapageEvents.Outputs) > 0) {
       var outputsUpdate: MetapageInstanceInputs = {};
-      outputsUpdate[this.id] = maybeNewOutputs;
+      outputsUpdate[this.id] = this.outputs;
       this._metapage.emit(MetapageEvents.Outputs, outputsUpdate);
     }
   }
