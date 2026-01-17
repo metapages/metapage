@@ -36,8 +36,11 @@ _build_npm:
     echo "✅ typescript check"
     # Set NODE_OPTIONS as env var for CI compatibility (prevents hanging)
     export NODE_OPTIONS='--max_old_space_size=16384'
+    # Ensure CI mode is set (prevents watch mode and other interactive behaviors)
+    export CI=true
     echo "🔨 Starting vite build..."
     # Use explicit mode for CI and ensure stdin is closed (prevents hanging in CI)
+    # The force-exit plugin in vite.config.ts will ensure the process exits properly
     {{vite}} build --mode production < /dev/null
     echo "✅ vite build"
 

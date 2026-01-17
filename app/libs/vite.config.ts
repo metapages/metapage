@@ -1,8 +1,24 @@
 import path, { resolve } from "path";
 import { typescriptPaths } from "rollup-plugin-typescript-paths";
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 
 import typescript from "@rollup/plugin-typescript";
+
+// Plugin to ensure build process exits properly in CI
+// This prevents hanging when plugins leave open handles
+function forceExitPlugin(): Plugin {
+  return {
+    name: "force-exit",
+    buildEnd(error) {
+      // Force exit after build ends in CI to prevent hanging
+      // This handles both success and error cases
+      if (process.env.CI) {
+        const exitCode = error ? 1 : 0;
+        setTimeout(() => process.exit(exitCode), 100);
+      }
+    },
+  };
+}
 
 // https://vitejs.dev/config/
 
@@ -19,6 +35,8 @@ export default defineConfig(({ mode }) => ({
       declaration: true,
       outDir: "dist",
     }),
+    // Only add force-exit plugin in CI to prevent hanging
+    ...(process.env.CI ? [forceExitPlugin()] : []),
   ],
 
   esbuild: {
