@@ -7,15 +7,14 @@ on:
     branches:
       - "main"
 
-permissions:
-  id-token: write  # Required for OIDC
-  contents: read
-
 jobs:
   deploy-and-publish:
     # Can switch to ubuntu-latest but self-hosted is safer and faster
     name: Deploy and Publish
     runs-on: self-hosted
+    permissions:
+      id-token: write  # Required for OIDC
+      contents: read
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
