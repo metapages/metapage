@@ -120,7 +120,8 @@ publish: _ensure_npm_modules
     fi
     just build
     echo "PUBLISHING npm version $VERSION"
-    npm publish --access public .
+    # Use --provenance for OIDC Trusted Publishing (automatically uses GitHub Actions OIDC token)
+    npm publish --access public --provenance .
     # git tag $VERSION
     # git push origin $VERSION
 
