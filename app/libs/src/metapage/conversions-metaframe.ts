@@ -9,9 +9,33 @@ import {
 } from "./v0_4/index.js";
 import { MetaframeDefinitionV1 } from "./v1/index.js";
 import { MetaframeVersionCurrent, type VersionsMetaframe } from "./versions.js";
-import { MetaframeDefinitionV2 } from "./v2/metaframe.js";
+import {
+  HashParamsObject,
+  HashParamsRaw,
+  MetaframeDefinitionV2,
+} from "./v2/metaframe.js";
 
 const fetchRetry = fetchRetryWrapper(fetch);
+
+/**
+ * Normalizes hashParams from legacy array format to object format.
+ * - Array format ["foo", "bar"] becomes { foo: {}, bar: {} }
+ * - Object format is passed through unchanged
+ * - undefined/null returns undefined
+ */
+export const normalizeHashParams = (
+  hashParams: HashParamsRaw | undefined,
+): HashParamsObject | undefined => {
+  if (!hashParams) return undefined;
+  if (Array.isArray(hashParams)) {
+    const result: HashParamsObject = {};
+    for (const key of hashParams) {
+      result[key] = {};
+    }
+    return result;
+  }
+  return hashParams;
+};
 
 type AnyMetaframeDefinition =
   | MetaframeDefinitionV03
@@ -70,7 +94,7 @@ export const convertMetaframeDefinitionToVersion = async (
 
 export const convertMetaframeDefinitionToCurrentVersion = async (
   def: any | AnyMetaframeDefinition,
-): Promise<MetaframeDefinitionV1> => {
+): Promise<MetaframeDefinitionV2> => {
   return convertMetaframeDefinitionToVersion(def, MetaframeVersionCurrent);
 };
 
@@ -213,7 +237,12 @@ export const convertMetaframeJsonToCurrentVersion = async (
   if (!m) {
     return;
   }
-  return convertMetaframeDefinitionToCurrentVersion(m);
+  const converted = await convertMetaframeDefinitionToCurrentVersion(m);
+  // Normalize hashParams from array format to object format
+  if (converted?.hashParams) {
+    converted.hashParams = normalizeHashParams(converted.hashParams);
+  }
+  return converted;
 };
 
 const definition_v0_4_to_v0_3 = (def: MetaframeDefinitionV4) => {

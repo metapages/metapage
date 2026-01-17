@@ -32,7 +32,11 @@ npm install @metapages/metapage
 Or use directly from CDN:
 
 ```javascript
-import { renderMetapage, Metapage, Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
+import {
+  renderMetapage,
+  Metapage,
+  Metaframe,
+} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
 ```
 
 ## Quick Start
@@ -46,7 +50,7 @@ import { renderMetapage } from "@metapages/metapage";
 
 // Fetch a metapage definition (or define your own JSON)
 const response = await fetch(
-  "https://metapage.io/m/87ae11673508447e883b598bf7da9c5d/metapage.json"
+  "https://metapage.io/m/87ae11673508447e883b598bf7da9c5d/metapage.json",
 );
 const definition = await response.json();
 
@@ -58,6 +62,7 @@ const { setInputs, dispose } = await renderMetapage({
 ```
 
 The `renderMetapage` function the `react-grid-layout` layout in `metapage.json`:
+
 ```json
 {
   "meta": {
@@ -69,9 +74,8 @@ The `renderMetapage` function the `react-grid-layout` layout in `metapage.json`:
   }
 }
 ```
+
 [Implentation in source code](https://github.com/metapages/metapage/blob/2ef8bd7bfb151ad1616da46aa9797bcf2b1c3d78/app/libs/src/metapage/metapageRenderer.ts#L204)
-
-
 
 ### Creating a Metaframe (Inside an iframe)
 
@@ -171,8 +175,16 @@ metaframe.onInput("file", (file) => {
   <head>
     <meta charset="utf-8" />
     <style>
-      body { margin: 0; padding: 0; width: 100vw; height: 100vh; }
-      #metapage-container { width: 100%; height: 100%; }
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100vw;
+        height: 100vh;
+      }
+      #metapage-container {
+        width: 100%;
+        height: 100%;
+      }
     </style>
   </head>
   <body>
@@ -182,8 +194,8 @@ metaframe.onInput("file", (file) => {
       import { renderMetapage } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
 
       const definition = await fetch(
-        "https://metapage.io/m/87ae11673508447e883b598bf7da9c5d/metapage.json"
-      ).then(r => r.json());
+        "https://metapage.io/m/87ae11673508447e883b598bf7da9c5d/metapage.json",
+      ).then((r) => r.json());
 
       const { setInputs, dispose, metapage } = await renderMetapage({
         definition,
@@ -194,14 +206,14 @@ metaframe.onInput("file", (file) => {
         options: {
           hideFrameBorders: true,
           hideOptions: true,
-        }
+        },
       });
 
       // Send inputs to metaframes
       setInputs({
-        "metaframeId": {
-          "inputPipeName": "some value"
-        }
+        metaframeId: {
+          inputPipeName: "some value",
+        },
       });
 
       // Clean up when done
@@ -228,7 +240,7 @@ metaframe.onInputs((inputs) => {
   // Send outputs
   metaframe.setOutputs({
     result: result,
-    timestamp: Date.now()
+    timestamp: Date.now(),
   });
 });
 
@@ -257,10 +269,10 @@ const metapage = new Metapage({
     version: "2",
     metaframes: {
       viewer: {
-        url: "https://markdown.mtfm.io/"
-      }
-    }
-  }
+        url: "https://markdown.mtfm.io/",
+      },
+    },
+  },
 });
 
 // Listen to metaframe outputs
@@ -271,8 +283,8 @@ metapage.on(Metapage.OUTPUTS, (outputs) => {
 // Set inputs to metaframes
 await metapage.setInputs({
   viewer: {
-    text: "# Hello World"
-  }
+    text: "# Hello World",
+  },
 });
 
 // Get current outputs
@@ -291,7 +303,7 @@ Metaframes can read and write to their URL hash parameters:
 ```javascript
 import {
   getHashParamValueJsonFromWindow,
-  setHashParamValueJsonInWindow
+  setHashParamValueJsonInWindow,
 } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
 
 // Read from URL hash
@@ -321,7 +333,7 @@ Use glob patterns to match multiple outputs:
 
 ```javascript
 // Send binary data
-const imageData = await fetch("/image.png").then(r => r.arrayBuffer());
+const imageData = await fetch("/image.png").then((r) => r.arrayBuffer());
 metaframe.setOutput("image", imageData);
 
 // Receive and use
@@ -339,6 +351,7 @@ metaframe.onInput("image", async (data) => {
 Render a metapage into a DOM element.
 
 **Parameters:**
+
 - `definition`: Metapage definition object
 - `rootDiv`: DOM element to render into
 - `onOutputs`: Callback for metaframe outputs (optional)
@@ -353,12 +366,14 @@ Render a metapage into a DOM element.
 ### Metapage Class
 
 **Methods:**
+
 - `setInputs(inputs)`: Set inputs for metaframes
 - `getState()`: Get current state (inputs/outputs)
 - `dispose()`: Clean up and remove all listeners
 - `on(event, handler)`: Listen to events
 
 **Events:**
+
 - `Metapage.OUTPUTS`: When metaframe outputs change
 - `Metapage.INPUTS`: When metapage inputs change
 - `Metapage.DEFINITION`: When definition changes
@@ -366,6 +381,7 @@ Render a metapage into a DOM element.
 ### Metaframe Class
 
 **Methods:**
+
 - `setOutput(name, value)`: Set a single output
 - `setOutputs(outputs)`: Set multiple outputs
 - `getInput(name)`: Get a single input value
@@ -375,6 +391,7 @@ Render a metapage into a DOM element.
 - `dispose()`: Clean up
 
 **Properties:**
+
 - `id`: Metaframe ID assigned by parent metapage
 - `isInputOutputBlobSerialization`: Enable/disable automatic binary serialization
 
@@ -392,21 +409,21 @@ Example minimal metaframe:
 ```html
 <!DOCTYPE html>
 <html>
-<head>
-  <title>My Metaframe</title>
-</head>
-<body>
-  <script type="module">
-    import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
+  <head>
+    <title>My Metaframe</title>
+  </head>
+  <body>
+    <script type="module">
+      import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
 
-    const metaframe = new Metaframe();
+      const metaframe = new Metaframe();
 
-    metaframe.onInputs((inputs) => {
-      // Your logic here
-      metaframe.setOutput("result", "processed: " + JSON.stringify(inputs));
-    });
-  </script>
-</body>
+      metaframe.onInputs((inputs) => {
+        // Your logic here
+        metaframe.setOutput("result", "processed: " + JSON.stringify(inputs));
+      });
+    </script>
+  </body>
 </html>
 ```
 
@@ -420,16 +437,16 @@ import {
   Metaframe,
   MetapageDefinitionV2,
   MetaframeInputMap,
-  MetapageInstanceInputs
+  MetapageInstanceInputs,
 } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
 
 const definition: MetapageDefinitionV2 = {
   version: "2",
   metaframes: {
     example: {
-      url: "https://example.com"
-    }
-  }
+      url: "https://example.com",
+    },
+  },
 };
 
 const metapage = new Metapage({ definition });
