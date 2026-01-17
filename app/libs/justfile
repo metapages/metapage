@@ -10,7 +10,7 @@ set dotenv-load    := true
 ###########################################################################
 NPM_MODULE         := `cat package.json | jq -r .name`
 tsc                := "./node_modules/typescript/bin/tsc"
-vite               := "NODE_OPTIONS='--max_old_space_size=16384' ./node_modules/vite/bin/vite.js"
+vite               := "./node_modules/vite/bin/vite.js"
 # minimal formatting, bold is very useful
 bold               := '\033[1m'
 normal             := '\033[0m'
@@ -34,7 +34,11 @@ _build_npm:
     # How to test installation of the build?
     {{tsc}} --noEmit
     echo "✅ typescript check"
-    {{vite}} build
+    # Set NODE_OPTIONS as env var for CI compatibility (prevents hanging)
+    export NODE_OPTIONS='--max_old_space_size=16384'
+    echo "🔨 Starting vite build..."
+    # Use explicit mode for CI and ensure stdin is closed (prevents hanging in CI)
+    {{vite}} build --mode production < /dev/null
     echo "✅ vite build"
 
 # watch for file changes, then build ALL into ./dist
