@@ -25,6 +25,9 @@ _help:
     echo -e "           lib    {{blue}}#library(module) commands{{normal}}"
     echo -e ""
 
+@build:
+    just app/build
+
 # Run all build/unit tests
 @test:
     just app/test

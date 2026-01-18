@@ -31,8 +31,8 @@ jobs:
         with:
           node-version: 23.x
 
-      - name: Ensure npm >= 11.5.1
-        run: npm install -g npm@^11.5.1
+      - name: Ensure npm >= 11.7.0
+        run: npm install -g npm@^11.7.0
 
       - uses: denoland/setup-deno@v1
         with:
