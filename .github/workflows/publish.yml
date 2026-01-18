@@ -41,6 +41,9 @@ jobs:
       - name: publish module
         run: just app/libs/publish
 
+      - name: Install sd (beetter sed)
+        run: sudo apt install -y rust-sd
+      
       - name: deploy worker
         env:
           DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
