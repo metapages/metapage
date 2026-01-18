@@ -35,8 +35,8 @@ deploy: _ensure_deployctl
   # deploy deploy is on an older version of deno which does not support 
   # the "sloppy-imports" flag
   # So jump through some hoops to convert the imports
-  # find src/lib -type f -name '*.ts' -exec sd -s ".js'" ".ts'" {} +
-  # find src/lib -type f -name '*.ts' -exec sd -s '.js"' '.ts"' {} +
+  find src/lib -type f -name '*.ts' -exec sd -s ".js'" ".ts'" {} +
+  find src/lib -type f -name '*.ts' -exec sd -s '.js"' '.ts"' {} +
   deno task build
   deployctl deploy --project=metapage-module --prod --entrypoint src/main.ts
 

@@ -41,8 +41,13 @@ jobs:
       - name: publish module
         run: just app/libs/publish
 
-      - name: Install sd (beetter sed)
-        run: sudo apt install -y rust-sd
+      # - name: Install sd (better sed)
+      #   run: sudo apt install -y rust-sd
+
+      - name: Install sd (better sed)
+        run: |
+          curl -sSL https://github.com/chmln/sd/releases/download/v1.0.0/sd-v1.0.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          sudo mv sd-v1.0.0-x86_64-unknown-linux-gnu/sd /usr/local/bin/
       
       - name: deploy worker
         env:
