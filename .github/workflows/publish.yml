@@ -31,6 +31,9 @@ jobs:
         with:
           node-version: 23.x
 
+      - name: Ensure npm >= 11.5.1
+        run: npm install -g npm@^11.5.1
+
       - uses: denoland/setup-deno@v1
         with:
           deno-version: "2.5.6"
