@@ -11,7 +11,7 @@ jobs:
   deploy-and-publish:
     # Can switch to ubuntu-latest but self-hosted is safer and faster
     name: Deploy and Publish
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     permissions:
       id-token: write  # Required for OIDC
       contents: read
@@ -21,8 +21,22 @@ jobs:
         with:
           fetch-depth: '0'
 
+      - uses: extractions/setup-just@v1
+        with:
+          just-version: '1.46.0'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 23.x
+
+      - uses: denoland/setup-deno@v1
+        with:
+          deno-version: "2.5.6"
+
       - name: publish module
-        run: echo "$HOME/.deno/bin/" >> "$GITHUB_PATH" && just app/libs/publish
+        run: just app/libs/publish
 
       - name: deploy worker
         env:
