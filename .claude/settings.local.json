@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(ls:*)",
+      "WebSearch",
+      "Bash(npm install)",
+      "Bash(npm run build:*)",
+      "Bash(npm run:*)",
+      "Bash(just build:*)",
+      "Bash(npm test:*)",
+      "Bash(gh release list:*)",
+      "Bash(gh:*)"
+    ]
+  }
+}
