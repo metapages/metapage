@@ -137,6 +137,41 @@ A metapage is defined using JSON that specifies which metaframes to load and how
 
 This creates a pipeline: `input` → `processor` → `output`
 
+
+### Metaframe Definition
+
+See [code](https://github.com/metapages/metapage/blob/73549f9f3e27da7a2aef5a935ec112c5bdb130db/app/libs/src/metapage/v2/metaframe.ts#L40)
+
+This is provided either by:
+
+ - `https://<your metaframe>/metaframe.json`
+ - `https://<your metaframe>/#?definition=<json encoded hash param>`
+
+The definition describes inputs, outputs, security, and the types of hash parameters (so AI tools can correctly modify)
+
+```typescript
+export interface MetaframeDefinitionV2 {
+  version: VersionsMetaframe;
+  inputs?: {
+    [key: string]: MetaframePipeDefinition;
+  }; // <MetaframePipeId, MetaframePipeDefinition>
+  outputs?: {
+    [key: string]: MetaframePipeDefinition;
+  }; // <MetaframePipeId, MetaframePipeDefinition>
+  metadata: MetaframeMetadataV2;
+  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Feature_Policy/Using_Feature_Policy#the_iframe_allow_attribute
+  // https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/Feature-Policy#directives
+  allow?: string;
+  // Set or override allowed features for the iframe
+  // https://developer.mozilla.org/en-US/docs/Web/HTML/Element/iframe#sandbox
+  sandbox?: string;
+  // Hash parameters configuration.
+  // Accepts both legacy array format (string[]) and new object format (HashParamsObject).
+  // When fetched via helper methods, array format is normalized to object format.
+  hashParams?: HashParamsRaw;
+}
+```
+
 ### Data Pipes
 
 Pipes connect metaframe outputs to other metaframe inputs:
