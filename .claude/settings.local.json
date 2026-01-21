@@ -9,7 +9,15 @@
       "Bash(just build:*)",
       "Bash(npm test:*)",
       "Bash(gh release list:*)",
-      "Bash(gh:*)"
+      "Bash(gh:*)",
+      "WebFetch(domain:cdn.jsdelivr.net)",
+      "Bash(npm install:*)",
+      "Bash(node:*)",
+      "Bash(npm pack:*)",
+      "WebFetch(domain:registry.npmjs.org)",
+      "Bash(npm view:*)",
+      "Bash(tar:*)",
+      "Bash(just verify:*)"
     ]
   }
 }

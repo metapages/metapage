@@ -1,7 +1,7 @@
 {
   "name": "@metapages/metapage",
   "public": true,
-  "version": "1.9.1",
+  "version": "1.9.2",
   "description": "Connect web pages together",
   "repository": "https://github.com/metapages/metapage",
   "homepage": "https://metapage.io/",
@@ -34,10 +34,13 @@
     "picomatch": "^4.0.2"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^29.0.0",
+    "@rollup/plugin-node-resolve": "^16.0.3",
     "@rollup/plugin-typescript": "^11.1.5",
     "@types/object-hash": "^2.2.1",
     "@vitest/browser": "^3.2.4",
     "playwright": "^1.54.2",
+    "rollup": "^2.79.2",
     "rollup-plugin-typescript-paths": "^1.4.0",
     "tslib": "^2.6.2",
     "typescript": "^5.3.3",
@@ -57,7 +60,8 @@
     "format": "npx prettier . --write",
     "test": "vitest run",
     "test-watch": "vitest",
-    "test:browser": "vitest --config=vitest.browser.config.ts"
+    "test:browser": "vitest --config=vitest.browser.config.ts",
+    "verify": "node test-jsdelivr-bundle.mjs"
   },
   "license": "Apache-2.0",
   "browserslist": [
