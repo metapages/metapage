@@ -17,7 +17,9 @@
       "WebFetch(domain:registry.npmjs.org)",
       "Bash(npm view:*)",
       "Bash(tar:*)",
-      "Bash(just verify:*)"
+      "Bash(just verify:*)",
+      "Bash(CI=true just build:*)",
+      "Bash(CI=true just verify:*)"
     ]
   }
 }
