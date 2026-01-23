@@ -5,7 +5,7 @@ name: Deploy and Publish
 on:
   push:
     branches:
-      - "fix-publishing"
+      - 'main'
 
 jobs:
   deploy-and-publish:
@@ -13,8 +13,8 @@ jobs:
     name: Deploy and Publish
     runs-on: ubuntu-latest
     permissions:
-      id-token: write  # Required for OIDC
-      contents: write  # Required for tags and releases
+      id-token: write # Required for OIDC
+      contents: write # Required for tags and releases
     steps:
       - name: Check out the repo
         uses: actions/checkout@v4
@@ -41,7 +41,7 @@ jobs:
 
       - uses: denoland/setup-deno@v1
         with:
-          deno-version: "2.5.6"
+          deno-version: '2.5.6'
 
       - name: publish module
         id: publish
@@ -79,7 +79,7 @@ jobs:
         run: |
           curl -sSL https://github.com/chmln/sd/releases/download/v1.0.0/sd-v1.0.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
           sudo mv sd-v1.0.0-x86_64-unknown-linux-gnu/sd /usr/local/bin/
-      
+
       - name: deploy worker
         env:
           DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
