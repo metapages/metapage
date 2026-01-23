@@ -1,6 +1,6 @@
 import { ListenerFn } from "eventemitter3";
 import { create } from "mutative";
-import picomatch from "picomatch-browser";
+import picomatch from "picomatch/posix";
 
 import { VERSION_METAPAGE } from "./Constants";
 import {

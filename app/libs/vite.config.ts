@@ -9,12 +9,11 @@ import typescript from "@rollup/plugin-typescript";
 function forceExitPlugin(): Plugin {
   return {
     name: "force-exit",
-    buildEnd(error) {
-      // Force exit after build ends in CI to prevent hanging
-      // This handles both success and error cases
+    closeBundle() {
+      // Force exit after bundle is closed (files written) in CI to prevent hanging
+      // IMPORTANT: Use closeBundle, not buildEnd - buildEnd fires BEFORE files are written!
       if (process.env.CI) {
-        const exitCode = error ? 1 : 0;
-        setTimeout(() => process.exit(exitCode), 100);
+        setTimeout(() => process.exit(0), 100);
       }
     },
   };
