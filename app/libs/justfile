@@ -106,6 +106,13 @@ dev: _ensure_npm_modules watch
 @list:
     npm view {{NPM_MODULE}} versions --json
 
+# Verify package is ready for publishing (checks dist/, npm pack, and jsDelivr bundling)
+verify: _ensure_npm_modules build
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔍 Running pre-publish verification..."
+    node test-jsdelivr-bundle.mjs
+
 # If the version does not exist, publish the packages (metaframe+metapage)
 publish: _ensure_npm_modules
     #!/usr/bin/env bash
@@ -122,11 +129,14 @@ publish: _ensure_npm_modules
         fi
     fi
     just build
+    # Verify the build before publishing
+    echo "🔍 Running pre-publish verification..."
+    node test-jsdelivr-bundle.mjs
     echo "PUBLISHING npm version $VERSION"
     # OIDC Trusted Publishing (automatically uses GitHub Actions OIDC token)
     npm publish --access public .
-    # git tag $VERSION
-    # git push origin $VERSION
+    git tag "v$VERSION"
+    git push origin "v$VERSION"
 
 # Unpublish version https://docs.npmjs.com/cli/v7/commands/npm-unpublish
 unpublish version:
