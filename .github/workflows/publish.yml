@@ -5,7 +5,7 @@ name: Deploy and Publish
 on:
   push:
     branches:
-      - "fix-publishing"
+      - "main"
 
 jobs:
   deploy-and-publish:
