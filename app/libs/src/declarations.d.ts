@@ -1,1 +1,4 @@
-declare module "picomatch-browser";
+declare module "picomatch/posix" {
+  import picomatch from "picomatch";
+  export = picomatch;
+}
