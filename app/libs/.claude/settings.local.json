@@ -4,7 +4,12 @@
       "Bash(npm run build:*)",
       "Bash(npm run:*)",
       "Bash(npx tsc:*)",
-      "Bash(npm test:*)"
+      "Bash(npm test:*)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(grep:*)",
+      "Bash(just check:*)",
+      "Bash(just test-io:*)",
+      "Bash(just build:*)"
     ]
   }
 }
