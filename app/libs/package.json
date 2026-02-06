@@ -23,6 +23,7 @@
   ],
   "source": "src/index.ts",
   "dependencies": {
+    "@metapages/dataref": "^2.0.1",
     "@metapages/hash-query": "^0.9.8",
     "base64-arraybuffer": "^1.0.2",
     "compare-versions": "^6.1.1",
