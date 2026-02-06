@@ -125,10 +125,7 @@ export const possiblySerializeValueToDataref = async <T>(
     value instanceof Float32Array ||
     value instanceof Float64Array
   ) {
-    return typedArrayToDataUrl(
-      value,
-      value.constructor.name as TypedArrayType,
-    );
+    return typedArrayToDataUrl(value, value.constructor.name as TypedArrayType);
   } else if (value instanceof File) {
     const arrayBuffer = await value.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);

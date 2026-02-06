@@ -70,7 +70,7 @@ describe("Round-trip serialization: TypedArrays", () => {
       const serialized = await possiblySerializeValueToDataref(original);
       expect(typeof serialized).toBe("string");
       expect((serialized as string).startsWith("data:")).toBe(true);
-      expect((serialized as string)).toContain(`type=${name}`);
+      expect(serialized as string).toContain(`type=${name}`);
 
       const deserialized = await possiblyDeserializeDatarefToValue(serialized);
       expect(deserialized.constructor.name).toBe(name);
@@ -99,8 +99,8 @@ describe("Round-trip serialization: Blob", () => {
     const original = new Blob(["hello world"], { type: "text/plain" });
     const serialized = await possiblySerializeValueToDataref(original);
     expect(typeof serialized).toBe("string");
-    expect((serialized as string)).toContain("blob=true");
-    expect((serialized as string)).toContain("text/plain");
+    expect(serialized as string).toContain("blob=true");
+    expect(serialized as string).toContain("text/plain");
 
     const deserialized = await possiblyDeserializeDatarefToValue(serialized);
     expect(deserialized).toBeInstanceOf(Blob);
@@ -128,9 +128,9 @@ describe("Round-trip serialization: File", () => {
     });
     const serialized = await possiblySerializeValueToDataref(original);
     expect(typeof serialized).toBe("string");
-    expect((serialized as string)).toContain("file=true");
-    expect((serialized as string)).toContain("name=test.txt");
-    expect((serialized as string)).toContain(`lastModified=${lastMod}`);
+    expect(serialized as string).toContain("file=true");
+    expect(serialized as string).toContain("name=test.txt");
+    expect(serialized as string).toContain(`lastModified=${lastMod}`);
 
     const deserialized = await possiblyDeserializeDatarefToValue(serialized);
     expect(deserialized).toBeInstanceOf(File);
