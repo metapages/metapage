@@ -25,3 +25,8 @@ export interface MetapageDefinitionV2 {
   // meta is optional metadata: name, layouts, tags, etc
   meta?: MetapageMetadataV2;
 }
+
+// External-facing type: version is not needed, optional for backwards compatibility, detected automatically if missing
+export type MetapageDefinition = Omit<MetapageDefinitionV2, "version"> & {
+  version?: string;
+};

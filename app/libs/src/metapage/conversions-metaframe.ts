@@ -14,6 +14,7 @@ import {
   HashParamsRaw,
   MetaframeDefinitionV2,
 } from "./v2/metaframe.js";
+import { detectMetaframeVersion } from "./version-detection.js";
 
 const fetchRetry = fetchRetryWrapper(fetch);
 
@@ -54,9 +55,10 @@ export const convertMetaframeDefinitionToVersion = async (
   }
 
   if (!def.version) {
-    throw `Missing "version" key in metaframe definition: ${JSON.stringify(
-      def,
-    )}`;
+    const detectedVersion = detectMetaframeVersion(def);
+    def = create(def, (draft: any) => {
+      draft.version = detectedVersion;
+    });
   }
   if (!targetVersion) {
     throw 'Missing "version" argument';
@@ -107,11 +109,10 @@ const convertMetaframeDefinitionToTargetVersionInternal = (
   }
 
   if (!def.version) {
-    // we assume this is an older version of the definition
-    // that does not have the version key
-    def = create(def, (draft: MetaframeDefinitionV03) => {
-      draft.version = "0.3";
-    }) as MetaframeDefinitionV6;
+    const detectedVersion = detectMetaframeVersion(def);
+    def = create(def, (draft: any) => {
+      draft.version = detectedVersion;
+    });
   }
 
   let currentVersion = getMatchingMetaframeVersion(def.version);

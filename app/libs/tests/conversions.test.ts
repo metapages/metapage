@@ -9,6 +9,8 @@ import {
   MetapageVersionCurrent,
   MetaframeDefinitionV2,
   HashParamsObject,
+  detectMetapageVersion,
+  detectMetaframeVersion,
 } from "../src";
 import { describe, expect, it } from "vitest";
 import { MetapageDefinitionV03 } from "../src/metapage/v0_3/all";
@@ -170,6 +172,219 @@ describe("hashParams normalization", () => {
       expect(result?.hashParams).to.deep.equal({
         legacyParam: {},
       });
+    });
+  });
+});
+
+describe("version detection", () => {
+  describe("detectMetapageVersion", () => {
+    it("returns version directly if already set", () => {
+      expect(detectMetapageVersion({ version: "1" })).to.equal("1");
+      expect(detectMetapageVersion({ version: "0.3" })).to.equal("0.3");
+      expect(detectMetapageVersion({ version: "2" })).to.equal("2");
+    });
+
+    it("detects v0.2 from embedded metaframe property without plugins", () => {
+      expect(
+        detectMetapageVersion({
+          metaframes: {
+            mf1: {
+              metaframe: { version: "0.3", metadata: {} },
+              url: "https://example.com",
+            },
+          },
+        }),
+      ).to.equal("0.2");
+    });
+
+    it("detects v0.3 from embedded metaframe property with plugins", () => {
+      expect(
+        detectMetapageVersion({
+          metaframes: {
+            mf1: {
+              metaframe: { version: "0.3", metadata: {} },
+              url: "https://example.com",
+            },
+          },
+          plugins: ["https://plugin.example.com"],
+        }),
+      ).to.equal("0.3");
+    });
+
+    it("detects v1 from meta.keywords", () => {
+      expect(
+        detectMetapageVersion({
+          metaframes: { mf1: { url: "https://example.com" } },
+          meta: { keywords: ["test"] },
+        }),
+      ).to.equal("1");
+    });
+
+    it("detects v1 from meta.author (string)", () => {
+      expect(
+        detectMetapageVersion({
+          metaframes: { mf1: { url: "https://example.com" } },
+          meta: { author: "Dion" },
+        }),
+      ).to.equal("1");
+    });
+
+    it("defaults to v2 when no distinguishing features", () => {
+      expect(
+        detectMetapageVersion({
+          metaframes: { mf1: { url: "https://example.com" } },
+        }),
+      ).to.equal("2");
+    });
+  });
+
+  describe("detectMetaframeVersion", () => {
+    it("returns version directly if already set", () => {
+      expect(detectMetaframeVersion({ version: "0.3" })).to.equal("0.3");
+      expect(detectMetaframeVersion({ version: "1" })).to.equal("1");
+      expect(detectMetaframeVersion({ version: "2" })).to.equal("2");
+    });
+
+    it("detects v0.3 from metadata.title", () => {
+      expect(
+        detectMetaframeVersion({
+          metadata: { title: "My Frame", author: "Author" },
+        }),
+      ).to.equal("0.3");
+    });
+
+    it("detects v0.4 from metadata.title with allow", () => {
+      expect(
+        detectMetaframeVersion({
+          metadata: { title: "My Frame" },
+          allow: "camera",
+        }),
+      ).to.equal("0.4");
+    });
+
+    it("detects v0.5 from metadata.edit", () => {
+      expect(
+        detectMetaframeVersion({
+          metadata: { name: "My Frame", edit: { type: "url", value: {} } },
+        }),
+      ).to.equal("0.5");
+    });
+
+    it("detects v0.6 from metadata.operations", () => {
+      expect(
+        detectMetaframeVersion({
+          metadata: { name: "My Frame", operations: { edit: {} } },
+        }),
+      ).to.equal("0.6");
+    });
+
+    it("detects v1 from metadata.author (string)", () => {
+      expect(
+        detectMetaframeVersion({
+          metadata: { name: "My Frame", author: "Dion" },
+        }),
+      ).to.equal("1");
+    });
+
+    it("detects v2 from metadata.authors (array)", () => {
+      expect(
+        detectMetaframeVersion({
+          metadata: { name: "My Frame", authors: ["Dion"] },
+        }),
+      ).to.equal("2");
+    });
+
+    it("detects v2 from hashParams", () => {
+      expect(
+        detectMetaframeVersion({
+          metadata: { name: "My Frame" },
+          hashParams: ["foo"],
+        }),
+      ).to.equal("2");
+    });
+
+    it("detects v2 from sandbox", () => {
+      expect(
+        detectMetaframeVersion({
+          metadata: { name: "My Frame" },
+          sandbox: "allow-scripts",
+        }),
+      ).to.equal("2");
+    });
+
+    it("defaults to v2 when no distinguishing features", () => {
+      expect(detectMetaframeVersion({ metadata: {} })).to.equal("2");
+    });
+  });
+});
+
+describe("versionless conversion", () => {
+  describe("metapage definitions without version", () => {
+    it("converts a versionless v2-like definition to current version", async () => {
+      const def = {
+        metaframes: {
+          mf1: { url: "https://example.com" },
+        },
+      };
+      const result = await convertMetapageDefinitionToCurrentVersion(def);
+      expect(result.version).to.equal("2");
+      expect(result.metaframes.mf1.url).to.equal("https://example.com");
+    });
+
+    it("converts a versionless v1-like definition to current version", async () => {
+      const def = {
+        metaframes: {
+          mf1: { url: "https://example.com" },
+        },
+        meta: { keywords: ["test"], author: "Dion" },
+      };
+      const result = await convertMetapageDefinitionToCurrentVersion(def);
+      expect(result.version).to.equal("2");
+      // keywords should be converted to tags
+      expect(result.meta?.tags).to.deep.equal(["test"]);
+      // author should be converted to authors
+      expect(result.meta?.authors).to.deep.equal(["Dion"]);
+    });
+
+    it("converts a versionless v0.3-like definition to current version", async () => {
+      const def = {
+        metaframes: {
+          mf1: {
+            metaframe: {
+              version: "0.3",
+              metadata: { title: "Example", author: "Dion" },
+              inputs: {},
+              outputs: {},
+            },
+            id: "obsolete",
+            url: "https://example.com",
+          },
+        },
+        plugins: ["https://plugin.example.com"],
+      };
+      const result = await convertMetapageDefinitionToCurrentVersion(def);
+      expect(result.version).to.equal("2");
+    });
+  });
+
+  describe("metaframe definitions without version", () => {
+    it("converts a versionless v2-like definition to current version", async () => {
+      const def = {
+        metadata: { name: "Test", authors: ["Dion"] },
+      };
+      const result = await convertMetaframeJsonToCurrentVersion(def as any);
+      expect(result?.version).to.equal("2");
+      expect(result?.metadata?.authors).to.deep.equal(["Dion"]);
+    });
+
+    it("converts a versionless v1-like definition to current version", async () => {
+      const def = {
+        metadata: { name: "Test", author: "Dion" },
+      };
+      const result = await convertMetaframeJsonToCurrentVersion(def as any);
+      expect(result?.version).to.equal("2");
+      // author should be converted to authors
+      expect(result?.metadata?.authors).to.deep.equal(["Dion"]);
     });
   });
 });

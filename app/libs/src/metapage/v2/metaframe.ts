@@ -57,3 +57,8 @@ export interface MetaframeDefinitionV2 {
   // When fetched via helper methods, array format is normalized to object format.
   hashParams?: HashParamsRaw;
 }
+
+// External-facing type: version is not needed, optional for backwards compatibility, detected automatically if missing
+export type MetaframeDefinition = Omit<MetaframeDefinitionV2, "version"> & {
+  version?: string;
+};
