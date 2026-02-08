@@ -7,6 +7,7 @@ import { MetapageDefinitionV03 } from "./v0_3/all.js";
 import { MetapageDefinitionV1 } from "./v1/index.js";
 import { MetapageVersionCurrent, VersionsMetapage } from "./versions.js";
 import { MetapageDefinitionV2 } from "./v2/metapage.js";
+import { detectMetapageVersion } from "./version-detection.js";
 
 const fetchRetry = fetchRetryWrapper(fetch);
 
@@ -24,9 +25,10 @@ export const convertMetapageDefinitionToVersion = async (
   }
 
   if (!def.version) {
-    def = create(def, (draft: MetapageDefinitionV03) => {
-      draft.version = "0.3";
-    }) as MetapageDefinitionV03;
+    const detectedVersion = detectMetapageVersion(def);
+    def = create(def, (draft: any) => {
+      draft.version = detectedVersion;
+    });
   }
   if (!targetVersion) {
     throw 'Missing "version" argument';
@@ -91,9 +93,10 @@ const convertMetapageDefinitionToTargetVersionInternal = (
   }
 
   if (!def.version) {
-    throw `Missing "version" key in metapage definition: ${JSON.stringify(
-      def,
-    )}`;
+    const detectedVersion = detectMetapageVersion(def);
+    def = create(def, (draft: any) => {
+      draft.version = detectedVersion;
+    });
   }
 
   let currentVersion = getMatchingMetapageVersion(def.version);

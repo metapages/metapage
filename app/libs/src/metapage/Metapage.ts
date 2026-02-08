@@ -328,11 +328,6 @@ export class Metapage extends MetapageShared {
     def: any,
     state?: MetapageState,
   ): Promise<Metapage> {
-    // Some validation
-    if (!def.version) {
-      throw "Metapage definition must have a version";
-    }
-
     const newDefinition: MetapageDefinitionV2 =
       await convertMetapageDefinitionToCurrentVersion(def);
 
