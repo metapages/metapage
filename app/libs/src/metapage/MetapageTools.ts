@@ -14,7 +14,7 @@ import { MetapageDefinitionV2 } from "./v2/metapage.js";
  */
 export const merge = (
   current: MetaframeInputMap,
-  newInputs: MetaframeInputMap
+  newInputs: MetaframeInputMap,
 ): MetaframeInputMap => {
   if (!newInputs) {
     return current;
@@ -41,13 +41,13 @@ export const getUrlParam = (key: MetapageHashParams): string | null => {
 
 export const getUrlParamDebug = (): boolean => {
   return new URLSearchParams(globalThis.location.search).has(
-    MetapageHashParams.mp_debug
+    MetapageHashParams.mp_debug,
   );
 };
 
 export const isDebugFromUrlsParams = (): boolean => {
   const param = new URLSearchParams(globalThis?.location?.search).get(
-    MetapageHashParams.mp_debug
+    MetapageHashParams.mp_debug,
   );
   return param === "true" || param === "1";
 };
@@ -120,7 +120,8 @@ export const intToRGB = (i: number): string => {
 
 export const isPageLoaded = (): boolean => {
   return (
-    globalThis?.document?.readyState == "complete" || globalThis?.document?.readyState == "interactive"
+    globalThis?.document?.readyState == "complete" ||
+    globalThis?.document?.readyState == "interactive"
   );
   // https://stackoverflow.com/questions/13364613/how-to-know-if-window-load-event-was-fired-already/28093606
   // // TODO ugh casting here but I can't seem to get the right type with the loadEventEnd
@@ -160,7 +161,7 @@ export const metapageAllSha256Hash = async (metapage: MetapageDefinitionV2) => {
 };
 
 export const metapageOnlyEssentailSha256Hash = async (
-  metapage: Pick<MetapageDefinitionV2, "metaframes" | "version">
+  metapage: Pick<MetapageDefinitionV2, "metaframes" | "version">,
 ) => {
   const metapageStr = stringify({
     version: metapage.version,

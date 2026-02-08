@@ -8,12 +8,19 @@ import {
   InjectSecretsPayload,
   MetapageEventDefinition,
 } from "../src";
-import { getHashParamValue, getHashParamValueBase64DecodedFromUrl, setHashParamValueBase64EncodedInUrl } from "@metapages/hash-query";
+import {
+  getHashParamValue,
+  getHashParamValueBase64DecodedFromUrl,
+  setHashParamValueBase64EncodedInUrl,
+} from "@metapages/hash-query";
 
 describe("Metapage secrets injection", async () => {
   let metapage: Metapage;
   // the metaframe name is "secret1test"
-  const testDefinition: MetapageDefinitionV2 = await getMetapageDefinitionFromUrl("https://metapage.io/m/6e3f0110d6054b778c3c089965b4e04b");
+  const testDefinition: MetapageDefinitionV2 =
+    await getMetapageDefinitionFromUrl(
+      "https://metapage.io/m/6e3f0110d6054b778c3c089965b4e04b",
+    );
 
   beforeEach(async () => {
     metapage = new Metapage();
@@ -41,7 +48,9 @@ describe("Metapage secrets injection", async () => {
     expect(metaframe).toBeDefined();
     if (metaframe) {
       // The secret should be in the hash
-      expect(getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret1")).toBe(secret1);
+      expect(
+        getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret1"),
+      ).toBe(secret1);
     }
   });
 
@@ -64,8 +73,12 @@ describe("Metapage secrets injection", async () => {
 
     // Verify secrets are not in the definition URL
     const defUrl = definition.metaframes.secret1test.url;
-    expect(getHashParamValueBase64DecodedFromUrl(defUrl, "secret1")).toBeUndefined();
-    expect(getHashParamValueBase64DecodedFromUrl(defUrl, "secret2")).toBeUndefined();
+    expect(
+      getHashParamValueBase64DecodedFromUrl(defUrl, "secret1"),
+    ).toBeUndefined();
+    expect(
+      getHashParamValueBase64DecodedFromUrl(defUrl, "secret2"),
+    ).toBeUndefined();
   });
 
   it("should remove secrets from definition events", async () => {
@@ -82,9 +95,12 @@ describe("Metapage secrets injection", async () => {
     let emittedDefinition: MetapageDefinitionV2 | null = null;
 
     // Listen for definition events
-    metapage.addListener(Metapage.DEFINITION, (event: MetapageEventDefinition) => {
-      emittedDefinition = event.definition;
-    });
+    metapage.addListener(
+      Metapage.DEFINITION,
+      (event: MetapageEventDefinition) => {
+        emittedDefinition = event.definition;
+      },
+    );
 
     metapage.injectSecrets(secrets);
 
@@ -95,8 +111,11 @@ describe("Metapage secrets injection", async () => {
     expect(emittedDefinition).toBeDefined();
     if (emittedDefinition) {
       // Verify secret is not in the emitted definition
-      const defUrl = (emittedDefinition as MetapageDefinitionV2).metaframes.secret1test.url;
-      expect(getHashParamValueBase64DecodedFromUrl(defUrl, "secret1")).toBeUndefined();
+      const defUrl = (emittedDefinition as MetapageDefinitionV2).metaframes
+        .secret1test.url;
+      expect(
+        getHashParamValueBase64DecodedFromUrl(defUrl, "secret1"),
+      ).toBeUndefined();
     }
   });
 
@@ -128,7 +147,7 @@ describe("Metapage secrets injection", async () => {
     // The definition should return the original URL
     const definition = mp.getDefinition();
     expect(definition.metaframes.secret1test.url).toBe(
-      "https://metapage.io/metaframes/passthrough-markdown/#existingParam=value"
+      "https://metapage.io/metaframes/passthrough-markdown/#existingParam=value",
     );
 
     mp.dispose();
@@ -162,15 +181,23 @@ describe("Metapage secrets injection", async () => {
     const metaframe = metapage.getMetaframe("secret1test");
     expect(metaframe).toBeDefined();
     if (metaframe) {
-      expect(getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret1")).toBe("first secret");
-      expect(getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret2")).toBe("second secret");
+      expect(
+        getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret1"),
+      ).toBe("first secret");
+      expect(
+        getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret2"),
+      ).toBe("second secret");
     }
 
     // The definition should not contain any secrets
     const definition = metapage.getDefinition();
     const defUrl = definition.metaframes.secret1test.url;
-    expect(getHashParamValueBase64DecodedFromUrl(defUrl, "secret1")).toBeUndefined();
-    expect(getHashParamValueBase64DecodedFromUrl(defUrl, "secret2")).toBeUndefined();
+    expect(
+      getHashParamValueBase64DecodedFromUrl(defUrl, "secret1"),
+    ).toBeUndefined();
+    expect(
+      getHashParamValueBase64DecodedFromUrl(defUrl, "secret2"),
+    ).toBeUndefined();
   });
 
   it("should handle injecting secrets for non-existent metaframe gracefully", async () => {
@@ -244,24 +271,37 @@ describe("Metapage secrets injection", async () => {
     expect(metaframe2).toBeDefined();
 
     if (metaframe1) {
-      expect(getHashParamValueBase64DecodedFromUrl(metaframe1.url, "secret1")).toBe(firstSecret);
+      expect(
+        getHashParamValueBase64DecodedFromUrl(metaframe1.url, "secret1"),
+      ).toBe(firstSecret);
     }
 
     if (metaframe2) {
-      expect(getHashParamValueBase64DecodedFromUrl(metaframe2.url, "apiKey")).toBe(secondSecret);
+      expect(
+        getHashParamValueBase64DecodedFromUrl(metaframe2.url, "apiKey"),
+      ).toBe(secondSecret);
     }
 
     // The definitions should not contain secrets
     const definition = mp.getDefinition();
-    expect(getHashParamValueBase64DecodedFromUrl(definition.metaframes.frame1.url, "secret1")).toBeUndefined();
-    expect(getHashParamValueBase64DecodedFromUrl(definition.metaframes.frame2.url, "apiKey")).toBeUndefined();
+    expect(
+      getHashParamValueBase64DecodedFromUrl(
+        definition.metaframes.frame1.url,
+        "secret1",
+      ),
+    ).toBeUndefined();
+    expect(
+      getHashParamValueBase64DecodedFromUrl(
+        definition.metaframes.frame2.url,
+        "apiKey",
+      ),
+    ).toBeUndefined();
 
     mp.dispose();
   });
 });
 
 describe("Metapage secrets injection - integration test", () => {
-
   const secret1 = "injected secret";
   const secret2 = "another secret";
 
@@ -301,14 +341,17 @@ describe("Metapage secrets injection - integration test", () => {
       expect(url.hash).toContain("secret1");
 
       // Verify the secret is base64 encoded
-      const decodedSecret = getHashParamValueBase64DecodedFromUrl(url, "secret1");
+      const decodedSecret = getHashParamValueBase64DecodedFromUrl(
+        url,
+        "secret1",
+      );
       expect(decodedSecret).toBe("injected secret");
     }
 
     // The definition should NOT contain the secret
     const definition = metapage.getDefinition();
     expect(definition.metaframes.secret1test.url).toBe(
-      "https://metapage.io/metaframes/passthrough-markdown/"
+      "https://metapage.io/metaframes/passthrough-markdown/",
     );
 
     metapage.dispose();
@@ -344,7 +387,9 @@ describe("Metapage secrets injection - integration test", () => {
     let metaframe = metapage.getMetaframe("secret1test");
     expect(metaframe).toBeDefined();
     if (metaframe) {
-      expect(getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret1")).toBe(secret1);
+      expect(
+        getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret1"),
+      ).toBe(secret1);
     }
 
     // Now update the definition with a new (non-base64) hash param
@@ -363,15 +408,24 @@ describe("Metapage secrets injection - integration test", () => {
     metaframe = metapage.getMetaframe("secret1test");
     expect(metaframe).toBeDefined();
     if (metaframe) {
-      expect(getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret1")).toBe(secret1);
+      expect(
+        getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret1"),
+      ).toBe(secret1);
       // And the new param should also be there (plain value, not base64)
       expect(getHashParamValue(metaframe.url, "newParam")).toBe("value");
     }
 
     // But getDefinition should return URL with newParam but without the secret
     const definition = metapage.getDefinition();
-    expect(getHashParamValue(definition.metaframes.secret1test.url, "newParam")).toBe("value");
-    expect(getHashParamValueBase64DecodedFromUrl(definition.metaframes.secret1test.url, "secret1")).toBeUndefined();
+    expect(
+      getHashParamValue(definition.metaframes.secret1test.url, "newParam"),
+    ).toBe("value");
+    expect(
+      getHashParamValueBase64DecodedFromUrl(
+        definition.metaframes.secret1test.url,
+        "secret1",
+      ),
+    ).toBeUndefined();
 
     metapage.dispose();
   });
@@ -424,12 +478,21 @@ describe("Metapage secrets injection - integration test", () => {
 
       // The metaframe URL should have both the user's param AND the secret
       expect(getHashParamValue(metaframe.url, "userParam")).toBe("userValue");
-      expect(getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret1")).toBe(secret1);
+      expect(
+        getHashParamValueBase64DecodedFromUrl(metaframe.url, "secret1"),
+      ).toBe(secret1);
 
       // But the definition should have the user's param but NOT the secret
       const definition = metapage.getDefinition();
-      expect(getHashParamValue(definition.metaframes.secret1test.url, "userParam")).toBe("userValue");
-      expect(getHashParamValueBase64DecodedFromUrl(definition.metaframes.secret1test.url, "secret1")).toBeUndefined();
+      expect(
+        getHashParamValue(definition.metaframes.secret1test.url, "userParam"),
+      ).toBe("userValue");
+      expect(
+        getHashParamValueBase64DecodedFromUrl(
+          definition.metaframes.secret1test.url,
+          "secret1",
+        ),
+      ).toBeUndefined();
     }
 
     metapage.dispose();
@@ -467,12 +530,16 @@ describe("Metapage secrets injection - integration test", () => {
     let metaframe = metapage.getMetaframe("secret1test");
     expect(metaframe).toBeDefined();
     if (metaframe) {
-      expect(getHashParamValueBase64DecodedFromUrl(metaframe.url, "existingParam")).toBe("replaced secret");
+      expect(
+        getHashParamValueBase64DecodedFromUrl(metaframe.url, "existingParam"),
+      ).toBe("replaced secret");
     }
 
     // But getDefinition should return the original value (raw, not decoded)
     const definition = metapage.getDefinition();
-    expect(getHashParamValue(definition.metaframes.secret1test.url, "existingParam")).toBe(originalParam);
+    expect(
+      getHashParamValue(definition.metaframes.secret1test.url, "existingParam"),
+    ).toBe(originalParam);
 
     metapage.dispose();
   });
@@ -480,7 +547,10 @@ describe("Metapage secrets injection - integration test", () => {
 
 describe("Metapage query params secrets injection", async () => {
   let metapage: Metapage;
-  const testDefinition: MetapageDefinitionV2 = await getMetapageDefinitionFromUrl("https://metapage.io/m/6e3f0110d6054b778c3c089965b4e04b");
+  const testDefinition: MetapageDefinitionV2 =
+    await getMetapageDefinitionFromUrl(
+      "https://metapage.io/m/6e3f0110d6054b778c3c089965b4e04b",
+    );
 
   beforeEach(async () => {
     metapage = new Metapage();
@@ -571,7 +641,9 @@ describe("Metapage query params secrets injection", async () => {
       const url = new URL(metaframe.url);
 
       // Check hash param
-      expect(getHashParamValueBase64DecodedFromUrl(url, "secret1")).toBe("hash secret");
+      expect(getHashParamValueBase64DecodedFromUrl(url, "secret1")).toBe(
+        "hash secret",
+      );
 
       // Check query param
       const apiKey = url.searchParams.get("apiKey");
@@ -586,7 +658,12 @@ describe("Metapage query params secrets injection", async () => {
     const definition = metapage.getDefinition();
     const defUrl = new URL(definition.metaframes.secret1test.url);
 
-    expect(getHashParamValueBase64DecodedFromUrl(definition.metaframes.secret1test.url, "secret1")).toBeUndefined();
+    expect(
+      getHashParamValueBase64DecodedFromUrl(
+        definition.metaframes.secret1test.url,
+        "secret1",
+      ),
+    ).toBeUndefined();
     expect(defUrl.searchParams.get("apiKey")).toBeNull();
   });
 
