@@ -23,8 +23,8 @@
   ],
   "source": "src/index.ts",
   "dependencies": {
+    "@metapages/hash-query": "^0.9.12",
     "@metapages/dataref": "^2.0.1",
-    "@metapages/hash-query": "^0.9.8",
     "base64-arraybuffer": "^1.0.2",
     "compare-versions": "^6.1.1",
     "eventemitter3": "^4.0.0",
@@ -59,8 +59,8 @@
   "scripts": {
     "build": "just build",
     "format": "npx prettier . --write",
-    "test": "vitest run",
-    "test-watch": "vitest",
+    "test": "vitest run --config=vitest.browser.config.ts",
+    "test-watch": "vitest --config=vitest.browser.config.ts",
     "test:browser": "vitest --config=vitest.browser.config.ts",
     "verify": "node test-jsdelivr-bundle.mjs"
   },

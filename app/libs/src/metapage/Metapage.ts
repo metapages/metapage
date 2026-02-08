@@ -1,6 +1,10 @@
 import { ListenerFn } from "eventemitter3";
 import { create } from "mutative";
 import picomatch from "picomatch/posix";
+import {
+  setHashParamValueBase64EncodedInUrl,
+  getHashParamValueBase64DecodedFromUrl,
+} from "@metapages/hash-query";
 
 import { VERSION_METAPAGE } from "./Constants";
 import {
@@ -46,6 +50,19 @@ interface MetapageStatePartial {
 export interface MetapageState {
   metaframes: MetapageStatePartial;
 }
+
+export type InjectSecretsPayload = {
+  frameSecrets: {
+    [metaframeName: string]: {
+      hashParams?: {
+        [name: string]: string;
+      };
+      queryParams?: {
+        [name: string]: string;
+      };
+    };
+  };
+};
 
 const emptyState: MetapageState = create<MetapageState>(
   {
@@ -150,6 +167,25 @@ export class Metapage extends MetapageShared {
 
   debug: boolean = isDebugFromUrlsParams();
   _consoleBackgroundColor: string;
+
+  // Store the original hash param values (before secret injection) for each secret key
+  // undefined means the key didn't exist originally
+  _originalSecretHashParams: {
+    [metaframeId: string]: { [secretKey: string]: string | undefined };
+  } = {};
+  // Store the original query param values (before secret injection) for each secret key
+  // undefined means the key didn't exist originally
+  _originalSecretQueryParams: {
+    [metaframeId: string]: { [secretKey: string]: string | undefined };
+  } = {};
+  // Store injected hash param secrets
+  _injectedSecrets: {
+    [metaframeId: string]: { [key: string]: string };
+  } = {};
+  // Store injected query param secrets
+  _injectedQuerySecrets: {
+    [metaframeId: string]: { [key: string]: string };
+  } = {};
 
   // Useful for debugging duplicate messages
   _internalReceivedMessageCounter: number = 0;
@@ -321,7 +357,202 @@ export class Metapage extends MetapageShared {
   }
 
   public getDefinition(): MetapageDefinitionV2 {
-    return this._definition;
+    return this._getDefinitionWithoutSecrets();
+  }
+
+  /**
+   * Inject secrets into metaframe URLs via hash parameters and/or query parameters.
+   * Secrets are base64-encoded and added to the metaframe URLs.
+   * The original param values are preserved and restored when returning definitions.
+   * Multiple calls to this method will accumulate secrets.
+   *
+   * @param secrets - Object mapping metaframe names to their secret hash/query parameters
+   */
+  public injectSecrets(secrets: InjectSecretsPayload): void {
+    if (!secrets?.frameSecrets) {
+      return;
+    }
+
+    Object.entries(secrets.frameSecrets).forEach(([metaframeName, config]) => {
+      const metaframe = this._metaframes[metaframeName];
+      if (!metaframe) {
+        this.log(
+          `Warning: Cannot inject secrets for unknown metaframe: ${metaframeName}`,
+        );
+        return;
+      }
+
+      // Initialize storage for this metaframe if needed
+      if (!this._injectedSecrets[metaframeName]) {
+        this._injectedSecrets[metaframeName] = {};
+      }
+      if (!this._injectedQuerySecrets[metaframeName]) {
+        this._injectedQuerySecrets[metaframeName] = {};
+      }
+      if (!this._originalSecretHashParams[metaframeName]) {
+        this._originalSecretHashParams[metaframeName] = {};
+      }
+      if (!this._originalSecretQueryParams[metaframeName]) {
+        this._originalSecretQueryParams[metaframeName] = {};
+      }
+
+      const currentUrl = new URL(metaframe.url);
+
+      // Store original hash param values and the new secrets
+      if (config.hashParams) {
+        Object.entries(config.hashParams).forEach(([key, value]) => {
+          // Only store original value if we haven't already stored it
+          if (!(key in this._originalSecretHashParams[metaframeName])) {
+            // Get the current value (if any) before injecting the secret
+            const originalValue = getHashParamValueBase64DecodedFromUrl(
+              currentUrl,
+              key,
+            );
+            this._originalSecretHashParams[metaframeName][key] =
+              originalValue || undefined;
+          }
+          this._injectedSecrets[metaframeName][key] = value;
+        });
+      }
+
+      // Store original query param values and the new secrets
+      if (config.queryParams) {
+        Object.entries(config.queryParams).forEach(([key, value]) => {
+          // Only store original value if we haven't already stored it
+          if (!(key in this._originalSecretQueryParams[metaframeName])) {
+            // Get the current value (if any) before injecting the secret
+            const originalValue = currentUrl.searchParams.get(key);
+            this._originalSecretQueryParams[metaframeName][key] =
+              originalValue || undefined;
+          }
+          this._injectedQuerySecrets[metaframeName][key] = value;
+        });
+      }
+
+      // Inject all accumulated secrets into the URL
+      let url: URL = new URL(metaframe.url);
+
+      // Inject hash param secrets
+      Object.entries(this._injectedSecrets[metaframeName]).forEach(
+        ([key, value]) => {
+          url = new URL(
+            setHashParamValueBase64EncodedInUrl(url.href, key, value),
+          );
+        },
+      );
+
+      // Inject query param secrets (base64 encoded)
+      Object.entries(this._injectedQuerySecrets[metaframeName]).forEach(
+        ([key, value]) => {
+          const encoded = btoa(encodeURIComponent(value));
+          url.searchParams.set(key, encoded);
+        },
+      );
+
+      // Update the metaframe URL with the injected secrets
+      metaframe.url = url.href;
+
+      // Update the definition as well
+      if (this._definition?.metaframes?.[metaframeName]) {
+        this._definition = create(this._definition, (draft) => {
+          draft.metaframes[metaframeName].url = url.href;
+        });
+      }
+    });
+  }
+
+  /**
+   * Helper method to get the definition without any injected secrets.
+   * Returns the definition with secret hash/query params replaced by their original values.
+   */
+  private _getDefinitionWithoutSecrets(): MetapageDefinitionV2 {
+    if (
+      Object.keys(this._injectedSecrets).length === 0 &&
+      Object.keys(this._injectedQuerySecrets).length === 0
+    ) {
+      // No secrets have been injected, return the current definition
+      return this._definition;
+    }
+
+    // Create a copy of the definition with secrets removed/replaced
+    return create(this._definition, (draft) => {
+      // Process all metaframes that have either hash or query secrets
+      const allMetaframesWithSecrets = new Set([
+        ...Object.keys(this._injectedSecrets),
+        ...Object.keys(this._injectedQuerySecrets),
+      ]);
+
+      allMetaframesWithSecrets.forEach((metaframeName) => {
+        if (!draft.metaframes?.[metaframeName]) {
+          return;
+        }
+
+        const metaframe = this._metaframes[metaframeName];
+        if (!metaframe) {
+          return;
+        }
+
+        let cleanUrl = metaframe.url;
+
+        // Handle hash param secrets
+        const hashSecrets = this._injectedSecrets[metaframeName] || {};
+        const originalHashParams =
+          this._originalSecretHashParams[metaframeName] || {};
+
+        Object.keys(hashSecrets).forEach((secretKey) => {
+          const originalValue = originalHashParams[secretKey];
+          if (originalValue === undefined) {
+            // This key didn't exist originally, remove it
+            const url = new URL(cleanUrl);
+            let hashStr = url.hash.startsWith("#?")
+              ? url.hash.slice(2)
+              : url.hash.slice(1);
+            // Replace ? with & in case the hash uses ? as a separator
+            hashStr = hashStr.replace(/\?/g, "&");
+            const hashParams = new URLSearchParams(hashStr);
+            hashParams.delete(secretKey);
+            const newHashStr = hashParams.toString();
+            url.hash = newHashStr
+              ? url.hash.startsWith("#?")
+                ? `?${newHashStr}`
+                : newHashStr
+              : "";
+            cleanUrl = url.href;
+          } else {
+            // This key had an original value, restore it
+            const restoredUrl = setHashParamValueBase64EncodedInUrl(
+              cleanUrl,
+              secretKey,
+              originalValue,
+            );
+            cleanUrl =
+              typeof restoredUrl === "string" ? restoredUrl : restoredUrl.href;
+          }
+        });
+
+        // Handle query param secrets
+        const querySecrets = this._injectedQuerySecrets[metaframeName] || {};
+        const originalQueryParams =
+          this._originalSecretQueryParams[metaframeName] || {};
+
+        Object.keys(querySecrets).forEach((secretKey) => {
+          const originalValue = originalQueryParams[secretKey];
+          const tempUrl = new URL(cleanUrl);
+
+          if (originalValue === undefined) {
+            // This key didn't exist originally, remove it
+            tempUrl.searchParams.delete(secretKey);
+          } else {
+            // This key had an original value, restore it as-is (not base64-encoded)
+            tempUrl.searchParams.set(secretKey, originalValue);
+          }
+
+          cleanUrl = tempUrl.href;
+        });
+
+        draft.metaframes[metaframeName].url = cleanUrl;
+      });
+    });
   }
 
   public async setDefinition(
@@ -357,6 +588,12 @@ export class Metapage extends MetapageShared {
     // If there is not an earlier definition, we don't fire an event
     const previousDefinition = this._definition;
 
+    // Save the current secrets before updating the definition
+    const savedSecrets = { ...this._injectedSecrets };
+    const savedQuerySecrets = { ...this._injectedQuerySecrets };
+    const savedOriginalParams = { ...this._originalSecretHashParams };
+    const savedOriginalQueryParams = { ...this._originalSecretQueryParams };
+
     this._definition = newDefinition;
     // try to be efficient with the new definition.
     // destroy any metaframes not in the new definition
@@ -383,6 +620,76 @@ export class Metapage extends MetapageShared {
         }
       });
     }
+
+    // Re-inject secrets for metaframes that still exist or were just created
+    const allMetaframesWithSecrets = new Set([
+      ...Object.keys(savedSecrets),
+      ...Object.keys(savedQuerySecrets),
+    ]);
+
+    allMetaframesWithSecrets.forEach((metaframeName) => {
+      if (this._metaframes[metaframeName]) {
+        const hashSecrets = savedSecrets[metaframeName] || {};
+        const querySecrets = savedQuerySecrets[metaframeName] || {};
+
+        // Start from the NEW definition URL (which may have new params)
+        const metaframe = this._metaframes[metaframeName];
+        const newDefinitionUrl =
+          this._definition?.metaframes?.[metaframeName]?.url;
+        if (!newDefinitionUrl) return;
+
+        let url = new URL(newDefinitionUrl);
+
+        // Update original params storage with any existing values from the new URL
+        // that will be replaced by secrets
+        if (Object.keys(hashSecrets).length > 0) {
+          const originalParams = savedOriginalParams[metaframeName] || {};
+          Object.keys(hashSecrets).forEach((secretKey) => {
+            const existingValue = getHashParamValueBase64DecodedFromUrl(
+              url.href,
+              secretKey,
+            );
+            originalParams[secretKey] = existingValue;
+          });
+          this._injectedSecrets[metaframeName] = hashSecrets;
+          this._originalSecretHashParams[metaframeName] = originalParams;
+        }
+
+        if (Object.keys(querySecrets).length > 0) {
+          const originalQueryParams =
+            savedOriginalQueryParams[metaframeName] || {};
+          Object.keys(querySecrets).forEach((secretKey) => {
+            const existingValue = url.searchParams.get(secretKey);
+            // Store the raw value (not base64-decoded) since it's from the new definition
+            originalQueryParams[secretKey] = existingValue || undefined;
+          });
+          this._injectedQuerySecrets[metaframeName] = querySecrets;
+          this._originalSecretQueryParams[metaframeName] = originalQueryParams;
+        }
+
+        // Re-inject hash param secrets
+        Object.entries(hashSecrets).forEach(([key, value]) => {
+          url = new URL(
+            setHashParamValueBase64EncodedInUrl(url.href, key, value),
+          );
+        });
+
+        // Re-inject query param secrets
+        Object.entries(querySecrets).forEach(([key, value]) => {
+          const encoded = btoa(encodeURIComponent(value));
+          url.searchParams.set(key, encoded);
+        });
+
+        metaframe.url = url.href;
+
+        // Update the definition with secrets
+        if (this._definition?.metaframes?.[metaframeName]) {
+          this._definition = create(this._definition, (draft) => {
+            draft.metaframes[metaframeName].url = url.href;
+          });
+        }
+      }
+    });
 
     // TODO: fire the event anyway, but use immutable state so we
     // can do a quick compare
@@ -419,7 +726,7 @@ export class Metapage extends MetapageShared {
   _emitDefinitionEvent() {
     if (this.listenerCount(MetapageEvents.Definition) > 0) {
       const event: MetapageEventDefinition = {
-        definition: this._definition,
+        definition: this._getDefinitionWithoutSecrets(),
         metaframes: this._metaframes,
       };
       this.emit(MetapageEvents.Definition, event);
@@ -472,6 +779,12 @@ export class Metapage extends MetapageShared {
       });
     });
 
+    // Clean up secrets storage for this metaframe
+    delete this._injectedSecrets[metaframeId];
+    delete this._injectedQuerySecrets[metaframeId];
+    delete this._originalSecretHashParams[metaframeId];
+    delete this._originalSecretQueryParams[metaframeId];
+
     // This will regenerate, simpler than surgery
     this._cachedInputLookupMap = create({}, (draft) => draft);
   }
@@ -486,6 +799,11 @@ export class Metapage extends MetapageShared {
     this._state = emptyState;
     this._inputMap = create({}, (draft) => draft);
     this._cachedInputLookupMap = create({}, (draft) => draft);
+    // Clean up all secrets
+    this._injectedSecrets = {};
+    this._injectedQuerySecrets = {};
+    this._originalSecretHashParams = {};
+    this._originalSecretQueryParams = {};
   }
 
   public metaframes() {
@@ -1172,16 +1490,108 @@ export class Metapage extends MetapageShared {
           //     context to decide wether to re-render or recreate
           const hashParamsUpdatePayload: MetapageEventUrlHashUpdate =
             jsonrpc.params;
-          const url = new URL(metaframe.url);
+          const metaframeName = hashParamsUpdatePayload.metaframe;
+          let url = new URL(metaframe.url);
           url.hash = hashParamsUpdatePayload.hash;
-          // Update the local metaframe client reference
+
+          // Re-inject hash param secrets into the new URL if any were injected
+          if (this._injectedSecrets[metaframeName]) {
+            Object.entries(this._injectedSecrets[metaframeName]).forEach(
+              ([key, value]) => {
+                url = new URL(
+                  setHashParamValueBase64EncodedInUrl(url.href, key, value),
+                );
+              },
+            );
+          }
+
+          // Re-inject query param secrets
+          if (this._injectedQuerySecrets[metaframeName]) {
+            Object.entries(this._injectedQuerySecrets[metaframeName]).forEach(
+              ([key, value]) => {
+                const encoded = btoa(encodeURIComponent(value));
+                url.searchParams.set(key, encoded);
+              },
+            );
+          }
+
+          // Update the local metaframe client reference (with secrets)
           metaframe.url = url.href;
-          // Update the definition in place
+
+          // Update the definition in place (without secrets)
+          // Use the same logic as _getDefinitionWithoutSecrets
+          let cleanUrlStr = url.href;
+
+          // Remove/restore hash param secrets
+          if (this._injectedSecrets[metaframeName]) {
+            const originalParams =
+              this._originalSecretHashParams[metaframeName] || {};
+
+            Object.keys(this._injectedSecrets[metaframeName]).forEach(
+              (secretKey) => {
+                const originalValue = originalParams[secretKey];
+                if (originalValue === undefined) {
+                  // This key didn't exist originally, remove it
+                  const tempUrl = new URL(cleanUrlStr);
+                  let hashStr = tempUrl.hash.startsWith("#?")
+                    ? tempUrl.hash.slice(2)
+                    : tempUrl.hash.slice(1);
+                  // Replace ? with & in case the hash uses ? as a separator
+                  hashStr = hashStr.replace(/\?/g, "&");
+                  const hashParams = new URLSearchParams(hashStr);
+                  hashParams.delete(secretKey);
+                  const newHashStr = hashParams.toString();
+                  tempUrl.hash = newHashStr
+                    ? tempUrl.hash.startsWith("#?")
+                      ? `?${newHashStr}`
+                      : newHashStr
+                    : "";
+                  cleanUrlStr = tempUrl.href;
+                } else {
+                  // This key had an original value, restore it
+                  const restoredUrl = setHashParamValueBase64EncodedInUrl(
+                    cleanUrlStr,
+                    secretKey,
+                    originalValue,
+                  );
+                  cleanUrlStr =
+                    typeof restoredUrl === "string"
+                      ? restoredUrl
+                      : restoredUrl.href;
+                }
+              },
+            );
+          }
+
+          // Remove/restore query param secrets
+          if (this._injectedQuerySecrets[metaframeName]) {
+            const originalQueryParams =
+              this._originalSecretQueryParams[metaframeName] || {};
+
+            Object.keys(this._injectedQuerySecrets[metaframeName]).forEach(
+              (secretKey) => {
+                const originalValue = originalQueryParams[secretKey];
+                const tempUrl = new URL(cleanUrlStr);
+
+                if (originalValue === undefined) {
+                  // This key didn't exist originally, remove it
+                  tempUrl.searchParams.delete(secretKey);
+                } else {
+                  // This key had an original value, restore it as-is (not base64-encoded)
+                  tempUrl.searchParams.set(secretKey, originalValue);
+                }
+
+                cleanUrlStr = tempUrl.href;
+              },
+            );
+          }
+
+          const cleanUrl = new URL(cleanUrlStr);
+
           this._definition = create<MetapageDefinitionV2>(
             this._definition,
             (draft) => {
-              draft.metaframes[hashParamsUpdatePayload.metaframe].url =
-                url.href;
+              draft.metaframes[metaframeName].url = cleanUrl.href;
             },
           );
 
