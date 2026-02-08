@@ -14,7 +14,7 @@ import { MetapageDefinitionV2 } from "./v2/metapage.js";
  */
 export const merge = (
   current: MetaframeInputMap,
-  newInputs: MetaframeInputMap,
+  newInputs: MetaframeInputMap
 ): MetaframeInputMap => {
   if (!newInputs) {
     return current;
@@ -33,21 +33,21 @@ export const merge = (
 };
 
 export const getUrlParam = (key: MetapageHashParams): string | null => {
-  if (!window.location.search) {
+  if (!globalThis?.location.search) {
     return null;
   }
-  return new URLSearchParams(window.location.search).get(key);
+  return new URLSearchParams(globalThis.location.search).get(key);
 };
 
 export const getUrlParamDebug = (): boolean => {
-  return new URLSearchParams(window.location.search).has(
-    MetapageHashParams.mp_debug,
+  return new URLSearchParams(globalThis.location.search).has(
+    MetapageHashParams.mp_debug
   );
 };
 
 export const isDebugFromUrlsParams = (): boolean => {
-  const param = new URLSearchParams(window.location.search).get(
-    MetapageHashParams.mp_debug,
+  const param = new URLSearchParams(globalThis?.location?.search).get(
+    MetapageHashParams.mp_debug
   );
   return param === "true" || param === "1";
 };
@@ -94,9 +94,9 @@ export const log = (o: any, color?: string, backgroundColor?: string) => {
       cssstring = `${cssstring}; background: #${backgroundColor}`;
     }
     s = `%c${s}`;
-    window.console.log(s, cssstring);
+    globalThis.console.log(s, cssstring);
   } else {
-    window.console.log(s);
+    globalThis.console.log(s);
   }
 };
 
@@ -120,11 +120,11 @@ export const intToRGB = (i: number): string => {
 
 export const isPageLoaded = (): boolean => {
   return (
-    document.readyState == "complete" || document.readyState == "interactive"
+    globalThis?.document?.readyState == "complete" || globalThis?.document?.readyState == "interactive"
   );
   // https://stackoverflow.com/questions/13364613/how-to-know-if-window-load-event-was-fired-already/28093606
   // // TODO ugh casting here but I can't seem to get the right type with the loadEventEnd
-  // return window.performance.getEntriesByType("navigation").every((e) => { return (e as PerformanceNavigationTiming).loadEventEnd > 0 });
+  // return globalThis.performance.getEntriesByType("navigation").every((e) => { return (e as PerformanceNavigationTiming).loadEventEnd > 0 });
 };
 
 export const pageLoaded = async (): Promise<void> => {
@@ -137,7 +137,7 @@ export const pageLoaded = async (): Promise<void> => {
       return;
     }
     let loaded = false;
-    window.addEventListener("load", () => {
+    globalThis?.addEventListener("load", () => {
       if (loaded) {
         return;
       }
@@ -160,7 +160,7 @@ export const metapageAllSha256Hash = async (metapage: MetapageDefinitionV2) => {
 };
 
 export const metapageOnlyEssentailSha256Hash = async (
-  metapage: Pick<MetapageDefinitionV2, "metaframes" | "version">,
+  metapage: Pick<MetapageDefinitionV2, "metaframes" | "version">
 ) => {
   const metapageStr = stringify({
     version: metapage.version,

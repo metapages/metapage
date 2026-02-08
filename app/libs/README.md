@@ -378,6 +378,91 @@ metaframe.onInput("image", async (data) => {
 });
 ```
 
+## Secrets
+
+Inject sensitive credentials (API keys, tokens, etc.) into metaframe URLs at runtime while ensuring they are never exposed when retrieving the metapage definition.
+
+### API
+
+```typescript
+import { Metapage, InjectSecretsPayload } from "@metapages/metapage";
+
+const metapage = new Metapage();
+await metapage.setDefinition(definition);
+
+const secrets: InjectSecretsPayload = {
+  frameSecrets: {
+    myMetaframe: {
+      hashParams: {
+        apiKey: "sk-abc123",
+        token: "secret-token",
+      },
+      queryParams: {
+        auth: "bearer-token",
+      },
+    },
+  },
+};
+
+metapage.injectSecrets(secrets);
+```
+
+### Type Definition
+
+```typescript
+type InjectSecretsPayload = {
+  frameSecrets: {
+    [metaframeName: string]: {
+      hashParams?: { [name: string]: string };
+      queryParams?: { [name: string]: string };
+    };
+  };
+};
+```
+
+### Behavior
+
+- **Injection**: Secrets are base64-encoded into metaframe URL hash/query parameters using `setHashParamValueBase64EncodedInUrl` from `@metapages/hash-query`
+- **Accumulation**: Multiple calls to `injectSecrets()` accumulate secrets rather than replacing previous ones
+- **Safe removal**: `getDefinition()` and definition change events automatically strip secrets, restoring original parameter values
+- **Persistence across updates**: Secrets survive `setDefinition()` calls — if a metaframe still exists in the new definition, its secrets are re-injected
+- **Cleanup**: Secrets are removed when metaframes are removed via `removeMetaframe()` or `removeAll()`
+
+### Example
+
+```typescript
+const metapage = new Metapage();
+await metapage.setDefinition(definition);
+
+// Inject a secret
+metapage.injectSecrets({
+  frameSecrets: {
+    secret1test: {
+      hashParams: {
+        secret1: "injected secret",
+      },
+    },
+  },
+});
+
+// The metaframe iframe URL now contains the secret (base64-encoded in hash)
+// But getDefinition() returns the original URL without secrets:
+const def = metapage.getDefinition();
+// def.metaframes.secret1test.url has NO secret params
+
+// Definition events also exclude secrets:
+metapage.on(Metapage.DEFINITION, (cleanDef) => {
+  // cleanDef has no secrets
+});
+```
+
+### Security Notes
+
+- Secrets are base64-encoded (not encrypted) in URLs
+- Metaframe iframes receive secrets via their URL hash/query params at runtime
+- Secrets are stripped from all definition retrieval methods and events
+- Secret storage is cleared on `dispose()`
+
 ## API Overview
 
 ### renderMetapage(options)
@@ -403,6 +488,7 @@ Render a metapage into a DOM element.
 
 - `setInputs(inputs)`: Set inputs for metaframes
 - `getState()`: Get current state (inputs/outputs)
+- `injectSecrets(secrets)`: Inject secrets into metaframe URLs (see [Secrets](#secrets))
 - `dispose()`: Clean up and remove all listeners
 - `on(event, handler)`: Listen to events
 
