@@ -43,6 +43,11 @@ jobs:
         with:
           deno-version: '2.5.6'
 
+      - name: Install sd (better sed)
+        run: |
+          curl -sSL https://github.com/chmln/sd/releases/download/v1.0.0/sd-v1.0.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
+          sudo mv sd-v1.0.0-x86_64-unknown-linux-gnu/sd /usr/local/bin/
+
       - name: publish module
         id: publish
         run: |
@@ -71,14 +76,6 @@ jobs:
             --title "v$VERSION" \
             --generate-notes \
             --verify-tag
-
-      # - name: Install sd (better sed)
-      #   run: sudo apt install -y rust-sd
-
-      - name: Install sd (better sed)
-        run: |
-          curl -sSL https://github.com/chmln/sd/releases/download/v1.0.0/sd-v1.0.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
-          sudo mv sd-v1.0.0-x86_64-unknown-linux-gnu/sd /usr/local/bin/
 
       - name: deploy worker
         env:
