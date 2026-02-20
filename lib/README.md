@@ -39,7 +39,6 @@ import {
 } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
 ```
 
-
 ## Quick Start
 
 ### Rendering a Metapage
