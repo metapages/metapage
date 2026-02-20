@@ -5,9 +5,9 @@ import {
   convertMetaframeJsonToCurrentVersion,
   normalizeHashParams,
   MetapageDefinitionV1,
-  MetapageDefinitionV2,
+  MetapageDefinition,
   MetapageVersionCurrent,
-  MetaframeDefinitionV2,
+  MetaframeDefinition,
   HashParamsObject,
   detectMetapageVersion,
   detectMetaframeVersion,
@@ -47,8 +47,7 @@ const ExampleMetapageDefinitionV1: MetapageDefinitionV1 = {
   },
 };
 
-const ExampleMetapageDefinitionV2: MetapageDefinitionV2 = {
-  version: "2",
+const ExampleMetapageDefinitionV2: MetapageDefinition = {
   metaframes: {
     mf1: {
       id: "obsolete",
@@ -117,8 +116,7 @@ describe("hashParams normalization", () => {
 
   describe("convertMetaframeJsonToCurrentVersion with hashParams", () => {
     it("normalizes array hashParams during conversion", async () => {
-      const definition: MetaframeDefinitionV2 = {
-        version: "2",
+      const definition: MetaframeDefinition = {
         metadata: { name: "Test Metaframe" },
         hashParams: ["param1", "param2"],
       };
@@ -136,8 +134,7 @@ describe("hashParams normalization", () => {
         param1: { type: "string", label: "Parameter 1" },
         param2: { type: "number", description: "A numeric param", value: 42 },
       };
-      const definition: MetaframeDefinitionV2 = {
-        version: "2",
+      const definition: MetaframeDefinition = {
         metadata: { name: "Test Metaframe" },
         hashParams,
       };
@@ -148,8 +145,7 @@ describe("hashParams normalization", () => {
     });
 
     it("handles definition without hashParams", async () => {
-      const definition: MetaframeDefinitionV2 = {
-        version: "2",
+      const definition: MetaframeDefinition = {
         metadata: { name: "Test Metaframe" },
       };
 

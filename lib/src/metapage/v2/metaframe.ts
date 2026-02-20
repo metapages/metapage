@@ -1,6 +1,6 @@
-import { VersionsMetaframe } from "../versions.js";
 import { MetaframePipeDefinition } from "../v0_4/index.js";
 import { MetaframeOperationsV1 } from "../v1/metaframe.js";
+import { VersionsMetaframe } from "../versions.js";
 
 // Hash parameter types
 export type HashParamType =
@@ -38,7 +38,7 @@ export type MetaframeMetadataV2 = {
 };
 
 export interface MetaframeDefinitionV2 {
-  version: VersionsMetaframe;
+  version?: VersionsMetaframe;
   inputs?: {
     [key: string]: MetaframePipeDefinition;
   }; // <MetaframePipeId, MetaframePipeDefinition>

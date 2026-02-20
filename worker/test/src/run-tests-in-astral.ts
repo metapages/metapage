@@ -2,7 +2,7 @@
  * CLI flags:
  *   --debug-metapage             Turn on metapage+metaframe debugging (debug=1 in the URL query params), very verbose. For metapage/metaframe internal issues
  *   --browser-console-stdout     Pipe the browser console output to stdout (for iterative debugging)
- *   --no-local-build             Disable checks on the locally built libs (useful for debugging), so only already published (and hopefully already tested) versions
+ *   --no-local-build             Disable checks on the locally built  (useful for debugging), so only already published (and hopefully already tested) versions
  *   --disable-headless           Show the actual browser window (rather than headless), for easier debugging
  *
  * Run the full set of tests:

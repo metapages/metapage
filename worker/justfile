@@ -58,7 +58,7 @@ build: _build_local_module
   echo "✅ worker typescript compilation"
 
 @_build_local_module:
-  just ../libs/build
+  just ../lib/build
 
 @_ensure_deployctl:
   if ! command -v deployctl &> /dev/null; then echo '‼️ 👉 deployctl is being installed ‼️'; deno install -gArf jsr:@deno/deployctl; fi

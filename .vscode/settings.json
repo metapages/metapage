@@ -7,9 +7,9 @@
     "**/node_modules": true,
     "**/static/metapage": true
   },
-  "deno.enable": false,
-  "deno.config": "app/worker/deno.json",
+  "deno.enable": true,
+  "deno.config": "worker/deno.json",
   "deno.enablePaths": [
-    "app/worker"
+    "worker"
   ]
 }

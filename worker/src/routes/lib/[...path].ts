@@ -12,7 +12,7 @@ export const handler = async (
 ): Promise<Response> => {
   const url = new URL(_req.url);
   const filepath = decodeURIComponent(url.pathname).replace(/^\/lib\//, "");
-  const fullPath = normalize(`${Deno.cwd()}/../libs/dist/${filepath}`);
+  const fullPath = normalize(`${Deno.cwd()}/../lib/dist/${filepath}`);
 
   try {
     const response = await serveFile(_req, fullPath);

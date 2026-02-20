@@ -1,5 +1,8 @@
 # Architecture and diagrams
 
+- `lib`: code for generated `@metapages/metapage` library
+- `worker`: service for tests and converting versions
+
 ## `metapage` <-> `metaframe` initialization via [window.postMessage](https://developer.mozilla.org/en-US/docs/Web/API/Window/postMessage)
 
 This process can only start when the `metapage` consumer adds the child `metaframe`.iframe elements to the DOM (iframes elements only start loading when added to the DOM).

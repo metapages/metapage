@@ -44,7 +44,7 @@ deno run -A test/minimal-test.ts
 
 ```bash
 # Run with enhanced debugging
-cd app/worker
+cd worker
 deno task start  # In another terminal
 deno run -A test/src/run-tests-in-astral.ts --browser-console-stdout
 
@@ -58,7 +58,7 @@ deno run -A test/src/run-tests-in-astral.ts --debug-metapage
 ### Run Minimal Test (Recommended)
 
 ```bash
-cd app/worker
+cd worker
 deno task start  # In another terminal
 deno run -A test/minimal-test.ts
 ```
