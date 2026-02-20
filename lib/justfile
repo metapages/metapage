@@ -3,36 +3,42 @@
 ###########################################################################
 # just configuration
 ###########################################################################
-set shell          := ["bash", "-c"]
-set dotenv-load    := true
+
+set shell := ["bash", "-c"]
+set dotenv-load := true
+
 ###########################################################################
 # library configuration
 ###########################################################################
-NPM_MODULE         := `cat package.json | jq -r .name`
-tsc                := "./node_modules/typescript/bin/tsc"
-vite               := "./node_modules/vite/bin/vite.js"
+
+NPM_MODULE := `cat package.json | jq -r .name`
+tsc := "./node_modules/typescript/bin/tsc"
+vite := "./node_modules/vite/bin/vite.js"
+
 # minimal formatting, bold is very useful
-bold               := '\033[1m'
-normal             := '\033[0m'
-green              := "\\e[32m"
-yellow             := "\\e[33m"
-blue               := "\\e[34m"
-magenta            := "\\e[35m"
-grey               := "\\e[90m"
+
+bold := '\033[1m'
+normal := '\033[0m'
+green := "\\e[32m"
+yellow := "\\e[33m"
+blue := "\\e[34m"
+magenta := "\\e[35m"
+grey := "\\e[90m"
 
 _help:
     @just --list --unsorted --list-heading $'Commands:\n'
 
 # Build the production npm distributions in dist/metaframe and dist/metapage
 build: _build
+
 _build: _ensure_npm_modules _build_npm
 
 _build_npm:
     #!/usr/bin/env bash
     set -euo pipefail
-    # Compiles the entire codebase to typescript files in ./dist. Packaged into the npm module '{{NPM_MODULE}}'
+    # Compiles the entire codebase to typescript files in ./dist. Packaged into the npm module '{{ NPM_MODULE }}'
     # How to test installation of the build?
-    {{tsc}} --noEmit
+    {{ tsc }} --noEmit
     echo "✅ typescript check"
     # Set NODE_OPTIONS as env var for CI compatibility (prevents hanging)
     export NODE_OPTIONS='--max_old_space_size=16384'
@@ -41,7 +47,7 @@ _build_npm:
     echo "🔨 Starting vite build..."
     # Use explicit mode for CI and ensure stdin is closed (prevents hanging in CI)
     # The force-exit plugin in vite.config.ts will ensure the process exits properly
-    {{vite}} build --mode production < /dev/null
+    {{ vite }} build --mode production < /dev/null
     echo "✅ vite build"
 
 # watch for file changes, then build ALL into ./dist
@@ -49,12 +55,12 @@ watch: _ensure_npm_modules
     #!/usr/bin/env bash
     set -euo pipefail
     echo "👀 watching and building into ./dist..."
-    {{tsc}} --noEmit
+    {{ tsc }} --noEmit
     echo "✅ typescript check"
-    {{vite}} --watch build
+    {{ vite }} --watch build
 
 @_tsc +args="":
-    {{tsc}} {{args}}
+    {{ tsc }} {{ args }}
 
 fmt +failIfChanged="":
     #!/usr/bin/env bash
@@ -71,7 +77,7 @@ fmt +failIfChanged="":
     fi
 
 # check
-@test-io: 
+@test-io:
     npm run test:browser --browser=chromium
 
 @test-io-watch: _ensure_npm_modules
@@ -85,18 +91,19 @@ test:
 #   1. just dev
 #   2. modify metapage/metaframe code
 #   3. refresh browser window
+
 # recompile metapage/metaframe src on change, and open a browser at the test page for the local metapage test
 dev: _ensure_npm_modules watch
 
-# typescript check 
+# typescript check
 @check: (_tsc "--build")
-    echo -e "✅ {{green}}TypeScript{{normal}} check passed"
+    echo -e "✅ {{ green }}TypeScript{{ normal }} check passed"
 
 # npm link the package in dist for local development. In the other project: 'npm link @metapages/metapage'
 @link:
     if [ ! -d dist ]; then just build; fi
     cd dist && npm link
-    echo -e "👉 in the other project: npm link {{NPM_MODULE}}"
+    echo -e "👉 in the other project: npm link {{ NPM_MODULE }}"
 
 # unlink the package in dist from local development. You probably don't ever need to do this
 @unlink:
@@ -104,7 +111,7 @@ dev: _ensure_npm_modules watch
 
 # List all published versions
 @list:
-    npm view {{NPM_MODULE}} versions --json
+    npm view {{ NPM_MODULE }} versions --json
 
 # Verify package is ready for publishing (checks dist/, npm pack, and jsDelivr bundling)
 verify: _ensure_npm_modules build
@@ -114,15 +121,15 @@ verify: _ensure_npm_modules build
     node test-jsdelivr-bundle.mjs
 
 # If the version does not exist, publish the packages (metaframe+metapage)
-publish: _ensure_npm_modules
+publish: _ensure_npm_modules update-docs-versions check-versions-id-docs
     #!/usr/bin/env bash
     set -euo pipefail
     VERSION=`cat package.json | jq -r '.version'`
     # Check if the package exists, if not this is the first publish
-    if ! npm view {{NPM_MODULE}} version &> /dev/null; then
-        echo "📦 First time publishing {{NPM_MODULE}}"
+    if ! npm view {{ NPM_MODULE }} version &> /dev/null; then
+        echo "📦 First time publishing {{ NPM_MODULE }}"
     else
-        INDEX=`npm view {{NPM_MODULE}} versions --json | jq "index( \"$VERSION\" )"`
+        INDEX=`npm view {{ NPM_MODULE }} versions --json | jq "index( \"$VERSION\" )"`
         if [ "$INDEX" != "null" ]; then
             echo -e '🌳 Version exists, not publishing'
             exit 0
@@ -138,20 +145,51 @@ publish: _ensure_npm_modules
     git tag "v$VERSION"
     git push origin "v$VERSION"
 
+check-versions-id-docs:
+    #!/usr/bin/env bash
+    # Check if the versions are in the docs
+    set -euo pipefail
+    echo "🔍 Checking versions in docs..."
+    # Get the versions from the package.json
+    VERSION=`cat package.json | jq -r '.version'`
+    # Extract all versions used in CDN lines in README.md
+    USED_VERSIONS=$(grep -oE 'https://cdn.jsdelivr.net/npm/@metapages/metapage@([0-9]+\.[0-9]+\.[0-9]+)' README.md | sed -E 's|.*@([0-9]+\.[0-9]+\.[0-9]+)|\1|')
+    EXIT_CODE=0
+    for used in $USED_VERSIONS; do
+      if [[ "$used" != "$VERSION" ]]; then
+        echo -e "❌ Version mismatch: README.md refers to @metapages/metapage@$used but package.json is $$VERSION"
+        EXIT_CODE=1
+      fi
+    done
+    if [[ $EXIT_CODE -ne 0 ]]; then
+      exit $EXIT_CODE
+    fi
+    echo -e "✅ All CDN versions in README.md match package.json ($$VERSION)"
+
+update-docs-versions:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    echo "🔍 Updating docs versions..."
+    # Get the versions from the package.json
+    VERSION=`cat package.json | jq -r '.version'`
+    # Update the versions in the docs
+    sd "https://cdn.jsdelivr.net/npm/@metapages/metapage@[^\s\"']*" "https://cdn.jsdelivr.net/npm/@metapages/metapage@${VERSION}" README.md
+    echo -e "✅ Updated docs versions to $VERSION"
+
 # Unpublish version https://docs.npmjs.com/cli/v7/commands/npm-unpublish
 unpublish version:
     @echo "❗ If this fails: you cannot use .npmrc or NPM_TOKEN, you must 'npm login' 🤷‍♀️"
-    npm unpublish {{NPM_MODULE}}@{{version}}
+    npm unpublish {{ NPM_MODULE }}@{{ version }}
 
 # https://docs.npmjs.com/cli/v7/commands/npm-deprecate
 module_deprecate version +message:
-    npm deprecate {{NPM_MODULE}}@{{version}} "{{message}}"
+    npm deprecate {{ NPM_MODULE }}@{{ version }} "{{ message }}"
 
 # delete all generated assets/files
 @clean:
     mkdir -p dist
     rm -rf dist/*
-    echo -e "✅ Cleaned libs"
+    echo -e "✅ Cleaned lib"
 
 @_ensure_npm_modules:
     if [ ! -d node_modules ]; then npm i; fi

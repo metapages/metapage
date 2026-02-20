@@ -1,5 +1,5 @@
 #################################################################
-# libs image to pull in static assets
+# lib image to pull in static assets
 #################################################################
 
 # You cannot use build args as in: COPY --from=${someval}
@@ -9,7 +9,7 @@
 # ARG DOCKER_REGISTRY
 # ARG DOCKER_IMAGE_PREFIX
 
-# FROM ${DOCKER_REGISTRY}${DOCKER_IMAGE_PREFIX}libs:${DOCKER_TAG} as libs
+# FROM ${DOCKER_REGISTRY}${DOCKER_IMAGE_PREFIX}lib:${DOCKER_TAG} as lib
 
 #################################################################
 # Base image
@@ -65,7 +65,7 @@ RUN bundle update --bundler
 RUN bundle install
 
 ADD . /workspace/docs
-# COPY --from=libs /workspace/libs/dist/@metapage/metapage/browser /workspace/docs/js
+# COPY --from=lib /workspace/lib/dist/@metapage/metapage/browser /workspace/docs/js
 
 RUN mkdir -p /docs && chmod 777 /docs
 RUN JEKYLL_ENV=production bundle exec jekyll build --disable-disk-cache --strict_front_matter --trace --config _config.yml --destination /docs

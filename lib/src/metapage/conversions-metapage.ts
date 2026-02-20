@@ -261,8 +261,11 @@ const definition_v1_to_v2 = (
 };
 
 export const getMatchingMetapageVersion = (
-  version: string,
+  version: string | undefined,
 ): VersionsMetapage => {
+  if (!version) {
+    throw `Missing version`;
+  }
   if (version === "latest") {
     return MetapageVersionCurrent;
   } else if (compareVersions(version, "0.2") < 0) {

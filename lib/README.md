@@ -36,7 +36,7 @@ import {
   renderMetapage,
   Metapage,
   Metaframe,
-} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
+} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
 ```
 
 ## Quick Start
@@ -82,7 +82,7 @@ The `renderMetapage` function the `react-grid-layout` layout in `metapage.json`:
 If you're building a component to use in a metapage:
 
 ```javascript
-import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
+import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
 
 const metaframe = new Metaframe();
 
@@ -107,7 +107,6 @@ A metapage is defined using JSON that specifies which metaframes to load and how
 
 ```javascript
 {
-  "version": "2",
   "metaframes": {
     "input": {
       "url": "https://editor.mtfm.io/#?hm=disabled"
@@ -149,8 +148,7 @@ This is provided either by:
 The definition describes inputs, outputs, security, and the types of hash parameters (so AI tools can correctly modify)
 
 ```typescript
-export interface MetaframeDefinitionV2 {
-  version: VersionsMetaframe;
+export interface MetaframeDefinition {
   inputs?: {
     [key: string]: MetaframePipeDefinition;
   }; // <MetaframePipeId, MetaframePipeDefinition>
@@ -225,7 +223,7 @@ metaframe.onInput("file", (file) => {
     <div id="metapage-container"></div>
 
     <script type="module">
-      import { renderMetapage } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
+      import { renderMetapage } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
 
       const definition = await fetch(
         "https://metapage.io/m/87ae11673508447e883b598bf7da9c5d/metapage.json",
@@ -260,7 +258,7 @@ metaframe.onInput("file", (file) => {
 ### Building a Metaframe Component
 
 ```javascript
-import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
+import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
 
 const metaframe = new Metaframe();
 
@@ -300,7 +298,6 @@ import { Metapage } from "@metapages/metapage";
 
 const metapage = new Metapage({
   definition: {
-    version: "2",
     metaframes: {
       viewer: {
         url: "https://markdown.mtfm.io/",
@@ -338,7 +335,7 @@ Metaframes can read and write to their URL hash parameters:
 import {
   getHashParamValueJsonFromWindow,
   setHashParamValueJsonInWindow,
-} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
+} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
 
 // Read from URL hash
 const config = getHashParamValueJsonFromWindow("config");
@@ -448,7 +445,7 @@ Example minimal metaframe:
   </head>
   <body>
     <script type="module">
-      import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
+      import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
 
       const metaframe = new Metaframe();
 
@@ -472,7 +469,7 @@ import {
   MetapageDefinitionV2,
   MetaframeInputMap,
   MetapageInstanceInputs,
-} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.8.35";
+} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
 
 const definition: MetapageDefinitionV2 = {
   version: "2",

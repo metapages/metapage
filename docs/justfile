@@ -24,7 +24,7 @@ dev:
     sed -i'' 's#^url: .*#url: "https://{{APP_FQDN}}:{{APP_PORT}}"#g' _config.dev.yml
     watchexec -w _config.yml -w _config.dev.template.yml --restart --force-poll 2000 -- JEKYLL_ENV=$JEKYLL_ENV bundle exec jekyll serve --strict_front_matter --trace --watch --force_polling --host 0.0.0.0 --port $APP_PORT --config _config.yml,_config.dev.yml
 
-# Expects ../libs to already be published (just app/libs/(build or publish) )
+# Expects ../lib to already be published (just lib/(build or publish) )
 # build docs website in <../docs/> for https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages
 publish: clean
     #!/usr/bin/env bash
@@ -34,9 +34,9 @@ publish: clean
     git branch --delete -D gh-pages || true
     # create new gh-pages branch this commit
     git checkout -b gh-pages
-    # build dependencies from ../libs
-    just ../libs/build
-    just ../libs/_versions-write-versions-to-jekyll
+    # build dependencies from ../lib
+    just ../lib/build
+    just ../lib/_versions-write-versions-to-jekyll
     # build the docs in ../../docs (<root/docs) https://docs.github.com/en/pages/getting-started-with-github-pages/about-github-pages
     just build
     # commit everything in ../../docs

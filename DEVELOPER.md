@@ -20,7 +20,7 @@ just worker dev
 To have the module automatically update when it changes:
 
 ```bash
-just libs dev
+just lib dev
 ```
 
 ### Host Setup

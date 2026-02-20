@@ -387,8 +387,11 @@ const definition_v0_6_to_v0_5 = (
 
 // ["0.3", "0.4", "0.5", "0.6", "1"]
 export const getMatchingMetaframeVersion = (
-  version: string,
+  version: string | undefined,
 ): VersionsMetaframe => {
+  if (!version) {
+    throw `Missing version`;
+  }
   if (version === "latest") {
     return MetaframeVersionCurrent;
   } else if (compareVersions(version, "0.3") < 0) {

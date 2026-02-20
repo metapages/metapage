@@ -20,45 +20,48 @@ _help:
     just --list --unsorted --list-heading $'🚪 Commands for {{green}}https://github.com/metapages/metapage{{normal}}:\n\n'
     echo -e ""
     echo -e "       🔽 {{bold}}Sub-commands: ( just <command> ){{normal}}"
-    echo -e "           app    {{blue}}#lib and worker commands{{normal}}"
     echo -e "           worker {{blue}}#worker commands{{normal}}"
     echo -e "           lib    {{blue}}#library(module) commands{{normal}}"
-    echo -e ""
 
-@build:
-    just app/build
+# Build the application stack
+@build +args="":
+    # The worker builds the js module too
+    just worker/build
 
-# Run all build/unit tests
-@test:
-    just app/test
+# Run all build/unit/functional tests
+test:
+    just worker/test
 
-# Publish new npm modules and associated documentation
-@publish:
-    DOCKER_COMPOSE="docker compose -f docker-compose.yml" just app/publish
+# Publish new npm module version (defined in lib/package.json)
+publish:
+    just lib/publish
+    just worker/deploy
 
-# Develop: run the stack with docker-compose, open a browser window. 'just app/down' to stop.
+# Run the worker
 @dev:
-    just app/dev
+    just worker/dev
 
 # Quick compile check
 @check:
-    just app/check
+    just lib/check
+    just worker/check
 
 @fmt +failIfChanged="":
-    just app/fmt {{failIfChanged}}
+    just lib/fmt {{failIfChanged}}
+
+# Deletes generated files
+@clean:
+    just lib/clean
+    just worker/clean
 
 ###################################################
 # Internal utilies
 ###################################################
 
-alias app := _app
-@_app +args="":
-    just app/{{args}}
-
 alias worker := _worker
 @_worker +args="":
-    just app/worker/{{args}}
+    just worker/{{args}}
 
-alias libs := _libs
-@_libs +args="":
-    just app/libs/{{args}}
+alias lib := _lib
+@_lib +args="":
+    just lib/{{args}}

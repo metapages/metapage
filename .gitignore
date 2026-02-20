@@ -11,13 +11,6 @@
 # I would love to commit this, but it's probably not a good idea
 # /.vscode
 
-# by default, do not commit the build documentation
-/docs
-
-###########################################################################################
-# app/
-###########################################################################################
-
 # browser
 **/node_modules
 **/.cache
