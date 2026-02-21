@@ -84,8 +84,8 @@ fmt +failIfChanged="":
     npm run test-watch
 
 # Run tests
-test:
-    just ../worker/test
+test: _ensure_npm_modules
+    npm run test
 
 # Develop:
 #   1. just dev
