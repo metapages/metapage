@@ -30,6 +30,7 @@ _help:
 
 # Run all build/unit/functional tests
 test:
+    just lib/test
     just worker/test
 
 # Publish new npm module version (defined in lib/package.json)
