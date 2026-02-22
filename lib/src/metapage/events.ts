@@ -9,6 +9,8 @@ export enum MetapageEvents {
   // The definition has already changed e.g. a metaframe changes its hash params
   // so the current definition now contains that change
   Definition = "definition",
+  // Always emitted by updateDefinition, includes diff of added/removed metaframes
+  DefinitionUpdate = "definitionupdate",
   Error = "error",
   Warning = "warning",
   // when a metaframe wants to tell the metapage of the new URL (for saving state/config)
@@ -21,6 +23,15 @@ export interface MetapageEventDefinition {
   definition: MetapageDefinitionV2;
   metaframes: {
     [key: string]: MetapageIFrameRpcClient;
+  };
+}
+
+export interface MetapageEventDefinitionUpdate {
+  definition: MetapageDefinitionV2;
+  metaframes: {
+    current: { [key: string]: MetapageIFrameRpcClient };
+    added: { [key: string]: MetapageIFrameRpcClient };
+    removed: { [key: string]: MetapageIFrameRpcClient };
   };
 }
 
