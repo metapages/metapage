@@ -38,6 +38,9 @@ import * as $test_metapage_multiple_concurrently_index from "./routes/test/metap
 import * as $test_metapage_multiple_concurrently_metapage_test_js from "./routes/test/metapage/multiple-concurrently/metapage-test.js.ts";
 import * as $test_metapage_timing_version_ from "./routes/test/metapage/timing/[version].tsx";
 import * as $test_metapage_timing_index from "./routes/test/metapage/timing/index.tsx";
+import * as $test_metapage_transferable_version_ from "./routes/test/metapage/transferable/[version].tsx";
+import * as $test_metapage_transferable_index from "./routes/test/metapage/transferable/index.tsx";
+import * as $test_metapage_transferable_metapage_test_js from "./routes/test/metapage/transferable/metapage-test.js.ts";
 import * as $versions_index from "./routes/versions/index.tsx";
 import * as $versions_metapages_metapage from "./routes/versions/metapages/metapage.ts";
 import * as $Counter from "./islands/Counter.tsx";
@@ -100,6 +103,12 @@ const manifest = {
     "./routes/test/metapage/timing/[version].tsx":
       $test_metapage_timing_version_,
     "./routes/test/metapage/timing/index.tsx": $test_metapage_timing_index,
+    "./routes/test/metapage/transferable/[version].tsx":
+      $test_metapage_transferable_version_,
+    "./routes/test/metapage/transferable/index.tsx":
+      $test_metapage_transferable_index,
+    "./routes/test/metapage/transferable/metapage-test.js.ts":
+      $test_metapage_transferable_metapage_test_js,
     "./routes/versions/index.tsx": $versions_index,
     "./routes/versions/metapages/metapage.ts": $versions_metapages_metapage,
   },

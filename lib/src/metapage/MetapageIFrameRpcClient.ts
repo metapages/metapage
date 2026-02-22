@@ -5,7 +5,7 @@ import { getHashParamValueJsonFromUrl } from "@metapages/hash-query";
 import { VERSION_METAPAGE } from "./Constants";
 import { convertMetaframeJsonToCurrentVersion } from "./conversions-metaframe";
 import { Disposer, MetaframeId, MetaframePipeId, MetapageId } from "./core";
-import { serializeInputs } from "./data";
+import { collectTransferables, serializeInputs } from "./data";
 import { MetapageEvents } from "./events";
 import {
   ClientMessageRecievedAck,
@@ -56,6 +56,8 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   _debug: boolean;
   _sendInputsAfterRegistration: boolean = false;
   _definition: MetaframeDefinitionV2 | undefined;
+
+  isTransferableObjects: boolean = false;
 
   _metapage: MetapageShared;
 
@@ -407,11 +409,21 @@ export class MetapageIFrameRpcClient extends EventEmitter<
         inputs: this.inputs,
       },
       version: VERSION_METAPAGE as VersionsMetapage,
+      isTransferableObjects: this.isTransferableObjects,
     };
-    this.sendRpcInternal(
-      JsonRpcMethodsFromParent.SetupIframeServerResponse,
-      response,
-    );
+    if (this.isTransferableObjects) {
+      const transfer = collectTransferables(this.inputs);
+      this.sendRpcInternalWithTransfer(
+        JsonRpcMethodsFromParent.SetupIframeServerResponse,
+        response,
+        transfer,
+      );
+    } else {
+      this.sendRpcInternal(
+        JsonRpcMethodsFromParent.SetupIframeServerResponse,
+        response,
+      );
+    }
   }
 
   public registered(version: VersionsMetaframe) {
@@ -440,14 +452,26 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     if (!inputs) {
       return;
     }
-    inputs = await serializeInputs(inputs);
-    if (this.isDisposed()) {
-      return;
+    if (this.isTransferableObjects) {
+      if (this.isDisposed()) {
+        return;
+      }
+      const transfer = collectTransferables(inputs);
+      this.sendRpcWithTransfer(
+        JsonRpcMethodsFromParent.InputsUpdate,
+        { inputs, parentId: this._parentId },
+        transfer,
+      );
+    } else {
+      inputs = await serializeInputs(inputs);
+      if (this.isDisposed()) {
+        return;
+      }
+      this.sendRpc(JsonRpcMethodsFromParent.InputsUpdate, {
+        inputs: inputs,
+        parentId: this._parentId,
+      });
     }
-    this.sendRpc(JsonRpcMethodsFromParent.InputsUpdate, {
-      inputs: inputs,
-      parentId: this._parentId,
-    });
   }
 
   public sendRpc(method: string, params: any) {
@@ -458,6 +482,22 @@ export class MetapageIFrameRpcClient extends EventEmitter<
       const thing = this;
       this?._onLoaded.push(() => {
         thing.sendRpcInternal(method, params);
+      });
+    }
+  }
+
+  public sendRpcWithTransfer(
+    method: string,
+    params: any,
+    transfer: Transferable[],
+  ) {
+    if (this?._iframe?.parentNode && this._loaded) {
+      this.sendRpcInternalWithTransfer(method, params, transfer);
+    } else {
+      this?._metapage?.error("sending rpc later");
+      const thing = this;
+      this?._onLoaded.push(() => {
+        thing.sendRpcInternalWithTransfer(method, params, transfer);
       });
     }
   }
@@ -523,19 +563,51 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     }
   }
 
-  _bufferMessages: any[] | undefined;
+  sendRpcInternalWithTransfer(
+    method: string,
+    params: any,
+    transfer: Transferable[],
+  ) {
+    const messageJSON: MinimumClientMessage<any> = {
+      id: "_",
+      iframeId: this.id,
+      jsonrpc: "2.0",
+      method: method,
+      params: params,
+      parentId: this._parentId,
+    };
+    if (this._iframe) {
+      this.sendOrBufferPostMessage(messageJSON, transfer);
+    } else {
+      if (this._metapage) {
+        this._metapage.error(
+          `Cannot send to child iframe messageJSON=${JSON.stringify(
+            messageJSON,
+          ).substring(0, 200)}`,
+        );
+      } else {
+        console.error(
+          `Cannot send to child iframe messageJSON=${JSON.stringify(
+            messageJSON,
+          ).substring(0, 200)}`,
+        );
+      }
+    }
+  }
+
+  _bufferMessages: { message: any; transfer: Transferable[] }[] | undefined;
   _bufferTimeout: number | undefined;
-  sendOrBufferPostMessage(message: any) {
+  sendOrBufferPostMessage(message: any, transfer: Transferable[] = []) {
     if (this._iframe && this._iframe.contentWindow) {
-      this._iframe.contentWindow.postMessage(message, this.url);
+      this._iframe.contentWindow.postMessage(message, this.url, transfer);
     } else {
       if (!this._bufferMessages) {
-        this._bufferMessages = [message];
+        this._bufferMessages = [{ message, transfer }];
         const thing = this;
         this._bufferTimeout = window.setInterval(function () {
           if (thing._iframe && thing._iframe.contentWindow) {
-            thing._bufferMessages!.forEach((m) =>
-              thing._iframe!.contentWindow!.postMessage(m, thing.url),
+            thing._bufferMessages!.forEach(({ message: m, transfer: t }) =>
+              thing._iframe!.contentWindow!.postMessage(m, thing.url, t),
             );
             window.clearInterval(thing._bufferTimeout);
             thing._bufferTimeout = undefined;
@@ -543,7 +615,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
           }
         }, 0);
       } else {
-        this._bufferMessages.push(message);
+        this._bufferMessages.push({ message, transfer });
       }
     }
   }

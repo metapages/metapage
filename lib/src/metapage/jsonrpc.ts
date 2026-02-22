@@ -27,6 +27,8 @@ export interface SetupIframeServerResponseData {
   };
   // Allow newer metaframes to handle older metapage versions
   version: VersionsMetapage;
+  // Parent tells child whether to use transferable objects instead of base64
+  isTransferableObjects?: boolean;
 }
 
 export interface MinimumClientMessage<T> extends JsonRpcRequest<T> {

@@ -17,7 +17,7 @@ import {
 
 import { VERSION_METAFRAME } from "./Constants";
 import { Disposer, MetaframeId, MetaframePipeId, MetapageId } from "./core";
-import { deserializeInputs, serializeInputs } from "./data";
+import { collectTransferables, deserializeInputs, serializeInputs } from "./data";
 import { MetapageEventUrlHashUpdate } from "./events";
 import {
   JsonRpcMethodsFromChild,
@@ -84,6 +84,13 @@ export class Metaframe extends EventEmitter<
    * This is useful to avoid the overhead of serialization/deserialization if you know you won't be using it
    */
   isInputOutputBlobSerialization: boolean = true;
+
+  /**
+   * When true, binary data (ArrayBuffer, TypedArray) is transferred via the native
+   * postMessage transfer list (zero-copy), and Blob/File via structured clone.
+   * Set by the parent metapage via the SetupIframeServerResponse handshake.
+   */
+  isTransferableObjects: boolean = false;
 
   /**
    * This is the (locally) unique id that the parent metapage
@@ -173,6 +180,7 @@ export class Metaframe extends EventEmitter<
         this._parentVersion = params.version;
         this.color = stringToRgb(this.id);
         this._parentId = params.parentId;
+        this.isTransferableObjects = !!params.isTransferableObjects;
         this.log(
           `metapage[${this._parentId}](v${
             this._parentVersion ? this._parentVersion : "unknown"
@@ -180,6 +188,9 @@ export class Metaframe extends EventEmitter<
         );
 
         if (params.state && params.state.inputs) {
+          // Always attempt deserialization: it is a no-op for natively
+          // transferred binary types, but correctly handles data URL strings
+          // that may arrive from older metaframes that still base64-encode.
           if (this.isInputOutputBlobSerialization) {
             this._inputPipeValues = await deserializeInputs(
               params.state.inputs,
@@ -232,10 +243,19 @@ export class Metaframe extends EventEmitter<
         this.emit(MetaframeEvents.Connected);
 
         // Send the initial outputs to the parent, we have been accumulating them
-        this.sendRpc(
-          JsonRpcMethodsFromChild.OutputsUpdate,
-          this._outputPipeValues,
-        );
+        if (this.isTransferableObjects) {
+          const transfer = collectTransferables(this._outputPipeValues);
+          this.sendRpc(
+            JsonRpcMethodsFromChild.OutputsUpdate,
+            this._outputPipeValues,
+            transfer,
+          );
+        } else {
+          this.sendRpc(
+            JsonRpcMethodsFromChild.OutputsUpdate,
+            this._outputPipeValues,
+          );
+        }
       } else {
         this.log(
           "Got JsonRpcMethods.SetupIframeServerResponse but already resolved",
@@ -385,7 +405,9 @@ export class Metaframe extends EventEmitter<
   }
 
   async setInternalInputsAndNotify(inputs: MetaframeInputMap) {
-    // this is where we deserialize the inputs
+    // Always attempt deserialization: it is a no-op for natively transferred
+    // binary types (ArrayBuffer, TypedArray, Blob, File), but correctly
+    // handles data URL strings from older metaframes that base64-encode.
     if (this.isInputOutputBlobSerialization) {
       inputs = await deserializeInputs(inputs);
     }
@@ -440,7 +462,7 @@ export class Metaframe extends EventEmitter<
   }
 
   public async setOutputs(outputs: MetaframeInputMap): Promise<void> {
-    if (this.isInputOutputBlobSerialization) {
+    if (!this.isTransferableObjects && this.isInputOutputBlobSerialization) {
       outputs = await serializeInputs(outputs);
     }
 
@@ -452,7 +474,12 @@ export class Metaframe extends EventEmitter<
 
     // If we are not ready/connected, outputs will be sent when connected
     if (this._state === MetaframeLoadingState.Ready) {
-      this.sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
+      if (this.isTransferableObjects) {
+        const transfer = collectTransferables(outputs);
+        this.sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs, transfer);
+      } else {
+        this.sendRpc(JsonRpcMethodsFromChild.OutputsUpdate, outputs);
+      }
     }
   }
 
@@ -478,7 +505,11 @@ export class Metaframe extends EventEmitter<
     this.sendRpc(JsonRpcMethodsFromChild.HashParamsUpdate, payload);
   }
 
-  sendRpc(method: JsonRpcMethodsFromChild, params: any) {
+  sendRpc(
+    method: JsonRpcMethodsFromChild,
+    params: any,
+    transfer: Transferable[] = [],
+  ) {
     if (this._isIframe) {
       const message: MinimumClientMessage<any> = {
         jsonrpc: "2.0",
@@ -489,7 +520,7 @@ export class Metaframe extends EventEmitter<
         parentId: this._parentId, // TODO this is likely not actually needed ? iframes cannot send to anyone but the parent? But the parent does not automatically know where a message comes from
       };
       if (window.parent) {
-        window.parent.postMessage(message, "*");
+        window.parent.postMessage(message, "*", transfer);
       }
     } else {
       this.log(

@@ -5,6 +5,7 @@ import { MetaframeInstance } from "../v0_4/index.js";
 export interface MetapageOptionsV1 {
   id?: MetapageId;
   color?: string;
+  isTransferableObjects?: boolean;
 }
 
 export type MetapageMetadataV1 = Partial<{

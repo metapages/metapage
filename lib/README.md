@@ -362,18 +362,79 @@ Use glob patterns to match multiple outputs:
 
 ### Binary Data Handling
 
+By default, binary values (`ArrayBuffer`, TypedArrays, `Blob`, `File`) are automatically serialized to base64 data URL strings before being sent across iframe boundaries, then deserialized back on the receiving end. This works universally but adds encoding/decoding overhead.
+
 ```javascript
-// Send binary data
+// Send binary data — automatically base64-encoded in transit
 const imageData = await fetch("/image.png").then((r) => r.arrayBuffer());
 metaframe.setOutput("image", imageData);
 
-// Receive and use
+// Receive and use — automatically decoded back to ArrayBuffer
 metaframe.onInput("image", async (data) => {
   const blob = new Blob([data]);
   const url = URL.createObjectURL(blob);
   document.getElementById("img").src = url;
 });
 ```
+
+### Transferable Objects (Zero-Copy Binary)
+
+For performance-critical applications that pass large binary data between metaframes, enable `isTransferableObjects` mode on the `Metapage`. This uses the browser's native [`postMessage` transfer](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects) mechanism instead of base64 encoding:
+
+- **`ArrayBuffer` and TypedArrays** (`Float32Array`, `Uint8Array`, etc.) are transferred with zero-copy ownership transfer
+- **`Blob` and `File`** are passed via structured clone — no serialization needed
+- **Plain JSON values** in the same output call are unaffected
+
+```javascript
+import { Metapage } from "@metapages/metapage";
+
+const metapage = new Metapage({ isTransferableObjects: true });
+await metapage.setDefinition(definition);
+```
+
+Or set it after construction (propagates immediately to all loaded metaframes):
+
+```javascript
+const metapage = await Metapage.from(definition);
+metapage.isTransferableObjects = true;
+```
+
+Inside a metaframe, no code changes are needed — the mode is communicated automatically during the connection handshake. Binary values passed to `setOutput`/`setOutputs` are sent natively:
+
+```javascript
+const metaframe = new Metaframe();
+
+metaframe.onInput("tensor", (data) => {
+  // data arrives as Float32Array, not a string — no deserialization needed
+  console.log(data instanceof Float32Array); // true
+  runModel(data);
+});
+
+// Sending — large buffers transfer ownership (zero-copy) to the metapage
+const weights = new Float32Array(1_000_000);
+metaframe.setOutput("tensor", weights);
+
+// Mixed outputs work too — binary and plain values in the same call
+metaframe.setOutputs({
+  tensor: new Float32Array([1, 2, 3]),
+  label: "result",
+  count: 42,
+});
+```
+
+**Multi-recipient routing**: when one metaframe's output routes to more than one downstream metaframe, the library automatically deep-copies binary buffers so each recipient receives its own independent copy.
+
+#### Version compatibility
+
+`isTransferableObjects` is backwards-compatible with older metaframe versions in the same metapage:
+
+| Sender version | Receiver version | Result |
+|---|---|---|
+| Old (base64) | New (transferable) | Receiver automatically deserializes base64 strings as a fallback |
+| New (transferable) | Old (base64) | Old receiver's deserializer is a no-op for already-binary values — works correctly |
+| Old metapage | New metaframe | Metaframe defaults to base64 mode (flag not sent by old metapage) |
+
+The mode defaults to `false`; metapages that do not set it behave identically to previous versions.
 
 ## Secrets
 
@@ -481,6 +542,12 @@ Render a metapage into a DOM element.
 
 ### Metapage Class
 
+**Constructor options** (`MetapageOptionsV1`):
+
+- `id`: Optional metapage ID
+- `color`: Optional color for console logging
+- `isTransferableObjects`: Enable zero-copy binary transfer mode (default: `false`) — see [Transferable Objects](#transferable-objects-zero-copy-binary)
+
 **Methods:**
 
 - `setInputs(inputs)`: Set inputs for metaframes
@@ -488,6 +555,10 @@ Render a metapage into a DOM element.
 - `injectSecrets(secrets)`: Inject secrets into metaframe URLs (see [Secrets](#secrets))
 - `dispose()`: Clean up and remove all listeners
 - `on(event, handler)`: Listen to events
+
+**Properties:**
+
+- `isTransferableObjects`: Get or set transferable objects mode; setting it after construction propagates immediately to all metaframe clients
 
 **Events:**
 
@@ -510,7 +581,8 @@ Render a metapage into a DOM element.
 **Properties:**
 
 - `id`: Metaframe ID assigned by parent metapage
-- `isInputOutputBlobSerialization`: Enable/disable automatic binary serialization
+- `isInputOutputBlobSerialization`: Enable/disable automatic base64 serialization (default: `true`)
+- `isTransferableObjects`: Read-only in practice; set automatically during handshake when the parent metapage has `isTransferableObjects: true`
 
 ## Creating Your Own Metaframes
 

@@ -12,7 +12,11 @@ import {
   getMatchingMetapageVersion,
 } from "./conversions-metapage";
 import { Disposer, MetaframeId, MetaframePipeId, MetapageId } from "./core";
-import { deserializeInputs, serializeInputs } from "./data";
+import {
+  deepCopyInputsWithTransferables,
+  deserializeInputs,
+  serializeInputs,
+} from "./data";
 import {
   MetapageEventDefinition,
   MetapageEvents,
@@ -162,6 +166,7 @@ export class Metapage extends MetapageShared {
   }
 
   _id: MetapageId;
+  _isTransferableObjects: boolean = false;
   _state: MetapageState = emptyState;
   _metaframes: MetaframeClients = create({}, (draft) => draft); //<MetaframeId, MetapageIFrameRpcClient>
 
@@ -225,9 +230,21 @@ export class Metapage extends MetapageShared {
   //     }
   // }
 
+  get isTransferableObjects(): boolean {
+    return this._isTransferableObjects;
+  }
+
+  set isTransferableObjects(value: boolean) {
+    this._isTransferableObjects = value;
+    for (const client of Object.values(this._metaframes)) {
+      client.isTransferableObjects = value;
+    }
+  }
+
   constructor(opts?: MetapageOptionsV1) {
     super();
     this._id = opts && opts.id ? opts.id : generateMetapageId();
+    this._isTransferableObjects = opts?.isTransferableObjects ?? false;
     this._consoleBackgroundColor =
       opts && opts.color ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT;
 
@@ -861,6 +878,7 @@ export class Metapage extends MetapageShared {
       this._consoleBackgroundColor,
       this.debug,
     ).setMetapage(this);
+    iframeClient.isTransferableObjects = this._isTransferableObjects;
     this._metaframes = create<MetaframeClients>(
       this._metaframes,
       (draft: MetaframeClients) => {
@@ -1418,11 +1436,14 @@ export class Metapage extends MetapageShared {
           });
           if (modified) {
             this.setInputStateOnlyMetapageInstanceInputs(collectedOutputs);
-            Object.keys(collectedOutputs).forEach((metaframeId) => {
-              this._metaframes[metaframeId].setInputs(
-                collectedOutputs[metaframeId],
-                // then actually set the inputs once collected
-              );
+            const recipientIds = Object.keys(collectedOutputs);
+            const needsCopy =
+              this._isTransferableObjects && recipientIds.length > 1;
+            recipientIds.forEach((targetId) => {
+              const inputsToSend = needsCopy
+                ? deepCopyInputsWithTransferables(collectedOutputs[targetId])
+                : collectedOutputs[targetId];
+              this._metaframes[targetId].setInputs(inputsToSend);
             });
           }
           // only send a state event if downstream inputs were modified

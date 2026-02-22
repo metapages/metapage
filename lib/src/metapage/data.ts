@@ -304,6 +304,112 @@ function deserializeLegacyMetapage(value: DataRefSerialized): any {
   return value;
 }
 
+/**
+ * Recursively collect all Transferable objects (ArrayBuffer, ImageBitmap) from a value.
+ * TypedArray views contribute their underlying .buffer.
+ * Uses a seen Set to avoid duplicates from shared backing buffers.
+ */
+export const collectTransferables = (
+  obj: any,
+  seen: Set<ArrayBuffer> = new Set(),
+): Transferable[] => {
+  if (obj === null || obj === undefined) return [];
+
+  if (obj instanceof ArrayBuffer) {
+    if (!seen.has(obj)) {
+      seen.add(obj);
+      return [obj];
+    }
+    return [];
+  }
+
+  if (ArrayBuffer.isView(obj)) {
+    const buf = obj.buffer as ArrayBuffer;
+    if (!seen.has(buf)) {
+      seen.add(buf);
+      return [buf];
+    }
+    return [];
+  }
+
+  if (typeof ImageBitmap !== "undefined" && obj instanceof ImageBitmap) {
+    return [obj as unknown as Transferable];
+  }
+
+  if (Array.isArray(obj)) {
+    const result: Transferable[] = [];
+    for (const item of obj) {
+      for (const t of collectTransferables(item, seen)) {
+        result.push(t);
+      }
+    }
+    return result;
+  }
+
+  if (typeof obj === "object") {
+    const result: Transferable[] = [];
+    for (const key of Object.keys(obj)) {
+      for (const t of collectTransferables(obj[key], seen)) {
+        result.push(t);
+      }
+    }
+    return result;
+  }
+
+  return [];
+};
+
+/**
+ * Deep-copy an inputs map, cloning ArrayBuffers and TypedArrays so that
+ * multiple downstream recipients each get their own copy of binary data.
+ * Blob/File are structured-cloneable and returned as-is.
+ */
+export const deepCopyInputsWithTransferables = (
+  inputs: MetaframeInputMap,
+): MetaframeInputMap => {
+  const result: MetaframeInputMap = {};
+  for (const key of Object.keys(inputs)) {
+    result[key] = deepCopyValue(inputs[key]);
+  }
+  return result;
+};
+
+function deepCopyValue(value: any): any {
+  if (value === null || value === undefined) return value;
+
+  if (value instanceof ArrayBuffer) {
+    return value.slice(0);
+  }
+
+  if (ArrayBuffer.isView(value)) {
+    const buf = (value.buffer as ArrayBuffer).slice(
+      value.byteOffset,
+      value.byteOffset + value.byteLength,
+    );
+    // @ts-ignore — dynamic constructor call
+    return new (value.constructor as any)(buf);
+  }
+
+  // Blob and File are structured-cloneable; pass by reference
+  if (value instanceof Blob) {
+    return value;
+  }
+
+  if (Array.isArray(value)) {
+    return value.map(deepCopyValue);
+  }
+
+  if (typeof value === "object") {
+    const result: Record<string, any> = {};
+    for (const k of Object.keys(value)) {
+      result[k] = deepCopyValue(value[k]);
+    }
+    return result;
+  }
+
+  return value;
+}
+
 function deserializeDatarefV1(value: {
   ref: string;
   c: string;
