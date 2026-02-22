@@ -15,6 +15,7 @@ import { Disposer, MetaframeId, MetaframePipeId, MetapageId } from "./core";
 import { deserializeInputs, serializeInputs } from "./data";
 import {
   MetapageEventDefinition,
+  MetapageEventDefinitionUpdate,
   MetapageEvents,
   MetapageEventUrlHashUpdate,
 } from "./events";
@@ -39,7 +40,11 @@ import {
   PipeUpdateBlob,
 } from "./v0_4";
 import { MetapageOptionsV1 } from "./v1";
-import { MetapageDefinitionV2, MetapageMetadataV2 } from "./v2";
+import {
+  MetapageDefinition,
+  MetapageDefinitionV2,
+  MetapageMetadataV2,
+} from "./v2";
 import { VersionsMetapage } from "./versions";
 
 interface MetapageStatePartial {
@@ -136,6 +141,7 @@ export class Metapage extends MetapageShared {
 
   // Event literals for users to listen to events
   public static readonly DEFINITION = MetapageEvents.Definition;
+  public static readonly DEFINITION_UPDATE = MetapageEvents.DefinitionUpdate;
   public static readonly ERROR = MetapageEvents.Error;
   public static readonly INPUTS = MetapageEvents.Inputs;
   public static readonly MESSAGE = MetapageEvents.Message;
@@ -145,7 +151,10 @@ export class Metapage extends MetapageShared {
   public static deserializeInputs = deserializeInputs;
   public static serializeInputs = serializeInputs;
 
-  public static async from(metaPageDef: any, inputs?: any): Promise<Metapage> {
+  public static async from(
+    metaPageDef: any,
+    opts?: { debug?: boolean },
+  ): Promise<Metapage> {
     if (metaPageDef == null) {
       throw "Metapage definition cannot be null";
     }
@@ -158,6 +167,7 @@ export class Metapage extends MetapageShared {
     }
 
     var metapage = new Metapage();
+    metapage.debug = opts?.debug || false;
     return metapage.setDefinition(metaPageDef);
   }
 
@@ -253,6 +263,7 @@ export class Metapage extends MetapageShared {
     this.removeMetaframe = this.removeMetaframe.bind(this);
     this.setDebugFromUrlParams = this.setDebugFromUrlParams.bind(this);
     this.setDefinition = this.setDefinition.bind(this);
+    this.updateDefinition = this.updateDefinition.bind(this);
     this.setInput = this.setInput.bind(this);
     this.setInputs = this.setInputs.bind(this);
     this.setOutputs = this.setOutputs.bind(this);
@@ -278,6 +289,8 @@ export class Metapage extends MetapageShared {
     this.setState = this.setState.bind(this);
     this.isDisposed = this.isDisposed.bind(this);
     this._emitDefinitionEvent = this._emitDefinitionEvent.bind(this);
+    this._emitDefinitionUpdateEvent =
+      this._emitDefinitionUpdateEvent.bind(this);
 
     // see ARCHITECTURE.md
     // when the page is loaded, only then start listening to messages from metaframes
@@ -356,7 +369,7 @@ export class Metapage extends MetapageShared {
     return this._state.metaframes;
   }
 
-  public getDefinition(): MetapageDefinitionV2 {
+  public getDefinition(): MetapageDefinition {
     return this._getDefinitionWithoutSecrets();
   }
 
@@ -555,16 +568,19 @@ export class Metapage extends MetapageShared {
     });
   }
 
-  public async setDefinition(
+  private async _applyDefinition(
     def: any,
     state?: MetapageState,
-  ): Promise<Metapage> {
+  ): Promise<{
+    newDefinition: MetapageDefinitionV2;
+    added: { [key: string]: MetapageIFrameRpcClient };
+    removed: { [key: string]: MetapageIFrameRpcClient };
+  }> {
     const newDefinition: MetapageDefinitionV2 =
       await convertMetapageDefinitionToCurrentVersion(def);
 
     if (this.isDisposed()) {
-      // we got disposed while converting
-      return this;
+      return { newDefinition, added: {}, removed: {} };
     }
 
     if (newDefinition.metaframes) {
@@ -584,10 +600,6 @@ export class Metapage extends MetapageShared {
       });
     }
 
-    // TODO: revisit this assumption?
-    // If there is not an earlier definition, we don't fire an event
-    const previousDefinition = this._definition;
-
     // Save the current secrets before updating the definition
     const savedSecrets = { ...this._injectedSecrets };
     const savedQuerySecrets = { ...this._injectedQuerySecrets };
@@ -595,28 +607,34 @@ export class Metapage extends MetapageShared {
     const savedOriginalQueryParams = { ...this._originalSecretQueryParams };
 
     this._definition = newDefinition;
-    // try to be efficient with the new definition.
-    // destroy any metaframes not in the new definition
+
+    // Capture removed frames BEFORE removing them so we have references
+    const removed: { [key: string]: MetapageIFrameRpcClient } = {};
     Object.keys(this._metaframes).forEach((metaframeId) => {
-      // Doesn't exist? Destroy it
       if (!newDefinition.metaframes || !newDefinition.metaframes[metaframeId]) {
-        // this removes the metaframe, pipes, inputs, caches
-        this.removeMetaframe(metaframeId);
+        removed[metaframeId] = this._metaframes[metaframeId];
       }
     });
 
-    // if the state is updated, set that now
+    // Destroy any metaframes not in the new definition
+    Object.keys(removed).forEach((metaframeId) => {
+      this.removeMetaframe(metaframeId);
+    });
+
+    // If the state is updated, set that now
     if (state) {
       this._state = create<MetapageState>(state, (draft) => draft);
     }
 
-    // Create any new metaframes needed
+    // Create any new metaframes needed, tracking which ones were added
+    const added: { [key: string]: MetapageIFrameRpcClient } = {};
     if (newDefinition.metaframes) {
       Object.keys(newDefinition.metaframes).forEach((newMetaframeId) => {
         if (!this._metaframes.hasOwnProperty(newMetaframeId)) {
           const metaframeDefinition = newDefinition.metaframes[newMetaframeId];
           // this will also set the inputs from our state
-          this.addMetaframe(newMetaframeId, metaframeDefinition);
+          const client = this.addMetaframe(newMetaframeId, metaframeDefinition);
+          added[newMetaframeId] = client;
         }
       });
     }
@@ -691,6 +709,25 @@ export class Metapage extends MetapageShared {
       }
     });
 
+    return { newDefinition, added, removed };
+  }
+
+  public async setDefinition(
+    def: any,
+    state?: MetapageState,
+  ): Promise<Metapage> {
+    // TODO: revisit this assumption?
+    // If there is not an earlier definition, we don't fire an event
+    // Capture before the async _applyDefinition call
+    const previousDefinition = this._definition;
+
+    const { newDefinition } = await this._applyDefinition(def, state);
+
+    if (this.isDisposed()) {
+      // we got disposed while converting
+      return this;
+    }
+
     // TODO: fire the event anyway, but use immutable state so we
     // can do a quick compare
     // Only fire a definition update event IF this is not the first
@@ -715,6 +752,36 @@ export class Metapage extends MetapageShared {
     return this;
   }
 
+  public async updateDefinition(
+    def: any,
+    state?: MetapageState,
+  ): Promise<Metapage> {
+    const { added, removed } = await this._applyDefinition(def, state);
+
+    if (this.isDisposed()) {
+      return this;
+    }
+
+    // Always emit DefinitionUpdate (even on first call), on the next tick
+    // to give listeners time to re-add after this method returns.
+    window.setTimeout(() => {
+      if (!this.isDisposed()) {
+        this._emitDefinitionUpdateEvent(added, removed);
+        const framesChanged =
+          Object.keys(added).length > 0 || Object.keys(removed).length > 0;
+        if (this.listenerCount(MetapageEvents.State) > 0) {
+          const shouldEmitState =
+            framesChanged || (!!state && emptyState !== this._state);
+          if (shouldEmitState) {
+            this.emit(MetapageEvents.State, this._state);
+          }
+        }
+      }
+    }, 0);
+
+    return this;
+  }
+
   setMetadata(metadata: MetapageMetadataV2) {
     this._definition = create(this._definition, (draft) => {
       draft.meta = metadata;
@@ -730,6 +797,23 @@ export class Metapage extends MetapageShared {
         metaframes: this._metaframes,
       };
       this.emit(MetapageEvents.Definition, event);
+    }
+  }
+
+  private _emitDefinitionUpdateEvent(
+    added: { [key: string]: MetapageIFrameRpcClient },
+    removed: { [key: string]: MetapageIFrameRpcClient },
+  ): void {
+    if (this.listenerCount(MetapageEvents.DefinitionUpdate) > 0) {
+      const event: MetapageEventDefinitionUpdate = {
+        definition: this._getDefinitionWithoutSecrets(),
+        metaframes: {
+          current: this._metaframes,
+          added,
+          removed,
+        },
+      };
+      this.emit(MetapageEvents.DefinitionUpdate, event);
     }
   }
 

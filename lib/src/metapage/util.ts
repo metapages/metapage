@@ -1,18 +1,18 @@
 import fetchRetryWrapper from "fetch-retry";
 import { convertMetapageDefinitionToVersion } from "./conversions-metapage";
-import { MetaframeDefinitionV1, MetapageDefinitionV1 } from "./v1";
+import { MetaframeDefinitionV1 } from "./v1";
 import {
   MetaframeVersionCurrent,
   MetapageVersionCurrent,
   VersionsMetaframe,
   VersionsMetapage,
 } from "./versions";
-import { MetaframeDefinitionV4, MetapageDefinitionV3 } from "./v0_4";
+import { MetaframeDefinitionV4 } from "./v0_4";
 import {
   convertMetaframeDefinitionToVersion,
   convertMetaframeJsonToCurrentVersion,
 } from "./conversions-metaframe";
-import { MetaframeDefinitionV2, MetapageDefinitionV2 } from "./v2";
+import { MetaframeDefinitionV2, MetapageDefinition } from "./v2";
 import { getHashParamValueJsonFromUrl } from "@metapages/hash-query";
 
 const fetchRetry = fetchRetryWrapper(fetch);
@@ -20,9 +20,7 @@ const fetchRetry = fetchRetryWrapper(fetch);
 export const getMetapageDefinitionFromUrl = async (
   url: string,
   version?: VersionsMetapage,
-): Promise<
-  MetapageDefinitionV2 | MetapageDefinitionV1 | MetapageDefinitionV3
-> => {
+): Promise<MetapageDefinition> => {
   const metapageUrl = new URL(url);
   metapageUrl.pathname =
     metapageUrl.pathname +
@@ -37,7 +35,7 @@ export const getMetapageDefinitionFromUrl = async (
     definition,
     version || MetapageVersionCurrent,
   );
-  return convertedDefinition;
+  return convertedDefinition as MetapageDefinition;
 };
 
 export const getMetaframeDefinitionFromUrl = async (
