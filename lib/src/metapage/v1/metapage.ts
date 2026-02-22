@@ -6,6 +6,7 @@ export interface MetapageOptionsV1 {
   id?: MetapageId;
   color?: string;
   isTransferableObjects?: boolean;
+  debug?: boolean;
 }
 
 export type MetapageMetadataV1 = Partial<{

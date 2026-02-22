@@ -521,6 +521,92 @@ metapage.on(Metapage.DEFINITION, (cleanDef) => {
 - Secrets are stripped from all definition retrieval methods and events
 - Secret storage is cleared on `dispose()`
 
+## updateDefinition
+
+`updateDefinition` is the preferred way to change the metapage definition at runtime when you need to react to what changed. Unlike `setDefinition`, it:
+
+- Always emits a `DefinitionUpdate` event — even on the very first call
+- Includes a structured diff of which metaframes were added and removed
+- Automatically emits a `State` event when metaframes are added or removed
+
+### API
+
+```typescript
+await metapage.updateDefinition(definition, state?);
+```
+
+| Parameter    | Type                       | Description                                            |
+| ------------ | -------------------------- | ------------------------------------------------------ |
+| `definition` | `MetapageDefinition`       | The new metapage definition                            |
+| `state`      | `MetapageState` (optional) | Initial state to apply alongside the definition update |
+
+### Event Payload
+
+Listen with `Metapage.DEFINITION_UPDATE`. The event payload has this shape:
+
+```typescript
+interface MetapageEventDefinitionUpdate {
+  definition: MetapageDefinition; // current definition (secrets stripped)
+  metaframes: {
+    current: { [id: string]: MetapageIFrameRpcClient }; // all metaframes after update
+    added: { [id: string]: MetapageIFrameRpcClient }; // metaframes that were added
+    removed: { [id: string]: MetapageIFrameRpcClient }; // metaframes that were removed (disposed)
+  };
+}
+```
+
+### Example
+
+```typescript
+import { Metapage, MetapageEventDefinitionUpdate } from "@metapages/metapage";
+
+const metapage = new Metapage();
+
+metapage.on(
+  Metapage.DEFINITION_UPDATE,
+  (event: MetapageEventDefinitionUpdate) => {
+    const { added, removed, current } = event.metaframes;
+
+    console.log("Current metaframes:", Object.keys(current));
+    console.log("Added:", Object.keys(added));
+    console.log("Removed:", Object.keys(removed));
+  },
+);
+
+// First call — fires immediately (unlike setDefinition)
+await metapage.updateDefinition({
+  metaframes: {
+    viewer: { url: "https://markdown.mtfm.io/" },
+  },
+});
+
+// Second call — event reports frame2 in `added`
+await metapage.updateDefinition({
+  metaframes: {
+    viewer: { url: "https://markdown.mtfm.io/" },
+    editor: { url: "https://editor.mtfm.io/" },
+  },
+});
+```
+
+### Comparison with setDefinition
+
+| Behaviour                     | `setDefinition` | `updateDefinition` |
+| ----------------------------- | --------------- | ------------------ |
+| Emits event on first call     | No              | Yes                |
+| Event type                    | `Definition`    | `DefinitionUpdate` |
+| Diff of added/removed frames  | No              | Yes                |
+| Emits `State` on frame change | No              | Yes                |
+
+### State event
+
+`State` is automatically emitted (to any listeners) when:
+
+- Metaframes are added or removed, OR
+- An explicit `state` argument is passed and is non-empty
+
+---
+
 ## API Overview
 
 ### renderMetapage(options)
@@ -550,6 +636,8 @@ Render a metapage into a DOM element.
 
 **Methods:**
 
+- `setDefinition(def, state?)`: Set the metapage definition; emits `Definition` on subsequent calls only
+- `updateDefinition(def, state?)`: Set the definition and always emit `DefinitionUpdate` with added/removed diff (see [updateDefinition](#updatedefinition))
 - `setInputs(inputs)`: Set inputs for metaframes
 - `getState()`: Get current state (inputs/outputs)
 - `injectSecrets(secrets)`: Inject secrets into metaframe URLs (see [Secrets](#secrets))
@@ -564,7 +652,9 @@ Render a metapage into a DOM element.
 
 - `Metapage.OUTPUTS`: When metaframe outputs change
 - `Metapage.INPUTS`: When metapage inputs change
-- `Metapage.DEFINITION`: When definition changes
+- `Metapage.DEFINITION`: When definition changes (not emitted on first `setDefinition` call)
+- `Metapage.DEFINITION_UPDATE`: When `updateDefinition` is called; payload includes added/removed metaframe diff (see [updateDefinition](#updatedefinition))
+- `Metapage.STATE`: When metapage state changes
 
 ### Metaframe Class
 
@@ -624,13 +714,12 @@ Full TypeScript definitions are included:
 import {
   Metapage,
   Metaframe,
-  MetapageDefinitionV2,
+  MetapageDefinition,
   MetaframeInputMap,
   MetapageInstanceInputs,
 } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
 
-const definition: MetapageDefinitionV2 = {
-  version: "2",
+const definition: MetapageDefinition = {
   metaframes: {
     example: {
       url: "https://example.com",
