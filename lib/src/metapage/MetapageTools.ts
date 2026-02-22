@@ -3,7 +3,7 @@ import { create } from "mutative";
 import { MetapageHashParams } from "./Shared.js";
 import { MetaframeId, MetapageId } from "./core.js";
 import { MetaframeInputMap } from "./v0_4/index.js";
-import { MetapageDefinitionV2 } from "./v2/metapage.js";
+import { MetapageDefinition, MetapageDefinitionV2 } from "./v2/metapage.js";
 /**
  * Merges new values into the a new object.
  * Does NOT check if there are actually new keys.
@@ -155,13 +155,13 @@ export const pageLoaded = async (): Promise<void> => {
   });
 };
 
-export const metapageAllSha256Hash = async (metapage: MetapageDefinitionV2) => {
+export const metapageAllSha256Hash = async (metapage: MetapageDefinition) => {
   const metapageStr = stringify(metapage);
   return await sha256ToBase64(metapageStr);
 };
 
 export const metapageOnlyEssentailSha256Hash = async (
-  metapage: Pick<MetapageDefinitionV2, "metaframes" | "version">,
+  metapage: Pick<MetapageDefinition, "metaframes" | "version">,
 ) => {
   const metapageStr = stringify({
     version: metapage.version,

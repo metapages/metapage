@@ -1,5 +1,5 @@
 import { MetaframeId } from "./core";
-import { MetapageDefinitionV2 } from "./v2";
+import { MetapageDefinition } from "./v2";
 import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
 
 export enum MetapageEvents {
@@ -20,14 +20,14 @@ export enum MetapageEvents {
 }
 
 export interface MetapageEventDefinition {
-  definition: MetapageDefinitionV2;
+  definition: MetapageDefinition;
   metaframes: {
     [key: string]: MetapageIFrameRpcClient;
   };
 }
 
 export interface MetapageEventDefinitionUpdate {
-  definition: MetapageDefinitionV2;
+  definition: MetapageDefinition;
   metaframes: {
     current: { [key: string]: MetapageIFrameRpcClient };
     added: { [key: string]: MetapageIFrameRpcClient };

@@ -4,7 +4,7 @@ import { Metapage } from "./Metapage.js";
 import { pageLoaded } from "./MetapageTools.js";
 import { getMetapageDefinitionFromUrl } from "./util.js";
 import { MetapageInstanceInputs } from "./v0_4/index.js";
-import { MetapageDefinitionV2 } from "./v2/metapage.js";
+import { MetapageDefinition } from "./v2/metapage.js";
 
 // Types for the pure function
 export interface RenderingOptions {
@@ -41,9 +41,7 @@ export function isMetaframeDivider(url: string): boolean {
 }
 
 // Utility function to validate layout (simplified version)
-function validateLayout(
-  definition: MetapageDefinitionV2,
-): MetapageDefinitionV2 {
+function validateLayout(definition: MetapageDefinition): MetapageDefinition {
   // Create a deep copy to avoid mutating the original
   const validated = JSON.parse(JSON.stringify(definition));
 
@@ -112,7 +110,7 @@ function validateLayout(
 }
 
 export const getVisibleGridLayoutData = (
-  definition: MetapageDefinitionV2,
+  definition: MetapageDefinition,
 ): {
   visibleLayoutItems: LayoutItem[];
   hiddenMetaframeIds: Set<string>;
@@ -203,7 +201,7 @@ export const getVisibleGridLayoutData = (
  */
 export async function renderMetapage(props: {
   url?: string;
-  definition?: MetapageDefinitionV2;
+  definition?: MetapageDefinition;
   onOutputs?: (outputs: MetapageInstanceInputs) => void;
   rootDiv: HTMLElement;
   options?: RenderingOptions;
@@ -445,7 +443,7 @@ export async function renderMetapage(props: {
 }
 
 export const isMetaframeHidden = (
-  definition: MetapageDefinitionV2,
+  definition: MetapageDefinition,
   metaframeId: MetaframeId,
 ): boolean => {
   // Get the layout information
@@ -516,8 +514,8 @@ const getMetaframeKey = (url: string | URL): string | undefined => {
 };
 
 const processMetapage = async (
-  metapageDefinition: MetapageDefinitionV2,
-): Promise<MetapageDefinitionV2> => {
+  metapageDefinition: MetapageDefinition,
+): Promise<MetapageDefinition> => {
   if (!metapageDefinition?.metaframes) {
     return metapageDefinition;
   }

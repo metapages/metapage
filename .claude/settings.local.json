@@ -23,7 +23,9 @@
       "Bash(grep:*)",
       "Bash(just test:*)",
       "Bash(git -C /Users/dion/dev/git/metapages/metapage-npm log --oneline secrets...master)",
-      "Bash(just lib/test:*)"
+      "Bash(just lib/test:*)",
+      "Bash(head:*)",
+      "Bash(just check:*)"
     ]
   }
 }

@@ -474,10 +474,10 @@ metapage.on(Metapage.DEFINITION, (cleanDef) => {
 await metapage.updateDefinition(definition, state?);
 ```
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `definition` | `MetapageDefinition` | The new metapage definition |
-| `state` | `MetapageState` (optional) | Initial state to apply alongside the definition update |
+| Parameter    | Type                       | Description                                            |
+| ------------ | -------------------------- | ------------------------------------------------------ |
+| `definition` | `MetapageDefinition`       | The new metapage definition                            |
+| `state`      | `MetapageState` (optional) | Initial state to apply alongside the definition update |
 
 ### Event Payload
 
@@ -485,10 +485,10 @@ Listen with `Metapage.DEFINITION_UPDATE`. The event payload has this shape:
 
 ```typescript
 interface MetapageEventDefinitionUpdate {
-  definition: MetapageDefinitionV2;       // current definition (secrets stripped)
+  definition: MetapageDefinition; // current definition (secrets stripped)
   metaframes: {
     current: { [id: string]: MetapageIFrameRpcClient }; // all metaframes after update
-    added:   { [id: string]: MetapageIFrameRpcClient }; // metaframes that were added
+    added: { [id: string]: MetapageIFrameRpcClient }; // metaframes that were added
     removed: { [id: string]: MetapageIFrameRpcClient }; // metaframes that were removed (disposed)
   };
 }
@@ -501,13 +501,16 @@ import { Metapage, MetapageEventDefinitionUpdate } from "@metapages/metapage";
 
 const metapage = new Metapage();
 
-metapage.on(Metapage.DEFINITION_UPDATE, (event: MetapageEventDefinitionUpdate) => {
-  const { added, removed, current } = event.metaframes;
+metapage.on(
+  Metapage.DEFINITION_UPDATE,
+  (event: MetapageEventDefinitionUpdate) => {
+    const { added, removed, current } = event.metaframes;
 
-  console.log("Current metaframes:", Object.keys(current));
-  console.log("Added:", Object.keys(added));
-  console.log("Removed:", Object.keys(removed));
-});
+    console.log("Current metaframes:", Object.keys(current));
+    console.log("Added:", Object.keys(added));
+    console.log("Removed:", Object.keys(removed));
+  },
+);
 
 // First call — fires immediately (unlike setDefinition)
 await metapage.updateDefinition({
@@ -527,12 +530,12 @@ await metapage.updateDefinition({
 
 ### Comparison with setDefinition
 
-| Behaviour | `setDefinition` | `updateDefinition` |
-|-----------|----------------|-------------------|
-| Emits event on first call | No | Yes |
-| Event type | `Definition` | `DefinitionUpdate` |
-| Diff of added/removed frames | No | Yes |
-| Emits `State` on frame change | No | Yes |
+| Behaviour                     | `setDefinition` | `updateDefinition` |
+| ----------------------------- | --------------- | ------------------ |
+| Emits event on first call     | No              | Yes                |
+| Event type                    | `Definition`    | `DefinitionUpdate` |
+| Diff of added/removed frames  | No              | Yes                |
+| Emits `State` on frame change | No              | Yes                |
 
 ### State event
 
@@ -639,13 +642,12 @@ Full TypeScript definitions are included:
 import {
   Metapage,
   Metaframe,
-  MetapageDefinitionV2,
+  MetapageDefinition,
   MetaframeInputMap,
   MetapageInstanceInputs,
 } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
 
-const definition: MetapageDefinitionV2 = {
-  version: "2",
+const definition: MetapageDefinition = {
   metaframes: {
     example: {
       url: "https://example.com",

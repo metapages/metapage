@@ -8,8 +8,7 @@ import {
   MetapageState,
 } from "../src";
 
-const PASSTHROUGH_URL =
-  "https://metapage.io/metaframes/passthrough-markdown/";
+const PASSTHROUGH_URL = "https://metapage.io/metaframes/passthrough-markdown/";
 
 // Register listener BEFORE calling updateDefinition so we don't miss the
 // asynchronous (setTimeout 0) event, and auto-remove after first fire.

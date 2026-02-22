@@ -2,7 +2,7 @@ import { EventEmitter } from "eventemitter3";
 
 import { MetapageEvents } from "./events.js";
 import { JsonRpcMethodsFromParent } from "./jsonrpc.js";
-import { MetapageDefinitionV2 } from "./v2/index.js";
+import { MetapageDefinition, MetapageDefinitionV2 } from "./v2/index.js";
 import { MetapageVersionCurrent } from "./versions.js";
 
 export enum MetapageHashParams {
@@ -37,7 +37,7 @@ export class MetapageShared extends EventEmitter<
   public error(err: any) {
     throw "Subclass should implement";
   }
-  public getDefinition(): MetapageDefinitionV2 {
+  public getDefinition(): MetapageDefinition {
     return this._definition;
   }
 }

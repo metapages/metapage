@@ -40,7 +40,11 @@ import {
   PipeUpdateBlob,
 } from "./v0_4";
 import { MetapageOptionsV1 } from "./v1";
-import { MetapageDefinitionV2, MetapageMetadataV2 } from "./v2";
+import {
+  MetapageDefinition,
+  MetapageDefinitionV2,
+  MetapageMetadataV2,
+} from "./v2";
 import { VersionsMetapage } from "./versions";
 
 interface MetapageStatePartial {
@@ -147,7 +151,10 @@ export class Metapage extends MetapageShared {
   public static deserializeInputs = deserializeInputs;
   public static serializeInputs = serializeInputs;
 
-  public static async from(metaPageDef: any, opts?: {debug?: boolean}): Promise<Metapage> {
+  public static async from(
+    metaPageDef: any,
+    opts?: { debug?: boolean },
+  ): Promise<Metapage> {
     if (metaPageDef == null) {
       throw "Metapage definition cannot be null";
     }
@@ -282,7 +289,8 @@ export class Metapage extends MetapageShared {
     this.setState = this.setState.bind(this);
     this.isDisposed = this.isDisposed.bind(this);
     this._emitDefinitionEvent = this._emitDefinitionEvent.bind(this);
-    this._emitDefinitionUpdateEvent = this._emitDefinitionUpdateEvent.bind(this);
+    this._emitDefinitionUpdateEvent =
+      this._emitDefinitionUpdateEvent.bind(this);
 
     // see ARCHITECTURE.md
     // when the page is loaded, only then start listening to messages from metaframes
@@ -361,7 +369,7 @@ export class Metapage extends MetapageShared {
     return this._state.metaframes;
   }
 
-  public getDefinition(): MetapageDefinitionV2 {
+  public getDefinition(): MetapageDefinition {
     return this._getDefinitionWithoutSecrets();
   }
 
