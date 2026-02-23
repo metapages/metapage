@@ -125,7 +125,10 @@ export const possiblySerializeValueToDataref = async <T>(
     value instanceof Float32Array ||
     value instanceof Float64Array
   ) {
-    return typedArrayToDataUrl(value, value.constructor.name as TypedArrayType);
+    return typedArrayToDataUrl(
+      value as InstanceType<(typeof globalThis)[TypedArrayType]>,
+      value.constructor.name as TypedArrayType,
+    );
   } else if (value instanceof File) {
     const arrayBuffer = await value.arrayBuffer();
     const bytes = new Uint8Array(arrayBuffer);
@@ -198,7 +201,7 @@ export const possiblyDeserializeDatarefToFile = async (
     });
   }
   if (ArrayBuffer.isView(deserialized)) {
-    return new File([deserialized], "file", {
+    return new File([deserialized.buffer as ArrayBuffer], "file", {
       type: "application/octet-stream",
     });
   }
@@ -227,7 +230,7 @@ export const valueToFile = async (
     return new File([buffer], fileName, options);
   }
   if (ArrayBuffer.isView(value)) {
-    return new File([value.buffer], fileName, options);
+    return new File([value.buffer as ArrayBuffer], fileName, options);
   }
   if (typeof value === "string") {
     const blob = new Blob([value], { type: "text/plain" });
@@ -275,8 +278,13 @@ async function deserializeDataUrl(dataUrl: string): Promise<any> {
     return new Blob([buffer], { type: mimeType });
   }
 
-  // Plain ArrayBuffer
-  return dataUrlToBuffer(dataUrl);
+  // If we do not recognize it, leave it as a data URL
+  if (dataUrl.startsWith("data:application/octet-stream;base64,")) {
+    // plain ArrayBuffer
+    return dataUrlToBuffer(dataUrl);
+  }
+  // leave data:image etc. as is
+  return dataUrl;
 }
 
 function deserializeLegacyMetapage(value: DataRefSerialized): any {
