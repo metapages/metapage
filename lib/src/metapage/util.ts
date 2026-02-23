@@ -63,11 +63,14 @@ export const getMetaframeDefinitionFromUrl = async (
 
   // first try hash param encoded definition
   let urlEncodedDefinition: MetaframeDefinitionV2 | undefined =
-    getHashParamValueJsonFromUrl(url, "definition");
+    getHashParamValueJsonFromUrl(metaframeUrl, "definition");
 
-  if (urlEncodedDefinition?.version) {
+  if (urlEncodedDefinition) {
     return convertMetaframeJsonToCurrentVersion(urlEncodedDefinition);
   }
+
+  // not sent to server
+  metaframeUrl.hash = "";
 
   // then try metaframe.json in the url
   if (!metaframeUrl.pathname.endsWith("metaframe.json")) {
@@ -94,7 +97,8 @@ export const getMetaframeDefinitionFromUrl = async (
     return convertedDefinition;
   } catch (error) {
     console.error(
-      `Error fetching metaframe definition from ${metaframeUrl.href}: ${error}`,
+      `Error fetching metaframe definition from ${metaframeUrl.href.substring(0, 200)}`,
+      error,
     );
     return undefined;
   }
