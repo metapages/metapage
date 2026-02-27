@@ -13,11 +13,22 @@ export type HashParamType =
 
 export interface HashParamDefinition {
   type?: HashParamType;
-  description?: string; // For humans or LLMs
-  label?: string; // Short label
   value?: any; // Default value
-  allowedValues?: any[]; // Allowed values
-  defaultValue?: any; // Default value
+  label?: string; // Short label
+  description?: string; // For humans or LLMs
+  image?: string;
+  allowed?: {
+    value: any;
+    label?: string;
+    description?: string;
+    image?: string;
+  }[]; // Allowed values
+  default?: {
+    value: any;
+    label?: string;
+    description?: string;
+    image?: string;
+  }; // Default value
 }
 
 export type HashParamsObject = {
