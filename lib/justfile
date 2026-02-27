@@ -59,7 +59,7 @@ watch: _ensure_npm_modules
     echo "✅ typescript check"
     {{ vite }} --watch build
 
-@_tsc +args="":
+@_tsc +args="": _ensure_npm_modules
     {{ tsc }} {{ args }}
 
 fmt +failIfChanged="":
