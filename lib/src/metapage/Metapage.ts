@@ -1,9 +1,10 @@
 import { ListenerFn } from "eventemitter3";
 import { create } from "mutative";
 import picomatch from "picomatch/posix";
+
 import {
-  setHashParamValueBase64EncodedInUrl,
   getHashParamValueBase64DecodedFromUrl,
+  setHashParamValueBase64EncodedInUrl,
 } from "@metapages/hash-query";
 
 import { VERSION_METAPAGE } from "./Constants";
@@ -40,11 +41,7 @@ import {
   PipeUpdateBlob,
 } from "./v0_4";
 import { MetapageOptionsV1 } from "./v1";
-import {
-  MetapageDefinition,
-  MetapageDefinitionV2,
-  MetapageMetadataV2,
-} from "./v2";
+import { MetapageDefinition, MetapageMetadataV2 } from "./v2";
 import { VersionsMetapage } from "./versions";
 
 interface MetapageStatePartial {
@@ -478,7 +475,7 @@ export class Metapage extends MetapageShared {
    * Helper method to get the definition without any injected secrets.
    * Returns the definition with secret hash/query params replaced by their original values.
    */
-  private _getDefinitionWithoutSecrets(): MetapageDefinitionV2 {
+  private _getDefinitionWithoutSecrets(): MetapageDefinition {
     if (
       Object.keys(this._injectedSecrets).length === 0 &&
       Object.keys(this._injectedQuerySecrets).length === 0
@@ -572,11 +569,11 @@ export class Metapage extends MetapageShared {
     def: any,
     state?: MetapageState,
   ): Promise<{
-    newDefinition: MetapageDefinitionV2;
+    newDefinition: MetapageDefinition;
     added: { [key: string]: MetapageIFrameRpcClient };
     removed: { [key: string]: MetapageIFrameRpcClient };
   }> {
-    const newDefinition: MetapageDefinitionV2 =
+    const newDefinition: MetapageDefinition =
       await convertMetapageDefinitionToCurrentVersion(def);
 
     if (this.isDisposed()) {
@@ -1672,7 +1669,7 @@ export class Metapage extends MetapageShared {
 
           const cleanUrl = new URL(cleanUrlStr);
 
-          this._definition = create<MetapageDefinitionV2>(
+          this._definition = create<MetapageDefinition>(
             this._definition,
             (draft) => {
               draft.metaframes[metaframeName].url = cleanUrl.href;

@@ -1,19 +1,25 @@
 import fetchRetryWrapper from "fetch-retry";
+
+import { getHashParamValueJsonFromUrl } from "@metapages/hash-query";
+
+import {
+  convertMetaframeDefinitionToVersion,
+  convertMetaframeJsonToCurrentVersion,
+} from "./conversions-metaframe";
 import { convertMetapageDefinitionToVersion } from "./conversions-metapage";
+import { MetaframeDefinitionV4 } from "./v0_4";
 import { MetaframeDefinitionV1 } from "./v1";
+import {
+  MetaframeDefinition,
+  MetaframeDefinitionV2,
+  MetapageDefinition,
+} from "./v2";
 import {
   MetaframeVersionCurrent,
   MetapageVersionCurrent,
   VersionsMetaframe,
   VersionsMetapage,
 } from "./versions";
-import { MetaframeDefinitionV4 } from "./v0_4";
-import {
-  convertMetaframeDefinitionToVersion,
-  convertMetaframeJsonToCurrentVersion,
-} from "./conversions-metaframe";
-import { MetaframeDefinitionV2, MetapageDefinition } from "./v2";
-import { getHashParamValueJsonFromUrl } from "@metapages/hash-query";
 
 const fetchRetry = fetchRetryWrapper(fetch);
 
@@ -45,6 +51,7 @@ export const getMetaframeDefinitionFromUrl = async (
   | MetaframeDefinitionV2
   | MetaframeDefinitionV1
   | MetaframeDefinitionV4
+  | MetaframeDefinition
   | undefined
 > => {
   // we know some URLs will never provide a definition, so we can skip them

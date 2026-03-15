@@ -1,6 +1,7 @@
 import { compareVersions } from "compare-versions";
-import { create } from "mutative";
 import fetchRetryWrapper from "fetch-retry";
+import { create } from "mutative";
+
 import { type MetaframeDefinitionV03 } from "./v0_3/all.js";
 import {
   MetaframeDefinitionV4,
@@ -8,13 +9,14 @@ import {
   MetaframeDefinitionV6,
 } from "./v0_4/index.js";
 import { MetaframeDefinitionV1 } from "./v1/index.js";
-import { MetaframeVersionCurrent, type VersionsMetaframe } from "./versions.js";
 import {
   HashParamsObject,
   HashParamsRaw,
+  MetaframeDefinition,
   MetaframeDefinitionV2,
 } from "./v2/metaframe.js";
 import { detectMetaframeVersion } from "./version-detection.js";
+import { MetaframeVersionCurrent, type VersionsMetaframe } from "./versions.js";
 
 const fetchRetry = fetchRetryWrapper(fetch);
 
@@ -44,7 +46,8 @@ type AnyMetaframeDefinition =
   | MetaframeDefinitionV5
   | MetaframeDefinitionV6
   | MetaframeDefinitionV1
-  | MetaframeDefinitionV2;
+  | MetaframeDefinitionV2
+  | MetaframeDefinition;
 
 export const convertMetaframeDefinitionToVersion = async (
   def: any | AnyMetaframeDefinition,
@@ -96,7 +99,7 @@ export const convertMetaframeDefinitionToVersion = async (
 
 export const convertMetaframeDefinitionToCurrentVersion = async (
   def: any | AnyMetaframeDefinition,
-): Promise<MetaframeDefinitionV2> => {
+): Promise<MetaframeDefinition> => {
   return convertMetaframeDefinitionToVersion(def, MetaframeVersionCurrent);
 };
 
@@ -234,7 +237,7 @@ export const convertMetaframeJsonToCurrentVersion = async (
   m: AnyMetaframeDefinition | undefined,
   // deprecated
   opts?: { errorIfUnknownVersion?: boolean },
-): Promise<MetaframeDefinitionV2 | undefined> => {
+): Promise<MetaframeDefinition | undefined> => {
   if (!m) {
     return;
   }
