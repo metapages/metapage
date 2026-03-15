@@ -5,9 +5,9 @@ import { create } from "mutative";
 import { MetapageDefinitionV02 } from "./v0_2/all.js";
 import { MetapageDefinitionV03 } from "./v0_3/all.js";
 import { MetapageDefinitionV1 } from "./v1/index.js";
-import { MetapageVersionCurrent, VersionsMetapage } from "./versions.js";
-import { MetapageDefinitionV2 } from "./v2/metapage.js";
+import { MetapageDefinition, MetapageDefinitionV2 } from "./v2/metapage.js";
 import { detectMetapageVersion } from "./version-detection.js";
+import { MetapageVersionCurrent, VersionsMetapage } from "./versions.js";
 
 const fetchRetry = fetchRetryWrapper(fetch);
 
@@ -17,7 +17,8 @@ export const convertMetapageDefinitionToVersion = async (
     | MetapageDefinitionV02
     | MetapageDefinitionV03
     | MetapageDefinitionV1
-    | MetapageDefinitionV2,
+    | MetapageDefinitionV2
+    | MetapageDefinition,
   targetVersion: VersionsMetapage,
 ): Promise<any> => {
   if (!def) {
@@ -70,8 +71,9 @@ export const convertMetapageDefinitionToCurrentVersion = async (
     | MetapageDefinitionV02
     | MetapageDefinitionV03
     | MetapageDefinitionV1
-    | MetapageDefinitionV2,
-): Promise<MetapageDefinitionV2> => {
+    | MetapageDefinitionV2
+    | MetapageDefinition,
+): Promise<MetapageDefinition> => {
   return convertMetapageDefinitionToVersion(def, MetapageVersionCurrent);
 };
 

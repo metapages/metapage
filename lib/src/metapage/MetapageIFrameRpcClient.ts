@@ -23,7 +23,7 @@ import {
 import { MetapageHashParams, MetapageShared } from "./Shared";
 import { getMetaframeDefinitionFromUrl } from "./util";
 import { MetaframeInputMap, MetapageInstanceInputs } from "./v0_4";
-import { MetaframeDefinitionV2 } from "./v2";
+import { MetaframeDefinition } from "./v2";
 import { VersionsMetaframe, VersionsMetapage } from "./versions";
 
 /**
@@ -55,7 +55,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   _parentId: MetapageId;
   _debug: boolean;
   _sendInputsAfterRegistration: boolean = false;
-  _definition: MetaframeDefinitionV2 | undefined;
+  _definition: MetaframeDefinition | undefined;
 
   _metapage: MetapageShared;
 
@@ -127,7 +127,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
             }
           } else {
             // else use the url encoded definition
-            let urlEncodedDefinition: MetaframeDefinitionV2 | undefined =
+            let urlEncodedDefinition: MetaframeDefinition | undefined =
               getHashParamValueJsonFromUrl(this.url, "definition");
 
             urlEncodedDefinition =
@@ -144,7 +144,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
               selfThis._iframe.allow = urlEncodedDefinition.allow;
             } else {
               // Otherwise use whatever is in the metaframe.json
-              let metaframeDef: MetaframeDefinitionV2 | undefined =
+              let metaframeDef: MetaframeDefinition | undefined =
                 await selfThis.getDefinition();
               if (this._debug) {
                 this.log(`mf metaframeDef=${JSON.stringify(metaframeDef)}`);
@@ -233,7 +233,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
    * but advanced features e.g. allow permissions won't work and
    * anything relying on metadata.
    */
-  public async getDefinition(): Promise<MetaframeDefinitionV2 | undefined> {
+  public async getDefinition(): Promise<MetaframeDefinition | undefined> {
     if (this._definition) {
       return this._definition;
     }
