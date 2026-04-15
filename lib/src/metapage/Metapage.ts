@@ -392,6 +392,11 @@ export class Metapage extends MetapageShared {
         return;
       }
 
+      // Early return for data URLs - they don't support URL manipulation
+      if (metaframe.url.startsWith("data:")) {
+        return;
+      }
+
       // Initialize storage for this metaframe if needed
       if (!this._injectedSecrets[metaframeName]) {
         this._injectedSecrets[metaframeName] = {};
@@ -499,6 +504,11 @@ export class Metapage extends MetapageShared {
 
         const metaframe = this._metaframes[metaframeName];
         if (!metaframe) {
+          return;
+        }
+
+        // Data URLs don't support URL manipulation
+        if (metaframe.url.startsWith("data:")) {
           return;
         }
 
@@ -651,7 +661,7 @@ export class Metapage extends MetapageShared {
         const metaframe = this._metaframes[metaframeName];
         const newDefinitionUrl =
           this._definition?.metaframes?.[metaframeName]?.url;
-        if (!newDefinitionUrl) return;
+        if (!newDefinitionUrl || newDefinitionUrl.startsWith("data:")) return;
 
         let url = new URL(newDefinitionUrl);
 
@@ -1564,6 +1574,10 @@ export class Metapage extends MetapageShared {
         // In the current use case this app: https://github.com/metapages/metapage-app
         // will listen for the event and update the definition accordingly
         if (metaframe) {
+          // Data URLs don't support URL manipulation
+          if (metaframe.url.startsWith("data:")) {
+            break;
+          }
           // Update in place the local references to the new metaframe URL with the
           // new hash params:
           //   - if you call metapage.getDefinition() it will include the new URL
