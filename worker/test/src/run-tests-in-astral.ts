@@ -113,7 +113,6 @@ async function pollServerUntilUp(
 
   console.error("💥 Server did not come up within the allocated time");
   console.error(`💡 Debug info: Check if the server is running on ${url}`);
-  console.error(`💡 Check if the hostname ${serverFqdn} is in /etc/hosts`);
   console.error(`💡 Check if the server is bound to the correct interface`);
   return false;
 }

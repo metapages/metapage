@@ -21,7 +21,7 @@ try {
 const PORT = parseInt(
   Deno.env.get("APP_PORT") || Deno.env.get("PORT") || "8000"
 );
-const HOSTNAME = Deno.env.get("APP_FQDN") || "0.0.0.0"; // Use 0.0.0.0 to bind to all interfaces
+const HOSTNAME = "0.0.0.0"; // Always bind to all interfaces; APP_FQDN is only for client-facing URLs
 
 export default defineConfig({
   plugins: [tailwind()],
