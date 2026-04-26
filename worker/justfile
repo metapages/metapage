@@ -61,9 +61,7 @@ build: _build_local_module
   just ../lib/build
 
 # DEV: generate TLS certs for HTTPS over localhost https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
-_mkcert:
-  #!/usr/bin/env bash
-  if [ ! -f .certs/local-key.pem ]; then
-    mkdir -p .certs ;
-    mkcert -cert-file .certs/local-cert.pem -key-file .certs/local-key.pem localhost 127.0.0.1 ;
-  fi
+@_mkcert:
+  rm -rf .certs
+  mkdir -p .certs
+  mkcert -cert-file .certs/local-cert.pem -key-file .certs/local-key.pem localhost metapage-npm.dev 127.0.0.1
