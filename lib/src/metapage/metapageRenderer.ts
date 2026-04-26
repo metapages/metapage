@@ -354,6 +354,13 @@ export async function renderMetapage(props: {
     // Create wrapper div for proper grid positioning
     const wrapper = document.createElement("div");
     Object.assign(wrapper.style, itemStyle);
+
+    // Ensure iframe fills its wrapper
+    iframe.style.width = "100%";
+    iframe.style.height = "100%";
+    iframe.style.border = "none";
+    iframe.style.display = "block";
+
     wrapper.appendChild(iframe);
 
     gridContainer.appendChild(wrapper);
