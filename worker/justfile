@@ -24,7 +24,7 @@ grey                               := "\\e[90m"
 open:
   deno run --allow-all https://deno.land/x/metapages@v0.0.27/exec/open_url.ts 'https://metapages.github.io/load-page-when-available/?url=https://{{APP_FQDN}}:{{APP_PORT}}'
 
-deploy: _ensure_deployctl
+deploy:
   #!/usr/bin/env bash
   set -euo pipefail
   rm -rf deploy
@@ -38,7 +38,7 @@ deploy: _ensure_deployctl
   find src/lib -type f -name '*.ts' -exec sd -s ".js'" ".ts'" {} +
   find src/lib -type f -name '*.ts' -exec sd -s '.js"' '.ts"' {} +
   deno task build
-  deployctl deploy --project=metapage-module --prod --entrypoint src/main.ts
+  deno deploy --prod
 
 # Delete all cached and generated files, and docker volumes
 @clean:
@@ -59,9 +59,6 @@ build: _build_local_module
 
 @_build_local_module:
   just ../lib/build
-
-@_ensure_deployctl:
-  if ! command -v deployctl &> /dev/null; then echo '‼️ 👉 deployctl is being installed ‼️'; deno install -gArf jsr:@deno/deployctl; fi
 
 # DEV: generate TLS certs for HTTPS over localhost https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
 _mkcert:

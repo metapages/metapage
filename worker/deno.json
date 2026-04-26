@@ -1,4 +1,8 @@
 {
+  "deploy": {
+    "org": "metapage",
+    "app": "module"
+  },
   "lock": false,
   "unstable": ["sloppy-imports"],
   "tasks": {
