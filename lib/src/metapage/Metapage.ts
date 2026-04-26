@@ -646,6 +646,31 @@ export class Metapage extends MetapageShared {
       });
     }
 
+    // Rebuild the pipe map for existing metaframes whose inputs may have
+    // changed in the new definition. addMetaframe already handles new frames,
+    // but existing frames keep their stale _inputMap entries.
+    if (newDefinition.metaframes) {
+      Object.keys(newDefinition.metaframes).forEach((metaframeId) => {
+        // Skip newly added frames — addMetaframe already set up their pipes
+        if (added[metaframeId]) {
+          return;
+        }
+        // Remove old pipe entries for this existing metaframe
+        this._inputMap = create(this._inputMap, (draft) => {
+          delete draft[metaframeId];
+        });
+        // Re-add pipes from the new definition
+        const metaframeDef = newDefinition.metaframes[metaframeId];
+        if (metaframeDef.inputs) {
+          metaframeDef.inputs.forEach((input) =>
+            this.addPipe(metaframeId, input),
+          );
+        }
+      });
+      // Clear the cached lookup since pipes changed
+      this._cachedInputLookupMap = create({}, (draft) => draft);
+    }
+
     // Re-inject secrets for metaframes that still exist or were just created
     const allMetaframesWithSecrets = new Set([
       ...Object.keys(savedSecrets),
