@@ -342,24 +342,27 @@ export async function renderMetapage(props: {
     const itemStyle: Record<string, string | number> = {
       gridColumn: `${layoutItem.x + 1} / span ${layoutItem.w}`,
       gridRow: `${layoutItem.y + 1} / span ${layoutItem.h}`,
-      overflow: "hidden",
+      position: "relative",
+      overflowY: "hidden",
       width: "100%",
-      height: "100%", // Use full height of grid cell
+      height: "100%",
       border: options.hideFrameBorders ? "none" : "1px solid #e0e0e0",
-      position: "relative" as const,
-      alignSelf: "stretch", // Stretch to fill the grid cell height
-      justifySelf: "stretch", // Stretch to fill the grid cell width
+      alignSelf: "stretch",
+      justifySelf: "stretch",
     };
 
     // Create wrapper div for proper grid positioning
     const wrapper = document.createElement("div");
     Object.assign(wrapper.style, itemStyle);
 
-    // Ensure iframe fills its wrapper
+    // Absolutely position iframe within its relative container
+    iframe.style.position = "absolute";
+    iframe.style.top = "0";
+    iframe.style.left = "0";
     iframe.style.width = "100%";
     iframe.style.height = "100%";
-    iframe.style.border = "none";
-    iframe.style.display = "block";
+    iframe.style.border = "0";
+    iframe.style.overflow = "hidden";
 
     wrapper.appendChild(iframe);
 
