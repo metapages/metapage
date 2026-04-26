@@ -5,6 +5,9 @@ import {
   Metapage,
   MetapageDefinition,
   MetapageEventDefinitionUpdate,
+  MetapageEvents,
+  MetaframeInputMap,
+  MetapageInstanceInputs,
   MetapageState,
 } from "../src";
 
@@ -247,5 +250,159 @@ describe("Metapage.updateDefinition", () => {
     const stateEvent = await statePromise;
 
     expect(stateEvent).toBeDefined();
+  });
+
+  it("new connections added via updateDefinition route data correctly", async () => {
+    metapage = new Metapage();
+
+    // Start with two frames, NO connections between them
+    const def1: MetapageDefinition = {
+      metaframes: {
+        frame1: { url: PASSTHROUGH_URL },
+        frame2: { url: PASSTHROUGH_URL },
+      },
+    };
+
+    const firstEventPromise = nextDefinitionUpdate(metapage);
+    await metapage.updateDefinition(def1);
+    await firstEventPromise;
+
+    // Verify no connections: setting output on frame1 should NOT reach frame2
+    const frame2Before = metapage.getMetaframe("frame2")!;
+    let frame2ReceivedInputBefore = false;
+    frame2Before.addListener(MetapageEvents.Inputs, () => {
+      frame2ReceivedInputBefore = true;
+    });
+
+    metapage.setMetaframeOutputs("frame1", { output1: "test-before" });
+    // Give any async events time to fire
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(frame2ReceivedInputBefore).toBe(false);
+    frame2Before.removeAllListeners(MetapageEvents.Inputs);
+
+    // Now update definition to ADD a connection: frame1.output1 -> frame2.input1
+    const def2: MetapageDefinition = {
+      metaframes: {
+        frame1: { url: PASSTHROUGH_URL },
+        frame2: {
+          url: PASSTHROUGH_URL,
+          inputs: [
+            { metaframe: "frame1", source: "output1", target: "input1" },
+          ],
+        },
+      },
+    };
+
+    const secondEventPromise = nextDefinitionUpdate(metapage);
+    await metapage.updateDefinition(def2);
+    await secondEventPromise;
+
+    // Now set output on frame1 — frame2 should receive it as input1
+    const frame2After = metapage.getMetaframe("frame2")!;
+    const inputsPromise = new Promise<MetaframeInputMap>((resolve) => {
+      const handler = (inputs: MetaframeInputMap) => {
+        frame2After.removeListener(MetapageEvents.Inputs, handler);
+        resolve(inputs);
+      };
+      frame2After.addListener(MetapageEvents.Inputs, handler);
+    });
+
+    metapage.setMetaframeOutputs("frame1", { output1: "hello-world" });
+
+    const receivedInputs = await inputsPromise;
+    expect(receivedInputs).toBeDefined();
+    expect(receivedInputs["input1"]).toBe("hello-world");
+  });
+
+  it("new connections to a newly added frame via updateDefinition route data correctly", async () => {
+    metapage = new Metapage();
+
+    // Start with one frame
+    const def1: MetapageDefinition = {
+      metaframes: {
+        frame1: { url: PASSTHROUGH_URL },
+      },
+    };
+
+    const firstEventPromise = nextDefinitionUpdate(metapage);
+    await metapage.updateDefinition(def1);
+    await firstEventPromise;
+
+    // Add frame2 with a connection from frame1
+    const def2: MetapageDefinition = {
+      metaframes: {
+        frame1: { url: PASSTHROUGH_URL },
+        frame2: {
+          url: PASSTHROUGH_URL,
+          inputs: [{ metaframe: "frame1", source: "data", target: "data" }],
+        },
+      },
+    };
+
+    const secondEventPromise = nextDefinitionUpdate(metapage);
+    await metapage.updateDefinition(def2);
+    await secondEventPromise;
+
+    // Set output on frame1 — newly added frame2 should receive it
+    const frame2 = metapage.getMetaframe("frame2")!;
+    const inputsPromise = new Promise<MetaframeInputMap>((resolve) => {
+      const handler = (inputs: MetaframeInputMap) => {
+        frame2.removeListener(MetapageEvents.Inputs, handler);
+        resolve(inputs);
+      };
+      frame2.addListener(MetapageEvents.Inputs, handler);
+    });
+
+    metapage.setMetaframeOutputs("frame1", { data: "new-frame-data" });
+
+    const receivedInputs = await inputsPromise;
+    expect(receivedInputs).toBeDefined();
+    expect(receivedInputs["data"]).toBe("new-frame-data");
+  });
+
+  it("glob connections added via updateDefinition route all matching outputs", async () => {
+    metapage = new Metapage();
+
+    // Start with two frames, no connections
+    const def1: MetapageDefinition = {
+      metaframes: {
+        frame1: { url: PASSTHROUGH_URL },
+        frame2: { url: PASSTHROUGH_URL },
+      },
+    };
+
+    const firstEventPromise = nextDefinitionUpdate(metapage);
+    await metapage.updateDefinition(def1);
+    await firstEventPromise;
+
+    // Update with a glob connection: frame2 receives ALL outputs from frame1
+    const def2: MetapageDefinition = {
+      metaframes: {
+        frame1: { url: PASSTHROUGH_URL },
+        frame2: {
+          url: PASSTHROUGH_URL,
+          inputs: [{ metaframe: "frame1", source: "**" }],
+        },
+      },
+    };
+
+    const secondEventPromise = nextDefinitionUpdate(metapage);
+    await metapage.updateDefinition(def2);
+    await secondEventPromise;
+
+    const frame2 = metapage.getMetaframe("frame2")!;
+    const inputsPromise = new Promise<MetaframeInputMap>((resolve) => {
+      const handler = (inputs: MetaframeInputMap) => {
+        frame2.removeListener(MetapageEvents.Inputs, handler);
+        resolve(inputs);
+      };
+      frame2.addListener(MetapageEvents.Inputs, handler);
+    });
+
+    metapage.setMetaframeOutputs("frame1", { anyKey: "glob-value" });
+
+    const receivedInputs = await inputsPromise;
+    expect(receivedInputs).toBeDefined();
+    expect(receivedInputs["anyKey"]).toBe("glob-value");
   });
 });
