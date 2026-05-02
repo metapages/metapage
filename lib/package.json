@@ -24,8 +24,8 @@
   ],
   "source": "src/index.ts",
   "dependencies": {
-    "@metapages/hash-query": "^0.9.12",
     "@metapages/dataref": "^2.0.1",
+    "@metapages/hash-query": "^0.9.12",
     "base64-arraybuffer": "^1.0.2",
     "compare-versions": "^6.1.1",
     "eventemitter3": "^4.0.0",
@@ -41,7 +41,7 @@
     "@rollup/plugin-typescript": "^11.1.5",
     "@types/object-hash": "^2.2.1",
     "@vitest/browser": "^3.2.4",
-    "playwright": "^1.54.2",
+    "playwright": "^1.59.1",
     "rollup": "^2.79.2",
     "rollup-plugin-typescript-paths": "^1.4.0",
     "tslib": "^2.6.2",
