@@ -1,7 +1,7 @@
 {
   "name": "@metapages/metapage",
   "public": true,
-  "version": "1.10.7",
+  "version": "1.10.8",
   "description": "Connect web pages together",
   "repository": "https://github.com/metapages/metapage",
   "homepage": "https://metapage.io/",
@@ -15,7 +15,8 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    }
+    },
+    "./metapage.css": "./dist/metapage.css"
   },
   "files": [
     "dist",
