@@ -40,7 +40,7 @@ describe("renderMetaframe", () => {
     expect(iframe).not.toBeNull();
     expect(iframe!.style.width).toBe("100%");
     expect(iframe!.style.height).toBe("100%");
-    expect(iframe!.style.border).toBe("none");
+    expect(iframe!.style.borderStyle).toBe("none");
   });
 
   it("returns a valid metapage instance", async () => {
