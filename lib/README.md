@@ -86,7 +86,7 @@ import { renderMetaframe } from "@metapages/metapage";
 
 const { setInputs, dispose } = await renderMetaframe({
   onOutputs: (outputs) => {
-    console.log("Got outputs", outputs)
+    console.log("Got outputs", outputs);
   },
   url: "https://js.mtfm.io/",
   rootDiv: document.getElementById("container"),
@@ -126,8 +126,13 @@ dispose();
 <html>
   <head>
     <style>
-      body { margin: 0; }
-      #container { width: 100vw; height: 100vh; }
+      body {
+        margin: 0;
+      }
+      #container {
+        width: 100vw;
+        height: 100vh;
+      }
     </style>
   </head>
   <body>
