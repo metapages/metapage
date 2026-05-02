@@ -77,12 +77,81 @@ The `renderMetapage` function the `react-grid-layout` layout in `metapage.json`:
 
 [Implentation in source code](https://github.com/metapages/metapage/blob/2ef8bd7bfb151ad1616da46aa9797bcf2b1c3d78/app/libs/src/metapage/metapageRenderer.ts#L204)
 
+### Rendering a Single Metaframe
+
+Use `renderMetaframe` to embed a single metaframe URL as a full-size iframe with no borders, labels, or grid layout:
+
+```javascript
+import { renderMetaframe } from "@metapages/metapage";
+
+const { setInputs, dispose } = await renderMetaframe({
+  onOutputs: (outputs) => {
+    console.log("Got outputs", outputs)
+  },
+  url: "https://js.mtfm.io/",
+  rootDiv: document.getElementById("container"),
+});
+```
+
+#### Options
+
+```javascript
+const { setInputs, setOutputs, dispose, metapage } = await renderMetaframe({
+  url: "https://js.mtfm.io/",
+  rootDiv: document.getElementById("container"),
+  debug: false,
+
+  // Called when the metaframe sends outputs (pipe-level, not wrapped by metaframe ID)
+  onOutputs: (outputs) => {
+    console.log("Outputs:", outputs); // { pipeName: value, ... }
+  },
+
+  // Called when the metaframe URL changes (e.g. hash param updates)
+  onUrlChange: (newUrl) => {
+    console.log("URL changed to:", newUrl);
+  },
+});
+
+// Send inputs directly as MetaframeInputMap (pipe-level)
+setInputs({ text: "hello" });
+
+// Clean up when done
+dispose();
+```
+
+#### Full HTML Example
+
+```html
+<!DOCTYPE html>
+<html>
+  <head>
+    <style>
+      body { margin: 0; }
+      #container { width: 100vw; height: 100vh; }
+    </style>
+  </head>
+  <body>
+    <div id="container"></div>
+    <script type="module">
+      import { renderMetaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.8";
+
+      const { dispose } = await renderMetaframe({
+        url: "https://js.mtfm.io/",
+        rootDiv: document.getElementById("container"),
+        onOutputs: (outputs) => console.log("outputs:", outputs),
+        onUrlChange: (url) => console.log("url:", url),
+      });
+    </script>
+  </body>
+</html>
+```
+
 ### Creating a Metaframe (Inside an iframe)
 
 If you're building a component to use in a metapage:
 
 ```javascript
-import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
+import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.8";
 
 const metaframe = new Metaframe();
 
@@ -564,6 +633,22 @@ Render a metapage into a DOM element.
   - `hideMetaframeLabels`: Hide metaframe labels
 
 **Returns:** `{ setInputs, setOutputs, dispose, metapage }`
+
+### renderMetaframe(options)
+
+Render a single metaframe URL as a full-size iframe.
+
+**Parameters:**
+
+- `url`: The metaframe URL to render
+- `rootDiv`: DOM element to render into
+- `onOutputs`: Callback for metaframe outputs as `MetaframeInputMap` (optional)
+- `onUrlChange`: Callback when the metaframe URL changes (optional)
+- `debug`: Enable debug logging (optional, default `false`)
+
+**Returns:** `{ setInputs, setOutputs, dispose, metapage }`
+
+Note: `setInputs` and `setOutputs` accept `MetaframeInputMap` directly (pipe-level), unlike `renderMetapage` which uses `MetapageInstanceInputs` (keyed by metaframe ID).
 
 ### Metapage Class
 
