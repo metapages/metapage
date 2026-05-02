@@ -30,7 +30,6 @@ _help:
 
 # Run all build/unit/functional tests
 test:
-    npx playwright install
     just lib/test
     just worker/test
 
