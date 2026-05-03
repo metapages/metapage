@@ -613,6 +613,15 @@ export class Metapage extends MetapageShared {
     const savedOriginalParams = { ...this._originalSecretHashParams };
     const savedOriginalQueryParams = { ...this._originalSecretQueryParams };
 
+    // Snapshot old definition URLs so we can detect genuine URL changes
+    // for existing metaframes (vs no-op round-trips from hash self-updates)
+    const oldDefinitionUrls: { [key: string]: string } = {};
+    if (this._definition?.metaframes) {
+      Object.keys(this._definition.metaframes).forEach((id) => {
+        oldDefinitionUrls[id] = this._definition.metaframes[id].url;
+      });
+    }
+
     this._definition = newDefinition;
 
     // Capture removed frames BEFORE removing them so we have references
@@ -642,6 +651,33 @@ export class Metapage extends MetapageShared {
           // this will also set the inputs from our state
           const client = this.addMetaframe(newMetaframeId, metaframeDefinition);
           added[newMetaframeId] = client;
+        }
+      });
+    }
+
+    // Update URLs for existing metaframes whose URL genuinely changed.
+    // Compare against the old definition URL (not the client URL, which
+    // may include injected secrets). When a metaframe self-updates its
+    // hash params, the HashParamsUpdate handler already updates both the
+    // client URL and this._definition, so by the time a round-trip call
+    // to setDefinition/updateDefinition arrives, the old definition URL
+    // already matches the new one — making this a no-op as intended.
+    if (newDefinition.metaframes) {
+      Object.keys(newDefinition.metaframes).forEach((metaframeId) => {
+        if (added[metaframeId]) {
+          return;
+        }
+        const client = this._metaframes[metaframeId];
+        if (!client) {
+          return;
+        }
+        const newUrl = newDefinition.metaframes[metaframeId].url;
+        const oldUrl = oldDefinitionUrls[metaframeId];
+        if (newUrl && oldUrl !== newUrl) {
+          client.url = newUrl;
+          if (client._iframe) {
+            client._iframe.src = newUrl;
+          }
         }
       });
     }
