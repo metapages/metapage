@@ -85,6 +85,8 @@ fmt +failIfChanged="":
 
 # Run tests
 test: _ensure_npm_modules
+    npm install
+    npx playwright install
     npm run test
 
 # Develop:

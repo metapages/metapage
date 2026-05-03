@@ -353,9 +353,11 @@ export async function renderMetapage(props: {
 
     // Create wrapper div for proper grid positioning
     const wrapper = document.createElement("div");
+    wrapper.classList.add("metaframe-container");
     Object.assign(wrapper.style, itemStyle);
 
     // Absolutely position iframe within its relative container
+    iframe.classList.add("metaframe");
     iframe.style.position = "absolute";
     iframe.style.top = "0";
     iframe.style.left = "0";

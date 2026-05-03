@@ -46,7 +46,10 @@ export default function App({ Component }: PageProps) {
 
           <nav class="box backgroundGrey600">
             <a class="linkpadding" href="/m">
-              Render
+              Render Metapage
+            </a>
+            <a class="linkpadding" href="/mf">
+              Render Metaframe
             </a>
             <a class="linkpadding" href="/test/metapage">
               Test

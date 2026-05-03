@@ -18,3 +18,4 @@ export * from "./metapage/versions";
 export * from "./metapage/version-detection";
 export * from "./metapage/util";
 export * from "./metapage/metapageRenderer";
+export * from "./metapage/metaframeRenderer";

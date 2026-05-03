@@ -16,6 +16,7 @@ import * as $convert_types from "./routes/convert/types.ts";
 import * as $index from "./routes/index.tsx";
 import * as $lib_path_ from "./routes/lib/[...path].ts";
 import * as $m_index from "./routes/m/index.tsx";
+import * as $mf_index from "./routes/mf/index.tsx";
 import * as $test_types from "./routes/test/_types.ts";
 import * as $test_metaframe_compatibility_version_index from "./routes/test/metaframe/compatibility/[version]/index.tsx";
 import * as $test_metaframe_compatibility_version_metaframe_json from "./routes/test/metaframe/compatibility/[version]/metaframe.json.ts";
@@ -61,6 +62,7 @@ const manifest = {
     "./routes/index.tsx": $index,
     "./routes/lib/[...path].ts": $lib_path_,
     "./routes/m/index.tsx": $m_index,
+    "./routes/mf/index.tsx": $mf_index,
     "./routes/test/_types.ts": $test_types,
     "./routes/test/metaframe/compatibility/[version]/index.tsx":
       $test_metaframe_compatibility_version_index,

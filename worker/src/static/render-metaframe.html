@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+
+  <head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
+    <title>Metaframe renderer</title>
+    <link rel="stylesheet" href="./styles.css"/>
+    <link rel="icon" href="./favicon.ico" type="image/x-icon"/>
+  </head>
+
+  <body style="margin: 0; padding: 0; border: none">
+    <main style="margin: 0; padding: 0; border: none">
+      <div id="root" style="width: 100vw; height: 100vh; margin: 0; padding: 0; border: none"></div>
+    </main>
+    <script type="module">
+      import {getHashParamFromWindow, setHashParamInWindow} from "https://cdn.jsdelivr.net/npm/@metapages/hash-query@0.8.15/+esm";
+      const {renderMetaframe} = await import ("{{VERSION}}");
+
+      const rootDiv = document.getElementById("root");
+
+      const metaframeUrl = getHashParamFromWindow("url");
+
+      if (metaframeUrl) {
+        rootDiv.style.display = "flex";
+        rootDiv.style.flexDirection = "column";
+        rootDiv.style.fontFamily = "Arial, sans-serif";
+
+        // URL bar at the top
+        const urlBar = document.createElement("div");
+        urlBar.style.padding = "8px 16px";
+        urlBar.style.borderBottom = "1px solid #e0e0e0";
+        urlBar.style.flexShrink = "0";
+        urlBar.style.display = "flex";
+        urlBar.style.alignItems = "center";
+        urlBar.style.gap = "8px";
+        urlBar.style.background = "#fafafa";
+
+        const urlInput = document.createElement("input");
+        urlInput.type = "text";
+        urlInput.value = metaframeUrl;
+        urlInput.readOnly = true;
+        urlInput.style.flex = "1";
+        urlInput.style.padding = "6px 10px";
+        urlInput.style.border = "1px solid #ccc";
+        urlInput.style.borderRadius = "4px";
+        urlInput.style.fontSize = "13px";
+        urlInput.style.fontFamily = "monospace";
+        urlInput.style.color = "#333";
+        urlInput.style.background = "#fff";
+        urlInput.style.outline = "none";
+        urlInput.addEventListener("focus", () => urlInput.select());
+
+        urlBar.appendChild(urlInput);
+        rootDiv.appendChild(urlBar);
+
+        // Padded metaframe area
+        const metaframeArea = document.createElement("div");
+        metaframeArea.style.flex = "1";
+        metaframeArea.style.padding = "16px";
+        metaframeArea.style.minHeight = "0";
+        metaframeArea.style.overflow = "hidden";
+
+        const metaframeContainer = document.createElement("div");
+        metaframeContainer.style.width = "100%";
+        metaframeContainer.style.height = "100%";
+
+        metaframeArea.appendChild(metaframeContainer);
+        rootDiv.appendChild(metaframeArea);
+
+        await renderMetaframe({url: metaframeUrl, rootDiv: metaframeContainer});
+      } else {
+        rootDiv.innerHTML = `
+          <div style="padding: 20px; text-align: center; font-family: Arial, sans-serif;">
+            <a href="/">
+                <img
+                  style="margin-top: 6px; margin-right: 16px; margin-left: 15px; "
+                  class="my-6"
+                  src="/mp/logo.svg"
+                  width="40"
+                  height="40"
+                  alt="the Metapages logo"
+                />
+              </a>
+
+            <div id="pasteArea" style="
+              border: 2px dashed #ccc;
+              padding: 40px;
+              margin: 20px;
+              border-radius: 8px;
+              background: #f9f9f9;
+              cursor: pointer;
+              transition: all 0.3s ease;
+            " onmouseover="this.style.borderColor='#999'; this.style.background='#f0f0f0';"
+               onmouseout="this.style.borderColor='#ccc'; this.style.background='#f9f9f9';">
+              <p style="margin: 0; color: #666;">Paste (Ctrl+V/Cmd+V) a metaframe URL</p>
+            </div>
+
+            <div id="errorOutput" style="
+              margin: 20px;
+              padding: 15px;
+              background: #f5f5f5;
+              border-radius: 5px;
+              text-align: left;
+              display: none;
+              max-height: 400px;
+              overflow-y: auto;
+            "></div>
+          </div>
+        `;
+
+        const errorOutput = document.getElementById("errorOutput");
+
+        document.addEventListener("paste", async (e) => {
+          let text = e.clipboardData.getData("text");
+          try {
+            text = text?.trim();
+            if (!text) {
+              return;
+            }
+            setHashParamInWindow("url", text);
+            window.location.reload();
+          } catch (e) {
+            errorOutput.innerHTML = '<p style="color: #dc3545;">Error: ' + e.message + '</p>';
+            errorOutput.style.display = "block";
+          }
+        });
+      }
+    </script>
+  </body>
+
+</html>

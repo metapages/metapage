@@ -1,3 +1,4 @@
+import fs from "fs";
 import path, { resolve } from "path";
 import { typescriptPaths } from "rollup-plugin-typescript-paths";
 import { defineConfig, type Plugin } from "vite";
@@ -6,6 +7,18 @@ import typescript from "@rollup/plugin-typescript";
 
 // Plugin to ensure build process exits properly in CI
 // This prevents hanging when plugins leave open handles
+function copyCssPlugin(): Plugin {
+  return {
+    name: "copy-css",
+    closeBundle() {
+      fs.copyFileSync(
+        path.resolve(__dirname, "src/metapage.css"),
+        path.resolve(__dirname, "dist/metapage.css"),
+      );
+    },
+  };
+}
+
 function forceExitPlugin(): Plugin {
   return {
     name: "force-exit",
@@ -34,6 +47,7 @@ export default defineConfig(({ mode }) => ({
       declaration: true,
       outDir: "dist",
     }),
+    copyCssPlugin(),
     // Only add force-exit plugin in CI to prevent hanging
     ...(process.env.CI ? [forceExitPlugin()] : []),
   ],
