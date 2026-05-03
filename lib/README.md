@@ -748,6 +748,10 @@ const definition: MetapageDefinition = {
 const metapage = new Metapage({ definition });
 ```
 
+## React Integration
+
+For embedding metapages and metaframes in React applications, see [`@metapages/metapage-react`](https://www.npmjs.com/package/@metapages/metapage-react) which provides hooks and components for seamless React integration.
+
 ## Browser Support
 
 - Chrome 78+
