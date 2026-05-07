@@ -42,29 +42,88 @@ console.log(`   Current working directory: ${Deno.cwd()}`);
 
 type TestType = "compatibility" | "globs" | "first-message" | "io-pipe-names";
 
-// Function to start the Deno Fresh server
+// Build the Fresh manifest before starting the server (avoid dev/watch mode in CI)
+async function buildFreshManifest() {
+  console.log("Building Fresh manifest...");
+  const build = new Deno.Command("deno", {
+    args: ["task", "build"],
+    stdout: "inherit",
+    stderr: "inherit",
+  });
+  const { code } = await build.output();
+  if (code !== 0) {
+    throw new Error(`Fresh build failed with exit code ${code}`);
+  }
+  console.log("Fresh manifest built successfully");
+}
+
+// Function to start the Deno Fresh server (production mode, no file watching)
 async function startDenoFreshServer() {
   console.log("Starting Deno Fresh server ", Deno.cwd());
+
+  await buildFreshManifest();
+
   const command = new Deno.Command("deno", {
-    args: ["task", "start"],
+    args: ["task", "preview"],
     stdout: "piped",
     stderr: "piped",
   });
 
   const process = command.spawn();
 
-  // Wait for the server to start
-  const decoder = new TextDecoder();
-  (async () => {
-    for await (const chunk of process.stdout) {
-      const output = decoder.decode(chunk);
-      console.log(output);
-      if (output.includes("Listening on")) {
+  // Wait for the server to be ready by watching both stdout and stderr
+  const isReadyLine = (line: string) =>
+    line.includes("Listening on") || line.includes("Fresh ready");
+
+  await new Promise<void>((resolve, reject) => {
+    let resolved = false;
+    const done = () => {
+      if (!resolved) {
+        resolved = true;
         console.log("Deno Fresh server started");
-        break;
+        clearTimeout(timeout);
+        resolve();
       }
-    }
-  })();
+    };
+
+    const timeout = setTimeout(() => {
+      if (!resolved) {
+        reject(new Error("Server did not become ready within 120 seconds"));
+      }
+    }, 120_000);
+
+    // Read stdout
+    const stdoutDecoder = new TextDecoder();
+    (async () => {
+      try {
+        for await (const chunk of process.stdout) {
+          const output = stdoutDecoder.decode(chunk);
+          console.log(output);
+          if (isReadyLine(output)) {
+            done();
+          }
+        }
+      } catch (err) {
+        if (!resolved) { clearTimeout(timeout); reject(err); }
+      }
+    })();
+
+    // Read stderr
+    const stderrDecoder = new TextDecoder();
+    (async () => {
+      try {
+        for await (const chunk of process.stderr) {
+          const output = stderrDecoder.decode(chunk);
+          console.error("[server stderr]", output);
+          if (isReadyLine(output)) {
+            done();
+          }
+        }
+      } catch (err) {
+        if (!resolved) { clearTimeout(timeout); reject(err); }
+      }
+    })();
+  });
 
   return process;
 }
@@ -205,59 +264,53 @@ async function runSingleMetapageTest(
     }s headless:${headless}`
   );
 
-  // Enhanced browser configuration for headless mode
   const browserArgs = [
     "--no-sandbox",
     "--disable-setuid-sandbox",
     "--disable-dev-shm-usage",
     "--disable-gpu",
+    "--no-first-run",
+    "--no-default-browser-check",
+    "--disable-extensions",
+    "--ignore-certificate-errors",
+    "--allow-insecure-localhost",
   ];
 
-  // Add additional arguments for headless mode stability
-  if (headless) {
-    browserArgs.push(
-      "--disable-renderer-backgrounding",
-      "--disable-features=TranslateUI",
-      "--no-first-run",
-      "--no-default-browser-check",
-      "--disable-default-apps",
-      "--disable-extensions",
-      "--disable-plugins",
-      "--disable-sync",
-      "--disable-translate",
-      "--hide-scrollbars",
-      "--mute-audio",
-      "--ignore-certificate-errors",
-      "--ignore-ssl-errors",
-      "--ignore-certificate-errors-spki-list",
-      "--allow-insecure-localhost",
-      "--disable-web-security",
-      "--disable-features=VizDisplayCompositor",
-      "--ignore-certificate-errors",
-      "--ignore-ssl-errors",
-      "--ignore-certificate-errors-spki-list",
-      "--allow-insecure-localhost",
-      "--disable-extensions-except",
-      "--disable-extensions-file-access-check"
-    );
+  // Find system Chrome — Astral's bundled Chromium may not work on all macOS versions
+  const chromePaths = [
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+  ];
+  let chromePath: string | undefined;
+  for (const p of chromePaths) {
+    try {
+      const stat = Deno.statSync(p);
+      if (stat.isFile) {
+        chromePath = p;
+        break;
+      }
+    } catch {
+      // not found, try next
+    }
   }
+  console.log(`🔧 Chrome path: ${chromePath ?? "(using Astral default)"}`);
 
-  const browser = await launch({
+  console.log("🔧 Launching browser...");
+  const launchStart = Date.now();
+  const launchOpts: Record<string, unknown> = {
     headless: headless,
     args: browserArgs,
-    dumpio: consoleToLogs,
-    // Add viewport for consistent behavior
-    defaultViewport: { width: 1280, height: 720 },
-  });
-
-  const page = await browser.newPage();
-
-  // Enhanced error handling and logging for headless mode
-  if (consoleToLogs || headless) {
-    // Note: Astral API doesn't support page.on() event handlers
-    // We'll rely on dumpio and other debugging methods instead
-    console.log("Enhanced logging enabled - using dumpio for browser output");
+  };
+  if (chromePath) {
+    launchOpts.path = chromePath;
   }
+  const browser = await launch(launchOpts as any);
+  console.log(`🔧 Browser launched in ${Date.now() - launchStart}ms`);
+
+  console.log(`🔧 Existing pages: ${browser.pages.length}`);
+  console.log("🔧 Creating new page...");
+  const page = await browser.newPage();
+  console.log("🔧 New page created");
 
   const url = getMetapageTestUrl(type, version);
   console.log(`Metapage url: ${url}`);
