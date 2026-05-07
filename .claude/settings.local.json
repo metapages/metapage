@@ -28,7 +28,11 @@
       "Bash(just check:*)",
       "Bash(git log:*)",
       "Bash(wc:*)",
-      "Bash(npx vitest:*)"
+      "Bash(npx vitest:*)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:jsr.io)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "WebFetch(domain:api.github.com)"
     ]
   }
 }

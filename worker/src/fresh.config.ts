@@ -1,8 +1,11 @@
 import tailwind from "$fresh/plugins/tailwind.ts";
 import { defineConfig } from "$fresh/server.ts";
+import { dirname, fromFileUrl, join } from "$std/path/mod.ts";
 
-const certPath = ".certs/local-cert.pem";
-const keyPath = ".certs/local-key.pem";
+// Resolve cert paths relative to the worker directory (parent of src/)
+const workerDir = dirname(dirname(fromFileUrl(import.meta.url)));
+const certPath = join(workerDir, ".certs", "local-cert.pem");
+const keyPath = join(workerDir, ".certs", "local-key.pem");
 let cert: string | undefined;
 let key: string | undefined;
 // Check if the file exists in the current directory.
