@@ -111,6 +111,16 @@ export async function renderMetaframe(props: {
   container.style.overflow = "hidden";
   container.style.position = "relative";
 
+  // Height floor: `height: 100%` only resolves to a real size when an ancestor
+  // has a definite height. When a downstream consumer places rootDiv in an
+  // auto-height parent, `100%` collapses to 0 and the iframe disappears. Fall
+  // back to the layout's natural height (rowHeight * row span) so the metaframe
+  // still renders, while filling a definite-height parent unchanged.
+  const rglLayout = definition.meta?.layouts?.["react-grid-layout"];
+  const naturalHeight =
+    (rglLayout?.props?.rowHeight || 100) * (rglLayout?.layout?.[0]?.h || 1);
+  container.style.minHeight = `${naturalHeight}px`;
+
   // Iframe fills the container
   iframe.style.position = "absolute";
   iframe.style.top = "0";

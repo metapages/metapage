@@ -43,6 +43,42 @@ describe("renderMetaframe", () => {
     expect(iframe!.style.borderStyle).toBe("none");
   });
 
+  it("floors container height so it survives an auto-height parent", async () => {
+    // rootDiv with no explicit height (normal document flow) — `height: 100%`
+    // resolves to auto here, which would collapse to 0 without the floor.
+    rootDiv = document.createElement("div");
+    document.body.appendChild(rootDiv);
+
+    result = await renderMetaframe({
+      url: METAFRAME_DATA_URL,
+      rootDiv,
+    });
+
+    const container = rootDiv.querySelector("div") as HTMLDivElement;
+    expect(container).not.toBeNull();
+    // Default rowHeight (100) * row span (1) = 100px floor.
+    expect(container.style.minHeight).toBe("100px");
+    // The container must actually have non-zero rendered height.
+    expect(container.getBoundingClientRect().height).toBeGreaterThan(0);
+  });
+
+  it("still fills a definite-height parent (100%)", async () => {
+    rootDiv = document.createElement("div");
+    rootDiv.style.width = "400px";
+    rootDiv.style.height = "300px";
+    document.body.appendChild(rootDiv);
+
+    result = await renderMetaframe({
+      url: METAFRAME_DATA_URL,
+      rootDiv,
+    });
+
+    const container = rootDiv.querySelector("div") as HTMLDivElement;
+    expect(container.style.height).toBe("100%");
+    // Fills the 300px parent, not clamped to the 100px floor.
+    expect(container.getBoundingClientRect().height).toBe(300);
+  });
+
   it("returns a valid metapage instance", async () => {
     rootDiv = document.createElement("div");
     document.body.appendChild(rootDiv);

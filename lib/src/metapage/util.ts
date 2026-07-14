@@ -113,9 +113,7 @@ export const getMetaframeDefinitionFromUrl = async (
 
 export const isEmptyMetaframeDefinition = (
   definition?:
-    | MetaframeDefinitionV1
-    | MetaframeDefinitionV2
-    | MetaframeDefinitionV4,
+    MetaframeDefinitionV1 | MetaframeDefinitionV2 | MetaframeDefinitionV4,
 ): boolean => {
   if (!definition) {
     return true;
