@@ -386,6 +386,20 @@ export async function renderMetapage(props: {
     maxCol,
   )}, 1fr)`;
 
+  // Height floor: the grid fills its parent with `height: 100%`, but that only
+  // resolves to a real size when an ancestor has a definite height. When the
+  // parent is auto-height (common for downstream consumers who don't control
+  // the outer layout), `100%` collapses to 0 and nothing renders. Give the grid
+  // a `min-height` equal to its natural react-grid-layout height so it falls
+  // back to content height instead of collapsing, while still filling a
+  // definite-height parent unchanged.
+  const rowHeight = desktopLayoutBlob.props.rowHeight || 100;
+  const gap = desktopLayoutBlob.props.margin?.[0] || 10;
+  const padding = desktopLayoutBlob.props.containerPadding?.[0] || 0;
+  const naturalHeight =
+    maxRow * rowHeight + Math.max(0, maxRow - 1) * gap + 2 * padding;
+  gridContainer.style.minHeight = `${naturalHeight}px`;
+
   // Create hidden container for hidden metaframes
   const hiddenContainer = document.createElement("div");
   hiddenContainer.style.position = "absolute";
@@ -535,12 +549,10 @@ const processMetapage = async (
     metapageDefinition.metaframes,
   )) {
     // ignore non-prod non-synced metaframes
-    if (
-      !(
-        metaframe.url.startsWith("https://metapage.io/mf/") ||
-        metaframe.url.startsWith("https://metapage.io/f/")
-      )
-    ) {
+    if (!(
+      metaframe.url.startsWith("https://metapage.io/mf/") ||
+      metaframe.url.startsWith("https://metapage.io/f/")
+    )) {
       continue;
     }
     const mfk = getMetaframeKey(metaframe.url);

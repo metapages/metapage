@@ -83,8 +83,7 @@ export interface MetaframeEditTypeMetapageV1 {
 }
 
 export type MetaframeOperationTypeV1 =
-  | MetaframeEditTypeUrlV1
-  | MetaframeEditTypeMetapageV1;
+  MetaframeEditTypeUrlV1 | MetaframeEditTypeMetapageV1;
 
 export interface MetaframeOperationsV1 {
   create?: MetaframeOperationTypeV1;

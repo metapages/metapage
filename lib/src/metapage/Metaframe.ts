@@ -504,12 +504,10 @@ export class Metaframe extends EventEmitter<
       if (jsonrpc.jsonrpc === "2.0") {
         //Make sure this is a jsonrpc object
         var method = jsonrpc.method as JsonRpcMethodsFromParent;
-        if (
-          !(
-            method == "SetupIframeServerResponse" ||
-            (jsonrpc.parentId == this._parentId && jsonrpc.iframeId == this.id)
-          )
-        ) {
+        if (!(
+          method == "SetupIframeServerResponse" ||
+          (jsonrpc.parentId == this._parentId && jsonrpc.iframeId == this.id)
+        )) {
           this.log(
             `window.message: received message (method=${method}) but jsonrpc.parentId=${jsonrpc.parentId} _parentId=${this._parentId} jsonrpc.iframeId=${jsonrpc.iframeId} id=${this.id}`,
           );

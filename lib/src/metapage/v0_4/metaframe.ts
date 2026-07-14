@@ -181,8 +181,7 @@ export interface MetaframeEditTypeMetapageV6 {
 }
 
 export type MetaframeOperationTypeV6 =
-  | MetaframeEditTypeUrlV6
-  | MetaframeEditTypeMetapageV6;
+  MetaframeEditTypeUrlV6 | MetaframeEditTypeMetapageV6;
 
 export interface MetaframeOperationsV6 {
   create?: MetaframeOperationTypeV6;

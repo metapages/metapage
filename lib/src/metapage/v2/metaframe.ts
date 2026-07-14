@@ -4,12 +4,7 @@ import { VersionsMetaframe } from "../versions.js";
 
 // Hash parameter types
 export type HashParamType =
-  | "string"
-  | "stringBase64"
-  | "boolean"
-  | "json"
-  | "File|Blob"
-  | "number";
+  "string" | "stringBase64" | "boolean" | "json" | "File|Blob" | "number";
 
 export interface HashParamDefinition {
   type?: HashParamType;
