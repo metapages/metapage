@@ -42,9 +42,9 @@ console.log(`   Current working directory: ${Deno.cwd()}`);
 
 type TestType = "compatibility" | "globs" | "first-message" | "io-pipe-names";
 
-// Build the Fresh manifest before starting the server (avoid dev/watch mode in CI)
+// Build the production bundle before starting the server (avoid dev/watch mode in CI)
 async function buildFreshManifest() {
-  console.log("Building Fresh manifest...");
+  console.log("Building Fresh production bundle...");
   const build = new Deno.Command("deno", {
     args: ["task", "build"],
     stdout: "inherit",
@@ -54,7 +54,7 @@ async function buildFreshManifest() {
   if (code !== 0) {
     throw new Error(`Fresh build failed with exit code ${code}`);
   }
-  console.log("Fresh manifest built successfully");
+  console.log("Fresh production bundle built successfully");
 }
 
 // Function to start the Deno Fresh server (production mode, no file watching)
@@ -63,8 +63,10 @@ async function startDenoFreshServer() {
 
   await buildFreshManifest();
 
+  // Not `deno task preview`: that uses `deno serve`, which cannot be given a
+  // TLS certificate. serve-tls.ts runs the same production bundle over HTTPS.
   const command = new Deno.Command("deno", {
-    args: ["task", "preview"],
+    args: ["run", "-A", "test/src/serve-tls.ts"],
     stdout: "piped",
     stderr: "piped",
   });
