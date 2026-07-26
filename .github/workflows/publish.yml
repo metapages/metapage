@@ -43,14 +43,6 @@ jobs:
         with:
           deno-version: '2.7.13'
 
-      - name: Install sd (better sed)
-        run: |
-          curl -sSL https://github.com/chmln/sd/releases/download/v1.0.0/sd-v1.0.0-x86_64-unknown-linux-gnu.tar.gz | tar xz
-          sudo mv sd-v1.0.0-x86_64-unknown-linux-gnu/sd /usr/local/bin/
-
-      - name: Unignore build output for deploy
-        run: find . -type f -name .gitignore -delete
-
       - name: publish module
         id: publish
         run: |

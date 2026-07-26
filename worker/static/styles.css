@@ -1,0 +1,58 @@
+/*
+ * Reset for the standalone renderer documents (render-metapage.html and
+ * render-metaframe.html), which link this file directly.
+ *
+ * This used to be `@tailwind base/components/utilities`, compiled by the Fresh
+ * 1.x Tailwind plugin. That build only ever emitted Tailwind's preflight: the
+ * content glob was rooted at the worker directory while the sources lived under
+ * src/, so no utility class ever matched, and routes/_app.tsx never linked the
+ * result anyway. What follows is the part of the preflight these two pages
+ * actually depend on, written out plainly.
+ */
+
+*,
+::before,
+::after {
+  box-sizing: border-box;
+}
+
+html {
+  line-height: 1.5;
+  -webkit-text-size-adjust: 100%;
+  font-family: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+    "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+}
+
+body {
+  margin: 0;
+  line-height: inherit;
+}
+
+h1,
+h2,
+h3,
+h4,
+p {
+  margin: 0;
+  font-size: inherit;
+  font-weight: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: inherit;
+}
+
+img,
+svg {
+  display: block;
+  vertical-align: middle;
+  max-width: 100%;
+  height: auto;
+}
+
+/* The only utility class used by the renderer documents. */
+.my-6 {
+  margin-top: 1.5rem;
+  margin-bottom: 1.5rem;
+}

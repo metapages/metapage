@@ -16,51 +16,59 @@ grey                               := "\\e[90m"
 @_help:
     just --list --unsorted
     echo -e "APP_FQDN={{APP_FQDN}}"
+    echo -e ""
+    echo -e "    Deno Deploy Console 🔗 {{ green }}https://console.deno.com/metapage/npm{{ normal }}"
+    echo -e ""
 
-# Run the server in development mode
-@dev +args="": clean _mkcert _build_local_module open
-  deno task start
+# Install npm/jsr dependencies (vite, preact, fresh, ...) into node_modules
+@_install:
+  deno install
+
+# Run the Vite dev server (http, with HMR)
+# NOTE: dev runs over plain HTTP. Vite enables HTTP/2 whenever TLS is
+# configured, and Deno's node:http2 layer truncates larger response bodies,
+# which corrupts the metapage bundles served from /lib. http://localhost is
+# still a browser "secure context", so metaframe APIs keep working.
+@dev +args="": clean _install _build_local_module open
+  deno task dev
 
 open:
-  deno run --allow-all https://deno.land/x/metapages@v0.0.27/exec/open_url.ts 'https://metapages.github.io/load-page-when-available/?url=https://{{APP_FQDN}}:{{APP_PORT}}'
+  deno run --allow-all https://deno.land/x/metapages@v0.0.27/exec/open_url.ts 'https://metapages.github.io/load-page-when-available/?url=http://{{APP_FQDN}}:{{APP_PORT}}'
 
-deploy:
-  #!/usr/bin/env bash
-  set -euo pipefail
-  rm -rf deploy
-  mkdir -p deploy
-  cp -rL src deploy/
-  cp -r deno.json deploy/
-  cd deploy
-  # deploy deploy is on an older version of deno which does not support 
-  # the "sloppy-imports" flag
-  # So jump through some hoops to convert the imports
-  find src/lib -type f -name '*.ts' -exec sd -s ".js'" ".ts'" {} +
-  find src/lib -type f -name '*.ts' -exec sd -s '.js"' '.ts"' {} +
+# Deploy to https://console.deno.com/metapage/npm
+# Auth comes from DENO_DEPLOY_TOKEN (.env locally / GitHub Actions secret in CI);
+# org & app are read from the `deploy` block in deno.json. Deno Deploy uploads
+# the source and runs `deno task build` itself; building here first just fails
+# fast on a broken build before anything is uploaded.
+deploy: _install
   deno task build
   deno deploy --prod
 
-# Delete all cached and generated files, and docker volumes
+# Delete all cached and generated files
 @clean:
   rm -rf .certs
-  rm -rf deploy
-  rm -rf src/_fresh
+  rm -rf _fresh
   echo -e "✅ Cleaned worker"
 
-test: _build_local_module _mkcert
+test: _install _build_local_module _mkcert
   APP_PORT=8762 deno run -A --unsafely-ignore-certificate-errors test/src/run-tests-in-astral.ts
 
-build: _build_local_module
+build: _install _build_local_module
   deno task build
 
-@check:
-  deno check src/main.ts
+# Preview the production build locally (http)
+preview: build
+  deno task preview
+
+@check: _install
+  deno check
   echo "✅ worker typescript compilation"
 
 @_build_local_module:
   just ../lib/build
 
 # DEV: generate TLS certs for HTTPS over localhost https://blog.filippo.io/mkcert-valid-https-certificates-for-localhost/
+# Only used by `just test`, which serves the production build over HTTPS.
 @_mkcert:
   rm -rf .certs
   mkdir -p .certs
