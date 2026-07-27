@@ -7,10 +7,18 @@
     // Fresh 2 migration, and whatever build settings it still carries in the
     // Deploy console are for the old layout. Fields set here take precedence
     // over the console.
+    //
+    // NOTE: the discriminator is "type", not "mode". Deno's editor schema
+    // (cli/schemas/config-file.v1.json) says "mode" and is wrong: the builder
+    // parses this block server-side and expects "type"
+    // (https://docs.deno.com/deploy/reference/builds/). With "mode" the whole
+    // `deploy` block is rejected and the builder silently falls back to the
+    // stale console config, whose entrypoint is still the Fresh 1
+    // `src/main.ts`.
     "install": "deno install",
     "build": "deno task build",
     "runtime": {
-      "mode": "dynamic",
+      "type": "dynamic",
       "entrypoint": "_fresh/server.js"
     }
   },
