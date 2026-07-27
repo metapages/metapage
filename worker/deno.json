@@ -2,7 +2,17 @@
   "nodeModulesDir": "auto",
   "deploy": {
     "org": "metapage",
-    "app": "npm"
+    "app": "npm",
+    // Spelled out rather than left to auto-detection: this app predates the
+    // Fresh 2 migration, and whatever build settings it still carries in the
+    // Deploy console are for the old layout. Fields set here take precedence
+    // over the console.
+    "install": "deno install",
+    "build": "deno task build",
+    "runtime": {
+      "mode": "dynamic",
+      "entrypoint": "_fresh/server.js"
+    }
   },
   "tasks": {
     "check": "deno fmt --check . && deno lint . && deno check",
@@ -47,16 +57,22 @@
     ],
     "types": ["vite/client"]
   },
+  "fmt": {
+    "exclude": ["static"]
+  },
   "lint": {
+    "exclude": ["static"],
     "rules": {
       "tags": ["fresh", "recommended"]
     }
   },
+  // static/ is kept out of fmt/lint only, not out of the top-level exclude:
+  // that one also narrows what `deno deploy` uploads, and static/ must ship —
+  // /m, /mf and the test-script routes read their sources from it.
   "exclude": [
     "**/_fresh/*",
     ".certs",
     "node_modules",
-    "static",
     "test"
   ]
 }
