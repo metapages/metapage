@@ -132,6 +132,13 @@ type MetaframeClients = {
 
 const CONSOLE_BACKGROUND_COLOR_DEFAULT = "bcbcbc";
 
+/**
+ * Upper bound on messages buffered before this page loads. Only metaframe
+ * handshakes are expected here, so this is generous; the cap exists so a page
+ * that never fires `load` cannot grow the buffer without limit.
+ */
+export const PRE_PAGE_LOAD_MESSAGE_BUFFER_MAX = 256;
+
 export class Metapage extends MetapageShared {
   // The current version is always the latest
   public static readonly version = VERSION_METAPAGE;
@@ -171,6 +178,10 @@ export class Metapage extends MetapageShared {
   _id: MetapageId;
   _state: MetapageState = emptyState;
   _metaframes: MetaframeClients = create({}, (draft) => draft); //<MetaframeId, MetapageIFrameRpcClient>
+  /** Set once this page has loaded and any buffered messages have been drained */
+  _pageLoaded: boolean = false;
+  /** Messages that arrived before this page finished loading, drained in order */
+  _bufferedMessages: MessageEvent[] = [];
 
   debug: boolean = isDebugFromUrlsParams();
   _consoleBackgroundColor: string;
@@ -290,12 +301,22 @@ export class Metapage extends MetapageShared {
       this._emitDefinitionUpdateEvent.bind(this);
 
     // see ARCHITECTURE.md
-    // when the page is loaded, only then start listening to messages from metaframes
+    // Listen immediately rather than at page load. A child metaframe iframe can
+    // finish loading (and send its SetupIframeClientRequest) before this page
+    // fires `load`, and attaching the listener later dropped that request on the
+    // floor, leaving the metaframe permanently unregistered. Messages that
+    // arrive before the page is loaded are buffered and processed in order once
+    // it is, which preserves the old "no activity before load" guarantee.
+    window.addEventListener("message", this.onMessage);
     pageLoaded().then(() => {
       if (this.isDisposed()) {
+        // dispose() has already removed the listener
         return;
       }
-      window.addEventListener("message", this.onMessage);
+      this._pageLoaded = true;
+      const buffered = this._bufferedMessages;
+      this._bufferedMessages = [];
+      buffered.forEach((message) => this.onMessage(message));
       this.log("Initialized");
     });
   }
@@ -1044,6 +1065,7 @@ export class Metapage extends MetapageShared {
     this.log("disposing");
     super.removeAllListeners();
     window.removeEventListener("message", this.onMessage);
+    this._bufferedMessages = [];
     if (this._metaframes) {
       Object.keys(this._metaframes).forEach((metaframeId) =>
         this._metaframes[metaframeId].dispose(),
@@ -1468,6 +1490,19 @@ export class Metapage extends MetapageShared {
   }
 
   onMessage(e: MessageEvent) {
+    if (this.isDisposed()) {
+      return;
+    }
+
+    // Buffer until this page has loaded: metaframes can register before then,
+    // but the rest of the library assumes a loaded page (see ARCHITECTURE.md).
+    if (!this._pageLoaded) {
+      if (this._bufferedMessages.length < PRE_PAGE_LOAD_MESSAGE_BUFFER_MAX) {
+        this._bufferedMessages.push(e);
+      }
+      return;
+    }
+
     // any other type of messages are ignored
     // maybe in the future we can pass around strings or ArrayBuffers
     if (typeof e.data === "object") {

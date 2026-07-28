@@ -55,6 +55,15 @@ export type MetaframeOptions = {
   disableHashChangeEvent?: boolean;
 };
 
+/**
+ * SetupIframeClientRequest is retried until the parent answers: the parent may
+ * not have attached its postMessage listener when we send the first one, and a
+ * single dropped request used to leave this metaframe blank forever.
+ * Backs off from the first to the max interval, then keeps polling at the max.
+ */
+export const SETUP_REQUEST_RETRY_INTERVAL_START_MS = 200;
+export const SETUP_REQUEST_RETRY_INTERVAL_MAX_MS = 5000;
+
 export class Metaframe extends EventEmitter<
   MetaframeEvents | JsonRpcMethodsFromChild
 > {
@@ -76,6 +85,10 @@ export class Metaframe extends EventEmitter<
   _isIframe: boolean;
   _state: MetaframeLoadingState = MetaframeLoadingState.WaitingForPageLoad;
   _messageSendCount = 0;
+  _setupRequestTimeout: number | undefined;
+  _setupRequestRetryIntervalMs: number = SETUP_REQUEST_RETRY_INTERVAL_START_MS;
+  /** Number of SetupIframeClientRequest messages sent, for tests and debugging */
+  _setupRequestSendCount = 0;
 
   debug: boolean = isDebugFromUrlsParams();
   color: string | undefined;
@@ -119,6 +132,9 @@ export class Metaframe extends EventEmitter<
     this.addListenerReturnDisposer = this.addListenerReturnDisposer.bind(this);
     this.connected = this.connected.bind(this);
     this.isConnected = this.isConnected.bind(this);
+    this._sendSetupRequestUntilRegistered =
+      this._sendSetupRequestUntilRegistered.bind(this);
+    this._cancelSetupRequestRetry = this._cancelSetupRequestRetry.bind(this);
     this.disableNotifyOnHashUrlChange =
       this.disableNotifyOnHashUrlChange.bind(this);
     this._onHashUrlChange = this._onHashUrlChange.bind(this);
@@ -147,15 +163,12 @@ export class Metaframe extends EventEmitter<
 
     const thisRef = this;
     // Do no listen or send messages until the page is loaded
-    // This iframe is not created UNTIL the parent page is loaded and listening to messages
     pageLoaded().then(() => {
       this.log("pageLoaded");
       window.addEventListener("message", this.onMessage);
-      // Now that we're listening, request to the parent to register us so we can talk
-      thisRef.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {
-        version: Metaframe.version,
-      });
-      thisRef._state = MetaframeLoadingState.SentSetupIframeClientRequest;
+      // Now that we're listening, request to the parent to register us so we can talk.
+      // The parent may not be listening yet, so this keeps asking until it answers.
+      thisRef._sendSetupRequestUntilRegistered();
     });
 
     if (!(options && options.disableHashChangeEvent)) {
@@ -163,10 +176,51 @@ export class Metaframe extends EventEmitter<
     }
   }
 
+  /**
+   * Ask the parent metapage to register us, and keep asking until it answers.
+   *
+   * The parent only starts listening to postMessage when its own page has
+   * loaded, and this iframe is not guaranteed to be created after that point:
+   * a slow parent page (or one that creates iframes from an async definition)
+   * can miss this request entirely. Since the request was previously sent
+   * exactly once, a single miss left the metaframe permanently blank.
+   */
+  _sendSetupRequestUntilRegistered() {
+    this._cancelSetupRequestRetry();
+    if (this._state === MetaframeLoadingState.Ready) {
+      return;
+    }
+    this.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {
+      version: Metaframe.version,
+    });
+    this._setupRequestSendCount++;
+    this._state = MetaframeLoadingState.SentSetupIframeClientRequest;
+    this._setupRequestTimeout = window.setTimeout(() => {
+      this._setupRequestTimeout = undefined;
+      this._setupRequestRetryIntervalMs = Math.min(
+        this._setupRequestRetryIntervalMs * 2,
+        SETUP_REQUEST_RETRY_INTERVAL_MAX_MS,
+      );
+      this._sendSetupRequestUntilRegistered();
+    }, this._setupRequestRetryIntervalMs);
+  }
+
+  _cancelSetupRequestRetry() {
+    if (this._setupRequestTimeout !== undefined) {
+      window.clearTimeout(this._setupRequestTimeout);
+      this._setupRequestTimeout = undefined;
+    }
+  }
+
   _resolveSetupIframeServerResponse(params: SetupIframeServerResponseData) {
     if (this._state === MetaframeLoadingState.WaitingForPageLoad) {
       throw "Got message but page has not finished loading, we should never get in this state";
     }
+
+    // The parent answered: stop asking. Done synchronously (rather than when
+    // the async registration below completes) so a slow deserialization of the
+    // initial inputs does not send redundant requests.
+    this._cancelSetupRequestRetry();
 
     (async () => {
       if (!this._parentId) {
@@ -312,6 +366,7 @@ export class Metaframe extends EventEmitter<
 
   public dispose() {
     super.removeAllListeners();
+    this._cancelSetupRequestRetry();
     window.removeEventListener("message", this.onMessage);
     this.disableNotifyOnHashUrlChange();
     // @ts-ignore
