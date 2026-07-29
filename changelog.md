@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.10.12]
+### Fixed
+- Metaframes no longer stay permanently blank when the parent page loads after them.
+  The registration handshake was order-dependent: the child sent
+  `SetupIframeClientRequest` exactly once and the parent only attached its
+  postMessage listener on its own page load, so a single missed request was fatal
+  and silent. Now the child retries until answered (backing off to 5s), and the
+  parent listens from construction, buffering messages until its page has loaded.
+
 ## [0.5.3] - 2021-04-18
 ### Added
 - `metapage` and `metaframe` objects do not start communication until the page has finished loading
