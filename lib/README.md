@@ -36,7 +36,7 @@ import {
   renderMetapage,
   Metapage,
   Metaframe,
-} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
+} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.12";
 ```
 
 ## Quick Start
@@ -138,7 +138,7 @@ dispose();
   <body>
     <div id="container"></div>
     <script type="module">
-      import { renderMetaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.8";
+      import { renderMetaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.12";
 
       const { dispose } = await renderMetaframe({
         url: "https://js.mtfm.io/",
@@ -156,7 +156,7 @@ dispose();
 If you're building a component to use in a metapage:
 
 ```javascript
-import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.8";
+import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.12";
 
 const metaframe = new Metaframe();
 
@@ -297,7 +297,7 @@ metaframe.onInput("file", (file) => {
     <div id="metapage-container"></div>
 
     <script type="module">
-      import { renderMetapage } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
+      import { renderMetapage } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.12";
 
       const definition = await fetch(
         "https://metapage.io/m/87ae11673508447e883b598bf7da9c5d/metapage.json",
@@ -332,7 +332,7 @@ metaframe.onInput("file", (file) => {
 ### Building a Metaframe Component
 
 ```javascript
-import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
+import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.12";
 
 const metaframe = new Metaframe();
 
@@ -409,7 +409,7 @@ Metaframes can read and write to their URL hash parameters:
 import {
   getHashParamValueJsonFromWindow,
   setHashParamValueJsonInWindow,
-} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
+} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.12";
 
 // Read from URL hash
 const config = getHashParamValueJsonFromWindow("config");
@@ -711,7 +711,7 @@ Example minimal metaframe:
   </head>
   <body>
     <script type="module">
-      import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
+      import { Metaframe } from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.12";
 
       const metaframe = new Metaframe();
 
@@ -735,7 +735,7 @@ import {
   MetapageDefinition,
   MetaframeInputMap,
   MetapageInstanceInputs,
-} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.1";
+} from "https://cdn.jsdelivr.net/npm/@metapages/metapage@1.10.12";
 
 const definition: MetapageDefinition = {
   metaframes: {

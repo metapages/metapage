@@ -46,20 +46,51 @@ jobs:
       - name: publish module
         id: publish
         run: |
+          set -euo pipefail
+
           # Capture version before publishing
-          VERSION=$(cat lib/package.json | jq -r '.version')
+          VERSION=$(jq -r '.version' lib/package.json)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-          # Run publish and capture if it actually published
-          OUTPUT=$(just lib/publish 2>&1) || true
-          echo "$OUTPUT"
+          # `tee` rather than `OUTPUT=$(...)` so the log streams live, and no
+          # `|| true`: a failing publish MUST fail the job. It used to be
+          # swallowed, so a broken publish (e.g. a missing tool in the recipe)
+          # reported success, silently skipped the release, and left the version
+          # unpublished with a green check mark.
+          if ! just lib/publish 2>&1 | tee publish.log; then
+            echo "::error::'just lib/publish' failed - see the log above"
+            exit 1
+          fi
 
-          # Check if version was actually published (not skipped)
-          if echo "$OUTPUT" | grep -q "PUBLISHING npm version"; then
+          # Publishing is idempotent: an already-published version is a no-op,
+          # not a failure, and must not cut a duplicate release.
+          if grep -q "PUBLISHING npm version" publish.log; then
             echo "published=true" >> $GITHUB_OUTPUT
           else
             echo "published=false" >> $GITHUB_OUTPUT
           fi
+
+      # Belt and braces: the step above can only report what the recipe told it.
+      # This asserts the actual end state against the registry, so any future
+      # way of failing quietly still turns the job red.
+      - name: verify version is on npm
+        run: |
+          set -euo pipefail
+          NAME=$(jq -r '.name' lib/package.json)
+          VERSION="${{ steps.publish.outputs.version }}"
+
+          # Registry reads can lag a publish by a few seconds
+          for attempt in 1 2 3 4 5; do
+            if npm view "$NAME@$VERSION" version > /dev/null 2>&1; then
+              echo "✅ $NAME@$VERSION is on npm"
+              exit 0
+            fi
+            echo "$NAME@$VERSION not visible yet (attempt $attempt), retrying..."
+            sleep 10
+          done
+
+          echo "::error::$NAME@$VERSION is not on npm after the publish step"
+          exit 1
 
       - name: Create GitHub Release
         if: steps.publish.outputs.published == 'true'
