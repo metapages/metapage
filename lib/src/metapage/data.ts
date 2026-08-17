@@ -5,9 +5,11 @@ import {
   bufferToDataUrl,
   dataUrlToBuffer,
   dataUrlToTypedArray,
+  dataUrlToUrl,
   isDataUrl,
   getParameters,
   getMimeType,
+  MIME_TYPES,
   type TypedArrayType,
 } from "@metapages/dataref";
 
@@ -255,6 +257,17 @@ export const valueToFile = async (
 async function deserializeDataUrl(dataUrl: string): Promise<any> {
   const params = getParameters(dataUrl);
 
+  // URL reference (text/x-uri): the payload is a URL-encoded URL pointing at
+  // the real bytes, so fetch them. Without this the consumer receives an
+  // opaque "data:text/x-uri,https%3A%2F%2F..." string instead of its data.
+  // Metaframes that want the reference itself rather than the bytes (e.g.
+  // container.mtfm.io, which hands the URL to a remote worker so the blob
+  // never travels through the browser) opt out by setting
+  // `metaframe.isInputOutputBlobSerialization = false`.
+  if (getMimeType(dataUrl) === MIME_TYPES.URI) {
+    return deserializeUrlDataUrl(dataUrl, params);
+  }
+
   // TypedArray: has "type" parameter (e.g. type=Float32Array)
   if (params.type && TYPED_ARRAY_NAMES.has(params.type)) {
     return dataUrlToTypedArray(dataUrl);
@@ -285,6 +298,72 @@ async function deserializeDataUrl(dataUrl: string): Promise<any> {
   }
   // leave data:image etc. as is
   return dataUrl;
+}
+
+/**
+ * Fetch the bytes behind a `text/x-uri` dataref and rebuild the original value.
+ *
+ * The `type` parameter, when present, says what the producer serialized:
+ * a TypedArray/ArrayBuffer/File name, or a JSON-ish type from
+ * `convertLargeObjectsToDataRefs`. With no `type` the reference is just a
+ * file, so it comes back as a Blob carrying the response's content type.
+ */
+async function deserializeUrlDataUrl(
+  dataUrl: string,
+  params: Record<string, string>,
+): Promise<any> {
+  const url = dataUrlToUrl(dataUrl);
+  if (!url) {
+    return dataUrl;
+  }
+
+  let response: Response;
+  try {
+    response = await fetch(url, { redirect: "follow" });
+    if (!response.ok) {
+      throw new Error(`${response.status} ${response.statusText}`);
+    }
+  } catch (err) {
+    // A dead or expired reference must not take down the whole input map:
+    // hand back the reference and let the consumer decide what to do.
+    console.warn(`metapage: could not dereference ${url}: ${err}`);
+    return dataUrl;
+  }
+
+  const buffer = await response.arrayBuffer();
+  const type = params.type;
+
+  if (type && TYPED_ARRAY_NAMES.has(type)) {
+    try {
+      // @ts-ignore
+      return new globalThis[type](buffer);
+    } catch (_) {
+      return buffer;
+    }
+  }
+  if (type === "ArrayBuffer") {
+    return buffer;
+  }
+  if (type === "string") {
+    return new TextDecoder().decode(buffer);
+  }
+  if (type === "object" || type === "array" || type === "number") {
+    try {
+      return JSON.parse(new TextDecoder().decode(buffer));
+    } catch (_) {
+      return new TextDecoder().decode(buffer);
+    }
+  }
+
+  const mimeType =
+    params.mimeType ||
+    response.headers.get("content-type")?.split(";")[0] ||
+    "application/octet-stream";
+  if (type === "File") {
+    const name = params.name ? decodeURIComponent(params.name) : "file";
+    return new File([buffer], name, { type: mimeType });
+  }
+  return new Blob([buffer], { type: mimeType });
 }
 
 function deserializeLegacyMetapage(value: DataRefSerialized): any {
