@@ -1,6 +1,6 @@
 /// <reference types="@vitest/browser/providers/playwright" />
 
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it } from "vitest";
 import { encode } from "base64-arraybuffer";
 import {
   serializeInputs,
@@ -410,5 +410,110 @@ describe("valueToFile", () => {
     expect(file.type).toBe("application/json");
     const text = await file.text();
     expect(JSON.parse(text)).toEqual(obj);
+  });
+});
+
+describe("text/x-uri datarefs are dereferenced", () => {
+  const URL_REF = "https://metapage.io/f/bc1082dc-e276-4caa-abd1-576de181c604";
+  const realFetch = globalThis.fetch;
+
+  const stubFetch = (
+    body: BodyInit,
+    headers: Record<string, string> = {},
+  ): { calls: string[] } => {
+    const calls: string[] = [];
+    globalThis.fetch = (async (input: any) => {
+      calls.push(typeof input === "string" ? input : input.url);
+      return new Response(body, { status: 200, headers });
+    }) as typeof fetch;
+    return { calls };
+  };
+
+  afterEach(() => {
+    globalThis.fetch = realFetch;
+  });
+
+  const uriDataUrl = (url: string, params = ""): string =>
+    `data:text/x-uri;${params}charset=utf-8,${encodeURIComponent(url)}`;
+
+  it("fetches the URL and returns a Blob, not the data URL string", async () => {
+    const { calls } = stubFetch("file contents", {
+      "content-type": "text/csv",
+    });
+    const result = await possiblyDeserializeDatarefToValue(uriDataUrl(URL_REF));
+    expect(calls).toEqual([URL_REF]);
+    expect(result).toBeInstanceOf(Blob);
+    expect((result as Blob).type).toBe("text/csv");
+    expect(await (result as Blob).text()).toBe("file contents");
+  });
+
+  it("deserializeInputs dereferences url datarefs", async () => {
+    stubFetch("hello");
+    const inputs = await deserializeInputs({
+      a: uriDataUrl(URL_REF),
+      b: "plain string",
+    });
+    expect(inputs.b).toBe("plain string");
+    expect(inputs.a).toBeInstanceOf(Blob);
+    expect(await (inputs.a as Blob).text()).toBe("hello");
+  });
+
+  it("rebuilds a typed array when the type parameter says so", async () => {
+    const original = new Float32Array([1.5, 2.5, 3.5]);
+    stubFetch(original.buffer as ArrayBuffer);
+    const result = await possiblyDeserializeDatarefToValue(
+      uriDataUrl(URL_REF, "type=Float32Array;"),
+    );
+    expect(result).toBeInstanceOf(Float32Array);
+    expect(Array.from(result as Float32Array)).toEqual([1.5, 2.5, 3.5]);
+  });
+
+  it("rebuilds a File, using the name parameter", async () => {
+    stubFetch("data");
+    const result = await possiblyDeserializeDatarefToValue(
+      uriDataUrl(URL_REF, "type=File;mimeType=text/plain;name=report.txt;"),
+    );
+    expect(result).toBeInstanceOf(File);
+    expect((result as File).name).toBe("report.txt");
+    expect((result as File).type).toBe("text/plain");
+  });
+
+  it("rebuilds JSON that was uploaded for being large", async () => {
+    stubFetch(JSON.stringify({ big: [1, 2, 3] }));
+    const result = await possiblyDeserializeDatarefToValue(
+      uriDataUrl(URL_REF, "type=object;"),
+    );
+    expect(result).toEqual({ big: [1, 2, 3] });
+  });
+
+  it("returns the reference unchanged when the fetch fails", async () => {
+    globalThis.fetch = (async () =>
+      new Response("nope", { status: 404 })) as typeof fetch;
+    const dataUrl = uriDataUrl(URL_REF);
+    expect(await possiblyDeserializeDatarefToValue(dataUrl)).toBe(dataUrl);
+  });
+
+  it("one dead reference does not break the other inputs", async () => {
+    globalThis.fetch = (async (input: any) => {
+      const url = typeof input === "string" ? input : input.url;
+      return url.endsWith("/dead")
+        ? new Response("", { status: 500 })
+        : new Response("ok");
+    }) as typeof fetch;
+    const dead = uriDataUrl("https://metapage.io/f/dead");
+    const inputs = await deserializeInputs({
+      dead,
+      alive: uriDataUrl(URL_REF),
+    });
+    expect(inputs.dead).toBe(dead);
+    expect(await (inputs.alive as Blob).text()).toBe("ok");
+  });
+
+  it("valueToFile turns a url dataref into a File", async () => {
+    stubFetch("contents", { "content-type": "text/plain" });
+    const file = await valueToFile(uriDataUrl(URL_REF), "out.txt");
+    expect(file).toBeInstanceOf(File);
+    expect(file.name).toBe("out.txt");
+    expect(await file.text()).toBe("contents");
   });
 });
