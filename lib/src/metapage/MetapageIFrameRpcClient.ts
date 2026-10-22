@@ -444,9 +444,13 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     //    newer than that snapshot is only here.
     // Inputs are a merge, so re-sending values the metaframe already has is
     // safe; dropping one is not.
-    if (this.inputs && Object.keys(this.inputs).length > 0) {
-      this.sendInputs(this.inputs);
-    }
+    //
+    // Sent even when there are none: a metaframe with no inputs yet (no pipes
+    // into it, or nothing upstream has produced) has always been told so by an
+    // empty InputsUpdate right after it registers, and some metaframes use
+    // that as their cue to start (the container.mtfm.io leg of
+    // worker/test io-pipe-names hangs without it).
+    this.sendInputs(this.inputs);
   }
 
   async sendInputs(inputs: MetaframeInputMap) {

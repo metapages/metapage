@@ -420,9 +420,37 @@ describe("Metapage sends current inputs on every registration", () => {
     registrationRequest(metapage, "frame1");
     registrationAck(metapage, "frame1");
 
-    expect(inputsUpdates(sent).map((m) => m.params.inputs.v)).toEqual([
-      "first",
-      "second",
-    ]);
+    // The two queued updates in order, then the current inputs that every
+    // registration re-sends (empty here: nothing was ever set, and that send
+    // is a tick later since serializing is async)
+    await vi.waitFor(() =>
+      expect(inputsUpdates(sent).map((m) => m.params.inputs)).toEqual([
+        { v: "first" },
+        { v: "second" },
+        {},
+      ]),
+    );
+  });
+
+  it("tells a metaframe with no inputs that it has none, once it registers", async () => {
+    metapage = new Metapage();
+    await metapage.setDefinition({
+      metaframes: { frame1: { url: FRAME_URL } },
+    });
+    const client = metapage.getMetaframe("frame1")!;
+    document.body.appendChild(await client.iframe);
+    const sent: MinimumClientMessage<any>[] = [];
+    client.sendOrBufferPostMessage = (m: any) => sent.push(m);
+
+    registrationRequest(metapage, "frame1");
+    registrationAck(metapage, "frame1");
+
+    // An empty InputsUpdate, not silence: a metaframe with no pipes into it
+    // (or nothing produced upstream yet) is told so as soon as it registers,
+    // and some metaframes use that as their cue to start. Dropping it hung
+    // the container leg of worker/test io-pipe-names.
+    await vi.waitFor(() =>
+      expect(inputsUpdates(sent).map((m) => m.params.inputs)).toEqual([{}]),
+    );
   });
 });
