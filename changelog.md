@@ -5,6 +5,25 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Inputs are no longer lost when a metaframe connects or reconnects. A metaframe
+  reloads for all sorts of reasons (it navigates itself, the metapage changes its
+  url, the iframe element is moved in the DOM) and the parent cannot see that
+  happen, so it kept posting inputs into a document that was going away and only
+  ever sent the full input set on the *first* registration. The metaframe also
+  threw away (literally: `throw`) any input that arrived while it was still
+  registering, a window that can include a network fetch when deserializing url
+  datarefs. Now the parent sends all current inputs on every registration, and
+  the metaframe buffers anything that arrives mid-registration instead of
+  dropping it.
+- Input updates are applied in the order they arrived. Applying one is
+  asynchronous (deserializing a url dataref fetches it), so a slow update could
+  land after a later fast one and leave a stale value as the final state.
+- Queued messages to a not-yet-registered metaframe are flushed in the order
+  they were queued (they were sent in reverse).
+- A metaframe re-registers when answered by a metapage with a different id,
+  instead of ignoring it and then rejecting every input it sends. Only the
+  window embedding the metaframe can register it.
 
 ## [1.10.12]
 ### Fixed

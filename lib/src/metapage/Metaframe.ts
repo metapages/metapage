@@ -64,6 +64,13 @@ export type MetaframeOptions = {
 export const SETUP_REQUEST_RETRY_INTERVAL_START_MS = 200;
 export const SETUP_REQUEST_RETRY_INTERVAL_MAX_MS = 5000;
 
+/**
+ * How many InputsUpdate messages that arrive before registration completes are
+ * kept. The parent re-sends the complete current inputs every time we register,
+ * so overflowing this buffer costs intermediate values, never the latest state.
+ */
+export const PRE_REGISTRATION_INPUTS_BUFFER_MAX = 100;
+
 export class Metaframe extends EventEmitter<
   MetaframeEvents | JsonRpcMethodsFromChild
 > {
@@ -89,6 +96,21 @@ export class Metaframe extends EventEmitter<
   _setupRequestRetryIntervalMs: number = SETUP_REQUEST_RETRY_INTERVAL_START_MS;
   /** Number of SetupIframeClientRequest messages sent, for tests and debugging */
   _setupRequestSendCount = 0;
+  /**
+   * InputsUpdate messages that arrived before registration finished, kept in
+   * arrival order and applied as soon as we are registered. See
+   * `_bufferInputsUpdate`.
+   */
+  _pendingInputsUpdates: {
+    parentId: MetapageId | undefined;
+    inputs: MetaframeInputMap;
+  }[] = [];
+  /**
+   * Applying an input update is asynchronous (deserializing can hit the
+   * network), so updates are chained through this promise to apply in the
+   * order they arrived. See `setInternalInputsAndNotify`.
+   */
+  _inputsApplyQueue: Promise<void> = Promise.resolve();
 
   debug: boolean = isDebugFromUrlsParams();
   color: string | undefined;
@@ -124,6 +146,11 @@ export class Metaframe extends EventEmitter<
     this.setInputs = this.setInputs.bind(this);
     this.setInternalInputsAndNotify =
       this.setInternalInputsAndNotify.bind(this);
+    this._setInternalInputsAndNotify =
+      this._setInternalInputsAndNotify.bind(this);
+    this._bufferInputsUpdate = this._bufferInputsUpdate.bind(this);
+    this._drainPendingInputsUpdates =
+      this._drainPendingInputsUpdates.bind(this);
     this.setOutput = this.setOutput.bind(this);
     this.setOutputs = this.setOutputs.bind(this);
     this.warn = this.warn.bind(this);
@@ -222,80 +249,135 @@ export class Metaframe extends EventEmitter<
     // initial inputs does not send redundant requests.
     this._cancelSetupRequestRetry();
 
+    // Already registered with this same parent: our retry crossed the parent's
+    // first answer, or the parent asked us to register again. Acknowledge it
+    // again rather than dropping it: the parent sends the current inputs on
+    // every ack, so a silently ignored response leaves the parent believing we
+    // received inputs that went into our previous (now replaced) document.
+    if (this._parentId && this._parentId === params.parentId) {
+      this.log(
+        "Got JsonRpcMethods.SetupIframeServerResponse but already resolved, re-acking",
+      );
+      this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {
+        version: Metaframe.version,
+      });
+      return;
+    }
+
     (async () => {
-      if (!this._parentId) {
-        this._parentVersion = params.version;
-        this.color = stringToRgb(this.id);
-        this._parentId = params.parentId;
-        this.log(
-          `metapage[${this._parentId}](v${
-            this._parentVersion ? this._parentVersion : "unknown"
-          }) registered`,
-        );
+      // Either our first registration, or a response from a *different* parent
+      // id, which means a new channel: the parent page was recreated. Register
+      // against it, otherwise every subsequent InputsUpdate is rejected by the
+      // parent id check in onMessage and this metaframe, still believing it is
+      // connected, never receives another input.
+      this._parentVersion = params.version;
+      this.color = stringToRgb(this.id);
+      this._parentId = params.parentId;
+      this.log(
+        `metapage[${this._parentId}](v${
+          this._parentVersion ? this._parentVersion : "unknown"
+        }) registered`,
+      );
 
-        if (params.state && params.state.inputs) {
-          if (this.isInputOutputBlobSerialization) {
-            this._inputPipeValues = await deserializeInputs(
-              params.state.inputs,
-            );
-          } else {
-            this._inputPipeValues = params.state.inputs;
-          }
-        }
-
-        // this._inputPipeValues =
-        //   params.state && params.state.inputs
-        //     ? this.isInputOutputBlobSerialization
-        //       ? deserializeInputs(params.state.inputs)
-        //       : params.state.inputs
-        //     : this._inputPipeValues;
-
-        // Tell the parent we have registered.
-        this._state = MetaframeLoadingState.Ready;
-        // TODO why do we need  Metaframe.version here? It was sent in the initial SetupIframeClientRequest
-        this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {
-          version: Metaframe.version,
-        });
-
-        //Send notifications of initial inputs (if non-null)
-        //so you don't have to listen to the ready event if you don't want to
-        if (
-          this._inputPipeValues &&
-          Object.keys(this._inputPipeValues).length > 0
-        ) {
-          this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
-          if (this.listenerCount(MetaframeEvents.Input) > 0) {
-            Object.keys(this._inputPipeValues).forEach((pipeId) =>
-              this.emit(
-                MetaframeEvents.Input,
-                pipeId,
-                this._inputPipeValues[pipeId],
-              ),
-            );
-          }
-        }
-
-        // this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
-
-        //Resolve AFTER sending inputs. This way consumers can either:
-        //1) Just listen to inputs updates. The first will be when the metaframe is ready
-        //2) Listen to the ready event, get the inputs if desired, and listen to subsequent
-        //   inputs updates. You may not wish to respond to the first updates but you might
-        //   want to know when the metaframe is ready
-        //*** Does this distinction make sense?
-        this.emit(MetaframeEvents.Connected);
-
-        // Send the initial outputs to the parent, we have been accumulating them
-        this.sendRpc(
-          JsonRpcMethodsFromChild.OutputsUpdate,
-          this._outputPipeValues,
-        );
-      } else {
-        this.log(
-          "Got JsonRpcMethods.SetupIframeServerResponse but already resolved",
-        );
+      if (params.state && params.state.inputs) {
+        const initialInputs = this.isInputOutputBlobSerialization
+          ? await deserializeInputs(params.state.inputs)
+          : params.state.inputs;
+        // Merge rather than replace: these are the parent's current inputs,
+        // but on a re-registration we may already hold values from it.
+        this._inputPipeValues = merge(this._inputPipeValues, initialInputs);
       }
+
+      // Tell the parent we have registered.
+      this._state = MetaframeLoadingState.Ready;
+      // TODO why do we need  Metaframe.version here? It was sent in the initial SetupIframeClientRequest
+      this.sendRpc(JsonRpcMethodsFromChild.SetupIframeServerResponseAck, {
+        version: Metaframe.version,
+      });
+
+      //Send notifications of initial inputs (if non-null)
+      //so you don't have to listen to the ready event if you don't want to
+      if (
+        this._inputPipeValues &&
+        Object.keys(this._inputPipeValues).length > 0
+      ) {
+        this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
+        if (this.listenerCount(MetaframeEvents.Input) > 0) {
+          Object.keys(this._inputPipeValues).forEach((pipeId) =>
+            this.emit(
+              MetaframeEvents.Input,
+              pipeId,
+              this._inputPipeValues[pipeId],
+            ),
+          );
+        }
+      }
+
+      // this.emit(MetaframeEvents.Inputs, this._inputPipeValues);
+
+      //Resolve AFTER sending inputs. This way consumers can either:
+      //1) Just listen to inputs updates. The first will be when the metaframe is ready
+      //2) Listen to the ready event, get the inputs if desired, and listen to subsequent
+      //   inputs updates. You may not wish to respond to the first updates but you might
+      //   want to know when the metaframe is ready
+      //*** Does this distinction make sense?
+      this.emit(MetaframeEvents.Connected);
+
+      // Send the initial outputs to the parent, we have been accumulating them
+      this.sendRpc(
+        JsonRpcMethodsFromChild.OutputsUpdate,
+        this._outputPipeValues,
+      );
+
+      // Finally apply anything the parent sent while we were registering
+      await this._drainPendingInputsUpdates();
     })();
+  }
+
+  /**
+   * Hold an InputsUpdate that arrived before registration finished.
+   *
+   * The parent considers us connected as soon as it has answered a
+   * SetupIframeClientRequest, and it has no way to know when our registration
+   * actually completes: resolving it is asynchronous, and deserializing the
+   * initial inputs can even go to the network for url datarefs. An input
+   * update that lands in that window used to throw out of the message handler,
+   * which lost that input permanently. The same applies to an iframe that
+   * reloaded (its own navigation, a changed url, being moved in the DOM): the
+   * parent keeps sending inputs while the new document is still handshaking.
+   */
+  _bufferInputsUpdate(
+    parentId: MetapageId | undefined,
+    inputs: MetaframeInputMap,
+  ) {
+    if (!inputs) {
+      return;
+    }
+    this._pendingInputsUpdates.push({ parentId, inputs });
+    // Bounded: the parent re-sends all current inputs once we register, so
+    // dropping the oldest intermediate values here cannot lose the latest state
+    while (
+      this._pendingInputsUpdates.length > PRE_REGISTRATION_INPUTS_BUFFER_MAX
+    ) {
+      this._pendingInputsUpdates.shift();
+    }
+  }
+
+  /** Apply buffered input updates, in arrival order */
+  async _drainPendingInputsUpdates(): Promise<void> {
+    while (
+      this._pendingInputsUpdates &&
+      this._pendingInputsUpdates.length > 0
+    ) {
+      const pending = this._pendingInputsUpdates.shift()!;
+      // Only from the parent we registered with: the same check onMessage
+      // applies to updates arriving after registration, deferred to here
+      // because the parent id was not yet known when this was buffered.
+      if (pending.parentId !== this._parentId) {
+        continue;
+      }
+      await this.setInternalInputsAndNotify(pending.inputs);
+    }
   }
 
   isConnected(): boolean {
@@ -367,6 +449,7 @@ export class Metaframe extends EventEmitter<
   public dispose() {
     super.removeAllListeners();
     this._cancelSetupRequestRetry();
+    this._pendingInputsUpdates = [];
     window.removeEventListener("message", this.onMessage);
     this.disableNotifyOnHashUrlChange();
     // @ts-ignore
@@ -439,7 +522,29 @@ export class Metaframe extends EventEmitter<
     this.sendRpc(JsonRpcMethodsFromChild.InputsUpdate, inputs);
   }
 
-  async setInternalInputsAndNotify(inputs: MetaframeInputMap) {
+  /**
+   * Apply an input update from the parent: deserialize, merge, notify.
+   *
+   * Updates are applied one at a time, in the order they arrived. Applying is
+   * asynchronous (deserializing a url dataref fetches it), so without the
+   * queue a slow update could land after a later fast one and leave a stale
+   * value as the final state.
+   */
+  async setInternalInputsAndNotify(inputs: MetaframeInputMap): Promise<void> {
+    const applied = this._inputsApplyQueue.then(() =>
+      this._setInternalInputsAndNotify(inputs),
+    );
+    // Keep the chain alive if one update fails: a bad value must not stop
+    // every subsequent input from being applied
+    this._inputsApplyQueue = applied.catch(() => {});
+    return applied;
+  }
+
+  async _setInternalInputsAndNotify(inputs: MetaframeInputMap) {
+    if (!this._inputPipeValues) {
+      // disposed while this update was queued
+      return;
+    }
     // this is where we deserialize the inputs
     if (this.isInputOutputBlobSerialization) {
       inputs = await deserializeInputs(inputs);
@@ -559,8 +664,30 @@ export class Metaframe extends EventEmitter<
       if (jsonrpc.jsonrpc === "2.0") {
         //Make sure this is a jsonrpc object
         var method = jsonrpc.method as JsonRpcMethodsFromParent;
+        // Inputs sent before we know our parent id are held (and checked
+        // against the parent id once we do know it) rather than rejected:
+        // see _bufferInputsUpdate
+        const isUnregisteredInputsUpdate =
+          method == "InputsUpdate" &&
+          !this._parentId &&
+          jsonrpc.iframeId == this.id;
+        // Only the window embedding us can register us, and it registers us
+        // again every time our document is replaced. `e.source` is unset for
+        // events dispatched inside this window (tests, and any script already
+        // running here, which can call this object directly anyway).
+        if (
+          method == "SetupIframeServerResponse" &&
+          e.source &&
+          e.source !== window.parent
+        ) {
+          this.log(
+            "window.message: ignoring SetupIframeServerResponse from a window that is not our parent",
+          );
+          return;
+        }
         if (!(
           method == "SetupIframeServerResponse" ||
+          isUnregisteredInputsUpdate ||
           (jsonrpc.parentId == this._parentId && jsonrpc.iframeId == this.id)
         )) {
           this.log(
@@ -575,7 +702,14 @@ export class Metaframe extends EventEmitter<
             break; //Handled elsewhere
           case JsonRpcMethodsFromParent.InputsUpdate:
             if (this._state !== MetaframeLoadingState.Ready) {
-              throw "Got InputsUpdate but metaframe is not MetaframeLoadingState.Ready";
+              // Not an error: the parent sends inputs as soon as it has
+              // answered our registration request, which is before we have
+              // finished registering. Throwing here lost the input forever.
+              this._bufferInputsUpdate(
+                jsonrpc.parentId,
+                jsonrpc.params?.inputs,
+              );
+              break;
             }
             this.setInternalInputsAndNotify(jsonrpc.params.inputs);
             break;

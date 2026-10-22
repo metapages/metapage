@@ -54,7 +54,6 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   _onLoaded: Disposer[] = [];
   _parentId: MetapageId;
   _debug: boolean;
-  _sendInputsAfterRegistration: boolean = false;
   _definition: MetaframeDefinition | undefined;
 
   _metapage: MetapageShared;
@@ -283,13 +282,10 @@ export class MetapageIFrameRpcClient extends EventEmitter<
       return this;
     }
 
-    if (!this._loaded) {
-      this._sendInputsAfterRegistration = true;
-    }
     // Only send the new inputs to the actual metaframe iframe
     // if it's not registered, don't worry, inputs are merged,
     // and when the metaframe is registered, current inputs will
-    // be sent
+    // be sent (see registered())
     if (this._iframe.parentNode && this._loaded) {
       this.sendInputs(maybeNewInputs);
     }
@@ -394,10 +390,14 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   }
 
   /**
-   * Request that the parent metapage tell us what our id is.
-   * The iframe might send this message more than once (it reloads for some reason)
-   * so we can't gate this request if we think the metaframe
-   * is already registered.
+   * Answer a metaframe's request to be registered: tell it its id, our id, and
+   * the inputs it should start with.
+   *
+   * The iframe can send that request more than once (it reloads, is moved in
+   * the DOM, or retried before our first answer arrived) so this is never
+   * gated on the metaframe already being registered: the answer always carries
+   * the current inputs, so a reloaded document starts with them rather than
+   * waiting for the next upstream change.
    */
   public register() {
     var response: SetupIframeServerResponseData = {
@@ -414,24 +414,37 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     );
   }
 
+  /**
+   * The metaframe acknowledged our SetupIframeServerResponse: the channel to
+   * the document currently in the iframe is live.
+   *
+   * This runs again every time the iframe re-registers, which happens whenever
+   * its document is replaced: the metaframe navigated, the metapage changed its
+   * url, or the iframe element was moved in the DOM (which reloads it).
+   */
   public registered(version: VersionsMetaframe) {
     this.log({ m: "MetapageIFrameRpcClient.registered", inputs: this.inputs });
-    if (this._loaded) {
-      return;
-    }
     if (!version) {
       throw "Cannot register without a version";
     }
     this.version = version;
     this._loaded = true;
+    // FIFO: these are queued messages, so the last one queued must be the last
+    // one sent, otherwise an older input value overwrites a newer one
     while (this._onLoaded && this._onLoaded.length > 0) {
-      this._onLoaded.pop()!();
+      this._onLoaded.shift()!();
     }
-    // You still need to set the inputs even though they
-    // may have been set initially, because the inputs may
-    // have been been updated before the metaframe internal
-    // returned its server ack.
-    if (this._sendInputsAfterRegistration) {
+    // Always send the current inputs on registration, even if we believe the
+    // metaframe already has them:
+    //  - on a first registration they may have been updated between the
+    //    SetupIframeServerResponse (which carries a snapshot) and this ack
+    //  - on a re-registration everything we sent while the iframe was
+    //    reloading went to a document that no longer exists, so the new one
+    //    only has the snapshot from its own registration request. Anything
+    //    newer than that snapshot is only here.
+    // Inputs are a merge, so re-sending values the metaframe already has is
+    // safe; dropping one is not.
+    if (this.inputs && Object.keys(this.inputs).length > 0) {
       this.sendInputs(this.inputs);
     }
   }
