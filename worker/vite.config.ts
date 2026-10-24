@@ -14,7 +14,15 @@ const port = parseInt(
 // browser "secure context", so the postMessage/clipboard APIs metaframes rely
 // on keep working. `just test` is unaffected: it runs against the production
 // build via `deno serve --cert/--key`, which serves HTTPS over HTTP/1.1.
+// pr-daemon previews proxy a public host (https://<branch>.<domain>) to this
+// server, which Vite's host check would otherwise reject.
+const publicHost = Deno.env.get("PR_DAEMON_PUBLIC_HOST");
+
 export default defineConfig({
-  server: { host: "0.0.0.0", port },
+  server: {
+    host: "0.0.0.0",
+    port,
+    allowedHosts: publicHost ? [publicHost] : [],
+  },
   plugins: [fresh()],
 });
