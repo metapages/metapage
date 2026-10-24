@@ -290,6 +290,54 @@ describe("Metaframe inputs during (re)connection", () => {
       expect(metaframe!.getInputs()).toEqual({ a: 1, b: 2, c: 3 }),
     );
   });
+
+  it("applies an input that arrives while draining the buffer after the ones buffered before it", async () => {
+    metaframe = await newMetaframeAwaitingRegistration();
+    const parentId = "parent-drain-ordering";
+
+    // Two updates land while registering. The first is slow to deserialize,
+    // so the buffer is still draining when the next update arrives.
+    window.dispatchEvent(setupResponseFromParent(metaframe.id, parentId));
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, { v: BLOB_DATA_URL }),
+    );
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, { v: "buffered" }),
+    );
+    await metaframe.connected();
+
+    // Arrives once we are Ready, so it skips the buffer: it must still be
+    // applied after the older updates that were buffered.
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, { v: "latest" }),
+    );
+
+    await delay(200);
+    expect(metaframe.getInput("v")).toBe("latest");
+  });
+
+  it("does not let a new parent's initial inputs overwrite its newer updates", async () => {
+    metaframe = await newMetaframeAwaitingRegistration();
+    window.dispatchEvent(setupResponseFromParent(metaframe.id, "parent-old"));
+    await metaframe.connected();
+
+    // The parent page was recreated. Its initial inputs are slow to
+    // deserialize, and it sends a newer value in the meantime: the initial
+    // (older) value must not win.
+    window.dispatchEvent(
+      setupResponseFromParent(metaframe.id, "parent-new", {
+        v: BLOB_DATA_URL,
+      }),
+    );
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, "parent-new", { v: "latest" }),
+    );
+
+    await delay(200);
+    expect(metaframe._parentId).toBe("parent-new");
+    expect(metaframe.isConnected()).toBe(true);
+    expect(metaframe.getInput("v")).toBe("latest");
+  });
 });
 
 // ---------------------------------------------------------------------------

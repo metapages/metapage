@@ -273,6 +273,12 @@ export class Metaframe extends EventEmitter<
       this._parentVersion = params.version;
       this.color = stringToRgb(this.id);
       this._parentId = params.parentId;
+      // Not Ready until the initial inputs below are applied. On a
+      // re-registration we were Ready for the previous parent, and updates
+      // from the new one would otherwise be applied immediately, only to be
+      // overwritten by its (older) initial inputs once they deserialize.
+      // While not Ready they are buffered and applied after the initial inputs.
+      this._state = MetaframeLoadingState.SentSetupIframeClientRequest;
       this.log(
         `metapage[${this._parentId}](v${
           this._parentVersion ? this._parentVersion : "unknown"
@@ -280,12 +286,22 @@ export class Metaframe extends EventEmitter<
       );
 
       if (params.state && params.state.inputs) {
-        const initialInputs = this.isInputOutputBlobSerialization
-          ? await deserializeInputs(params.state.inputs)
-          : params.state.inputs;
-        // Merge rather than replace: these are the parent's current inputs,
-        // but on a re-registration we may already hold values from it.
-        this._inputPipeValues = merge(this._inputPipeValues, initialInputs);
+        // Through the apply queue, so an update from a previous parent that
+        // is still deserializing cannot land on top of these
+        const applied = this._inputsApplyQueue.then(async () => {
+          const initialInputs = this.isInputOutputBlobSerialization
+            ? await deserializeInputs(params.state.inputs)
+            : params.state.inputs;
+          if (!this._inputPipeValues) {
+            // disposed while deserializing
+            return;
+          }
+          // Merge rather than replace: these are the parent's current inputs,
+          // but on a re-registration we may already hold values from it.
+          this._inputPipeValues = merge(this._inputPipeValues, initialInputs);
+        });
+        this._inputsApplyQueue = applied.catch(() => {});
+        await applied;
       }
 
       // Tell the parent we have registered.
@@ -365,19 +381,18 @@ export class Metaframe extends EventEmitter<
 
   /** Apply buffered input updates, in arrival order */
   async _drainPendingInputsUpdates(): Promise<void> {
-    while (
-      this._pendingInputsUpdates &&
-      this._pendingInputsUpdates.length > 0
-    ) {
-      const pending = this._pendingInputsUpdates.shift()!;
+    // Queue them all synchronously, before awaiting any: we are already
+    // Ready, so an update arriving while one of these is still deserializing
+    // goes straight onto the apply queue, and must land behind all of them.
+    const pending = this._pendingInputsUpdates;
+    this._pendingInputsUpdates = [];
+    const applied = pending
       // Only from the parent we registered with: the same check onMessage
       // applies to updates arriving after registration, deferred to here
       // because the parent id was not yet known when this was buffered.
-      if (pending.parentId !== this._parentId) {
-        continue;
-      }
-      await this.setInternalInputsAndNotify(pending.inputs);
-    }
+      .filter((p) => p.parentId === this._parentId)
+      .map((p) => this.setInternalInputsAndNotify(p.inputs));
+    await Promise.all(applied);
   }
 
   isConnected(): boolean {

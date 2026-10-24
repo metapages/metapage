@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- Two remaining ways a stale input could win while a metaframe registers (#200).
+  An input that arrived while the buffered mid-registration inputs were still
+  being applied could be overwritten by an older buffered one. And when a
+  metaframe re-registered with a recreated parent, it stayed `Ready` while
+  deserializing the new parent's initial inputs, so a newer update from that
+  parent was applied first and then overwritten by the (older) initial value.
 
 ## [1.10.15] - 2026-10-22
 ### Fixed
