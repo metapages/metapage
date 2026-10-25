@@ -79,25 +79,50 @@ jobs:
           NAME=$(jq -r '.name' lib/package.json)
           VERSION="${{ steps.publish.outputs.version }}"
 
-          # Registry reads can lag a publish by a few seconds
-          for attempt in 1 2 3 4 5; do
-            if npm view "$NAME@$VERSION" version > /dev/null 2>&1; then
+          # Registry reads can lag a publish, and `--prefer-online` is the
+          # point of this loop: without it npm answers every attempt from the
+          # packument it cached on the first one, so retrying re-reads the same
+          # stale "not found" for the life of the cache entry and the whole
+          # window is wasted. That is how 1.10.15 - published, tagged and on
+          # the registry - was reported missing and failed the job.
+          # 12 x 15s, because a cold publish has taken over a minute to appear.
+          for attempt in $(seq 1 12); do
+            if npm view --prefer-online "$NAME@$VERSION" version > /dev/null 2>&1; then
               echo "✅ $NAME@$VERSION is on npm"
               exit 0
             fi
-            echo "$NAME@$VERSION not visible yet (attempt $attempt), retrying..."
-            sleep 10
+            echo "$NAME@$VERSION not visible yet (attempt $attempt/12), retrying..."
+            sleep 15
           done
 
           echo "::error::$NAME@$VERSION is not on npm after the publish step"
           exit 1
 
+      # Gated on the tag, not on `published`. Publishing is idempotent, so a
+      # re-run after anything later in the job failed finds the version already
+      # on npm, publishes nothing, reports published=false - and the release for
+      # that version was then lost for good, because no later run can ever
+      # satisfy the old condition. That happened to v1.10.15. The tag is what
+      # says "this version shipped", so release whatever is tagged and has no
+      # release yet, which makes the step safe to re-run and self-healing.
       - name: Create GitHub Release
-        if: steps.publish.outputs.published == 'true'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          set -euo pipefail
           VERSION="${{ steps.publish.outputs.version }}"
+
+          git fetch --tags --quiet origin
+          if ! git rev-parse -q --verify "refs/tags/v$VERSION" > /dev/null; then
+            echo "No tag v$VERSION: nothing shipped, nothing to release"
+            exit 0
+          fi
+
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            echo "Release v$VERSION already exists"
+            exit 0
+          fi
+
           gh release create "v$VERSION" \
             --title "v$VERSION" \
             --generate-notes \
