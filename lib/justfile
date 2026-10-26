@@ -62,6 +62,14 @@ watch: _ensure_npm_modules
 @_tsc +args="": _ensure_npm_modules
     {{ tsc }} {{ args }}
 
+# Check formatting without changing anything. `fmt FailIfChanged` can't serve
+# as a gate on a dirty tree: it asks git whether ANY file differs, so it trips
+# on unrelated work in progress. This asks prettier, which is what the CI
+# formatting job actually ends up enforcing.
+@fmt-check: _ensure_npm_modules
+    npx prettier . --check
+    echo -e "✅ {{ green }}prettier{{ normal }} formatting check passed"
+
 fmt +failIfChanged="":
     #!/usr/bin/env bash
     set -euo pipefail
