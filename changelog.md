@@ -12,6 +12,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   metaframe re-registered with a recreated parent, it stayed `Ready` while
   deserializing the new parent's initial inputs, so a newer update from that
   parent was applied first and then overwritten by the (older) initial value.
+- A metaframe whose initial inputs contained a value that failed to deserialize
+  (e.g. a malformed dataref) never finished registering: it stayed not `Ready`
+  and held every later input in its buffer forever (#200). The bad value is
+  now passed through as-is, an `error` event is emitted, and registration
+  completes.
 
 ## [1.10.15] - 2026-10-22
 ### Fixed

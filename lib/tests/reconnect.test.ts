@@ -28,6 +28,7 @@ import {
   JsonRpcMethodsFromChild,
   JsonRpcMethodsFromParent,
   Metaframe,
+  MetaframeEvents,
   Metapage,
   MinimumClientMessage,
 } from "../src";
@@ -36,6 +37,8 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** A blob encoded as a data url: deserializing it is slow (async, multi-step) */
 const BLOB_DATA_URL = "data:text/plain;blob=true;base64,aGVsbG8=";
+/** Not valid base64: deserializing it throws */
+const MALFORMED_BLOB_DATA_URL = "data:text/plain;blob=true;base64,%%%";
 
 // ---------------------------------------------------------------------------
 // The child half: messages a parent metapage sends to a metaframe
@@ -337,6 +340,38 @@ describe("Metaframe inputs during (re)connection", () => {
     expect(metaframe._parentId).toBe("parent-new");
     expect(metaframe.isConnected()).toBe(true);
     expect(metaframe.getInput("v")).toBe("latest");
+  });
+
+  it("still registers, and applies later inputs, when an initial input fails to deserialize", async () => {
+    metaframe = await newMetaframeAwaitingRegistration();
+    const parentId = "parent-bad-initial-input";
+    const errors: any[] = [];
+    metaframe.addListener(MetaframeEvents.Error, (err: any) =>
+      errors.push(err),
+    );
+
+    // Not valid base64: deserializing it throws. Registration used to stop
+    // there, never reaching Ready, so this and every later input was held
+    // in the buffer forever.
+    window.dispatchEvent(
+      setupResponseFromParent(metaframe.id, parentId, {
+        bad: MALFORMED_BLOB_DATA_URL,
+        good: 1,
+      }),
+    );
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, { v: "buffered" }),
+    );
+
+    await vi.waitFor(() => expect(metaframe!.isConnected()).toBe(true));
+    await vi.waitFor(() => expect(metaframe!.getInput("v")).toBe("buffered"));
+    expect(metaframe.getInput("good")).toBe(1);
+    expect(errors.length).toBeGreaterThan(0);
+
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, { v: "latest" }),
+    );
+    await vi.waitFor(() => expect(metaframe!.getInput("v")).toBe("latest"));
   });
 });
 

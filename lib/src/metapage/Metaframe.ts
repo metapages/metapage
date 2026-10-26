@@ -151,6 +151,7 @@ export class Metaframe extends EventEmitter<
     this._bufferInputsUpdate = this._bufferInputsUpdate.bind(this);
     this._drainPendingInputsUpdates =
       this._drainPendingInputsUpdates.bind(this);
+    this._deserializeInitialInputs = this._deserializeInitialInputs.bind(this);
     this.setOutput = this.setOutput.bind(this);
     this.setOutputs = this.setOutputs.bind(this);
     this.warn = this.warn.bind(this);
@@ -290,7 +291,7 @@ export class Metaframe extends EventEmitter<
         // is still deserializing cannot land on top of these
         const applied = this._inputsApplyQueue.then(async () => {
           const initialInputs = this.isInputOutputBlobSerialization
-            ? await deserializeInputs(params.state.inputs)
+            ? await this._deserializeInitialInputs(params.state.inputs)
             : params.state.inputs;
           if (!this._inputPipeValues) {
             // disposed while deserializing
@@ -348,6 +349,38 @@ export class Metaframe extends EventEmitter<
       // Finally apply anything the parent sent while we were registering
       await this._drainPendingInputsUpdates();
     })();
+  }
+
+  /**
+   * Deserialize the initial inputs without letting one bad value stop
+   * registration. A value that fails to deserialize (e.g. a malformed
+   * dataref) used to reject the whole registration: we never became Ready,
+   * the setup request retry was already cancelled, and every later
+   * InputsUpdate was buffered forever. Such a value is passed on as-is
+   * instead, the same as an unreachable url dataref.
+   */
+  async _deserializeInitialInputs(
+    inputs: MetaframeInputMap,
+  ): Promise<MetaframeInputMap> {
+    try {
+      return await deserializeInputs(inputs);
+    } catch (_) {
+      // Find the bad value(s), keeping the rest deserialized
+    }
+    const result: MetaframeInputMap = {};
+    for (const [pipeId, value] of Object.entries(inputs)) {
+      try {
+        result[pipeId] = (await deserializeInputs({ [pipeId]: value }))[pipeId];
+      } catch (err) {
+        result[pipeId] = value;
+        this.error(`Could not deserialize initial input ${pipeId}: ${err}`);
+        this.emit(
+          MetaframeEvents.Error,
+          `Could not deserialize initial input ${pipeId}: ${err}`,
+        );
+      }
+    }
+    return result;
   }
 
   /**
