@@ -111,6 +111,12 @@ export class Metaframe extends EventEmitter<
    * order they arrived. See `setInternalInputsAndNotify`.
    */
   _inputsApplyQueue: Promise<void> = Promise.resolve();
+  /**
+   * Set by `dispose()`. Registration and input updates resolve asynchronously,
+   * so they check this after every await: a disposed instance must not touch
+   * its (cleared) state, ack the parent, or emit.
+   */
+  _disposed = false;
 
   debug: boolean = isDebugFromUrlsParams();
   color: string | undefined;
@@ -240,6 +246,9 @@ export class Metaframe extends EventEmitter<
   }
 
   _resolveSetupIframeServerResponse(params: SetupIframeServerResponseData) {
+    if (this._disposed) {
+      return;
+    }
     if (this._state === MetaframeLoadingState.WaitingForPageLoad) {
       throw "Got message but page has not finished loading, we should never get in this state";
     }
@@ -283,6 +292,11 @@ export class Metaframe extends EventEmitter<
         const initialInputs = this.isInputOutputBlobSerialization
           ? await deserializeInputs(params.state.inputs)
           : params.state.inputs;
+        // Disposed while deserializing (e.g. React StrictMode unmounting
+        // right after the parent answered): drop the registration entirely.
+        if (this._disposed) {
+          return;
+        }
         // Merge rather than replace: these are the parent's current inputs,
         // but on a re-registration we may already hold values from it.
         this._inputPipeValues = merge(this._inputPipeValues, initialInputs);
@@ -447,6 +461,7 @@ export class Metaframe extends EventEmitter<
   }
 
   public dispose() {
+    this._disposed = true;
     super.removeAllListeners();
     this._cancelSetupRequestRetry();
     this._pendingInputsUpdates = [];
@@ -548,6 +563,9 @@ export class Metaframe extends EventEmitter<
     // this is where we deserialize the inputs
     if (this.isInputOutputBlobSerialization) {
       inputs = await deserializeInputs(inputs);
+      if (this._disposed) {
+        return;
+      }
     }
 
     const originalInputs = inputs;

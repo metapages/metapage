@@ -290,6 +290,64 @@ describe("Metaframe inputs during (re)connection", () => {
       expect(metaframe!.getInputs()).toEqual({ a: 1, b: 2, c: 3 }),
     );
   });
+
+  it("stops registering if disposed while deserializing the initial inputs", async () => {
+    // React StrictMode mounts, unmounts (dispose) and remounts: the first
+    // instance is disposed right after the parent answered, while its blob
+    // inputs are still deserializing. That used to throw from merge() into an
+    // undefined input map, then ack the parent from a disposed instance.
+    const mf = await newMetaframeAwaitingRegistration();
+    const sentToParent: string[] = [];
+    mf.sendRpc = (method: any) => sentToParent.push(method);
+    const emitted: string[] = [];
+    mf.emit = ((event: string) => {
+      emitted.push(event);
+      return true;
+    }) as any;
+
+    const unhandled: any[] = [];
+    const onUnhandled = (e: PromiseRejectionEvent) => {
+      unhandled.push(e.reason);
+      e.preventDefault();
+    };
+    window.addEventListener("unhandledrejection", onUnhandled);
+    try {
+      window.dispatchEvent(
+        setupResponseFromParent(mf.id, "parent-disposed", {
+          blob: BLOB_DATA_URL,
+        }),
+      );
+      // Deserialization is still pending
+      expect(mf._state).not.toBe("Ready");
+      mf.dispose();
+      await delay(200);
+    } finally {
+      window.removeEventListener("unhandledrejection", onUnhandled);
+    }
+
+    expect(unhandled).toEqual([]);
+    expect(sentToParent).toEqual([]);
+    expect(emitted).toEqual([]);
+    expect(mf._inputPipeValues).toBeUndefined();
+  });
+
+  it("ignores a setup response that arrives after dispose", async () => {
+    const mf = await newMetaframeAwaitingRegistration();
+    const sentToParent: string[] = [];
+    mf.sendRpc = (method: any) => sentToParent.push(method);
+    mf.dispose();
+
+    expect(() =>
+      mf._resolveSetupIframeServerResponse({
+        parentId: "parent-late",
+        state: { inputs: { a: 1 } },
+        version: Metapage.version,
+      } as any),
+    ).not.toThrow();
+    await delay(20);
+    expect(sentToParent).toEqual([]);
+    expect(mf._parentId).toBeUndefined();
+  });
 });
 
 // ---------------------------------------------------------------------------

@@ -5,6 +5,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Fixed
+- A metaframe disposed while it was still registering no longer throws
+  `TypeError: ... is undefined` from `merge`. Registration awaits the
+  deserialization of the parent's initial inputs, and `dispose()` landing in
+  that window (React StrictMode does it on every dev mount) made it merge into
+  the cleared input map. A disposed metaframe now abandons its registration: it
+  no longer acks the parent or emits inputs either.
 
 ## [1.10.15] - 2026-10-22
 ### Fixed
