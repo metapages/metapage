@@ -356,7 +356,8 @@ describe("Metaframe inputs during (re)connection", () => {
     window.dispatchEvent(
       setupResponseFromParent(metaframe.id, parentId, {
         bad: MALFORMED_BLOB_DATA_URL,
-        good: 1,
+        goodBlob: BLOB_DATA_URL,
+        n: 1,
       }),
     );
     window.dispatchEvent(
@@ -365,13 +366,110 @@ describe("Metaframe inputs during (re)connection", () => {
 
     await vi.waitFor(() => expect(metaframe!.isConnected()).toBe(true));
     await vi.waitFor(() => expect(metaframe!.getInput("v")).toBe("buffered"));
-    expect(metaframe.getInput("good")).toBe(1);
-    expect(errors.length).toBeGreaterThan(0);
+    // The other values are still deserialized, the bad one is handed back
+    expect(metaframe.getInput("goodBlob")).toBeInstanceOf(Blob);
+    expect(metaframe.getInput("n")).toBe(1);
+    expect(metaframe.getInput("bad")).toBe(MALFORMED_BLOB_DATA_URL);
+    expect(errors.length).toBe(1);
+    expect(errors[0]).toContain("bad");
 
     window.dispatchEvent(
       inputsUpdateFromParent(metaframe.id, parentId, { v: "latest" }),
     );
     await vi.waitFor(() => expect(metaframe!.getInput("v")).toBe("latest"));
+  });
+
+  it("applies the rest of an input update when one value fails to deserialize", async () => {
+    metaframe = await newMetaframeAwaitingRegistration();
+    const parentId = "parent-bad-update";
+    const errors: any[] = [];
+    metaframe.addListener(MetaframeEvents.Error, (err: any) =>
+      errors.push(err),
+    );
+    const seen: any[] = [];
+    metaframe.onInputs((inputs) => seen.push(inputs));
+
+    window.dispatchEvent(setupResponseFromParent(metaframe.id, parentId));
+    // One bad update while registering (buffered), one once Ready (live).
+    // Each used to be dropped whole, with no error event.
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, {
+        bad: MALFORMED_BLOB_DATA_URL,
+        buffered: BLOB_DATA_URL,
+      }),
+    );
+    await metaframe.connected();
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, {
+        bad: MALFORMED_BLOB_DATA_URL,
+        live: "yes",
+      }),
+    );
+
+    await vi.waitFor(() => expect(metaframe!.getInput("live")).toBe("yes"));
+    expect(metaframe.getInput("buffered")).toBeInstanceOf(Blob);
+    expect(metaframe.getInput("bad")).toBe(MALFORMED_BLOB_DATA_URL);
+    expect(seen.length).toBe(2);
+    expect(errors.length).toBe(2);
+    errors.forEach((err) => expect(err).toContain("bad"));
+  });
+
+  it("stops registering if disposed while deserializing the initial inputs", async () => {
+    // React StrictMode mounts, unmounts (dispose) and remounts: the first
+    // instance is disposed right after the parent answered, while its blob
+    // inputs are still deserializing. That used to throw from merge() into an
+    // undefined input map, then ack the parent from a disposed instance.
+    const mf = await newMetaframeAwaitingRegistration();
+    const sentToParent: string[] = [];
+    mf.sendRpc = (method: any) => sentToParent.push(method);
+    const emitted: string[] = [];
+    mf.emit = ((event: string) => {
+      emitted.push(event);
+      return true;
+    }) as any;
+
+    const unhandled: any[] = [];
+    const onUnhandled = (e: PromiseRejectionEvent) => {
+      unhandled.push(e.reason);
+      e.preventDefault();
+    };
+    window.addEventListener("unhandledrejection", onUnhandled);
+    try {
+      window.dispatchEvent(
+        setupResponseFromParent(mf.id, "parent-disposed", {
+          blob: BLOB_DATA_URL,
+        }),
+      );
+      // Deserialization is still pending
+      expect(mf._state).not.toBe("Ready");
+      mf.dispose();
+      await delay(200);
+    } finally {
+      window.removeEventListener("unhandledrejection", onUnhandled);
+    }
+
+    expect(unhandled).toEqual([]);
+    expect(sentToParent).toEqual([]);
+    expect(emitted).toEqual([]);
+    expect(mf._inputPipeValues).toBeUndefined();
+  });
+
+  it("ignores a setup response that arrives after dispose", async () => {
+    const mf = await newMetaframeAwaitingRegistration();
+    const sentToParent: string[] = [];
+    mf.sendRpc = (method: any) => sentToParent.push(method);
+    mf.dispose();
+
+    expect(() =>
+      mf._resolveSetupIframeServerResponse({
+        parentId: "parent-late",
+        state: { inputs: { a: 1 } },
+        version: Metapage.version,
+      } as any),
+    ).not.toThrow();
+    await delay(20);
+    expect(sentToParent).toEqual([]);
+    expect(mf._parentId).toBeUndefined();
   });
 });
 

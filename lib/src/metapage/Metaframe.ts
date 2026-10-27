@@ -111,6 +111,12 @@ export class Metaframe extends EventEmitter<
    * order they arrived. See `setInternalInputsAndNotify`.
    */
   _inputsApplyQueue: Promise<void> = Promise.resolve();
+  /**
+   * Set by `dispose()`. Registration and input updates resolve asynchronously,
+   * so they check this after every await: a disposed instance must not touch
+   * its (cleared) state, ack the parent, or emit.
+   */
+  _disposed = false;
 
   debug: boolean = isDebugFromUrlsParams();
   color: string | undefined;
@@ -151,7 +157,9 @@ export class Metaframe extends EventEmitter<
     this._bufferInputsUpdate = this._bufferInputsUpdate.bind(this);
     this._drainPendingInputsUpdates =
       this._drainPendingInputsUpdates.bind(this);
-    this._deserializeInitialInputs = this._deserializeInitialInputs.bind(this);
+    this._deserializeInputsKeepingFailures =
+      this._deserializeInputsKeepingFailures.bind(this);
+    this._reportError = this._reportError.bind(this);
     this.setOutput = this.setOutput.bind(this);
     this.setOutputs = this.setOutputs.bind(this);
     this.warn = this.warn.bind(this);
@@ -241,6 +249,9 @@ export class Metaframe extends EventEmitter<
   }
 
   _resolveSetupIframeServerResponse(params: SetupIframeServerResponseData) {
+    if (this._disposed) {
+      return;
+    }
     if (this._state === MetaframeLoadingState.WaitingForPageLoad) {
       throw "Got message but page has not finished loading, we should never get in this state";
     }
@@ -291,10 +302,11 @@ export class Metaframe extends EventEmitter<
         // is still deserializing cannot land on top of these
         const applied = this._inputsApplyQueue.then(async () => {
           const initialInputs = this.isInputOutputBlobSerialization
-            ? await this._deserializeInitialInputs(params.state.inputs)
+            ? await this._deserializeInputsKeepingFailures(params.state.inputs)
             : params.state.inputs;
-          if (!this._inputPipeValues) {
-            // disposed while deserializing
+          // Disposed while deserializing (e.g. React StrictMode unmounting
+          // right after the parent answered): drop the registration entirely.
+          if (this._disposed) {
             return;
           }
           // Merge rather than replace: these are the parent's current inputs,
@@ -303,6 +315,9 @@ export class Metaframe extends EventEmitter<
         });
         this._inputsApplyQueue = applied.catch(() => {});
         await applied;
+        if (this._disposed) {
+          return;
+        }
       }
 
       // Tell the parent we have registered.
@@ -352,35 +367,35 @@ export class Metaframe extends EventEmitter<
   }
 
   /**
-   * Deserialize the initial inputs without letting one bad value stop
-   * registration. A value that fails to deserialize (e.g. a malformed
-   * dataref) used to reject the whole registration: we never became Ready,
-   * the setup request retry was already cancelled, and every later
-   * InputsUpdate was buffered forever. Such a value is passed on as-is
-   * instead, the same as an unreachable url dataref.
+   * Deserialize inputs from the parent without letting one bad value lose
+   * the rest. A value that fails to deserialize (e.g. a malformed dataref)
+   * used to reject the whole map: for the initial inputs that stopped
+   * registration (we never became Ready, the setup request retry was already
+   * cancelled, and every later InputsUpdate was buffered forever), and for a
+   * later update it silently dropped every value in it. Such a value is now
+   * passed on as-is, the same as an unreachable url dataref, and reported as
+   * an error event.
    */
-  async _deserializeInitialInputs(
+  async _deserializeInputsKeepingFailures(
     inputs: MetaframeInputMap,
   ): Promise<MetaframeInputMap> {
-    try {
-      return await deserializeInputs(inputs);
-    } catch (_) {
-      // Find the bad value(s), keeping the rest deserialized
-    }
     const result: MetaframeInputMap = {};
+    // One key at a time, as deserializeInputs does anyway, so each value is
+    // deserialized (and a url dataref fetched) at most once
     for (const [pipeId, value] of Object.entries(inputs)) {
       try {
         result[pipeId] = (await deserializeInputs({ [pipeId]: value }))[pipeId];
       } catch (err) {
         result[pipeId] = value;
-        this.error(`Could not deserialize initial input ${pipeId}: ${err}`);
-        this.emit(
-          MetaframeEvents.Error,
-          `Could not deserialize initial input ${pipeId}: ${err}`,
-        );
+        this._reportError(`Could not deserialize input ${pipeId}: ${err}`);
       }
     }
     return result;
+  }
+
+  _reportError(message: string) {
+    this.error(message);
+    this.emit(MetaframeEvents.Error, message);
   }
 
   /**
@@ -424,7 +439,11 @@ export class Metaframe extends EventEmitter<
       // applies to updates arriving after registration, deferred to here
       // because the parent id was not yet known when this was buffered.
       .filter((p) => p.parentId === this._parentId)
-      .map((p) => this.setInternalInputsAndNotify(p.inputs));
+      .map((p) =>
+        this.setInternalInputsAndNotify(p.inputs).catch((err) =>
+          this._reportError(`Could not apply inputs: ${err}`),
+        ),
+      );
     await Promise.all(applied);
   }
 
@@ -495,6 +514,7 @@ export class Metaframe extends EventEmitter<
   }
 
   public dispose() {
+    this._disposed = true;
     super.removeAllListeners();
     this._cancelSetupRequestRetry();
     this._pendingInputsUpdates = [];
@@ -589,13 +609,16 @@ export class Metaframe extends EventEmitter<
   }
 
   async _setInternalInputsAndNotify(inputs: MetaframeInputMap) {
-    if (!this._inputPipeValues) {
+    if (this._disposed) {
       // disposed while this update was queued
       return;
     }
     // this is where we deserialize the inputs
     if (this.isInputOutputBlobSerialization) {
-      inputs = await deserializeInputs(inputs);
+      inputs = await this._deserializeInputsKeepingFailures(inputs);
+      if (this._disposed) {
+        return;
+      }
     }
 
     const originalInputs = inputs;
@@ -759,7 +782,9 @@ export class Metaframe extends EventEmitter<
               );
               break;
             }
-            this.setInternalInputsAndNotify(jsonrpc.params.inputs);
+            this.setInternalInputsAndNotify(jsonrpc.params.inputs).catch(
+              (err) => this._reportError(`Could not apply inputs: ${err}`),
+            );
             break;
           case JsonRpcMethodsFromParent.MessageAck:
             if (this.debug) this.log(`ACK: ${JSON.stringify(jsonrpc)}`);

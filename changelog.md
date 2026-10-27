@@ -16,7 +16,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   (e.g. a malformed dataref) never finished registering: it stayed not `Ready`
   and held every later input in its buffer forever (#200). The bad value is
   now passed through as-is, an `error` event is emitted, and registration
-  completes.
+  completes. Input updates fail the same way: one bad value no longer drops
+  the rest of the update silently.
+- A metaframe disposed while it was still registering no longer throws
+  `TypeError: ... is undefined` from `merge`. Registration awaits the
+  deserialization of the parent's initial inputs, and `dispose()` landing in
+  that window (React StrictMode does it on every dev mount) made it merge into
+  the cleared input map. A disposed metaframe now abandons its registration: it
+  no longer acks the parent or emits inputs either.
 
 ## [1.10.15] - 2026-10-22
 ### Fixed

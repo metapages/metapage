@@ -16,4 +16,4 @@
 **/.cache
 
 # pr-daemon per-branch preview state
-/.pr-daemon
+.pr-daemon/

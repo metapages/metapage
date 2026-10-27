@@ -19,17 +19,22 @@ export const merge = (
   if (!newInputs) {
     return current;
   }
-  return create<MetaframeInputMap>(current, (draft: MetaframeInputMap) => {
-    Object.keys(newInputs).forEach((pipeId: string) => {
-      // undefined means remove the key
-      // null means keep the key, but set to null
-      if (newInputs[pipeId] === undefined) {
-        delete draft[pipeId];
-      } else {
-        draft[pipeId] = newInputs[pipeId];
-      }
-    });
-  });
+  // A disposed Metaframe clears its inputs to undefined: never hand that to
+  // mutative, which would throw on the first draft assignment
+  return create<MetaframeInputMap>(
+    current ?? {},
+    (draft: MetaframeInputMap) => {
+      Object.keys(newInputs).forEach((pipeId: string) => {
+        // undefined means remove the key
+        // null means keep the key, but set to null
+        if (newInputs[pipeId] === undefined) {
+          delete draft[pipeId];
+        } else {
+          draft[pipeId] = newInputs[pipeId];
+        }
+      });
+    },
+  );
 };
 
 export const getUrlParam = (key: MetapageHashParams): string | null => {

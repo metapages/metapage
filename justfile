@@ -66,119 +66,110 @@ alias worker := _worker
 alias lib := _lib
 @_lib +args="":
     just lib/{{args}}
-###################################################
-# pr-daemon (http://localhost:7377/setup)
-###################################################
-# pr-daemon drives each branch's preview stack through three commands, run as
-# `bash -lc` from the root of the branch's worktree with no TTY:
-#   up    — print the local URL as the LAST line of stdout, return only once the
-#           app answers, be idempotent, isolate per branch, never open a browser
-#   down  — stop this branch's services and delete its data; safe when not up
-#   check — must be green before a PR opens
-# The stack is the worker (module.metapage.io) serving this branch's lib build.
 
-# Start this branch's worker dev server in the background and print its URL
+###################################################
+# pr-daemon 🌱 http://localhost:7377/setup
+#
+# One preview stack per branch: the production Fresh build of ./worker,
+# served by `deno serve` on a port derived from the branch name. The app is
+# entirely origin-relative (no baked-in URLs, CORS reflects the request
+# origin) and `deno serve` does not validate Host headers, so the same stack
+# works unchanged behind pr-daemon's public preview proxy. Nothing to wire,
+# and no PR_DAEMON_ROUTE lines: the browser only ever calls this one origin.
+###################################################
+
+# 🌱 pr-daemon: start this branch's preview stack, print its local URL
 pr-daemon-up:
     #!/usr/bin/env bash
     set -euo pipefail
-    # stdout is reserved for the URL: everything else goes to stderr
+    # Everything but the final URL goes to stderr: pr-daemon reads the URL off
+    # the last stdout line that is nothing but a URL.
     exec 3>&1 1>&2
-    cd "{{ justfile_directory() }}"
-    branch=$(git rev-parse --abbrev-ref HEAD)
-    state="$PWD/.pr-daemon"
-    pidfile="$state/dev.pid"
-    portfile="$state/dev.port"
-    hostfile="$state/dev.host"
-    logfile="$state/dev.log"
-    mkdir -p "$state"
-    # Set by pr-daemon when it proxies a public preview host to this server
-    public_host="${PR_DAEMON_PUBLIC_HOST:-}"
+    BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+    # Deterministic per-branch port, so `up` and `down` agree without any
+    # shared state and two branches' stacks never collide. cksum, not md5:
+    # it is POSIX and spelled the same on macOS and Linux.
+    PORT=$(( 20000 + $(printf '%s' "$BRANCH" | cksum | cut -d' ' -f1) % 20000 ))
+    STATE=".pr-daemon"
+    echo "🌱 branch=$BRANCH port=$PORT"
 
-    answers() { curl -fs -o /dev/null -m 3 "http://localhost:$1/"; }
-    listening() { lsof -ti "tcp:$1" -sTCP:LISTEN >/dev/null 2>&1; }
+    # Stop before building, never after: `down` runs `just clean`, which
+    # deletes exactly the build output a fresh `up` needs.
+    just pr-daemon-down
+    mkdir -p "$STATE"
 
-    # Idempotent: already serving for the same public host
-    if [ -f "$portfile" ] && answers "$(cat "$portfile")" \
-        && [ "$(cat "$hostfile" 2>/dev/null)" = "$public_host" ]; then
-        echo "pr-daemon-up: $branch already serving on port $(cat "$portfile")"
-        echo "http://localhost:$(cat "$portfile")" >&3
-        exit 0
-    fi
-    if [ -f "$pidfile" ]; then
-        just pr-daemon-down
-        mkdir -p "$state"
-    fi
-
-    # Port derived from the branch name so branches never collide
-    base=$(( 8100 + $(printf '%s' "$branch" | cksum | cut -d' ' -f1) % 700 ))
-    port=$base
-    for _ in $(seq 1 100); do
-        listening "$port" || break
-        port=$(( port + 1 ))
-    done
-    if listening "$port"; then
-        echo "pr-daemon-up: no free port near $base"
-        exit 1
-    fi
-
-    # The worker serves the lib build from this branch
+    # Then build, then start. `deno serve` loads _fresh/server.js once at
+    # startup, so a server left running would keep serving the old build:
+    # re-running `up` after a code change has to replace the process, or the
+    # agent never sees its own edits. The build is ~10s, cheap enough to
+    # always redo.
     just lib/build
-    (cd worker && deno install)
+    just worker/build
 
-    # Fully detached: pr-daemon reads stdout to EOF
-    (cd worker && APP_PORT="$port" PR_DAEMON_PUBLIC_HOST="$public_host" \
-        nohup deno task dev >"$logfile" 2>&1 < /dev/null &
-     echo $! > "$pidfile")
-    echo "$port" > "$portfile"
-    printf '%s' "$public_host" > "$hostfile"
+    cd worker
+    # nohup + closed stdin + detached: no TTY here, and the process has to
+    # outlive this recipe's shell.
+    #
+    # 3>&- matters as much as the rest. pr-daemon reads this recipe's stdout
+    # through a pipe, and fd 3 is a dup of it; a long-lived child holding that
+    # fd open means the reader never sees EOF and `up` appears to hang
+    # forever, even though it has already printed the URL and exited.
+    nohup deno serve -A --port "$PORT" _fresh/server.js \
+        > "../$STATE/server.log" 2>&1 < /dev/null 3>&- &
+    echo $! > "../$STATE/server.pid"
+    cd ..
 
-    for _ in $(seq 1 180); do
-        if answers "$port"; then
-            echo "pr-daemon-up: $branch up on port $port (log: $logfile)"
-            echo "http://localhost:$port" >&3
-            exit 0
-        fi
-        if ! kill -0 "$(cat "$pidfile")" 2>/dev/null; then
-            echo "pr-daemon-up: dev server exited; last 40 lines:"
-            tail -40 "$logfile"
-            exit 1
-        fi
+    # Return only once the app actually answers.
+    for i in $(seq 1 120); do
+        CODE="$(curl -s -o /dev/null -w '%{http_code}' -m 3 "http://127.0.0.1:$PORT/" || true)"
+        case "$CODE" in
+            2*|3*) echo "✅ preview up on port $PORT after ${i}s"; echo "http://localhost:$PORT" >&3; exit 0 ;;
+        esac
         sleep 1
     done
-    echo "pr-daemon-up: timed out waiting for http://localhost:$port; last 40 lines:"
-    tail -40 "$logfile"
+
+    echo "💥 preview did not answer on port $PORT within 120s"
+    cat "$STATE/server.log" || true
     exit 1
 
-# Stop this branch's worker dev server and delete what it generated
+# 🌱 pr-daemon: stop this branch's preview stack and delete its data
 pr-daemon-down:
     #!/usr/bin/env bash
     set -euo pipefail
-    cd "{{ justfile_directory() }}"
-    state=".pr-daemon"
-    if [ -f "$state/dev.pid" ]; then
-        pid=$(cat "$state/dev.pid")
-        kill "$pid" 2>/dev/null || true
-        for _ in $(seq 1 20); do
-            kill -0 "$pid" 2>/dev/null || break
-            sleep 0.5
-        done
-        kill -9 "$pid" 2>/dev/null || true
-    fi
-    # `deno task dev` spawns vite as a child: reap whatever still holds the port
-    port=$(cat "$state/dev.port" 2>/dev/null || true)
-    if [ -n "$port" ]; then
-        for p in $(lsof -ti "tcp:$port" -sTCP:LISTEN 2>/dev/null); do
-            kill -9 "$p" 2>/dev/null || true
-        done
-    fi
-    rm -rf "$state" worker/_fresh
-    echo "pr-daemon-down: stopped and cleaned"
+    # Safe to run when nothing is up.
+    BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+    PORT=$(( 20000 + $(printf '%s' "$BRANCH" | cksum | cut -d' ' -f1) % 20000 ))
+    STATE=".pr-daemon"
 
-# Must be green before a PR opens: formatting, type checks, lib tests
+    if [ -f "$STATE/server.pid" ]; then
+        PID="$(cat "$STATE/server.pid")"
+        if kill -0 "$PID" 2>/dev/null; then
+            kill "$PID" 2>/dev/null || true
+            for _ in $(seq 1 20); do
+                kill -0 "$PID" 2>/dev/null || break
+                sleep 0.5
+            done
+            kill -9 "$PID" 2>/dev/null || true
+        fi
+        rm -f "$STATE/server.pid"
+    fi
+
+    # Belt and braces: a pidfile lost to a crash would otherwise leave the
+    # port held, and this branch's port is ours alone to reclaim.
+    pkill -f "deno serve -A --port $PORT _fresh/server.js" 2>/dev/null || true
+
+    # Delete the branch's data: there are no containers or volumes, only
+    # generated build output.
+    just clean
+    rm -rf "$STATE"
+    echo "✅ preview down (branch=$BRANCH port=$PORT)"
+
+# Matches what CI gates on branches, minus `just worker/test`: that one is a
+# ~100s browser E2E on a hardcoded port (8762), so two previews checking at the
+# same time would collide. CI stays the outer gate for it.
+
+# 🌱 pr-daemon: must be green before a PR opens
 pr-daemon-check:
-    cd lib && (test -d node_modules || npm i) && npx prettier --check .
-    # --noEmit, not `just check`: `tsc --build` writes into lib/dist and would
-    # replace the bundle a running preview serves from /lib
-    just lib/_tsc --noEmit
-    just worker/check
+    just lib/fmt-check
+    just check
     just lib/test
