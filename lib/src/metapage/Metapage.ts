@@ -695,10 +695,7 @@ export class Metapage extends MetapageShared {
         const newUrl = newDefinition.metaframes[metaframeId].url;
         const oldUrl = oldDefinitionUrls[metaframeId];
         if (newUrl && oldUrl !== newUrl) {
-          client.url = newUrl;
-          if (client._iframe) {
-            client._iframe.src = newUrl;
-          }
+          client.setUrl(newUrl);
         }
       });
     }
@@ -1510,11 +1507,16 @@ export class Metapage extends MetapageShared {
       if (!this.isValidJSONRpcMessage(jsonrpc)) {
         return;
       }
-      this.onMessageJsonRpc(jsonrpc);
+      this.onMessageJsonRpc(jsonrpc, e);
     }
   }
 
-  onMessageJsonRpc(jsonrpc: MinimumClientMessage<any>) {
+  /**
+   * @param event the browser message event, when the message came from a
+   * window. Internal calls (e.g. setMetaframeOutputs) have none and are
+   * trusted.
+   */
+  onMessageJsonRpc(jsonrpc: MinimumClientMessage<any>, event?: MessageEvent) {
     //Verify here
     var method = jsonrpc.method as JsonRpcMethodsFromChild;
     const metaframeId = jsonrpc.iframeId;
@@ -1537,6 +1539,12 @@ export class Metapage extends MetapageShared {
     if (!metaframe) {
       // SetupIframeClientRequest from other metapages is ignored
       // this.error(`💥 onMessage method=${method}no metaframe id=${metaframeId}`);
+      return;
+    }
+
+    // Only accept messages from the document in this metaframe's iframe, at
+    // the origin of its url (#40)
+    if (event && !metaframe.isMessageFromMetaframe(event, method)) {
       return;
     }
 

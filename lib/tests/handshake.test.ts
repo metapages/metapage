@@ -229,8 +229,13 @@ describe("Metapage listens before page load", () => {
 
     // Stand in for a metaframe client the parent has already created. The real
     // one needs a live iframe contentWindow to postMessage its response to.
+    // (Its source/origin check is covered in origin.test.ts.)
     let registerCount = 0;
-    metapage.getMetaframe = () => ({ register: () => registerCount++ }) as any;
+    metapage.getMetaframe = () =>
+      ({
+        register: () => registerCount++,
+        isMessageFromMetaframe: () => true,
+      }) as any;
 
     window.dispatchEvent(setupRequestFromChild(metaframeId));
     expect(registerCount).toBe(0);

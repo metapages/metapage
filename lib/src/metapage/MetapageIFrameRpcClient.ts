@@ -9,6 +9,7 @@ import { serializeInputs } from "./data";
 import { MetapageEvents } from "./events";
 import {
   ClientMessageRecievedAck,
+  JsonRpcMethodsFromChild,
   JsonRpcMethodsFromParent,
   MinimumClientMessage,
   SetupIframeServerResponseData,
@@ -52,6 +53,13 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   _rpcListeners: ((r: JsonRpcRequest<any>) => void)[] = [];
   _loaded: boolean = false;
   _onLoaded: Disposer[] = [];
+  // Set when the parent changes the iframe src: until the new document asks to
+  // register, a SetupIframeServerResponseAck can only be from the old document
+  // (see setUrl and registered)
+  _awaitingSetupRequest: boolean = false;
+  // The last mismatched origin reported, so a retrying metaframe at the wrong
+  // origin is reported once, not on every retry
+  _reportedOriginMismatch: string | undefined;
   _parentId: MetapageId;
   _debug: boolean;
   _definition: MetaframeDefinition | undefined;
@@ -214,6 +222,80 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   public setMetapage(metapage: MetapageShared): MetapageIFrameRpcClient {
     this._metapage = metapage;
     return this;
+  }
+
+  /**
+   * The origin the document in the iframe must have for us to talk to it: the
+   * origin of the configured url. "null" for data: urls (opaque origin).
+   *
+   * Origins are matched strictly (#40): a metaframe url that redirects to, or
+   * a metaframe that navigates itself to, another origin is not sent anything
+   * and its messages are ignored. Inputs can carry secrets, so they only ever
+   * go to the origin written in the definition.
+   */
+  public get expectedOrigin(): string {
+    try {
+      return new URL(this.url).origin;
+    } catch (_) {
+      return "null";
+    }
+  }
+
+  /**
+   * The postMessage targetOrigin. An opaque origin ("null", i.e. a data: url)
+   * cannot be targeted: postMessage throws on a "data:..." targetOrigin. The
+   * content of a data: url is written inline in the definition, so it is as
+   * trusted as the metapage itself, and "*" is the only way to reach it.
+   * Caveat: if a data: metaframe navigates itself away, messages sent before it
+   * re-registers go to whatever it navigated to.
+   */
+  public get targetOrigin(): string {
+    const origin = this.expectedOrigin;
+    return origin === "null" ? "*" : origin;
+  }
+
+  /**
+   * Point the iframe at a new url. Stops sending until the new document has
+   * registered: anything sent before then reaches the old document (and if the
+   * origin changed, the browser drops it with "The target origin provided does
+   * not match the recipient window's origin"). Queued messages are flushed, and
+   * all current inputs re-sent, by registered().
+   */
+  public setUrl(url: string) {
+    this.url = url;
+    this._loaded = false;
+    this._awaitingSetupRequest = true;
+    this._reportedOriginMismatch = undefined;
+    if (this._iframe) {
+      this._iframe.src = url;
+    }
+  }
+
+  /**
+   * A message the browser delivered to the metapage is from this metaframe
+   * only if it came from the window in our iframe, at the expected origin.
+   * Anything else is ignored. A registration request from our iframe at the
+   * wrong origin (the url redirected, or the metaframe navigated away) is
+   * reported once, since it otherwise leaves the metaframe silently blank.
+   */
+  public isMessageFromMetaframe(e: MessageEvent, method: string): boolean {
+    if (!this._iframe || e.source !== this._iframe.contentWindow) {
+      return false;
+    }
+    const expectedOrigin = this.expectedOrigin;
+    if (e.origin === expectedOrigin) {
+      return true;
+    }
+    if (
+      method === JsonRpcMethodsFromChild.SetupIframeClientRequest &&
+      this._reportedOriginMismatch !== e.origin
+    ) {
+      this._reportedOriginMismatch = e.origin;
+      this._metapage?.error(
+        `Metaframe "${this.id}" is at origin ${e.origin} but its url ${this.url} has origin ${expectedOrigin} (redirected, or navigated away?). Not connecting it: set the metaframe url to where it actually loads.`,
+      );
+    }
+    return false;
   }
 
   public getDefinitionUrl(): string {
@@ -400,6 +482,8 @@ export class MetapageIFrameRpcClient extends EventEmitter<
    * waiting for the next upstream change.
    */
   public register() {
+    // This request is from whatever document is in the iframe now
+    this._awaitingSetupRequest = false;
     var response: SetupIframeServerResponseData = {
       iframeId: this.id,
       parentId: this._parentId,
@@ -426,6 +510,13 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     this.log({ m: "MetapageIFrameRpcClient.registered", inputs: this.inputs });
     if (!version) {
       throw "Cannot register without a version";
+    }
+    if (this._awaitingSetupRequest) {
+      // The src changed since we last answered a registration request, so this
+      // ack is from the old document, finishing its handshake late. Accepting
+      // it would start sending to the old document before the new one loads.
+      this.log("ignoring registration ack from the previous document");
+      return;
     }
     this.version = version;
     this._loaded = true;
@@ -544,7 +635,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   _bufferTimeout: number | undefined;
   sendOrBufferPostMessage(message: any) {
     if (this._iframe && this._iframe.contentWindow) {
-      this._iframe.contentWindow.postMessage(message, this.url);
+      this._iframe.contentWindow.postMessage(message, this.targetOrigin);
     } else {
       if (!this._bufferMessages) {
         this._bufferMessages = [message];
@@ -552,7 +643,7 @@ export class MetapageIFrameRpcClient extends EventEmitter<
         this._bufferTimeout = window.setInterval(function () {
           if (thing._iframe && thing._iframe.contentWindow) {
             thing._bufferMessages!.forEach((m) =>
-              thing._iframe!.contentWindow!.postMessage(m, thing.url),
+              thing._iframe!.contentWindow!.postMessage(m, thing.targetOrigin),
             );
             window.clearInterval(thing._bufferTimeout);
             thing._bufferTimeout = undefined;
