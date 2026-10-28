@@ -1,6 +1,8 @@
 # #40: `postMessage` target origin does not match the recipient window's origin
 
-Discussion only: no library code changes. The issue asked for analysis and review before any fix.
+**Status: fixed** with option B plus option C, origins strictly matched (see
+[What was implemented](#what-was-implemented)). The analysis below describes
+the behaviour before the fix.
 
 ```
 Failed to execute 'postMessage' on 'DOMWindow': The target origin provided ('…') does not match the recipient window's origin ('…')
@@ -83,7 +85,7 @@ So `onload` alone is not the right fix here.
 
 ## Options for a fix (for review)
 
-### A. Reply to the origin that actually registered (recommended)
+### A. Reply to the origin that actually registered (not chosen)
 
 In `Metapage.onMessage`, for `SetupIframeClientRequest`:
 
@@ -130,11 +132,52 @@ our iframe (`e.source` matches) with an `e.origin` that differs, emit an error
 naming both origins. Use `"*"`, or reject explicitly, for `data:` URLs instead
 of throwing `SyntaxError`. This is the smallest behavioural change, but redirects stay broken.
 
-### Suggested path
+### Review corrections
 
-Do B regardless. Then choose A (or A behind an opt-out) versus C based on
-how much the "inputs only go to the configured origin" guarantee matters for
-secret-bearing inputs. Each needs a browser test in `lib/tests`. Those run in
-real Chromium via `vitest.browser.config.ts`: a same-origin page that
-redirects cross-origin, a `data:` metaframe, and a URL swap under
-`setInputs` load.
+- **A's `"*"` fallback is not scoped by the `e.source` check.** That check only
+  decides whose *registration* is accepted. Every later `postMessage(msg, "*")`
+  goes to whatever document is in the iframe when it is sent, including a page
+  the metaframe navigated to.
+- **A needs plumbing.** `onMessage` only passes `e.data` on, and
+  `onMessageJsonRpc` is also called internally with no event
+  (`setMetaframeOutputs`).
+- **B has its own race.** An old document's in-flight
+  `SetupIframeServerResponseAck` can arrive after `_loaded = false` and set it
+  back to `true`. B only applies where `setDefinition` swaps `src`: in the
+  constructor `_loaded` already starts `false`.
+
+## What was implemented
+
+- **B:** `MetapageIFrameRpcClient.setUrl()` is now the only way the parent
+  changes a live iframe's `src` (`setDefinition` uses it). It sets
+  `_loaded = false`, so messages queue until the new document registers. Then
+  `registered()` flushes the queue and re-sends all inputs.
+- **B's race:** `setUrl()` also sets `_awaitingSetupRequest`. `registered()`
+  ignores acks until the next `SetupIframeClientRequest` reaches `register()`,
+  so a late ack from the old document can't re-open the gate. If the origin
+  changed, the origin check below drops that ack as well.
+- **C, strict origins:**
+  - `onMessage` passes the event to `onMessageJsonRpc(jsonrpc, event?)`.
+    Messages with an event are accepted only if
+    `e.source === iframe.contentWindow` and `e.origin` is the origin of the
+    configured url (`client.expectedOrigin`). Internal calls have no event and
+    are trusted, as before.
+  - A registration request from our iframe at another origin emits a metapage
+    `Error` naming both origins. It is emitted once per origin, not on every
+    child retry. The metaframe stays unconnected, so inputs never go to an
+    origin that isn't in the definition.
+- **`data:` urls:** the target is `"*"` (`client.targetOrigin`), because an
+  opaque origin can't be targeted. Incoming messages must still come from our
+  iframe with origin `"null"`.
+  - Remaining risk, accepted: a `data:` metaframe that navigates itself away
+    keeps receiving messages until something re-registers.
+  - Why it's acceptable: its content is written inline in the definition, so
+    it is as trusted as the metapage.
+- **Tests:** `lib/tests/origin.test.ts`. 9 of its 11 tests fail without the
+  fix.
+  - `lib/tests/dataurl.test.ts` didn't catch case 2 because it only checks that
+    `data:` urls survive `setDefinition`/`getDefinition`. It never runs a
+    handshake.
+  - The real cross-origin redirect is still only exercised by the probe
+    script. Vitest's single-origin server can't serve one, so the tests
+    simulate the redirect with `MessageEvent`s that carry `source` and `origin`.
