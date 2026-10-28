@@ -8,13 +8,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - `passByReference` metapage option (#208): binary inputs/outputs (`Blob`,
   `File`, `ArrayBuffer`, TypedArrays, also nested inside objects) are handed to
-  `postMessage` as-is instead of being encoded as base64 data URLs. 5-20x faster
-  for small frames, and frames over ~200 KiB, which cannot be serialized at all,
-  now work. Opt-in (`new Metapage({ passByReference: true })`, also on
-  `Metapage.from` and `renderMetapage`), and negotiated with each metaframe when
-  it connects: metaframes on older library versions keep using data URLs. The
+  `postMessage` as-is instead of being encoded as base64 data URLs. About 2x
+  the messages / second for 1 KiB values, 7-20x for 16-64 KiB, and values over
+  ~200 KiB, which cannot be serialized at all, now work. Values with no binary
+  data cost the same. Opt-in (`new Metapage({ passByReference: true })`, also
+  on `Metapage.from`, `renderMetapage` and `renderMetaframe`), and negotiated
+  with each metaframe when it connects: metaframes on older library versions,
+  or with `isInputOutputBlobSerialization = false`, keep using data URLs. The
   metapage state then holds the raw values, so serialize it before persisting.
-- Speed test comparing the two: `/test/metapage/pass-by-reference` in the worker.
+  Documented in the README: "Passing binary data by reference".
+- Speed tests comparing the two in the worker:
+  `/test/metapage/pass-by-reference` (throughput by value size) and
+  `/test/metapage/pass-by-reference-rate` (messages / second).
 
 ## [1.10.17] - 2026-10-28
 ### Fixed

@@ -271,39 +271,9 @@ metaframe.onInput("file", (file) => {
 });
 ```
 
-#### Passing binary data by reference
-
-By default binary values (`Blob`, `File`, `ArrayBuffer`, TypedArrays) are
-encoded as base64 data URLs on their way between metaframes, so the metapage
-state is plain JSON that can be saved. That is slow for large or frequent
-values (e.g. video frames), and fails outright for values over a few hundred
-KiB.
-
-With `passByReference` they are handed to `postMessage` as-is instead: a
-`Blob` or `File` is passed by reference (its bytes are never copied), an
-`ArrayBuffer` or TypedArray is copied natively, and binary values nested inside
-objects work too.
-
-```javascript
-const metapage = new Metapage({ passByReference: true });
-// or: await Metapage.from(definition, { passByReference: true })
-// or: renderMetapage({ ..., options: { passByReference: true } })
-```
-
-- Metaframes need no changes: they negotiate it with the metapage when they
-  connect. Metaframes running an older library version keep getting data URLs.
-- The metapage state (`getState()`, `onState`, `onOutputs`) then holds the raw
-  binary values. If you persist it, serialize it first with
-  `Metapage.serializeInputs`.
-- Set it when creating the metapage: metaframes read it when they connect.
-- It is off by default because of that state change, not for speed: with it
-  on, `JSON.stringify(metapage.getState())` turns a `Blob` into `{}` and a
-  `Uint8Array` into `{"0":..,"1":..}`, so code that saves or compares the
-  state would break silently. Checking for binary values costs the same in
-  both modes: one type check per value, never a walk over the elements of an
-  array.
-
-Speed test: [/test/metapage/pass-by-reference](https://module.metapage.io/test/metapage/pass-by-reference)
+Binary values are encoded as base64 data URLs between metaframes by default.
+To pass them as-is, which is much faster, see
+[Passing binary data by reference](#passing-binary-data-by-reference-passbyreference).
 
 ## Usage Examples
 
@@ -482,6 +452,157 @@ metaframe.onInput("image", async (data) => {
   document.getElementById("img").src = url;
 });
 ```
+
+## Passing binary data by reference (`passByReference`)
+
+By default binary values (`Blob`, `File`, `ArrayBuffer`, TypedArrays) are
+encoded as base64 data URLs on their way between metaframes, and decoded
+again on arrival. That keeps the metapage state plain JSON that can be saved,
+but it is slow for large or frequent values (e.g. video frames), and fails
+outright for values over about 200 KiB.
+
+With `passByReference: true` the metapage hands them to `postMessage` as-is:
+
+- a `Blob` or `File` is passed by reference: its bytes are never copied
+- an `ArrayBuffer` or TypedArray is copied natively by the browser, with no
+  base64 step
+- binary values nested inside objects or arrays arrive as-is too
+
+### API
+
+It is an option of the metapage, set when the metapage is created:
+
+```javascript
+import { Metapage, renderMetapage, renderMetaframe } from "@metapages/metapage";
+
+const metapage = new Metapage({ passByReference: true });
+
+// or
+const metapage = await Metapage.from(definition, { passByReference: true });
+
+// or
+await renderMetapage({
+  definition,
+  rootDiv,
+  options: { passByReference: true },
+});
+
+// or, for a single metaframe
+await renderMetaframe({ url, rootDiv, passByReference: true });
+```
+
+```typescript
+interface MetapageOptionsV1 {
+  id?: string;
+  color?: string;
+  passByReference?: boolean; // default false
+}
+```
+
+Metaframes need no changes and have no option: `setOutput` and `onInput`
+work the same, the values just arrive faster.
+
+```javascript
+// In a metaframe: the same code in both modes
+metaframe.setOutput("frame", new Uint8Array(videoFrameBytes));
+metaframe.onInput("frame", (frame) => {
+  frame instanceof Uint8Array; // true
+});
+```
+
+### Behavior
+
+- **Negotiated per metaframe.** When a metaframe connects it says whether it
+  can take raw values, and the metapage answers whether it wants them. Both
+  directions (metapage → metaframe inputs, metaframe → metapage outputs) use
+  what was agreed. This happens again whenever a metaframe reloads.
+- **Older metaframes keep working.** A metaframe on an older library version
+  never asks, so it keeps getting (and sending) data URLs, even in a
+  `passByReference` metapage. A pipe from a new metaframe into an old one
+  works: the metapage serializes the values for the old one.
+- **Older metapages keep working.** An older metapage never agrees to it, so
+  a new metaframe inside one sends data URLs.
+- **Metaframes that decode data URLs themselves** (they set
+  `metaframe.isInputOutputBlobSerialization = false`) do not ask for it, so
+  they keep getting data URLs.
+- **Set it when creating the metapage.** Metaframes read it when they
+  connect, so changing `metapage.passByReference` afterwards only changes one
+  direction.
+
+### Saving the state
+
+With `passByReference` on, the metapage state (`getState()`, `onState`,
+`onOutputs`, `onInputs`) holds the raw `Blob`s and TypedArrays rather than
+data URL strings. `JSON.stringify` does not handle those: a `Blob` becomes
+`{}` (the data is lost) and a `Uint8Array` becomes `{"0":1,"1":2,...}`.
+
+If you save or send the state anywhere, serialize the values first.
+`Metapage.serializeInputs` turns the binary values of one input or output
+map (top level only) into data URLs, and `Metapage.deserializeInputs` turns
+them back:
+
+```javascript
+const serializeMetaframeValues = async (values = {}) =>
+  Object.fromEntries(
+    await Promise.all(
+      Object.entries(values).map(async ([metaframeId, pipes]) => [
+        metaframeId,
+        await Metapage.serializeInputs(pipes),
+      ]),
+    ),
+  );
+
+const state = metapage.getState();
+const saved = JSON.stringify({
+  ...state,
+  metaframes: {
+    inputs: await serializeMetaframeValues(state.metaframes.inputs),
+    outputs: await serializeMetaframeValues(state.metaframes.outputs),
+  },
+});
+```
+
+### Why it is off by default
+
+Only because of the state change above: turning it on by default would
+silently break existing code that saves or compares the state as JSON. It is
+not a speed trade-off:
+
+- Finding the binary values costs the same in both modes: one type check
+  (`instanceof Blob`, `ArrayBuffer.isView`, ...) per input or output value.
+  A large array is never walked element by element: a TypedArray is one
+  object, and a plain `number[]` is ordinary JSON that is never encoded.
+- `postMessage` copies every message in both modes. Pass by reference only
+  skips the base64 encode and decode.
+
+### Speed
+
+Measured in Chrome on the speed test pages below (your numbers will differ):
+
+| messages / second, 5000 messages | serialized (default) | `passByReference` |
+| -------------------------------- | -------------------- | ----------------- |
+| small JSON object (no binary)    | ~50,000              | ~50,000           |
+| `Uint8Array`, 1 KiB              | ~26,000              | ~46,000           |
+| `Uint8Array`, 16 KiB             | ~3,500               | ~31,000           |
+| `Blob`, 1 KiB                    | ~5,000               | ~10,000           |
+
+| throughput, 30 frames | serialized (default)   | `passByReference` |
+| --------------------- | ---------------------- | ----------------- |
+| `Uint8Array`, 64 KiB  | ~50 MiB/s              | ~1,000 MiB/s      |
+| `Uint8Array`, 1 MiB   | fails (stack overflow) | ~1,400 MiB/s      |
+
+- Values without binary data cost the same in both modes.
+- For many small messages, a TypedArray is faster than a `Blob` in both
+  modes: sending a `Blob` costs more per message, whatever its size.
+
+Run them yourself:
+
+- messages / second:
+  [/test/metapage/pass-by-reference-rate](https://module.metapage.io/test/metapage/pass-by-reference-rate)
+  (`?count=5000&size=1024&types=json,Uint8Array,ArrayBuffer,Blob`)
+- throughput by size:
+  [/test/metapage/pass-by-reference](https://module.metapage.io/test/metapage/pass-by-reference)
+  (`?count=30&sizes=16,256,1024&type=Uint8Array`)
 
 ## Secrets
 
@@ -670,6 +791,7 @@ Render a metapage into a DOM element.
   - `hideFrameBorders`: Hide individual metaframe borders
   - `hideOptions`: Hide options panel
   - `hideMetaframeLabels`: Hide metaframe labels
+  - `passByReference`: Pass binary values as-is instead of as data URLs (see [passByReference](#passing-binary-data-by-reference-passbyreference))
 
 **Returns:** `{ setInputs, setOutputs, dispose, metapage }`
 
@@ -684,12 +806,19 @@ Render a single metaframe URL as a full-size iframe.
 - `onOutputs`: Callback for metaframe outputs as `MetaframeInputMap` (optional)
 - `onUrlChange`: Callback when the metaframe URL changes (optional)
 - `debug`: Enable debug logging (optional, default `false`)
+- `passByReference`: Pass binary values as-is instead of as data URLs (optional, default `false`, see [passByReference](#passing-binary-data-by-reference-passbyreference))
 
 **Returns:** `{ setInputs, setOutputs, dispose, metapage }`
 
 Note: `setInputs` and `setOutputs` accept `MetaframeInputMap` directly (pipe-level), unlike `renderMetapage` which uses `MetapageInstanceInputs` (keyed by metaframe ID).
 
 ### Metapage Class
+
+**Constructor:** `new Metapage({ id?, color?, passByReference? })`, or `await Metapage.from(definition, { debug?, passByReference? })`
+
+- `id`: Metapage id (optional)
+- `color`: Console log color (optional)
+- `passByReference`: Pass binary values as-is instead of as data URLs (optional, default `false`, see [passByReference](#passing-binary-data-by-reference-passbyreference))
 
 **Methods:**
 
@@ -700,6 +829,7 @@ Note: `setInputs` and `setOutputs` accept `MetaframeInputMap` directly (pipe-lev
 - `injectSecrets(secrets)`: Inject secrets into metaframe URLs (see [Secrets](#secrets))
 - `dispose()`: Clean up and remove all listeners
 - `on(event, handler)`: Listen to events
+- `Metapage.serializeInputs(map)` / `Metapage.deserializeInputs(map)` (static): Convert the binary values of an input or output map to data URLs and back
 
 **Events:**
 
@@ -724,7 +854,7 @@ Note: `setInputs` and `setOutputs` accept `MetaframeInputMap` directly (pipe-lev
 **Properties:**
 
 - `id`: Metaframe ID assigned by parent metapage
-- `isInputOutputBlobSerialization`: Enable/disable automatic binary serialization
+- `isInputOutputBlobSerialization`: Enable/disable automatic binary serialization. When `false`, the metaframe also never asks for [passByReference](#passing-binary-data-by-reference-passbyreference)
 
 ## Creating Your Own Metaframes
 

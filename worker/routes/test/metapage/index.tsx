@@ -39,6 +39,11 @@ export default function MetaframePage() {
               Speed test: binary values serialized vs passed by reference
             </a>
           </li>
+          <li>
+            <a href={`./metapage/pass-by-reference-rate`}>
+              Speed test: messages / second, passByReference off vs on
+            </a>
+          </li>
 
           {/* <li><a href={`./metapage/timing`}>Test timing and internal APIs</a></li> */}
         </ul>

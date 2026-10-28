@@ -45,7 +45,8 @@ type TestType =
   | "globs"
   | "first-message"
   | "io-pipe-names"
-  | "pass-by-reference";
+  | "pass-by-reference"
+  | "pass-by-reference-rate";
 
 // Build the production bundle before starting the server (avoid dev/watch mode in CI)
 async function buildFreshManifest() {
@@ -850,9 +851,14 @@ for (const testType of [
   "first-message",
   "compatibility",
   "pass-by-reference",
+  "pass-by-reference-rate",
 ] as TestType[]) {
   for (const version of allVersions) {
-    if (version !== "latest" && testType === "pass-by-reference") {
+    if (
+      version !== "latest" &&
+      (testType === "pass-by-reference" ||
+        testType === "pass-by-reference-rate")
+    ) {
       // passByReference is new in this library build: published versions
       // have nothing to compare
       continue;

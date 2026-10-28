@@ -13,7 +13,8 @@
       ?role=producer
         input  "prepare" {runId, count, size, type}: build `count` payloads up
                          front, so building them is not timed. Then output
-                         "prepared" = runId
+                         "prepared" = runId. type: Uint8Array | ArrayBuffer
+                         | Blob | json (a small plain object)
         input  "go"      runId: output each payload on "frame", in order
         output "error"   {runId, message} if sending failed (e.g. a payload
                          too large to serialize to a data url)
@@ -46,8 +47,14 @@
         metaframe.setOutput("ready", true);
       });
 
-      /** Every payload carries its index in its first 4 bytes */
+      /**
+       * Every payload carries its index: binary ones in their first 4 bytes,
+       * json ones (a small plain object, no binary) in `index`
+       */
       const makePayload = (type, size, index) => {
+        if (type === "json") {
+          return { index, values: [index, index + 1, index + 2] };
+        }
         const bytes = new Uint8Array(Math.max(size, 4));
         // non-zero content, so nothing can take a shortcut on empty buffers
         for (let i = 4; i < bytes.length; i += 64) bytes[i] = i & 0xff;
@@ -71,6 +78,9 @@
         }
         if (ArrayBuffer.isView(value)) {
           return new DataView(value.buffer, value.byteOffset).getUint32(0);
+        }
+        if (typeof value?.index === "number") {
+          return value.index;
         }
         return -1;
       };

@@ -26,8 +26,17 @@ export async function renderMetaframe(props: {
   onUrlChange?: (url: string) => void;
   rootDiv: HTMLElement;
   debug?: boolean;
+  /** See MetapageOptionsV1.passByReference */
+  passByReference?: boolean;
 }): Promise<MetaframeRendererResult> {
-  const { url, onOutputs, onUrlChange, rootDiv, debug = false } = props;
+  const {
+    url,
+    onOutputs,
+    onUrlChange,
+    rootDiv,
+    debug = false,
+    passByReference,
+  } = props;
 
   if (!url) {
     throw new Error("url must be provided");
@@ -57,7 +66,7 @@ export async function renderMetaframe(props: {
 
   await pageLoaded();
 
-  const metapage = new Metapage();
+  const metapage = new Metapage({ passByReference });
   metapage.debug = debug;
 
   try {
