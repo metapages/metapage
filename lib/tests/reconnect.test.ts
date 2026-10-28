@@ -28,6 +28,7 @@ import {
   JsonRpcMethodsFromChild,
   JsonRpcMethodsFromParent,
   Metaframe,
+  MetaframeEvents,
   Metapage,
   MinimumClientMessage,
 } from "../src";
@@ -36,6 +37,8 @@ const delay = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 /** A blob encoded as a data url: deserializing it is slow (async, multi-step) */
 const BLOB_DATA_URL = "data:text/plain;blob=true;base64,aGVsbG8=";
+/** Not valid base64: deserializing it throws */
+const MALFORMED_BLOB_DATA_URL = "data:text/plain;blob=true;base64,%%%";
 
 // ---------------------------------------------------------------------------
 // The child half: messages a parent metapage sends to a metaframe
@@ -289,6 +292,126 @@ describe("Metaframe inputs during (re)connection", () => {
     await vi.waitFor(() =>
       expect(metaframe!.getInputs()).toEqual({ a: 1, b: 2, c: 3 }),
     );
+  });
+
+  it("applies an input that arrives while draining the buffer after the ones buffered before it", async () => {
+    metaframe = await newMetaframeAwaitingRegistration();
+    const parentId = "parent-drain-ordering";
+
+    // Two updates land while registering. The first is slow to deserialize,
+    // so the buffer is still draining when the next update arrives.
+    window.dispatchEvent(setupResponseFromParent(metaframe.id, parentId));
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, { v: BLOB_DATA_URL }),
+    );
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, { v: "buffered" }),
+    );
+    await metaframe.connected();
+
+    // Arrives once we are Ready, so it skips the buffer: it must still be
+    // applied after the older updates that were buffered.
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, { v: "latest" }),
+    );
+
+    await delay(200);
+    expect(metaframe.getInput("v")).toBe("latest");
+  });
+
+  it("does not let a new parent's initial inputs overwrite its newer updates", async () => {
+    metaframe = await newMetaframeAwaitingRegistration();
+    window.dispatchEvent(setupResponseFromParent(metaframe.id, "parent-old"));
+    await metaframe.connected();
+
+    // The parent page was recreated. Its initial inputs are slow to
+    // deserialize, and it sends a newer value in the meantime: the initial
+    // (older) value must not win.
+    window.dispatchEvent(
+      setupResponseFromParent(metaframe.id, "parent-new", {
+        v: BLOB_DATA_URL,
+      }),
+    );
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, "parent-new", { v: "latest" }),
+    );
+
+    await delay(200);
+    expect(metaframe._parentId).toBe("parent-new");
+    expect(metaframe.isConnected()).toBe(true);
+    expect(metaframe.getInput("v")).toBe("latest");
+  });
+
+  it("still registers, and applies later inputs, when an initial input fails to deserialize", async () => {
+    metaframe = await newMetaframeAwaitingRegistration();
+    const parentId = "parent-bad-initial-input";
+    const errors: any[] = [];
+    metaframe.addListener(MetaframeEvents.Error, (err: any) =>
+      errors.push(err),
+    );
+
+    // Not valid base64: deserializing it throws. Registration used to stop
+    // there, never reaching Ready, so this and every later input was held
+    // in the buffer forever.
+    window.dispatchEvent(
+      setupResponseFromParent(metaframe.id, parentId, {
+        bad: MALFORMED_BLOB_DATA_URL,
+        goodBlob: BLOB_DATA_URL,
+        n: 1,
+      }),
+    );
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, { v: "buffered" }),
+    );
+
+    await vi.waitFor(() => expect(metaframe!.isConnected()).toBe(true));
+    await vi.waitFor(() => expect(metaframe!.getInput("v")).toBe("buffered"));
+    // The other values are still deserialized, the bad one is handed back
+    expect(metaframe.getInput("goodBlob")).toBeInstanceOf(Blob);
+    expect(metaframe.getInput("n")).toBe(1);
+    expect(metaframe.getInput("bad")).toBe(MALFORMED_BLOB_DATA_URL);
+    expect(errors.length).toBe(1);
+    expect(errors[0]).toContain("bad");
+
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, { v: "latest" }),
+    );
+    await vi.waitFor(() => expect(metaframe!.getInput("v")).toBe("latest"));
+  });
+
+  it("applies the rest of an input update when one value fails to deserialize", async () => {
+    metaframe = await newMetaframeAwaitingRegistration();
+    const parentId = "parent-bad-update";
+    const errors: any[] = [];
+    metaframe.addListener(MetaframeEvents.Error, (err: any) =>
+      errors.push(err),
+    );
+    const seen: any[] = [];
+    metaframe.onInputs((inputs) => seen.push(inputs));
+
+    window.dispatchEvent(setupResponseFromParent(metaframe.id, parentId));
+    // One bad update while registering (buffered), one once Ready (live).
+    // Each used to be dropped whole, with no error event.
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, {
+        bad: MALFORMED_BLOB_DATA_URL,
+        buffered: BLOB_DATA_URL,
+      }),
+    );
+    await metaframe.connected();
+    window.dispatchEvent(
+      inputsUpdateFromParent(metaframe.id, parentId, {
+        bad: MALFORMED_BLOB_DATA_URL,
+        live: "yes",
+      }),
+    );
+
+    await vi.waitFor(() => expect(metaframe!.getInput("live")).toBe("yes"));
+    expect(metaframe.getInput("buffered")).toBeInstanceOf(Blob);
+    expect(metaframe.getInput("bad")).toBe(MALFORMED_BLOB_DATA_URL);
+    expect(seen.length).toBe(2);
+    expect(errors.length).toBe(2);
+    errors.forEach((err) => expect(err).toContain("bad"));
   });
 
   it("stops registering if disposed while deserializing the initial inputs", async () => {

@@ -6,6 +6,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Fixed
+- Two remaining ways a stale input could win while a metaframe registers (#200).
+  An input that arrived while the buffered mid-registration inputs were still
+  being applied could be overwritten by an older buffered one. And when a
+  metaframe re-registered with a recreated parent, it stayed `Ready` while
+  deserializing the new parent's initial inputs, so a newer update from that
+  parent was applied first and then overwritten by the (older) initial value.
+- A metaframe whose initial inputs contained a value that failed to deserialize
+  (e.g. a malformed dataref) never finished registering: it stayed not `Ready`
+  and held every later input in its buffer forever (#200). The bad value is
+  now passed through as-is, an `error` event is emitted, and registration
+  completes. Input updates fail the same way: one bad value no longer drops
+  the rest of the update silently.
 - A metaframe disposed while it was still registering no longer throws
   `TypeError: ... is undefined` from `merge`. Registration awaits the
   deserialization of the parent's initial inputs, and `dispose()` landing in
