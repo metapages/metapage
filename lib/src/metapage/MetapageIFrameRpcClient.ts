@@ -60,6 +60,9 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   // The last mismatched origin reported, so a retrying metaframe at the wrong
   // origin is reported once, not on every retry
   _reportedOriginMismatch: string | undefined;
+  // expectedOrigin, cached for the url it was computed from
+  _expectedOriginUrl: string | undefined;
+  _expectedOrigin: string | undefined;
   _parentId: MetapageId;
   _debug: boolean;
   _definition: MetaframeDefinition | undefined;
@@ -232,13 +235,22 @@ export class MetapageIFrameRpcClient extends EventEmitter<
    * a metaframe that navigates itself to, another origin is not sent anything
    * and its messages are ignored. Inputs can carry secrets, so they only ever
    * go to the origin written in the definition.
+   *
+   * Read on every message sent and received, so it is cached: parsing the url
+   * each time costs ~0.2µs for a normal url but ~250µs for a 360KB data: url.
+   * The cache is keyed on the url string rather than invalidated in setUrl,
+   * because `url` is also assigned directly (e.g. when secrets are injected).
    */
   public get expectedOrigin(): string {
-    try {
-      return new URL(this.url).origin;
-    } catch (_) {
-      return "null";
+    if (this._expectedOriginUrl !== this.url) {
+      this._expectedOriginUrl = this.url;
+      try {
+        this._expectedOrigin = new URL(this.url).origin;
+      } catch (_) {
+        this._expectedOrigin = "null";
+      }
     }
+    return this._expectedOrigin!;
   }
 
   /**

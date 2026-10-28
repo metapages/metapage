@@ -102,6 +102,19 @@ describe("postMessage origins (#40)", () => {
       expect(client.targetOrigin).toBe("*");
     });
 
+    it("parses the url once, and again only when the url changes", async () => {
+      const { client } = await createMetapage(SAME_ORIGIN_URL);
+      expect(client.expectedOrigin).toBe(location.origin);
+      // A cached value is returned as-is while the url is unchanged
+      client._expectedOrigin = "https://cached.example";
+      expect(client.expectedOrigin).toBe("https://cached.example");
+      expect(client.targetOrigin).toBe("https://cached.example");
+      // assigned directly, not via setUrl, as Metapage does for secrets
+      client.url = "https://example.com/a";
+      expect(client.expectedOrigin).toBe("https://example.com");
+      expect(client.targetOrigin).toBe("https://example.com");
+    });
+
     it("is what postMessage is called with", async () => {
       const { client } = await createMetapage(SAME_ORIGIN_URL);
       // Wait for the 404 document so we spy on the window that stays
