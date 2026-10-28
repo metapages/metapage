@@ -26,6 +26,8 @@ export class MetapageShared extends EventEmitter<
 > {
   // Easier to ensure this value is never null|undefined
   _definition: MetapageDefinition = INITIAL_NULL_METAPAGE_DEFINITION;
+  /** See MetapageOptionsV1.passByReference */
+  passByReference: boolean = false;
 
   constructor() {
     super();

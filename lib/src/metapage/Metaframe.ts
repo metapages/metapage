@@ -23,6 +23,7 @@ import {
   JsonRpcMethodsFromChild,
   JsonRpcMethodsFromParent,
   MinimumClientMessage,
+  SetupIframeClientRequestData,
   SetupIframeServerResponseData,
 } from "./jsonrpc";
 import {
@@ -117,6 +118,11 @@ export class Metaframe extends EventEmitter<
    * its (cleared) state, ack the parent, or emit.
    */
   _disposed = false;
+  /**
+   * The parent metapage asked for binary outputs as-is rather than as data
+   * URLs (see MetapageOptionsV1.passByReference). Set on every registration.
+   */
+  _passByReference = false;
 
   debug: boolean = isDebugFromUrlsParams();
   color: string | undefined;
@@ -226,9 +232,13 @@ export class Metaframe extends EventEmitter<
     if (this._state === MetaframeLoadingState.Ready) {
       return;
     }
-    this.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, {
+    const request: SetupIframeClientRequestData = {
       version: Metaframe.version,
-    });
+      // We can always receive binary values as-is: deserializing leaves
+      // anything that is not a data URL untouched
+      passByReference: true,
+    };
+    this.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, request);
     this._setupRequestSendCount++;
     this._state = MetaframeLoadingState.SentSetupIframeClientRequest;
     this._setupRequestTimeout = window.setTimeout(() => {
@@ -285,6 +295,7 @@ export class Metaframe extends EventEmitter<
       this._parentVersion = params.version;
       this.color = stringToRgb(this.id);
       this._parentId = params.parentId;
+      this._passByReference = !!params.passByReference;
       // Not Ready until the initial inputs below are applied. On a
       // re-registration we were Ready for the previous parent, and updates
       // from the new one would otherwise be applied immediately, only to be
@@ -671,7 +682,9 @@ export class Metaframe extends EventEmitter<
   }
 
   public async setOutputs(outputs: MetaframeInputMap): Promise<void> {
-    if (this.isInputOutputBlobSerialization) {
+    // Outputs set before we have registered are serialized: we do not know
+    // yet whether the parent wants them as-is
+    if (this.isInputOutputBlobSerialization && !this._passByReference) {
       outputs = await serializeInputs(outputs);
     }
 

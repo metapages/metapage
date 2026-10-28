@@ -11,6 +11,7 @@ import {
   ClientMessageRecievedAck,
   JsonRpcMethodsFromParent,
   MinimumClientMessage,
+  SetupIframeClientRequestData,
   SetupIframeServerResponseData,
 } from "./jsonrpc";
 import { JsonRpcRequest } from "./jsonrpc2";
@@ -55,6 +56,11 @@ export class MetapageIFrameRpcClient extends EventEmitter<
   _parentId: MetapageId;
   _debug: boolean;
   _definition: MetaframeDefinition | undefined;
+  /**
+   * The metaframe said (in its SetupIframeClientRequest) that it accepts
+   * binary values as-is. Older metaframes do not, and keep getting data URLs.
+   */
+  _supportsPassByReference: boolean = false;
 
   _metapage: MetapageShared;
 
@@ -399,7 +405,10 @@ export class MetapageIFrameRpcClient extends EventEmitter<
    * the current inputs, so a reloaded document starts with them rather than
    * waiting for the next upstream change.
    */
-  public register() {
+  public register(request?: SetupIframeClientRequestData) {
+    // Every registration is a new document, which may be a different library
+    // version than the last one (the url changed), so this is never sticky
+    this._supportsPassByReference = !!request?.passByReference;
     var response: SetupIframeServerResponseData = {
       iframeId: this.id,
       parentId: this._parentId,
@@ -408,6 +417,9 @@ export class MetapageIFrameRpcClient extends EventEmitter<
       },
       version: VERSION_METAPAGE as VersionsMetapage,
     };
+    if (this.isPassByReference()) {
+      response.passByReference = true;
+    }
     this.sendRpcInternal(
       JsonRpcMethodsFromParent.SetupIframeServerResponse,
       response,
@@ -453,11 +465,22 @@ export class MetapageIFrameRpcClient extends EventEmitter<
     this.sendInputs(this.inputs);
   }
 
+  /**
+   * Binary values go to this metaframe as-is (structured clone by postMessage)
+   * rather than as base64 data URLs: the metapage asked for it, and the
+   * metaframe said it understands them.
+   */
+  public isPassByReference(): boolean {
+    return !!this._metapage?.passByReference && this._supportsPassByReference;
+  }
+
   async sendInputs(inputs: MetaframeInputMap) {
     if (!inputs) {
       return;
     }
-    inputs = await serializeInputs(inputs);
+    if (!this.isPassByReference()) {
+      inputs = await serializeInputs(inputs);
+    }
     if (this.isDisposed()) {
       return;
     }
