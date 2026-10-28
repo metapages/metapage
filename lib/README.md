@@ -271,6 +271,34 @@ metaframe.onInput("file", (file) => {
 });
 ```
 
+#### Passing binary data by reference
+
+By default binary values (`Blob`, `File`, `ArrayBuffer`, TypedArrays) are
+encoded as base64 data URLs on their way between metaframes, so the metapage
+state is plain JSON that can be saved. That is slow for large or frequent
+values (e.g. video frames), and fails outright for values over a few hundred
+KiB.
+
+With `passByReference` they are handed to `postMessage` as-is instead: a
+`Blob` or `File` is passed by reference (its bytes are never copied), an
+`ArrayBuffer` or TypedArray is copied natively, and binary values nested inside
+objects work too.
+
+```javascript
+const metapage = new Metapage({ passByReference: true });
+// or: await Metapage.from(definition, { passByReference: true })
+// or: renderMetapage({ ..., options: { passByReference: true } })
+```
+
+- Metaframes need no changes: they negotiate it with the metapage when they
+  connect. Metaframes running an older library version keep getting data URLs.
+- The metapage state (`getState()`, `onState`, `onOutputs`) then holds the raw
+  binary values. If you persist it, serialize it first with
+  `Metapage.serializeInputs`.
+- Set it when creating the metapage: metaframes read it when they connect.
+
+Speed test: [/test/metapage/pass-by-reference](https://module.metapage.io/test/metapage/pass-by-reference)
+
 ## Usage Examples
 
 ### Full HTML Example

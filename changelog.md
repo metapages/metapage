@@ -5,6 +5,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+### Added
+- `passByReference` metapage option (#208): binary inputs/outputs (`Blob`,
+  `File`, `ArrayBuffer`, TypedArrays, also nested inside objects) are handed to
+  `postMessage` as-is instead of being encoded as base64 data URLs. 5-20x faster
+  for small frames, and frames over ~200 KiB, which cannot be serialized at all,
+  now work. Opt-in (`new Metapage({ passByReference: true })`, also on
+  `Metapage.from` and `renderMetapage`), and negotiated with each metaframe when
+  it connects: metaframes on older library versions keep using data URLs. The
+  metapage state then holds the raw values, so serialize it before persisting.
+- Speed test comparing the two: `/test/metapage/pass-by-reference` in the worker.
 
 ## [1.10.17] - 2026-10-28
 ### Fixed
