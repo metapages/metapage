@@ -296,6 +296,12 @@ const metapage = new Metapage({ passByReference: true });
   binary values. If you persist it, serialize it first with
   `Metapage.serializeInputs`.
 - Set it when creating the metapage: metaframes read it when they connect.
+- It is off by default because of that state change, not for speed: with it
+  on, `JSON.stringify(metapage.getState())` turns a `Blob` into `{}` and a
+  `Uint8Array` into `{"0":..,"1":..}`, so code that saves or compares the
+  state would break silently. Checking for binary values costs the same in
+  both modes: one type check per value, never a walk over the elements of an
+  array.
 
 Speed test: [/test/metapage/pass-by-reference](https://module.metapage.io/test/metapage/pass-by-reference)
 

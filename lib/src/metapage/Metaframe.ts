@@ -234,9 +234,11 @@ export class Metaframe extends EventEmitter<
     }
     const request: SetupIframeClientRequestData = {
       version: Metaframe.version,
-      // We can always receive binary values as-is: deserializing leaves
-      // anything that is not a data URL untouched
-      passByReference: true,
+      // We can receive binary values as-is: deserializing leaves anything
+      // that is not a data URL untouched. Not if we skip deserializing
+      // (isInputOutputBlobSerialization = false): such a metaframe handles
+      // data URLs itself and would be handed raw values it does not expect.
+      passByReference: this.isInputOutputBlobSerialization,
     };
     this.sendRpc(JsonRpcMethodsFromChild.SetupIframeClientRequest, request);
     this._setupRequestSendCount++;

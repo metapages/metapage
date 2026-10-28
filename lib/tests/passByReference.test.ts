@@ -259,6 +259,16 @@ describe("passByReference negotiation (metaframe side)", () => {
     expect(sent[0].params.passByReference).toBe(true);
   });
 
+  it("does not ask for it when it handles data URLs itself", async () => {
+    const { mf, sent } = capturingMetaframe();
+    metaframe = mf;
+    // Set right after construction, as metaframes do: the request is only
+    // sent once the page has loaded
+    mf.isInputOutputBlobSerialization = false;
+    await vi.waitFor(() => expect(sent.length).toBeGreaterThan(0));
+    expect(sent[0].params.passByReference).toBe(false);
+  });
+
   it("sends outputs as-is when the parent asked for it", async () => {
     const { mf, sent } = capturingMetaframe();
     metaframe = mf;
