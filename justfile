@@ -33,10 +33,168 @@ test:
     just lib/test
     just worker/test
 
-# Publish new npm module version (defined in lib/package.json)
+# The tag is the trigger: this pushes vX.Y.Z, which runs
+# .github/workflows/publish.yml, which tests, publishes to npm with provenance,
+# and cuts the GitHub release. Nothing here publishes anything itself, so a
+# release that fails in CI is re-run from the Actions tab, not re-tagged.
+#
+#   just release          # next patch version
+#   just release 1.11.0   # that exact version
+#
+# RELEASE_YES=1 skips the confirmation prompt.
+
+# 🌱 Cut a release: bump lib/package.json, roll the changelog, tag and push
+release version="":
+    #!/usr/bin/env bash
+    set -euo pipefail
+
+    NPM_MODULE="$(jq -r .name lib/package.json)"
+    CURRENT="$(jq -r .version lib/package.json)"
+
+    # ---- work out the new version before touching anything -----------------
+    if [ -n "{{ version }}" ]; then
+        VERSION="{{ version }}"
+        # Leading v is a natural typo; accept it rather than cutting v-v1.2.3.
+        VERSION="${VERSION#v}"
+        if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.-]+)?$ ]]; then
+            echo "💥 '$VERSION' is not a semver version (X.Y.Z[-pre])"
+            exit 1
+        fi
+    elif [[ "$CURRENT" == *-* ]]; then
+        # npm's `patch` semantics: a patch bump off a prerelease is the release
+        # it was a prerelease of, not the version after it.
+        VERSION="${CURRENT%%-*}"
+    else
+        IFS=. read -r MAJOR MINOR PATCH <<< "$CURRENT"
+        VERSION="$MAJOR.$MINOR.$((PATCH + 1))"
+    fi
+    TAG="v$VERSION"
+
+    # ---- preflight ---------------------------------------------------------
+    # Every one of these is a way to cut a tag that publishes something other
+    # than what you think you are publishing. Fail before the push, not after:
+    # a pushed tag has already started the publish, and npm versions are
+    # forever.
+    BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+    if [ "$BRANCH" != "main" ]; then
+        echo "💥 releases are cut from main, not '$BRANCH'"
+        exit 1
+    fi
+
+    if ! git diff --quiet HEAD --; then
+        echo "💥 uncommitted changes - the release commit must contain only the version bump"
+        git status --short
+        exit 1
+    fi
+
+    git fetch --quiet --tags origin main
+    if [ "$(git rev-parse HEAD)" != "$(git rev-parse origin/main)" ]; then
+        echo "💥 main and origin/main disagree: $(git rev-list --left-right --count HEAD...origin/main | tr '\t' '/') (ahead/behind)"
+        echo "👉 push or pull first, so the tag lands on a commit that exists on the remote"
+        exit 1
+    fi
+
+    if git rev-parse -q --verify "refs/tags/$TAG" > /dev/null; then
+        echo "💥 tag $TAG already exists locally"
+        exit 1
+    fi
+    if [ -n "$(git ls-remote --tags origin "$TAG")" ]; then
+        echo "💥 tag $TAG already exists on origin"
+        exit 1
+    fi
+
+    # The registry is the only authority on what has shipped. Catches the case
+    # the tags cannot: a version published without a tag.
+    if npm view "$NPM_MODULE@$VERSION" version > /dev/null 2>&1; then
+        echo "💥 $NPM_MODULE@$VERSION is already on npm - pick a higher version"
+        exit 1
+    fi
+
+    # ---- confirm -----------------------------------------------------------
+    echo -e "📦 {{ bold }}$NPM_MODULE $CURRENT → $VERSION{{ normal }}  (tag $TAG on $(git rev-parse --short HEAD))"
+    echo ""
+    NOTES="$(just _changelog-section Unreleased)"
+    if [ -n "$NOTES" ]; then
+        echo "$NOTES" | sed 's/^/    /'
+    else
+        echo -e "    {{ yellow }}changelog [Unreleased] is empty - the release notes will be generated from commits{{ normal }}"
+    fi
+    echo ""
+    if [ -t 0 ] && [ "${RELEASE_YES:-}" != "1" ]; then
+        read -r -p "Cut and push $TAG? This publishes to npm. [y/N] " REPLY
+        case "$REPLY" in
+            y | Y) ;;
+            *)
+                echo "🚪 nothing done"
+                exit 1
+                ;;
+        esac
+    fi
+
+    # ---- bump --------------------------------------------------------------
+    # --no-git-tag-version: the tag is cut below, over a commit that also
+    # carries the changelog and README edits. npm would tag the bump alone.
+    ( cd lib && npm version "$VERSION" --no-git-tag-version > /dev/null )
+    just lib/update-docs-versions
+
+    if [ -n "$NOTES" ]; then
+        # Open a fresh [Unreleased] above the version being cut, so the next
+        # change has somewhere to go and `publish.yml` can find these notes
+        # under their version number.
+        VERSION="$VERSION" DATE="$(date -u +%Y-%m-%d)" perl -0pi \
+            -e 's/^## \[Unreleased\]\n/## [Unreleased]\n\n## [$ENV{VERSION}] - $ENV{DATE}\n/m' \
+            changelog.md
+    fi
+
+    git add -A
+    git commit --quiet -m "release $TAG"
+
+    # Annotated, so the tag carries the release notes and an author. The
+    # GitHub release reads the changelog, not this, but `git show $TAG` and
+    # `git describe` are better for it.
+    if [ -n "$NOTES" ]; then
+        printf '%s\n\n%s\n' "$TAG" "$NOTES" | git tag -a "$TAG" -F -
+    else
+        git tag -a "$TAG" -m "$TAG"
+    fi
+
+    # Commit first: if this races with someone else's push, the tag was never
+    # pushed and nothing has been published. The reverse order publishes a tag
+    # pointing at a commit nobody else has.
+    git push --quiet origin main
+    git push --quiet origin "$TAG"
+
+    echo -e "✅ {{ green }}pushed $TAG{{ normal }}"
+    echo -e "   👀 https://github.com/metapages/metapage/actions/workflows/publish.yml"
+
+# `_changelog-section Unreleased`, `_changelog-section 1.10.16`
+
+# Print one section of the changelog, without its heading
+_changelog-section version:
+    #!/usr/bin/env bash
+    set -euo pipefail
+    # Blank lines are held back rather than printed, so the leading and
+    # trailing ones around a section disappear while the ones between its
+    # subsections survive. No `tac`: it is GNU-only, and this runs on macOS.
+    awk -v want="{{ version }}" '
+        index($0, "## [" want "]") == 1 { found = 1; next }
+        found && /^## \[/ { exit }
+        found && /^[[:space:]]*$/ { if (started) pending++; next }
+        found {
+            while (pending-- > 0) print ""
+            pending = 0
+            started = 1
+            print
+        }
+    ' changelog.md
+
+# This is what publish.yml runs once a tag is pushed. It only publishes the
+# version already in lib/package.json, and is a no-op if that version shipped.
+# To cut a release, use `just release`.
+
+# Publish lib/package.json's current version to npm (CI entry point)
 publish:
     just lib/publish
-    just worker/deploy
 
 # Run the worker
 @dev:

@@ -1,30 +1,60 @@
 # https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
-name: Deploy and Publish
+name: Publish
 
-# https://docs.github.com/en/actions/reference/workflow-syntax-for-github-actions
+# The tag is the release. `just release` (root justfile) bumps
+# lib/package.json, rolls the changelog, commits and pushes `vX.Y.Z`; this
+# workflow is the only thing that publishes.
+#
+# Do not rename this file. npm Trusted Publishing is configured on npmjs.com
+# against a specific repository *and workflow filename* - a rename makes the
+# OIDC exchange fail and the publish lose its right to push to the registry.
+#
+# Nothing in here mutates the repo: the version, the docs and the tag were all
+# decided before the push, so every step is safe to re-run. If a release fails
+# halfway, re-run the workflow run - do not cut a new tag.
 on:
   push:
-    branches:
-      - 'main'
+    tags:
+      - 'v*'
 
 jobs:
-  deploy-and-publish:
-    # Can switch to ubuntu-latest but self-hosted is safer and faster
-    name: Deploy and Publish
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write # Required for OIDC
-      contents: write # Required for tags and releases
+  # The gate. Tag pushes do not match test.yml / format.yml (they filter on
+  # branches), so without this a release would run no tests at all.
+  test:
+    name: Test
+    # Self-hosted: the browser E2E suites (playwright for lib, astral for the
+    # worker, plus mkcert) are known-good there, which is where test.yml runs
+    # them too. A release that cannot be tested must not publish.
+    runs-on: [self-hosted]
     steps:
-      - name: Check out the repo
+      - name: Check out the tag
         uses: actions/checkout@v4
         with:
           fetch-depth: '0'
 
-      - name: Configure git for tagging
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+      - name: formatting
+        run: just lib/fmt-check
+
+      - name: typescript
+        run: just check
+
+      - name: tests
+        run: just test
+
+  publish:
+    name: Publish
+    needs: test
+    # ubuntu-latest, not self-hosted: this job holds the OIDC token that
+    # publishes to npm, so it runs on a disposable GitHub-hosted runner.
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write # Required for OIDC (trusted publishing + provenance)
+      contents: write # Required for the GitHub release
+    steps:
+      - name: Check out the tag
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
 
       - uses: extractions/setup-just@v1
         with:
@@ -39,18 +69,30 @@ jobs:
       - name: Ensure npm >= 11.7.0
         run: npm install -g npm@^11.7.0
 
-      - uses: denoland/setup-deno@v2
-        with:
-          deno-version: '2.7.13'
-
-      - name: publish module
-        id: publish
+      # The tag name and lib/package.json are set by the same recipe in the
+      # same commit, so a disagreement means the tag was hand-made or moved.
+      # Publishing then puts a version on npm that no tag describes, which is
+      # exactly the state this whole flow exists to prevent.
+      - name: resolve and verify version
+        id: version
         run: |
           set -euo pipefail
+          TAG="${GITHUB_REF_NAME}"
+          TAG_VERSION="${TAG#v}"
+          PKG_VERSION="$(jq -r '.version' lib/package.json)"
 
-          # Capture version before publishing
-          VERSION=$(jq -r '.version' lib/package.json)
-          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          if [ "$TAG_VERSION" != "$PKG_VERSION" ]; then
+            echo "::error::tag $TAG says $TAG_VERSION but lib/package.json says $PKG_VERSION"
+            exit 1
+          fi
+
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$PKG_VERSION" >> $GITHUB_OUTPUT
+          echo "✅ $TAG == lib/package.json $PKG_VERSION"
+
+      - name: publish module
+        run: |
+          set -euo pipefail
 
           # `tee` rather than `OUTPUT=$(...)` so the log streams live, and no
           # `|| true`: a failing publish MUST fail the job. It used to be
@@ -62,14 +104,6 @@ jobs:
             exit 1
           fi
 
-          # Publishing is idempotent: an already-published version is a no-op,
-          # not a failure, and must not cut a duplicate release.
-          if grep -q "PUBLISHING npm version" publish.log; then
-            echo "published=true" >> $GITHUB_OUTPUT
-          else
-            echo "published=false" >> $GITHUB_OUTPUT
-          fi
-
       # Belt and braces: the step above can only report what the recipe told it.
       # This asserts the actual end state against the registry, so any future
       # way of failing quietly still turns the job red.
@@ -77,7 +111,7 @@ jobs:
         run: |
           set -euo pipefail
           NAME=$(jq -r '.name' lib/package.json)
-          VERSION="${{ steps.publish.outputs.version }}"
+          VERSION="${{ steps.version.outputs.version }}"
 
           # Registry reads can lag a publish, and `--prefer-online` is the
           # point of this loop: without it npm answers every attempt from the
@@ -98,37 +132,62 @@ jobs:
           echo "::error::$NAME@$VERSION is not on npm after the publish step"
           exit 1
 
-      # Gated on the tag, not on `published`. Publishing is idempotent, so a
-      # re-run after anything later in the job failed finds the version already
-      # on npm, publishes nothing, reports published=false - and the release for
-      # that version was then lost for good, because no later run can ever
-      # satisfy the old condition. That happened to v1.10.15. The tag is what
-      # says "this version shipped", so release whatever is tagged and has no
-      # release yet, which makes the step safe to re-run and self-healing.
+      # Confirms the tarball on the registry really carries the provenance
+      # attestation this workflow asked for. Informational: a registry-side
+      # hiccup here should not fail a release that is already published.
+      - name: verify provenance signatures
+        continue-on-error: true
+        run: |
+          set -euo pipefail
+          NAME=$(jq -r '.name' lib/package.json)
+          VERSION="${{ steps.version.outputs.version }}"
+          rm -rf /tmp/sigcheck && mkdir -p /tmp/sigcheck
+          cd /tmp/sigcheck
+          npm init -y > /dev/null
+          npm install --ignore-scripts "$NAME@$VERSION" > /dev/null
+          npm audit signatures
+
+      # Unconditional, and idempotent, by design. The old version of this step
+      # was gated on "did we publish in this run?", so a re-run after a later
+      # failure found the version already on npm, published nothing, and could
+      # never create the release - v1.10.15 lost its release that way, for
+      # good. The tag is what says "this version shipped": release whatever is
+      # tagged and has no release yet.
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
-          VERSION="${{ steps.publish.outputs.version }}"
+          TAG="${{ steps.version.outputs.tag }}"
+          VERSION="${{ steps.version.outputs.version }}"
 
-          git fetch --tags --quiet origin
-          if ! git rev-parse -q --verify "refs/tags/v$VERSION" > /dev/null; then
-            echo "No tag v$VERSION: nothing shipped, nothing to release"
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "Release $TAG already exists"
             exit 0
           fi
 
-          if gh release view "v$VERSION" > /dev/null 2>&1; then
-            echo "Release v$VERSION already exists"
-            exit 0
+          # The same tarball npm publishes, attached so the release is
+          # self-contained even if the registry entry is later deprecated or
+          # unpublished. `--json` rather than parsing stdout: `npm pack` also
+          # writes a human file listing, and which stream each part lands on
+          # has moved between npm versions.
+          TARBALL=$(cd lib && npm pack --json --pack-destination "$GITHUB_WORKSPACE" | jq -r '.[0].filename')
+
+          # Hand-written notes beat generated ones when they exist; `just
+          # release` moved this version's changelog section under its number.
+          # Fall back to commit-generated notes when the section is empty.
+          just _changelog-section "$VERSION" > notes.md
+          if [ -s notes.md ]; then
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --notes-file notes.md \
+              --verify-tag \
+              "$TARBALL"
+          else
+            gh release create "$TAG" \
+              --title "$TAG" \
+              --generate-notes \
+              --verify-tag \
+              "$TARBALL"
           fi
-
-          gh release create "v$VERSION" \
-            --title "v$VERSION" \
-            --generate-notes \
-            --verify-tag
-
-      - name: deploy worker
-        env:
-          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
-        run: just worker/deploy
+          echo "✅ released $TAG"

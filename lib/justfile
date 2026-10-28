@@ -130,8 +130,13 @@ verify: _ensure_npm_modules build
     echo "🔍 Running pre-publish verification..."
     node test-jsdelivr-bundle.mjs
 
-# If the version does not exist, publish the packages (metaframe+metapage)
-publish: _ensure_npm_modules update-docs-versions check-versions-id-docs
+# `just release` (root justfile) is the entry point for a human: it cuts the
+# tag, and the tag is what runs this in CI. Nothing here bumps a version or
+# moves a ref - it publishes exactly what is in package.json, and is a no-op if
+# that version already shipped, so re-running a failed release workflow is safe.
+
+# Publish package.json's current version to npm, if it is not published yet
+publish: _ensure_npm_modules check-versions-id-docs
     #!/usr/bin/env bash
     set -euo pipefail
     VERSION=`cat package.json | jq -r '.version'`
@@ -150,11 +155,15 @@ publish: _ensure_npm_modules update-docs-versions check-versions-id-docs
     echo "🔍 Running pre-publish verification..."
     node test-jsdelivr-bundle.mjs
     echo "PUBLISHING npm version $VERSION"
-    # OIDC Trusted Publishing (automatically uses GitHub Actions OIDC token)
-    npm publish --access public .
-    git tag "v$VERSION"
-    git push origin "v$VERSION"
+    # OIDC Trusted Publishing (automatically uses GitHub Actions OIDC token).
+    # --provenance signs the tarball against the workflow, commit and repo that
+    # built it, which is what makes the "Built and signed on GitHub Actions"
+    # badge appear on npmjs.com and lets `npm audit signatures` verify it.
+    # Trusted publishing turns this on by default; asking for it explicitly
+    # means a config change that silently dropped it fails the publish instead.
+    npm publish --access public --provenance .
 
+# Fail if the README's jsDelivr URLs disagree with package.json
 check-versions-id-docs:
     #!/usr/bin/env bash
     # Check if the versions are in the docs
@@ -182,6 +191,13 @@ check-versions-id-docs:
     fi
     echo -e "✅ All CDN versions in README.md match package.json ($VERSION)"
 
+# Called by `just release`, never by CI: the README edit has to land in the
+# release commit. It used to run as a prerequisite of `publish`, where it
+# rewrote the README inside the runner's checkout and threw the result away -
+# which is why main's README still advertised 1.10.15 after 1.10.16 shipped.
+# CI only *checks* the versions now, via `check-versions-id-docs`.
+
+# Point the README's jsDelivr URLs at package.json's version
 update-docs-versions:
     #!/usr/bin/env bash
     set -euo pipefail
@@ -190,7 +206,7 @@ update-docs-versions:
     VERSION=`cat package.json | jq -r '.version'`
     # Update the versions in the docs.
     # perl, not sd: sd is not installed on the CI runners (nor on a stock dev
-    # machine), and this recipe is a prerequisite of `publish`, so a missing
+    # machine), and a release cannot be cut without this recipe, so a missing
     # binary blocks releases. perl ships with macOS and every CI image, and
     # -pi behaves identically on both, unlike sed -i.
     VERSION="$VERSION" perl -pi -e 's{(https://cdn\.jsdelivr\.net/npm/\@metapages/metapage\@)[^\s"\x27]*}{$1$ENV{VERSION}}g' README.md

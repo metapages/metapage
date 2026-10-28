@@ -1,0 +1,45 @@
+# https://docs.github.com/en/free-pro-team@latest/actions/reference/workflow-syntax-for-github-actions
+name: Deploy worker
+
+# The worker ships continuously from main; the npm module ships from tags
+# (.github/workflows/publish.yml). These used to be one job, which meant the
+# worker could not be deployed without also being a candidate for a publish.
+on:
+  push:
+    branches:
+      - 'main'
+
+jobs:
+  deploy:
+    name: Deploy worker
+    runs-on: ubuntu-latest
+    # Only one deploy at a time, and a newer main wins: there is no value in
+    # finishing a deploy of a commit that has already been superseded.
+    concurrency:
+      group: deploy-worker
+      cancel-in-progress: true
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: '0'
+
+      - uses: extractions/setup-just@v1
+        with:
+          just-version: '1.46.0'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 23.x
+
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: '2.7.13'
+
+      # The worker bundles the local lib, so this is also a build check on main.
+      - name: deploy worker
+        env:
+          DENO_DEPLOY_TOKEN: ${{ secrets.DENO_DEPLOY_TOKEN }}
+        run: just worker/deploy
