@@ -181,3 +181,38 @@ of throwing `SyntaxError`. This is the smallest behavioural change, but redirect
   - The real cross-origin redirect is still only exercised by the probe
     script. Vitest's single-origin server can't serve one, so the tests
     simulate the redirect with `MessageEvent`s that carry `source` and `origin`.
+
+## Do any of our checks duplicate the browser's?
+
+No. The browser enforces only one direction:
+
+- **Outgoing (parent → metaframe):** `postMessage(msg, targetOrigin)` is
+  enforced by the browser. It drops the message if the iframe's document is at
+  another origin. We only compute `targetOrigin`; we never re-check it.
+- **Incoming (metaframe → parent):** the browser filters nothing. Any window
+  that can reach ours (another iframe, a popup, an opener, the old document) can
+  post to it, and `iframeId`/`parentId` are just fields it can fill in.
+  `parentId` isn't secret either: a metapage can be given a fixed `opts.id`.
+  So the incoming checks are ours to make, and each one catches something the
+  other misses:
+  - `e.source === iframe.contentWindow` rejects every window other than our
+    iframe. `e.origin` alone can't do this: another window at the metaframe's
+    origin would pass.
+  - `e.origin === expectedOrigin` rejects a different document in *our*
+    iframe. `e.source` alone can't do this, because the iframe's `WindowProxy`
+    stays the same when it navigates or redirects. Without it, a page the
+    metaframe navigated to could still push outputs into the graph, since
+    `OutputsUpdate` isn't gated on registration.
+  - Tests for both: "ignores a window other than our iframe…" and "only
+    accepts outputs from the expected origin" in `lib/tests/origin.test.ts`.
+
+Partial overlaps, kept on purpose:
+
+- `_awaitingSetupRequest` is redundant with the origin check only when the
+  url swap changes origin. For a same-origin swap it is the only thing that
+  drops the old document's late ack.
+- The older `jsonrpc.parentId !== this._id` check ("ignore messages from other
+  metapages") is now covered by the `e.source` check for browser messages: a
+  metaframe of another metapage on the same page lives in a different iframe.
+  It is left in as a cheap early filter. It never wrongly rejects anything,
+  because internal calls set `parentId` to our own id.
