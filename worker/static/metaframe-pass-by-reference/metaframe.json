@@ -1,0 +1,20 @@
+{
+  "version": "2",
+  "metadata": {
+    "title": "pass-by-reference speed test metaframe",
+    "description": "Producer/consumer of binary frames for /test/metapage/pass-by-reference"
+  },
+  "inputs": {
+    "prepare": { "type": "json" },
+    "go": { "type": "string" },
+    "expect": { "type": "json" },
+    "frame": { "type": "application/octet-stream" }
+  },
+  "outputs": {
+    "ready": { "type": "boolean" },
+    "prepared": { "type": "string" },
+    "frame": { "type": "application/octet-stream" },
+    "done": { "type": "json" },
+    "error": { "type": "json" }
+  }
+}

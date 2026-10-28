@@ -40,7 +40,12 @@ console.log(`   Server Port: ${serverPort}`);
 console.log(`   Server URL: ${serverOrigin}`);
 console.log(`   Current working directory: ${Deno.cwd()}`);
 
-type TestType = "compatibility" | "globs" | "first-message" | "io-pipe-names";
+type TestType =
+  | "compatibility"
+  | "globs"
+  | "first-message"
+  | "io-pipe-names"
+  | "pass-by-reference";
 
 // Build the production bundle before starting the server (avoid dev/watch mode in CI)
 async function buildFreshManifest() {
@@ -844,8 +849,15 @@ for (const testType of [
   "globs",
   "first-message",
   "compatibility",
+  "pass-by-reference",
 ] as TestType[]) {
   for (const version of allVersions) {
+    if (version !== "latest" && testType === "pass-by-reference") {
+      // passByReference is new in this library build: published versions
+      // have nothing to compare
+      continue;
+    }
+
     if (
       version !== "latest" &&
       testType === "globs" &&
