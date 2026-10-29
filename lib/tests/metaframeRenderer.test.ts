@@ -43,6 +43,18 @@ describe("renderMetaframe", () => {
     expect(iframe!.style.borderStyle).toBe("none");
   });
 
+  it("passes passByReference on to its metapage", async () => {
+    rootDiv = document.createElement("div");
+    document.body.appendChild(rootDiv);
+
+    result = await renderMetaframe({
+      url: METAFRAME_DATA_URL,
+      rootDiv,
+      passByReference: true,
+    });
+    expect(result.metapage.passByReference).toBe(true);
+  });
+
   it("floors container height so it survives an auto-height parent", async () => {
     // rootDiv with no explicit height (normal document flow) — `height: 100%`
     // resolves to auto here, which would collapse to 0 without the floor.

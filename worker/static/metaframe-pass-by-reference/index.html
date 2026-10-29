@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>pass-by-reference benchmark metaframe</title>
+  </head>
+  <body style="font-family: monospace; font-size: 12px; margin: 4px">
+    <div id="status">loading</div>
+    <!--
+      Metaframe for /test/metapage/pass-by-reference (#208), served from a
+      directory so the metaframe.json next to it is found.
+
+      ?role=producer
+        input  "prepare" {runId, count, size, type}: build `count` payloads up
+                         front, so building them is not timed. Then output
+                         "prepared" = runId. type: Uint8Array | ArrayBuffer
+                         | Blob | json (a small plain object)
+        input  "go"      runId: output each payload on "frame", in order
+        output "error"   {runId, message} if sending failed (e.g. a payload
+                         too large to serialize to a data url)
+
+      ?role=consumer
+        input  "expect"  {runId, count}: reset the counter
+        input  "frame"   count it, check its type and the index stamped in
+                         its first 4 bytes
+        output "done"    {runId, count, type, ok} once `count` frames arrived
+
+      ?version=x.y.z loads that published library version, default: this
+      server's build.
+    -->
+    <script type="module">
+      const params = new URL(window.location.href).searchParams;
+      const role = params.get("role");
+      const version = params.get("version") || "latest";
+      const { Metaframe } = await import(
+        version === "latest"
+          ? "/lib/index.js"
+          : `https://cdn.jsdelivr.net/npm/@metapages/metapage@${version}`
+      );
+
+      const statusDiv = document.getElementById("status");
+      const setStatus = (s) => (statusDiv.textContent = `${role}: ${s}`);
+
+      const metaframe = new Metaframe();
+      metaframe.connected().then(() => {
+        setStatus("connected");
+        metaframe.setOutput("ready", true);
+      });
+
+      /**
+       * Every payload carries its index: binary ones in their first 4 bytes,
+       * json ones (a small plain object, no binary) in `index`
+       */
+      const makePayload = (type, size, index) => {
+        if (type === "json") {
+          return { index, values: [index, index + 1, index + 2] };
+        }
+        const bytes = new Uint8Array(Math.max(size, 4));
+        // non-zero content, so nothing can take a shortcut on empty buffers
+        for (let i = 4; i < bytes.length; i += 64) bytes[i] = i & 0xff;
+        new DataView(bytes.buffer).setUint32(0, index);
+        switch (type) {
+          case "ArrayBuffer":
+            return bytes.buffer;
+          case "Blob":
+            return new Blob([bytes], { type: "application/octet-stream" });
+          default:
+            return bytes;
+        }
+      };
+
+      const readIndex = async (value) => {
+        if (value instanceof Blob) {
+          value = await value.slice(0, 4).arrayBuffer();
+        }
+        if (value instanceof ArrayBuffer) {
+          return new DataView(value).getUint32(0);
+        }
+        if (ArrayBuffer.isView(value)) {
+          return new DataView(value.buffer, value.byteOffset).getUint32(0);
+        }
+        if (typeof value?.index === "number") {
+          return value.index;
+        }
+        return -1;
+      };
+
+      if (role === "producer") {
+        let payloads = [];
+        let preparedRunId;
+        metaframe.onInput("prepare", ({ runId, count, size, type }) => {
+          payloads = [];
+          for (let i = 0; i < count; i++) {
+            payloads.push(makePayload(type, size, i));
+          }
+          preparedRunId = runId;
+          setStatus(`prepared ${count} x ${type} ${size} bytes`);
+          metaframe.setOutput("prepared", runId);
+        });
+        metaframe.onInput("go", async (runId) => {
+          if (runId !== preparedRunId) return;
+          setStatus("sending");
+          try {
+            for (const payload of payloads) {
+              await metaframe.setOutputs({ frame: payload });
+            }
+            setStatus(`sent ${payloads.length}`);
+          } catch (err) {
+            setStatus(`error: ${err}`);
+            metaframe.setOutput("error", { runId, message: `${err}` });
+          }
+          payloads = [];
+        });
+      } else {
+        let expected;
+        let received = 0;
+        // Checking a Blob is async: collect the checks, await them at the end
+        let checks = [];
+        metaframe.onInput("expect", (e) => {
+          expected = e;
+          received = 0;
+          checks = [];
+          setStatus(`expecting ${e.count}`);
+        });
+        metaframe.onInput("frame", async (frame) => {
+          if (!expected) return;
+          // Counted synchronously, in arrival order
+          const index = received++;
+          checks.push(readIndex(frame).then((i) => i === index));
+          if (received !== expected.count) return;
+          const { runId } = expected;
+          const ok = (await Promise.all(checks)).every((c) => c);
+          setStatus(`received ${received}`);
+          metaframe.setOutput("done", {
+            runId,
+            count: received,
+            type: frame?.constructor?.name ?? typeof frame,
+            ok,
+          });
+        });
+      }
+    </script>
+  </body>
+</html>

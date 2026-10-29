@@ -24,6 +24,7 @@ import {
   JsonRpcMethodsFromChild,
   MinimumClientMessage,
   SetupIframeClientAckData,
+  SetupIframeClientRequestData,
 } from "./jsonrpc";
 import { MetapageIFrameRpcClient } from "./MetapageIFrameRpcClient";
 import {
@@ -157,7 +158,7 @@ export class Metapage extends MetapageShared {
 
   public static async from(
     metaPageDef: any,
-    opts?: { debug?: boolean },
+    opts?: { debug?: boolean; passByReference?: boolean },
   ): Promise<Metapage> {
     if (metaPageDef == null) {
       throw "Metapage definition cannot be null";
@@ -170,7 +171,7 @@ export class Metapage extends MetapageShared {
       }
     }
 
-    var metapage = new Metapage();
+    var metapage = new Metapage({ passByReference: opts?.passByReference });
     metapage.debug = opts?.debug || false;
     return metapage.setDefinition(metaPageDef);
   }
@@ -248,6 +249,7 @@ export class Metapage extends MetapageShared {
     this._id = opts && opts.id ? opts.id : generateMetapageId();
     this._consoleBackgroundColor =
       opts && opts.color ? opts.color : CONSOLE_BACKGROUND_COLOR_DEFAULT;
+    this.passByReference = !!opts?.passByReference;
 
     this.addPipe = this.addPipe.bind(this);
     this.dispose = this.dispose.bind(this);
@@ -1564,7 +1566,7 @@ export class Metapage extends MetapageShared {
        * communication channel.
        */
       case JsonRpcMethodsFromChild.SetupIframeClientRequest:
-        metaframe.register();
+        metaframe.register(jsonrpc.params as SetupIframeClientRequestData);
         break;
 
       /* A client iframe responded */

@@ -27,6 +27,22 @@ export interface SetupIframeServerResponseData {
   };
   // Allow newer metaframes to handle older metapage versions
   version: VersionsMetapage;
+  /**
+   * The metapage wants binary values passed as-is (structured clone) rather
+   * than serialized to data URLs. Only set if the metaframe said it supports
+   * it in its SetupIframeClientRequest. Absent from older metapages.
+   */
+  passByReference?: boolean;
+}
+
+export interface SetupIframeClientRequestData {
+  version: VersionsMetaframe;
+  /**
+   * The metaframe accepts binary values as-is (structured clone), and will
+   * send its outputs that way if the metapage asks. Absent from older
+   * metaframes, which only understand data URLs.
+   */
+  passByReference?: boolean;
 }
 
 export interface MinimumClientMessage<T> extends JsonRpcRequest<T> {

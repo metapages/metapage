@@ -138,8 +138,11 @@ The optional ```opts``` argument defineds some extra options, mostly used for de
 interface Options {
   color?: String;  // Color of console.logs, since all iframes and the main page will output logs to the same console
   id?   : String;  // Id, not required, but useful if you have multiple metapages in a single website.
+  passByReference?: boolean; // Pass binary values (Blob, ArrayBuffer, TypedArrays) between metaframes as-is instead of as base64 data URLs. Default false; true from the next major version, 2.0.
 }
 ```
+
+`passByReference` is much faster for binary data, but the metapage state then holds the raw binary values, so serialize them before saving the state. Details: [Passing binary data by reference](https://github.com/metapages/metapage/tree/main/lib#passing-binary-data-by-reference-passbyreference).
 
 ### Metapage#setDebugFromUrlParams
 

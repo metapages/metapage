@@ -1,0 +1,48 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+  </head>
+  <body>
+    <!--
+      A metaframe for tests/passByReference.test.ts, running the library
+      source. ?role=producer sends what it is told to on input "send" as
+      output "out". ?role=consumer reports what arrived on input "in".
+    -->
+    <script type="module">
+      import { Metaframe } from "../../src/index.ts";
+
+      const role = new URL(window.location.href).searchParams.get("role");
+      const metaframe = new Metaframe();
+
+      const describe = (value) => ({
+        type: value?.constructor?.name ?? typeof value,
+        bytes:
+          value instanceof ArrayBuffer || ArrayBuffer.isView(value)
+            ? Array.from(new Uint8Array(value.buffer ?? value))
+            : undefined,
+      });
+
+      if (role === "producer") {
+        metaframe.onInput("send", (spec) => {
+          const bytes = new Uint8Array(spec.bytes ?? []);
+          const value = spec.text
+            ? new Blob([spec.text], { type: "text/plain" })
+            : spec.nested
+              ? { nested: { bytes } }
+              : bytes;
+          metaframe.setOutput("out", value);
+        });
+      } else {
+        metaframe.onInput("in", async (value) => {
+          const received = value?.nested
+            ? { nested: describe(value.nested.bytes) }
+            : value instanceof Blob
+              ? { type: "Blob", text: await value.text() }
+              : describe(value);
+          metaframe.setOutput("received", received);
+        });
+      }
+    </script>
+  </body>
+</html>

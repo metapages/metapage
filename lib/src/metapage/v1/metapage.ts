@@ -6,6 +6,22 @@ export interface MetapageOptionsV1 {
   id?: MetapageId;
   color?: string;
   debug?: boolean;
+  /**
+   * Pass binary input/output values (Blob, File, ArrayBuffer, TypedArrays,
+   * and anything else postMessage can structured-clone) between metaframes
+   * as-is, instead of encoding them as base64 data URLs. Much faster for
+   * large or frequent values (e.g. video frames), and works at any depth.
+   *
+   * Negotiated per metaframe: metaframes from older library versions keep
+   * receiving data URLs. The metapage state then holds the raw values, so a
+   * consumer that persists the state must serialize it themselves (see
+   * `Metapage.serializeInputs`). Set at construction: metaframes read it
+   * when they register.
+   *
+   * Default false in 1.x. It will default to true in the next major version
+   * (2.0.0): pass `false` explicitly to keep data URLs in the state.
+   */
+  passByReference?: boolean;
 }
 
 export type MetapageMetadataV1 = Partial<{

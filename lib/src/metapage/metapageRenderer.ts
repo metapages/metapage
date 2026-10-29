@@ -14,6 +14,8 @@ export interface RenderingOptions {
   hideMetaframeLabels?: boolean;
   debug?: boolean;
   dividerIndex?: number;
+  /** See MetapageOptionsV1.passByReference */
+  passByReference?: boolean;
 }
 
 export interface MetapageRendererResult {
@@ -230,7 +232,7 @@ export async function renderMetapage(props: {
   await pageLoaded();
 
   // Create metapage instance
-  const metapage = new Metapage();
+  const metapage = new Metapage({ passByReference: options.passByReference });
   metapage.debug = options.debug || false;
 
   try {
