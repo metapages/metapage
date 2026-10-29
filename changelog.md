@@ -17,6 +17,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   or with `isInputOutputBlobSerialization = false`, keep using data URLs. The
   metapage state then holds the raw values, so serialize it before persisting.
   Documented in the README: "Passing binary data by reference".
+  **It will be on by default in the next major version, 2.0.0**: pass
+  `passByReference: false` to keep data URLs in the state, or serialize the
+  state before saving it (see the README section).
 - Speed tests comparing the two in the worker:
   `/test/metapage/pass-by-reference` (throughput by value size) and
   `/test/metapage/pass-by-reference-rate` (messages / second).

@@ -495,7 +495,7 @@ await renderMetaframe({ url, rootDiv, passByReference: true });
 interface MetapageOptionsV1 {
   id?: string;
   color?: string;
-  passByReference?: boolean; // default false
+  passByReference?: boolean; // default false (true from 2.0)
 }
 ```
 
@@ -562,11 +562,11 @@ const saved = JSON.stringify({
 });
 ```
 
-### Why it is off by default
+### Why it is off by default in 1.x
 
 Only because of the state change above: turning it on by default would
-silently break existing code that saves or compares the state as JSON. It is
-not a speed trade-off:
+silently break existing code that saves or compares the state as JSON, so it
+waits for a major version (see below). It is not a speed trade-off:
 
 - Finding the binary values costs the same in both modes: one type check
   (`instanceof Blob`, `ArrayBuffer.isView`, ...) per input or output value.
@@ -574,6 +574,29 @@ not a speed trade-off:
   object, and a plain `number[]` is ordinary JSON that is never encoded.
 - `postMessage` copies every message in both modes. Pass by reference only
   skips the base64 encode and decode.
+
+### Next major version (2.0): on by default
+
+`passByReference` will be **on by default in the next breaking release,
+2.0.0**. Until then (all 1.x releases) it stays off unless you ask for it.
+
+What changes in 2.0:
+
+- `getState()`, `onState`, `onInputs` and `onOutputs` hold raw `Blob`s and
+  TypedArrays, not data URL strings, unless you opt out.
+- Metaframes are unaffected: they already negotiate it, and older metaframes
+  keep getting data URLs.
+
+To get ready now, while still on 1.x:
+
+- If you never save, send or compare the metapage state as JSON, there is
+  nothing to do. You can turn it on today (`passByReference: true`) to get
+  the speed up early.
+- If you do, serialize the binary values first, as in
+  [Saving the state](#saving-the-state), and test with
+  `passByReference: true`. That code keeps working in 2.0.
+- To keep today's behavior in 2.0, set `passByReference: false` explicitly.
+  That keeps working in 1.x and 2.0.
 
 ### Speed
 
@@ -806,7 +829,7 @@ Render a single metaframe URL as a full-size iframe.
 - `onOutputs`: Callback for metaframe outputs as `MetaframeInputMap` (optional)
 - `onUrlChange`: Callback when the metaframe URL changes (optional)
 - `debug`: Enable debug logging (optional, default `false`)
-- `passByReference`: Pass binary values as-is instead of as data URLs (optional, default `false`, see [passByReference](#passing-binary-data-by-reference-passbyreference))
+- `passByReference`: Pass binary values as-is instead of as data URLs (optional, default `false`, `true` from 2.0, see [passByReference](#passing-binary-data-by-reference-passbyreference))
 
 **Returns:** `{ setInputs, setOutputs, dispose, metapage }`
 
@@ -818,7 +841,7 @@ Note: `setInputs` and `setOutputs` accept `MetaframeInputMap` directly (pipe-lev
 
 - `id`: Metapage id (optional)
 - `color`: Console log color (optional)
-- `passByReference`: Pass binary values as-is instead of as data URLs (optional, default `false`, see [passByReference](#passing-binary-data-by-reference-passbyreference))
+- `passByReference`: Pass binary values as-is instead of as data URLs (optional, default `false`, `true` from 2.0, see [passByReference](#passing-binary-data-by-reference-passbyreference))
 
 **Methods:**
 

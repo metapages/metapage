@@ -17,6 +17,9 @@ export interface MetapageOptionsV1 {
    * consumer that persists the state must serialize it themselves (see
    * `Metapage.serializeInputs`). Set at construction: metaframes read it
    * when they register.
+   *
+   * Default false in 1.x. It will default to true in the next major version
+   * (2.0.0): pass `false` explicitly to keep data URLs in the state.
    */
   passByReference?: boolean;
 }

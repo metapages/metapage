@@ -138,7 +138,7 @@ The optional ```opts``` argument defineds some extra options, mostly used for de
 interface Options {
   color?: String;  // Color of console.logs, since all iframes and the main page will output logs to the same console
   id?   : String;  // Id, not required, but useful if you have multiple metapages in a single website.
-  passByReference?: boolean; // Pass binary values (Blob, ArrayBuffer, TypedArrays) between metaframes as-is instead of as base64 data URLs. Default false.
+  passByReference?: boolean; // Pass binary values (Blob, ArrayBuffer, TypedArrays) between metaframes as-is instead of as base64 data URLs. Default false; true from the next major version, 2.0.
 }
 ```
 
